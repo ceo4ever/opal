@@ -1,0 +1,62 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/ownership-tool/ownership_tool/decisions.py",
+    "opal/tools/ownership-tool/ownership_tool/heartbeat_hook.py",
+    "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+    "opal/tools/ownership-tool/ownership_tool/pretooluse_guard_hook.py",
+    "opal/tools/ownership-tool/ownership_tool/session_end_hook.py",
+    "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+    "opal/tools/ownership-tool/ownership_tool/stop_evaluator.py",
+    "opal/tools/ownership-tool/tests/test_decisions.py",
+    "opal/tools/ownership-tool/tests/test_hook_session_identity.py",
+    "opal/tools/run-log-tool/run_log_core.py",
+    "opal/tools/run-log-tool/tests/test_run_log_tool.py",
+    "opal/tools/ownership-tool/README.md",
+    "opal/core/references/harness/worktree.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "332f015ed8491d1b",
+      "category": "dead-code",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "convention-categories.md §4 (코드 품질/죽은 코드 — 사용되지 않는 인자)",
+      "source_tier": "T2",
+      "location": {
+        "file": "opal/tools/ownership-tool/ownership_tool/stop_evaluator.py",
+        "line": 119,
+        "symbol": "state_path_for_payload"
+      },
+      "evidence": "이번 태스크 diff(ace8368 대비)가 함수 본문의 `session_id = ownership_core.resolve_session_id(env, payload)`를 `session_id = ownership_core.hook_session_id(payload)`로 교체하면서 `env` 매개변수의 유일한 소비처가 사라졌다. 함수 본문 전체를 재확인해도 `env`를 다시 읽는 곳이 없고, 유일한 호출부 `opal/tools/ownership-tool/ownership_tool/stop_hook.py:81`의 `stop_evaluator.state_path_for_payload(payload, project_root, now=now)`도 `env`를 전달하지 않는다.",
+      "impact": "죽은 매개변수가 시그니처에 남아 호출자에게 실제로 쓰이지 않는 입력을 요구하는 것으로 오인시키고, 이후 유지보수 시 `env`가 실사용된다고 잘못 가정할 위험이 있다.",
+      "remediation": {
+        "guidance": "`env=None` 매개변수를 제거하거나(하위 호환이 필요하면 deprecated 주석과 함께 유지), 같은 파일 `evaluate()`의 실사용 `env`와 구분되도록 docstring에 미사용 사유를 명시한다.",
+        "reference": "TBD — 프로젝트 자체 코드 리뷰 관례 (공식 린트 규칙 미지정)",
+        "auto_fixable": false
+      },
+      "verification": "재검사 시 `state_path_for_payload` 시그니처의 `env` 매개변수가 제거되었거나 함수 본문에서 실제로 소비되는지 확인한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "docs/CONVENTIONS.md 로드 (네이밍/파일구조/문서이력 규칙)",
+    "opal/core/references/harness/header-rules.md 로드 (@header 필수 필드·워커 권한 경계)",
+    ".opal/code-scan.json 확인 — headerSource: inline, extensions에 .py 포함",
+    "git -C <project_root> diff ace8368 -- <file> 13건 실행 — 이번 태스크 diff 범위 확정",
+    "대상 파일 13건 전건 Read",
+    "grep으로 DIAGNOSTICS enum 값 5개 소스(decisions.py SSOT, run_log_core.py 사본, README.md, worktree.md, 테스트 2종) 대조"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/harness/header-rules.md",
+    "opal/core/references/opal-doc-standard.md §5",
+    "~/.opal/skills/op-gc-convention/references/convention-categories.md",
+    ".opal/code-scan.json"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/153-260923-opds-훅-세션-식별-분리/GC-CONVENTION-2026-09-24T00-23-09-framework.md"
+}

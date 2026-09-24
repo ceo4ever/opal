@@ -3,7 +3,7 @@
   "module": "ownership_tool.stop_evaluator",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "Stop hook 판정 조립기(W-6). cwd를 registry(<project_root>/.opal-worktrees/.meta/task_*.json)로 해석해 worktree/hub 후보를 고르고 분류는 resolver에 위임한다 — cwd 문자열 파싱·.opal-worktrees 문자열 추론·부모 디렉터리 순회·mtime·updated_at 최신순 선택을 하지 않는다. 현재 세션 강제 후보가 정확히 1건이면 그 태스크의 transition_action만 평가하고, 복수면 defer_to_pm + multiple_hub_tasks로 무소유·만료 후보까지 한 반환에 담는다(무조건 fail-open도, 임의 단일 선택도 하지 않는다). stop_hook_active면 먼저 직전 receipt의 block_count를 플랫폼 상한과 비교해 allow_block_cap_reached로 빠져나가고(상한 env 미설정이면 검사 생략, 자체 고정 상한 없음), 이어 직전 fingerprint와 같으면 allow_no_progress_same_fingerprint로 통과하며 달라졌을 때만 재차단한다. D-21대로 claim_source=session_start인 current_session_owned 후보(SessionStart 자동 claim만 있는 수동 소유)는 강제 후보에서 빼고 passive_ownership 진단만 남기며 소유권 분류 자체는 유지한다 — claim_source=state_transition일 때만 강제 후보다(hub_canonical·worktree_canonical 취급은 무변경). foreign_session_owned·worktree_owned_shadow 후보는 강제 후보가 아니므로 Stop을 통과시키고 진단에만 남는다. block_continue·defer_to_pm은 판정 대상 task_id 전건과 각 transition_action·next_action을 나열한 reason을 함께 반환한다. decision_kind·diagnostic은 decisions의 D-3 폐쇄 enum 값만 쓴다.",
+  "description": "Stop hook 판정 조립기(W-6). cwd를 registry(<project_root>/.opal-worktrees/.meta/task_*.json)로 해석해 worktree/hub 후보를 고르고 분류는 resolver에 위임한다 — cwd 문자열 파싱·.opal-worktrees 문자열 추론·부모 디렉터리 순회·mtime·updated_at 최신순 선택을 하지 않는다. 현재 세션 강제 후보가 정확히 1건이면 그 태스크의 transition_action만 평가하고, 복수면 defer_to_pm + multiple_hub_tasks로 무소유·만료 후보까지 한 반환에 담는다(무조건 fail-open도, 임의 단일 선택도 하지 않는다). stop_hook_active면 먼저 직전 receipt의 block_count를 플랫폼 상한과 비교해 allow_block_cap_reached로 빠져나가고(상한 env 미설정이면 검사 생략, 자체 고정 상한 없음), 이어 직전 fingerprint와 같으면 allow_no_progress_same_fingerprint로 통과하며 달라졌을 때만 재차단한다. D-21대로 claim_source=session_start인 current_session_owned 후보(SessionStart 자동 claim만 있는 수동 소유)는 강제 후보에서 빼고 passive_ownership 진단만 남기며 소유권 분류 자체는 유지한다 — claim_source=state_transition일 때만 강제 후보다(hub_canonical·worktree_canonical 취급은 무변경). foreign_session_owned·worktree_owned_shadow 후보는 강제 후보가 아니므로 Stop을 통과시키고 진단에만 남는다. block_continue·defer_to_pm은 판정 대상 task_id 전건과 각 transition_action·next_action을 나열한 reason을 함께 반환한다. 세션 ID는 ownership_core.hook_session_id로 봉투 session_id만 읽고 env로 대체하지 않으며, 봉투 신원이 없으면 no_session_id 진단을 남기고 receipt를 쓰지 않는다(task 153). decision_kind·diagnostic은 decisions의 D-3 폐쇄 enum 값만 쓴다.",
   "exports": ["evaluate", "build_reason", "state_path_for_payload"],
   "depends": ["ownership_tool.decisions", "ownership_tool.fingerprint", "ownership_tool.ownership_core", "ownership_tool.resolver", "ownership_tool.claude_adapter"]
 }
@@ -123,8 +123,7 @@ def state_path_for_payload(payload, project_root, env=None, now=None):
     않고 project_root를 돌려준다. show 실패는 adapter의 None 폴백으로 이어진다.
     """
     payload = payload if isinstance(payload, dict) else {}
-    env = os.environ if env is None else env
-    session_id = ownership_core.resolve_session_id(env, payload)
+    session_id = ownership_core.hook_session_id(payload)
     cwd = payload.get("cwd") or project_root
     registry = _load_registry(project_root)
     home_entry = _registry_entry_for_home(registry, cwd)
@@ -207,7 +206,7 @@ def evaluate(payload, project_root=None, now=None, show_json=None, prior_receipt
     """
     payload = payload if isinstance(payload, dict) else {}
     env = os.environ if env is None else env
-    session_id = ownership_core.resolve_session_id(env, payload)
+    session_id = ownership_core.hook_session_id(payload)
     cwd = payload.get("cwd") or project_root
     stop_hook_active = bool(payload.get("stop_hook_active"))
 
@@ -219,6 +218,9 @@ def evaluate(payload, project_root=None, now=None, show_json=None, prior_receipt
         candidates = resolver.resolve_hub(project_root, registry, session_id, now=now)
 
     diagnostics = []
+    if not session_id:
+        # 봉투 신원이 없으면 env로 대체하지 않는다. receipt는 아래 _finish의 session_id 가드가 막는다.
+        diagnostics.append("no_session_id")
     ambiguous = False
     for candidate in candidates:
         for diagnostic in candidate.get("diagnostics") or []:

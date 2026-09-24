@@ -3,7 +3,7 @@
   "module": "ownership_tool.session_end_hook",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "SessionEnd hook 어댑터(W-8). 종료하는 세션이 소유한 lease 전건을 lease.release로 released 전이시키고, <project_root>/.opal/run/.runtime/sessions/<session_id>.json 레코드의 status를 closed로 바꿔 세션 registry를 닫는다. 소유 task_path 수집은 heartbeat_hook.owned_task_paths(발급값만 읽는 resolve_roots 경유)를 재사용해 판정 규칙을 한 곳에 둔다 — 소유하지 않은 lease는 건드리지 않고 ownership을 생성·이전하지 않는다. SessionEnd가 발화하지 않는 crash·강제 종료는 이 훅이 아니라 TTL 만료가 회수하며 만료 lease는 lease.classify가 unowned로 판정한다(새 분류 로직을 두지 않는다). 세션 ID 해석은 ownership_core.resolve_session_id(D-18)에 위임하고 플랫폼 고유 변수명은 갖지 않는다(C-15). 실행 루트는 봉투 cwd를 그대로 쓰지 않고 ownership_core.resolve_project_root(① 명시 오버라이드 OPAL_PROJECT_ROOT → ② 봉투 cwd부터 조상으로 올라가며 .opal/MEMORY.json 또는 .opal/AGENT.md를 파일로 가진 첫 디렉토리 → ③ None)가 해석하며, 미해석이면 파일 I/O 이전에 종료한다(D-30b·D-25). 해석된 루트는 handle() 내부의 루트 파생 호출에도 그대로 전파한다(D-27). 전 경로 fail-safe exit 0.",
+  "description": "SessionEnd hook 어댑터(W-8). 종료하는 세션이 소유한 lease 전건을 lease.release로 released 전이시키고, <project_root>/.opal/run/.runtime/sessions/<session_id>.json 레코드의 status를 closed로 바꿔 세션 registry를 닫는다. 소유 task_path 수집은 heartbeat_hook.owned_task_paths(발급값만 읽는 resolve_roots 경유)를 재사용해 판정 규칙을 한 곳에 둔다 — 소유하지 않은 lease는 건드리지 않고 ownership을 생성·이전하지 않는다. SessionEnd가 발화하지 않는 crash·강제 종료는 이 훅이 아니라 TTL 만료가 회수하며 만료 lease는 lease.classify가 unowned로 판정한다(새 분류 로직을 두지 않는다). 세션 ID는 ownership_core.hook_session_id로 봉투 session_id만 읽는다 — 부모 세션 env를 상속한 자식 프로세스의 이벤트가 부모 신원으로 판정되지 않도록 세션 환경변수·플랫폼 env로 대체하지 않으며, 봉투 신원이 없으면 no_session_id 진단만 남긴다(task 153 D-1·D-4). 플랫폼 고유 변수명은 갖지 않는다(C-15). 실행 루트는 봉투 cwd를 그대로 쓰지 않고 ownership_core.resolve_project_root(① 명시 오버라이드 OPAL_PROJECT_ROOT → ② 봉투 cwd부터 조상으로 올라가며 .opal/MEMORY.json 또는 .opal/AGENT.md를 파일로 가진 첫 디렉토리 → ③ None)가 해석하며, 미해석이면 파일 I/O 이전에 종료한다(D-30b·D-25). 해석된 루트는 handle() 내부의 루트 파생 호출에도 그대로 전파한다(D-27). 전 경로 fail-safe exit 0.",
   "exports": ["SESSION_STATUS_CLOSED", "handle", "main"],
   "depends": ["ownership_tool.ownership_core", "ownership_tool.lease", "ownership_tool.heartbeat_hook"]
 }
@@ -46,7 +46,6 @@ def handle(payload, project_root=None, env=None, now=None):
     released_tasks · registry_closed · diagnostics.
     """
     payload = payload if isinstance(payload, dict) else {}
-    env = os.environ if env is None else env
     result = {
         "exit_code": 0,
         "session_id": None,
@@ -56,7 +55,7 @@ def handle(payload, project_root=None, env=None, now=None):
         "diagnostics": [],
     }
 
-    session_id = ownership_core.resolve_session_id(env, payload)
+    session_id = ownership_core.hook_session_id(payload)
     result["session_id"] = session_id
     if not session_id:
         result["diagnostics"].append("no_session_id")

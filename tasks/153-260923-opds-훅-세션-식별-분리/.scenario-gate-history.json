@@ -1,0 +1,32 @@
+[
+  {
+    "iteration": 1,
+    "missing": {
+      "requirements": [
+        "C-5"
+      ],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": null,
+    "gaps": [
+      "C-5 미연결"
+    ],
+    "verdict": "rewrite"
+  },
+  {
+    "iteration": 2,
+    "missing": {
+      "requirements": [],
+      "features": [],
+      "hypotheses": []
+    },
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "gaps": [],
+    "verdict": "pass"
+  }
+]

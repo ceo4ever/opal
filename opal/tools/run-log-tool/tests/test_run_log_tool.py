@@ -3252,8 +3252,8 @@ class TestT147D4StopEnumMachineCrossCheck(unittest.TestCase):
             f"코어만: {sorted(set(core._STOP_DIAGNOSTICS) - set(ssot.DIAGNOSTICS))}, "
             f"SSOT만: {sorted(set(ssot.DIAGNOSTICS) - set(core._STOP_DIAGNOSTICS))}")
         self.assertEqual(
-            len(core._STOP_DIAGNOSTICS), 11,
-            f"T147 D-4 diagnostics가 11종이 아님 — {core._STOP_DIAGNOSTICS}")
+            len(core._STOP_DIAGNOSTICS), 12,
+            f"T147 D-4 diagnostics가 12종이 아님(task 153 no_session_id 포함) — {core._STOP_DIAGNOSTICS}")
 
     def test_core_source_does_not_import_ownership_tool(self):
         """§3.1 — 물리 분리의 다른 반쪽. 사본을 두는 이유가 import 회피이므로
