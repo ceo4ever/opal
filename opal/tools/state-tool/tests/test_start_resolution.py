@@ -71,6 +71,12 @@ class StartResolutionCliContractTest(unittest.TestCase):
 
     def _init_from_resolver(self, task: Path, resolved: dict, extra_init_args: list[str] | None = None) -> dict:
         init_args = list(resolved.get("init_args") or [])
+        # 157 DEC-1: opd/opds init_args에는 resolver가 판정한 --rows-from <pipeline>이 실린다.
+        # 이 헬퍼는 행 구성을 고정 ROWS(--rows-spec)로 주입하므로 그 쌍만 걷어낸다
+        # (--rows-spec/--rows-from 배타 계약 rows_input_conflict는 그대로 유지).
+        if "--rows-from" in init_args:
+            idx = init_args.index("--rows-from")
+            del init_args[idx:idx + 2]
         # worktree 판정 태스크는 worktree-tool create가 발급한 worktree_root를 --worktree로 덧붙인다
         # (DEC-8 절차 — 경로 없는 --workspace worktree는 S-5가 worktree_path_required로 고정한다).
         if resolved.get("workspace") == "worktree":

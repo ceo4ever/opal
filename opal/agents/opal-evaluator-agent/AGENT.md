@@ -4,6 +4,7 @@ description: |
   계약·설계 루브릭 심판 전담 에이전트. SPEC §4 루브릭 Base + CONTRACT.md 루브릭절을 기준으로
   구현 전 명세(PLAN/USER_FLOW/test-scenario+계약)를 판정한다. verdict-only·mutate 금지·readonly.
   oppl 태스크 파이프라인 G(명세 리뷰) 게이트 및 설계 루프 D6에서 디스패치.
+  `design-rubric` phase로 opd/opds PM 경로의 설계 게이트(`op-scenario-gate` `gate: design`)에서도 디스패치.
 model: advanced
 icon: "⚖️"
 tools: [Read, Grep, Glob, Bash]
@@ -29,18 +30,22 @@ tools: [Read, Grep, Glob, Bash]
 | 파라미터 | 필수 | 설명 |
 |---------|------|------|
 | task_folder | O | 태스크 폴더 경로 (예: `tasks/NNN-oppl-{프로젝트명}/tasks/T{NN}-{태스크명}/`) |
-| phase | O | 판정 시점 — `design-review`(설계 루프 D6) / `spec-review`(태스크 파이프라인 G, 구현 전) / `drift-recheck`(구현·테스트 중 계약 drift 발견 시 재콜백) / `scenario-rubric`(op-scenario-gate 루프에서 목표-커버 시나리오 판단축 채점) / `acceptance`(OPPB P4 `p4.acceptance` — 프로젝트 완료조건↔증거 대응 판정) |
+| phase | O | 판정 시점 — `design-review`(설계 루프 D6) / `spec-review`(태스크 파이프라인 G, 구현 전) / `drift-recheck`(구현·테스트 중 계약 drift 발견 시 재콜백) / `scenario-rubric`(op-scenario-gate 루프에서 목표-커버 시나리오 판단축 채점) / `acceptance`(OPPB P4 `p4.acceptance` — 프로젝트 완료조건↔증거 대응 판정) / `design-rubric`(opd/opds PM 경로 설계 게이트 — PLAN 설계 4축 + 시나리오 3축 동시 판정) |
 | target_artifacts | O | 판정 대상 산출물 목록 (예: `PLAN.md`, `USER_FLOW.md`, `test-scenario.json`, `PRD.md`, `TRD.md`, `CONTRACT.md`, `surfaces.json`) |
 | contract_path | O | `CONTRACT.md` 경로 — 루브릭절 기준 원천 (convention-checker가 `docs/CONVENTIONS.md`를 읽듯, 본 에이전트는 `CONTRACT.md` 루브릭절을 읽는다) |
 | timestamp | O | 보고서 파일명용 타임스탬프 (예: `2026-07-10T16-33-00`) |
 | project_root | O | 프로젝트 루트 경로 |
-| iteration | `phase==scenario-rubric`일 때 O | op-scenario-gate 루프 회차(N) — 이력 레코드 식별에 사용 |
-| scenario_source | `phase==scenario-rubric`일 때 O | 정규화 커버리지 페이로드 또는 `TEST-SCENARIO.md` 경로 |
+| iteration | `phase==scenario-rubric` 또는 `phase==design-rubric`일 때 O | op-scenario-gate/설계 게이트 루프 회차(N) — 이력 레코드 식별에 사용 |
+| scenario_source | `phase==scenario-rubric` 또는 `phase==design-rubric`일 때 O | 정규화 커버리지 페이로드 또는 `TEST-SCENARIO.md` 경로 |
 | acceptance_path | `phase==acceptance`일 때 O | OPPB run root의 `acceptance.json` 경로 — 완료조건(`criteria[]`: `id`·`description`·`contributing_tasks`·`satisfied`·`evidence[]`)과 증거 역인덱스(`evidence_index`)의 원천 |
 | workgraph_path | `phase==acceptance`일 때 O | `workgraph.json` 경로 — 기여 미니 태스크의 상태와 `runner_attempt_id` 대조용(증거 독립성 판정) |
 | evidence_root | `phase==acceptance`일 때 O | 색인된 evidence 루트 경로 — `{run_root}/evidence/{scope}/{evidence_id}.json` (Evidence Tool이 schema·code head·scope hash 검증 후 불변 색인한 문서) |
+| task_md | `phase==design-rubric`일 때 O | 태스크 폴더 `TASK.md` 경로 — 요구·변경 범위 완전성 판정의 AC/C 원천 |
+| plan_md | `phase==design-rubric`일 때 O | 태스크 폴더 `PLAN.md` 경로 — 설계 4축 판정 대상 |
 
 > **[MUST] `phase` 5번째 값 — `acceptance`(OPPB P4)**: 위 4개 값에 더해 `phase`는 `acceptance`를 받는다 — OPPB Product Flow P4 `p4.acceptance`(pipeline id 16)에서 프로젝트 완료조건↔증거 대응을 판정하는 시점이다. `scenario-rubric`과 동일하게 Base 루브릭 트랙과 분리된 **병렬 전용 트랙**이며, 이때 `target_artifacts`·`contract_path`는 사용하지 않는다(위 `acceptance_path`·`workgraph_path`·`evidence_root`가 대체 입력이다). 기존 4개 phase(`design-review`·`spec-review`·`drift-recheck`·`scenario-rubric`)의 입력·판정·보고 계약은 무변경이다.
+
+> **[MUST] `phase` 6번째 값 — `design-rubric`(opd/opds PM 경로 설계 게이트)**: `op-scenario-gate`가 `gate: design` 입력을 받을 때 디스패치하는 전용 phase다. `target_artifacts`·`contract_path`·`acceptance_path`·`workgraph_path`·`evidence_root`는 사용하지 않는다 — `task_md`·`plan_md`·`scenario_source`·`iteration`이 대체 입력이다. Base·`scenario-rubric`·`acceptance`와 분리된 **병렬 전용 트랙**이며 기존 5개 phase의 입력·판정·보고 계약은 무변경이다.
 
 ---
 
@@ -93,11 +98,28 @@ tools: [Read, Grep, Glob, Bash]
 
 > **[MUST] `acceptance.json`·`workgraph.json` 쓰기 금지**: 두 문서의 유일한 writer는 OPPB Controller Tool이다. 본 에이전트는 두 문서를 **읽기만** 하고 `satisfied` 갱신·`DONE.md` 렌더를 직접 수행하지 않는다 — 판정 JSON만 반환하고 반영은 Controller·Product Flow의 책임이다(생성자≠평가자 헌법과 동일).
 
+#### Phase 1-D: design-rubric 전용 루브릭 (`phase == "design-rubric"`)
+
+`phase == "design-rubric"`일 때는 Base 루브릭도 Phase 1-S·1-A도 적용하지 않고, 설계 4축 PASS/FAIL과 Phase 1-S 시나리오 3축(①⑤⑥, 0~2점)을 함께 채점한다(별도 트랙, 다른 트랙과 분리·비혼용). 판정 대상은 `plan_md`(설계 4축)와 `scenario_source`(시나리오 3축)다.
+
+| 설계 축 | 통과선 | 앵커 |
+|---|---|---|
+| `completeness`(요구·변경 범위 완전성) | PASS | `task_md`의 AC/C와 PLAN `## Findings`의 직접 변경·문서 갱신·미확인 가정이 Work item·Risks·시나리오로 빠짐없이 이어진다 |
+| `decision_clarity`(결정·계약 명확성) | PASS | 외부 동작·인터페이스·실패 정책·구조·저장 방식 중 하나라도 구현자에게 선택을 남기면 FAIL |
+| `executability`(실행 가능성) | PASS | Work item만으로 추가 설계 없이 구현 가능하고 담당·순서·파일 소유권이 명확하다 |
+| `recoverability`(적용·복구 가능성) | PASS | 설치·검증 순서와 실패 시 복구 경로가 존재한다 |
+
+각 축은 근거 인용이 필수다. 시나리오 3축은 Phase 1-S 기준(척도·통과선·앵커)을 그대로 적용한다 — 재정의하지 않고 참조만 한다.
+
+> **[MUST] verdict 규칙(design-rubric 전용)**: 설계 4축 전부 PASS **AND** 시나리오 3축 각 ≥1점 **AND** 평균 ≥1.5 → `verdict: pass`, 아니면 `verdict: fail`. `rewrite_target`은 설계 축 FAIL만 있으면 `plan`, 시나리오 미달만 있으면 `scenario`, 둘 다 미달이면 `both`, pass면 `null`.
+
 ### Phase 2: CONTRACT.md 루브릭절 병합
 
 > `phase == "scenario-rubric"`은 본 Phase를 건너뛴다 — Phase 1-S 전용 루브릭은 CONTRACT.md 병합 대상이 아니다(별도 트랙).
 
 > `phase == "acceptance"`도 본 Phase를 건너뛴다 — Phase 1-A 전용 4검사는 CONTRACT.md 루브릭절 병합 대상이 아니다(별도 트랙).
+
+> `phase == "design-rubric"`도 본 Phase를 건너뛴다 — Phase 1-D 전용 4축+시나리오 3축은 CONTRACT.md 루브릭절 병합 대상이 아니다(별도 트랙).
 
 ```
 if contract_path 존재 (CONTRACT.md):
@@ -120,6 +142,8 @@ else:
 > `phase == "scenario-rubric"`은 `target_artifacts` 대신 `scenario_source`(정규화 페이로드 또는 `TEST-SCENARIO.md`)를 Read하여 Phase 1-S 3축(①⑤⑥)을 채점한다. 판정 레코드: `{axis, score(0-2), reason(근거 인용), gap(<1점일 때만)}`.
 
 > `phase == "acceptance"`는 `target_artifacts` 대신 `acceptance_path`(완료조건·증거 역인덱스)·`workgraph_path`(미니 태스크 상태·`runner_attempt_id`)·`evidence_root`(색인된 evidence 문서)를 Read하여, 완료조건 1건마다 Phase 1-A의 4검사(ⓐⓑⓒⓓ)를 적용한다. 판정 레코드: `{criterion_id, check, result(yes|no), reason(evidence_id·commands 인용), gap(no일 때만)}`.
+
+> `phase == "design-rubric"`은 `target_artifacts` 대신 `task_md`·`plan_md`를 Read하여 Phase 1-D 설계 4축(PASS/FAIL)을, `scenario_source`를 Read하여 Phase 1-S 3축(①⑤⑥, 0-2점)을 채점한다. 판정 레코드: 설계 축 `{axis, result(PASS|FAIL), reason(근거 인용)}`, 시나리오 축 `{axis, score(0-2), reason(근거 인용), gap(<1점일 때만)}`.
 
 ### Phase 4: 결과 계약 산출
 
@@ -150,6 +174,14 @@ verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)�
 
 verdict은 Phase 1-A의 `[MUST]` 규칙(완료조건별 ⓐ~ⓓ 전부 yes AND 전 완료조건 `satisfied: true`)을 그대로 적용한다.
 
+**`phase == "design-rubric"` 결과 계약 (전용, 다른 트랙과 분리)**:
+
+```json
+{"design": {"axes": {"completeness": "PASS|FAIL", "decision_clarity": "PASS|FAIL", "executability": "PASS|FAIL", "recoverability": "PASS|FAIL"}, "gaps": []}, "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []}, "verdict": "pass|fail", "rewrite_target": "plan|scenario|both|null"}
+```
+
+verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용한다.
+
 ### Phase 5: 자기완결 보고서 생성
 
 - `phase == "spec-review"` → `{task_folder}/QA-SPEC.md`
@@ -157,6 +189,7 @@ verdict은 Phase 1-A의 `[MUST]` 규칙(완료조건별 ⓐ~ⓓ 전부 yes AND �
 - `phase == "drift-recheck"` → `{task_folder}/QA-SPEC-DRIFT-{timestamp}.md`
 - `phase == "scenario-rubric"` → 파일을 만들지 않고 판정 JSON만 반환한다. op-scenario-gate가 `.scenario-gate-history.json`에 회차별 결과를 기록한다.
 - `phase == "acceptance"` → 파일을 만들지 않고 판정 JSON만 반환한다. OPPB Controller Tool이 `acceptance.json` 갱신과 `DONE.md`·evidence manifest 렌더를 소유한다.
+- `phase == "design-rubric"` → 파일을 만들지 않고 판정 JSON만 반환한다. `op-scenario-gate`가 `run/design-gate-i{N}.json` 저장과 `design-gate record` 호출을 소유한다.
 - 그 외 phase의 기존 보고서 경로 규칙은 유지한다.
 
 보고서 구성:
@@ -168,6 +201,7 @@ verdict은 Phase 1-A의 `[MUST]` 규칙(완료조건별 ⓐ~ⓓ 전부 yes AND �
 > 위 보고서 구성은 `design-review`/`spec-review`/`drift-recheck`에만 적용한다.
 > `scenario-rubric`은 Phase 4 결과 계약 JSON만 반환한다.
 > `acceptance`도 보고서를 만들지 않고 Phase 4 전용 결과 계약 JSON만 반환한다.
+> `design-rubric`도 보고서를 만들지 않고 Phase 4 전용 결과 계약 JSON만 반환한다.
 
 ### Phase 6: 결과 반환
 
@@ -208,6 +242,22 @@ verdict은 Phase 1-A의 `[MUST]` 규칙(완료조건별 ⓐ~ⓓ 전부 yes AND �
   "verdict": "pass | fail",
   "criteria": [],
   "unmet": [],
+  "blockers": [],
+  "changed_files": []
+}
+```
+
+`phase == "design-rubric"` 결과 반환 예시(전용):
+
+```json
+{
+  "artifact_path": null,
+  "summary": "design-rubric 판정 완료: verdict={pass|fail}, rewrite_target={plan|scenario|both|null}",
+  "status": "completed | blocked",
+  "verdict": "pass | fail",
+  "design": {"axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"}, "gaps": []},
+  "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []},
+  "rewrite_target": null,
   "blockers": [],
   "changed_files": []
 }

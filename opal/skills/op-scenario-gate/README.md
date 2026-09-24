@@ -19,6 +19,7 @@ Producer(PM이 작성한 시나리오 산출물)와 evaluator(`opal-evaluator-ag
 - `producer_artifact`: 검증할 시나리오 산출물 (task_folder 하위 경로여야 함)
 - `pilot`: `opd`, `opds`, `opsdd` (`oppb`는 §5 확장 경로)
 - `iteration`: 최초 1부터 시작하는 반복 회차
+- `gate`(선택): `design`을 주면 opd/opds PM 경로 전용 설계 게이트(§6)로 동작 — PLAN 설계 4축 + 시나리오 3축을 `design-rubric` phase로 한 번에 판정하고 이력은 `state.json`의 `design_gate.history`에 기록
 
 ## 출력
 

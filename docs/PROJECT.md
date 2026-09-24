@@ -76,6 +76,8 @@
 
 > **actor 축**: 모드 축과 직교하는 별도 실행 주체(actor) 축이다 — 지원 Pilot 폐쇄 목록은 `opal-pilot-dev`(alias `opd`·`opds`) 하나뿐이며, 신규 태스크 기본값은 PM 조율(`actor=coordinator`, `--pm`과 같음)이다. PM이 TASK·분석·PLAN·TEST-SCENARIO와 분배·파일 소유권·검토·재작업·마감을 맡고, 구현·자가 점검·TEST FAIL 수정은 전문 워커가 맡는다. `--no-pm`은 분석·PLAN까지 워커가 수행하는 `actor=worker`다. legacy `actor=pm`(PM 직접 수행) 태스크는 재개만 지원한다. 정의·지원 범위·계약 원문 SSOT는 `opal/core/references/harness/actor.md`.
 >
+> **PM 설계 경로 (Task 157)**: `coordinator` 신규 태스크(opd·opds 공통, `pipeline-pm.json` 행)는 EXECUTE 진입 전 TASK 작성·TASK 확인·PLAN 작성(`## Findings` 포함)·TEST-SCENARIO 작성·설계 게이트·설계 확인 6행을 거친다. 설계 게이트는 `stage.design` 이벤트에서 결정론 검사와 독립 `opal-evaluator-agent`(`design-rubric` phase) 1회 판정을 함께 요구하며 `plan.design_gate` 행이 EXECUTE 진입을 구조적으로 차단한다. 저장 행으로 재개하는 기존 `coordinator` 태스크는 이 경로가 아니라 기존 방식을 그대로 쓴다. 원문 SSOT는 `opal/core/references/harness/design-gate.md`.
+>
 > **신규 태스크 기본 실행 (Task 156)**: `opd`·`opds`·`oppd`·`oppl`·`oppb` 신규 태스크는 플래그 없이 agentic·worktree로 시작한다. 그 외 Pilot은 semi-agentic·허브다. 세 축(mode·workspace·actor)은 `state-tool resolve-start`가 원문 플래그로 판정하고, 재개는 저장값을 상속한다. worktree 생성 실패 시 허브로 폴백하지 않는다. 원문은 `harness/modes.md`·`harness/worktree.md`·`harness/actor.md`.
 
 > **Pilot 선택 기준**: 목표·계약·백로그가 실행 증거에 따라 반복 변경되는 **수렴형 프로젝트는 `oppl`**, 한 번의 설계 승인으로 목표·계약·완료조건을 잠글 수 있는 **확정 실행 계약의 무인 소화는 `oppb`**다. 제품 명세(PRD·TRD) 작성부터 필요하면 `oppd`(또는 `opwt`로 명세를 만든 뒤 `oppb`로 실행), 단일 태스크 규모면 `opd`·`opds`다. 네 Pilot은 병존하며 대체·후계·deprecate 관계가 아니다. `oppb`에서 무인 실행이 보장되는 구간은 P3~P4뿐이며, P0~P2와 P5는 대화형 세션(Product Flow)이 몰고 간다 — P5 merge 게이트는 `--auto-pass`를 거부하고 소유자 발화를 요구한다.
@@ -231,7 +233,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `test-tool scenario-coverage-check` | - | 도구 확장 | R/F/H↔시나리오 매핑 누락 결정론 판정(②③④). exit 0(전커버)/16(coverage_unmet)/17(입력오류). pilot-중립 정규화 페이로드 소비 |
 | `opal-evaluator-agent scenario-rubric` | - | 서브에이전트 phase | 판단축 ①목표달성·⑤채택/잔존·⑥경계/부정 2점 척도 채점(각≥1 AND 평균≥1.5→pass). SCENARIO-GATE-{N}.md 산출. 기존 3 phase additive |
 
-> tool-gated: 게이트 PASS는 coverage-check exit 0 AND evaluator verdict pass 두 증거 필수. Producer(PM+캡틴)≠Evaluator(opal-evaluator-agent) 매반복 분리. 루프 상한 수치 SSOT는 `opal/core/references/harness/guards.md`, 게이트 절차 SSOT는 `opal/core/references/harness/scenario-gate.md`다. opd STEP 3.5의 pipeline.json `test_scenario.scenario_gate` 행이 EXECUTE 진입을 구조적으로 차단한다.
+> tool-gated: 게이트 PASS는 coverage-check exit 0 AND evaluator verdict pass 두 증거 필수. Producer(PM+캡틴)≠Evaluator(opal-evaluator-agent) 매반복 분리. 루프 상한 수치 SSOT는 `opal/core/references/harness/guards.md`, 게이트 절차 SSOT는 `opal/core/references/harness/scenario-gate.md`다. opd STEP 3.5의 pipeline.json `test_scenario.scenario_gate` 행이 EXECUTE 진입을 구조적으로 차단한다. PM 경로(`coordinator` 신규)는 이 게이트 대신 `plan.design_gate`(설계 게이트, `pipeline-pm.json`)가 EXECUTE 진입을 구조적으로 차단한다 — 원문 `opal/core/references/harness/design-gate.md`.
 >
 > **목표계열 선작성 트랙 (Task 095)**: 도출 입력을 Block A(TASK 유래 — 목표·R·채택/잔존 → 축 ①②⑤⑥)와 Block B(PLAN 유래 — F·H → 축 ③④)로 분리하고, Block A를 PLAN 워커 실행과 **병렬 선작성**할 수 있다. opt-in이며 목적은 효율이 아니라 **관점 편향 차단**(070 실패모드 방어)이다. 보강 없이는 게이트가 `coverage_unmet`으로 거부하고, 게이트는 보강 완료 후 1회만 호출한다. 접합: opds STEP 2 · opd STEP 3/3.5. SSOT: `opal/core/references/harness/red-first.md` §1.6 · 절차: `op-dev-test-scenario/references/test-scenario-guide.md` §Step 1.
 
@@ -260,10 +262,11 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `opal/core/references/harness/actor.md` | 실행 주체(actor) 축 SSOT | actor 값(`coordinator`/`worker`/legacy `pm`)·신규 기본값·재개 상속, 지원 Pilot 폐쇄 목록, PM 조율 계약, 독립 검증 경계·GC 호출 지점 | Framework | `pilot.start` 이벤트 |
 | `opal/core/references/harness/worktree.md` | 워크스페이스 축·실행 소유권 SSOT | `--wt`/`--no-wt` 축 정의·신규 기본 workspace·생성 실패 시 허브 폴백 금지·작업본 중첩 차단, task root와 allocator root 계약, **실행 소유권(lease) 계약**(획득·이관·해제·가드 적용 범위·저장 위치), canonical path 발급, cone 확장, multi-repo 캡슐 소유권 | Framework | `pilot.start` 이벤트. `--wt` 태스크 생성·기동·회수, lease 소유권 판단, 워크트리 세션 차단 진단 시 |
 | `opal/core/references/harness/modes.md` | 실행 모드 SSOT | Pilot별 신규 태스크 기본 mode, `resolve-start` 라우팅, interactive/semi-agentic/agentic의 단계 경계·자동 계속·사용자 대기 계약 | Framework | `pilot.start` 이벤트와 기존 태스크 재개, mode 전이 판단 시 |
+| `opal/core/references/harness/design-gate.md` | PM 경로 독립 설계 게이트 SSOT | PM 경로(`coordinator` 신규, `plan.design_gate` 행) 흐름·문서 묶음 해시·결정론 검사(`design-gate start` ⑦)·rewrite 대상·반복 상한과 reset·설계 결정 분류(`design-decision`)·실패 코드 | Framework | `stage.design` 이벤트, PM 경로 설계 게이트 판단 시 |
 | `opal/core/references/harness/state.md` | state-tool 전이 계약 | `transition_action`/`report_type`/`next_action`, CLOSE final, 사용자 확인 자동 승인 예외 | Framework | 상태 전이·재개·CLOSE tail·사용자 확인 행 처리 시 |
 | `opal/core/references/harness/task-process.md` | TASK 단계 전이 계약 | TASK 완료 보고가 구조화 전이 출력을 소비하고, 산문 승인 질문을 전이 판정 근거로 쓰지 않도록 하는 단계 경계 규칙 | Framework | TASK 작성·완료 직후 다음 행동 판정 시 |
 | `opal/core/hooks/claude-hooks.json` | Claude Code hook source | Stop hook은 `ownership-tool`의 stop hook 어댑터에 위임한다 — 세션 소유 태스크를 registry로 판정한 뒤 `transition_action=continue`이면 종료 차단·`next_action` 재개 안내를 반환하고, 무소유·타세션 소유·판정 불능은 통과시킨다 | Framework | 설치·아카이브 검증과 Claude 플랫폼 실행 지속성 점검 시 |
-| `opal/skills/opal-pilot-*/references/pipeline*.json` | Pilot pipeline fixture | 단계 행 key, gate, `transition_contract`, CLOSE tail(`close.done_md`~`close.final`)의 기계가독 SSOT | Framework | state-tool init, cross-Pilot conformance, 모드 경계·CLOSE 완료 판정 시 |
+| `opal/skills/opal-pilot-*/references/pipeline*.json` | Pilot pipeline fixture | 단계 행 key, gate, `transition_contract`, CLOSE tail(`close.done_md`~`close.final`)의 기계가독 SSOT. `opal-pilot-dev/references/pipeline-pm.json`은 PM 경로(`coordinator` 신규, opd·opds 공통) 전용 행 — `plan.design_gate` 게이트 행 포함 | Framework | state-tool init, cross-Pilot conformance, 모드 경계·CLOSE 완료 판정 시 |
 | `docs/run-log/PRD.md` | 태스크 실행 로그 제품 요구 | 목표·비목표·요구(R-1~R-21)·Phase 인도 범위·성공 판정 귀속 | Framework | 실행 로그 관련 작업의 범위·우선순위 판단 시 |
 | `docs/run-log/TRD.md` | 태스크 실행 로그 기술 결정 | 아키텍처 결정(D-1~D-9)·구성요소 책임 경계·데이터 흐름·동시성/시간/보안 모델·단계별 도입 순서 | Framework | run-log 구현·확산 태스크의 설계 판단 시 |
 | `docs/run-log/CONTRACT.md` | 태스크 실행 로그 인터페이스 계약 (SSOT) | 사건 스키마·허용 조합·오류 코드·CLI 시그니처·경계·기계검증절(MV)·루브릭절. 구현 전 명세 심판의 판정 기준 원천 | Framework | run-log 관련 구현·검증·명세 리뷰 전 |

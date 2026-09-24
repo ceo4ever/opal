@@ -1,0 +1,304 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0 -- /Users/iskang/.opal/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157
+plugins: asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 17 items
+
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_new_task_rows_from_init_args 
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_new_task_rows_from_init_args PASSED [  5%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_no_pm_uses_worker_pipeline 
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_no_pm_uses_worker_pipeline PASSED [ 11%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_opp_unchanged PASSED [ 17%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_pm_row_keys_order FAILED [ 23%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_resume_no_init_args FAILED [ 29%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s2_uncovered_requirement_blocks_start FAILED [ 35%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_finding_not_in_work_items FAILED [ 41%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_missing_section_removed FAILED [ 47%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_normal_plan_passes FAILED [ 52%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_regression_target_listed_as_change FAILED [ 58%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_unconfirmed_assumption_bad_reference FAILED [ 64%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s5_rewrite_flow FAILED [ 70%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s6_semi_agentic_reconfirm_flow FAILED [ 76%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s6_task_ac_change_requires_reconfirm FAILED [ 82%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s7_retry_limit_and_reset FAILED [ 88%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s8_design_decision FAILED [ 94%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s9_run_log_gate_events FAILED [100%]
+
+=================================== FAILURES ===================================
+_ DesignGateCliContractTest.test_s1_new_task_rows_from_init_args (skill='opd') _
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s1_new_task_rows_from_init_args>
+
+    def test_s1_new_task_rows_from_init_args(self):
+        for skill, expect_file in (("opd", "pipeline-pm.json"), ("opds", "pipeline-pm.json")):
+            with self.subTest(skill=skill):
+                task = self.root / f"s1-{skill}-pm"
+                resolved = self._assert_ok(
+                    self._run("resolve-start", str(task), "--skill", skill, "--new-task")
+                )
+                init_args = list(resolved.get("init_args") or [])
+>               self.assertIn("--rows-from", init_args, resolved)
+E               AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+
+opal/tools/state-tool/tests/test_design_gate.py:243: AssertionError
+_ DesignGateCliContractTest.test_s1_new_task_rows_from_init_args (skill='opds') _
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s1_new_task_rows_from_init_args>
+
+    def test_s1_new_task_rows_from_init_args(self):
+        for skill, expect_file in (("opd", "pipeline-pm.json"), ("opds", "pipeline-pm.json")):
+            with self.subTest(skill=skill):
+                task = self.root / f"s1-{skill}-pm"
+                resolved = self._assert_ok(
+                    self._run("resolve-start", str(task), "--skill", skill, "--new-task")
+                )
+                init_args = list(resolved.get("init_args") or [])
+>               self.assertIn("--rows-from", init_args, resolved)
+E               AssertionError: '--rows-from' not found in ['--skill', 'opds', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opds', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opds', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+
+opal/tools/state-tool/tests/test_design_gate.py:243: AssertionError
+__ DesignGateCliContractTest.test_s1_no_pm_uses_worker_pipeline (skill='opd') __
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s1_no_pm_uses_worker_pipeline>
+
+    def test_s1_no_pm_uses_worker_pipeline(self):
+        for skill, expect_file in (("opd", "pipeline.json"), ("opds", "pipeline-short.json")):
+            with self.subTest(skill=skill):
+                task = self.root / f"s1-{skill}-no-pm"
+                resolved = self._assert_ok(
+                    self._run("resolve-start", str(task), "--skill", skill, "--new-task", "--no-pm")
+                )
+                init_args = list(resolved.get("init_args") or [])
+>               self.assertIn("--rows-from", init_args, resolved)
+E               AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'worker'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'worker', 'actor_source': 'explicit', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'worker'], 'warnings': []}
+
+opal/tools/state-tool/tests/test_design_gate.py:257: AssertionError
+_ DesignGateCliContractTest.test_s1_no_pm_uses_worker_pipeline (skill='opds') __
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s1_no_pm_uses_worker_pipeline>
+
+    def test_s1_no_pm_uses_worker_pipeline(self):
+        for skill, expect_file in (("opd", "pipeline.json"), ("opds", "pipeline-short.json")):
+            with self.subTest(skill=skill):
+                task = self.root / f"s1-{skill}-no-pm"
+                resolved = self._assert_ok(
+                    self._run("resolve-start", str(task), "--skill", skill, "--new-task", "--no-pm")
+                )
+                init_args = list(resolved.get("init_args") or [])
+>               self.assertIn("--rows-from", init_args, resolved)
+E               AssertionError: '--rows-from' not found in ['--skill', 'opds', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'worker'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opds', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'worker', 'actor_source': 'explicit', 'persisted': False, 'init_args': ['--skill', 'opds', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'worker'], 'warnings': []}
+
+opal/tools/state-tool/tests/test_design_gate.py:257: AssertionError
+_____________ DesignGateCliContractTest.test_s1_pm_row_keys_order ______________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s1_pm_row_keys_order>
+
+    def test_s1_pm_row_keys_order(self):
+        task = self.root / "s1-rows"
+        resolved = self._assert_ok(
+            self._run("resolve-start", str(task), "--skill", "opd", "--new-task")
+        )
+        init_args = list(resolved.get("init_args") or [])
+        completed, _ = self._run("init", str(task), *init_args)
+>       self.assertEqual(completed.returncode, 0, completed.stderr)
+E       AssertionError: 1 != 0 :
+
+opal/tools/state-tool/tests/test_design_gate.py:287: AssertionError
+____________ DesignGateCliContractTest.test_s1_resume_no_init_args _____________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s1_resume_no_init_args>
+
+    def test_s1_resume_no_init_args(self):
+        task = self.root / "s1-resume"
+        resolved = self._assert_ok(
+            self._run("resolve-start", str(task), "--skill", "opd", "--new-task")
+        )
+        init_args = list(resolved.get("init_args") or [])
+        completed, _ = self._run("init", str(task), *init_args)
+>       self.assertEqual(completed.returncode, 0, completed.stderr)
+E       AssertionError: 1 != 0 :
+
+opal/tools/state-tool/tests/test_design_gate.py:276: AssertionError
+_____ DesignGateCliContractTest.test_s2_uncovered_requirement_blocks_start _____
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s2_uncovered_requirement_blocks_start>
+
+    def test_s2_uncovered_requirement_blocks_start(self):
+>       task = self._make_pm_task("s2", ac_refs="AC-1, AC-2")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+_________ DesignGateCliContractTest.test_s3_finding_not_in_work_items __________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s3_finding_not_in_work_items>
+
+    def test_s3_finding_not_in_work_items(self):
+>       task = self._make_pm_task("s3-3")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:353: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+__________ DesignGateCliContractTest.test_s3_missing_section_removed ___________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s3_missing_section_removed>
+
+    def test_s3_missing_section_removed(self):
+>       task = self._make_pm_task("s3-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:328: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+_____________ DesignGateCliContractTest.test_s3_normal_plan_passes _____________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s3_normal_plan_passes>
+
+    def test_s3_normal_plan_passes(self):
+>       task = self._make_pm_task("s3-ok")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:378: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+_____ DesignGateCliContractTest.test_s3_regression_target_listed_as_change _____
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s3_regression_target_listed_as_change>
+
+    def test_s3_regression_target_listed_as_change(self):
+>       task = self._make_pm_task("s3-2")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:340: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+____ DesignGateCliContractTest.test_s3_unconfirmed_assumption_bad_reference ____
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s3_unconfirmed_assumption_bad_reference>
+
+    def test_s3_unconfirmed_assumption_bad_reference(self):
+>       task = self._make_pm_task("s3-4")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:366: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+________________ DesignGateCliContractTest.test_s5_rewrite_flow ________________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s5_rewrite_flow>
+
+    def test_s5_rewrite_flow(self):
+>       task = self._make_pm_task("s5")
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:389: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+________ DesignGateCliContractTest.test_s6_semi_agentic_reconfirm_flow _________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s6_semi_agentic_reconfirm_flow>
+
+    def test_s6_semi_agentic_reconfirm_flow(self):
+>       task = self._make_pm_task("s6-semi")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:443: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+_____ DesignGateCliContractTest.test_s6_task_ac_change_requires_reconfirm ______
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s6_task_ac_change_requires_reconfirm>
+
+    def test_s6_task_ac_change_requires_reconfirm(self):
+>       task = self._make_pm_task("s6-task")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:470: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+___________ DesignGateCliContractTest.test_s7_retry_limit_and_reset ____________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s7_retry_limit_and_reset>
+
+    def test_s7_retry_limit_and_reset(self):
+>       task = self._make_pm_task("s7")
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:491: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+______________ DesignGateCliContractTest.test_s8_design_decision _______________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s8_design_decision>
+
+    def test_s8_design_decision(self):
+>       task = self._make_pm_task("s8")
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/state-tool/tests/test_design_gate.py:556: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/state-tool/tests/test_design_gate.py:206: in _make_pm_task
+    self.assertIn("--rows-from", init_args, resolved)
+E   AssertionError: '--rows-from' not found in ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'] : {'ok': True, 'command': 'resolve-start', 'skill': 'opd', 'new_task': True, 'effective_mode': 'agentic', 'mode_source': 'default', 'workspace': 'worktree', 'workspace_source': 'default', 'actor': 'coordinator', 'actor_source': 'default', 'persisted': False, 'init_args': ['--skill', 'opd', '--mode', 'agentic', '--workspace', 'worktree', '--actor', 'coordinator'], 'warnings': []}
+____________ DesignGateCliContractTest.test_s9_run_log_gate_events _____________
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_s9_run_log_gate_events>
+
+    def test_s9_run_log_gate_events(self):
+        task = self.root / "s9"
+        self._write_pm_docs(task)
+        resolved = self._assert_ok(
+            self._run("resolve-start", str(task), "--skill", "opd", "--new-task")
+        )
+        init_args = list(resolved.get("init_args") or [])
+        completed, _ = self._run(
+            "init", str(task), *init_args, "--run-log-mode", "shadow"
+        )
+>       self.assertEqual(completed.returncode, 0, completed.stderr)
+E       AssertionError: 1 != 0 :
+
+opal/tools/state-tool/tests/test_design_gate.py:614: AssertionError
+=========================== short test summary info ============================
+SUBFAILED(skill='opd') opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_new_task_rows_from_init_args
+SUBFAILED(skill='opds') opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_new_task_rows_from_init_args
+SUBFAILED(skill='opd') opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_no_pm_uses_worker_pipeline
+SUBFAILED(skill='opds') opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_no_pm_uses_worker_pipeline
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_pm_row_keys_order
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_resume_no_init_args
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s2_uncovered_requirement_blocks_start
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_finding_not_in_work_items
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_missing_section_removed
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_normal_plan_passes
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_regression_target_listed_as_change
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_unconfirmed_assumption_bad_reference
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s5_rewrite_flow
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s6_semi_agentic_reconfirm_flow
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s6_task_ac_change_requires_reconfirm
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s7_retry_limit_and_reset
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s8_design_decision
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s9_run_log_gate_events
+========================= 18 failed, 3 passed in 2.31s =========================

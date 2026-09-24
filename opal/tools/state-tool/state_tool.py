@@ -4,7 +4,7 @@
   "module": "state_tool",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/resolve-mode/resolve-start/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify/log-event/gate-request/gate-resolve, gate-pass(deprecated). resolve-mode는 명시 플래그 > 유효 저장 mode > 신규 기본값(--skill 지정 시 NEW_TASK_DEFAULTS, 미지정 시 semi-agentic)으로 effective mode를 판정하고 기존 태스크의 명시 override는 mode만 원자 갱신한다. resolve-start는 Pilot 원문 플래그로 mode·workspace·actor 세 축을 판정한다 — 신규는 NEW_TASK_DEFAULTS(opd·opds·oppd·oppl·oppb=agentic·worktree, opd·opds actor=coordinator, 그 외 semi-agentic·hub)로 읽기 전용 판정과 init_args를 돌려주고, 재개는 저장값을 상속하며 다른 workspace·actor 플래그는 resume_axis_locked, 플래그 충돌은 mode_flag_conflict·workspace_flag_conflict·actor_flag_conflict, oppb 허브 요청은 workspace_required_for_skill로 거부한다. run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). 이 run_id는 run_log.active_run_id(run-log 계열, `run_<UUIDv4>`)와 서로 다른 축이다. event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 7개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사), --run-log-completeness-check(135 W-4 run-log 완전성 진단, 비차단). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며(118 D-4), 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. 신규 pipeline은 명시적 close.final 행에서만 current_status를 completed_unmerged로 확정하고, close.final이 없는 legacy pipeline만 마지막 CLOSE 행을 final로 인정하며 MEMORY.json을 건드리지 않는다(118 D-4b, 136 W-2). 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 1.0/1.1(run_log 블록 부재) 태스크에서는 종전과 동일하게 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). 1.2 태스크(run_log 블록 보유)에서는 mark가 `_reconcile_worker_duration_minutes()`로 `_import_run_log_core()` 경로의 `run_log_core.reconcile_duration()`(W-6)을 호출해 해당 run의 terminal 사건(worker.completed/failed/blocked)에서 파생 분값을 읽는다(W-7, CONTRACT §2.5 시간 절, D-P8) — `--worker-run-id` 표면 인자가 없어 `_resolve_sole_terminal_worker_run_id()`가 `이 run의 terminal에 실린 worker_run_id가 정확히 1개`인 경우에만 그 값을 대상으로 삼고, 0건·2건 이상이면 조회를 건너뛰어 파생값 없음으로 처리한다. 파생값이 있으면 `--worker-duration-minutes` 미지정 시 자동 기록(경고 없음), 명시값이 파생값과 같으면 수용하되 `worker_duration_minutes_deprecated` 경고를 얹고, 다르면 상태 변경 이전 시점에 `worker_duration_conflict`(RUN_LOG_STATE_ERROR_CODES 등재, ERROR_CODES와 물리 분리)로 즉시 거부해 state.json을 손대지 않는다. 파생값을 아직 얻을 수 없으면(terminal 미기록 등) 명시값을 그대로 통과시켜 기존 수동 경로와 응답 키 집합이 바이트 동일하다(H-6, S-9). CONTRACT §2.5의 채널 등급·override 조항은 이번 범위에 포함하지 않는다(D-P9). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --run-log-mode {shadow,active}는 CONTRACT §2.5 state-tool.init.run-log-mode를 구현한다 — shadow는 항상 지원하고, active는 `_resolve_active_channel()`이 호출자가 명시적으로 넘긴 `--profiles` 파일에서 `--channel-id` 항목을 찾은 경우에만 그 channel의 completion_profile/adapter_id/adapter_sha256/receipt_sha256을 completion_profile_receipt로 고정해 수용하며(135 W-4, H-4 — profiles.json 자체 생성·channel 자동 승격은 하지 않는다), 그 외(미지정 `--profiles`·미승인 channel)는 여전히 profile_not_found로 거부한다. _cmd_init_run_log()가 outbox 2단 원자 쓰기(_atomic_write_state_json, pending→기록 코어 init/append lock_held=True 호출→active)로 state.json schema_version 1.2 + run_log 블록과 첫 run.started 사건을 만든다. `_check_active_completion_evidence()`(135 W-4, CONTRACT §1.5)는 cmd_mark가 완료(--done, --step 최종 단계 포함) 전이를 시도할 때 row 주소 해석보다 먼저 실행되어, active mode + completion_profile≠cooperative인 run에 trusted terminal 사건 정확히 1건(그리고 observed_trajectory면 PM이 아닌 actor의 trusted activity 1건 이상)이 없으면 `completion_evidence_missing`으로 거부하고 state.json을 손대지 않는다. `verify --run-log-completeness-check`(135 W-4, CONTRACT §1.4/§1.5, 7번째 상호 배타 라우트)는 `_run_log_completeness_check()`로 state.json rows와 조각(committed)·보관함(pending) 사건을 대조해 `missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/`unobserved_worker_boundary` 4종 누락 목록과, committed+pending 전 구간에서 조회하는 `last_observed_decision`/`last_observed_state_change`/`last_observed_boundary` 3필드(`{event_id, ts, ref}` 또는 None)를 항상 반환한다 — 구조 검증(run-log-tool validate-run)과 별개 축이며 read-only·비차단(exit 0)이다. `missing_pm_activity`는 CONTRACT §2.5 트리거 조문의 상태 앵커 2종(① `status=done` ∧ `owner=auto` ∧ `key` 보유 행에 `task_step` 일치 PM activity(decision)가 없으면 행마다 1건을 row_id 오름차순으로, ② `run_log.status=overridden`인데 run 전역에 PM activity(decision)가 0건이면 배열 마지막에 1건)을 committed+pending 합집합 사건과 대조해 채우며, 항목은 `row_id`·`row_key`·`stage`·`expected`·`anchor` 5키 고정이다(137 W-5). --run-log-mode 미지정 경로는 기존 save_state_json()을 그대로 타 바이트 동일성을 유지한다(D-L, C-3). _atomic_write_state_json()은 tmp→fsync→os.replace 원자 쓰기이며, run_log.pending_events가 있으면 쓰기 직전 기록 코어의 redact() 초크포인트를 통과시킨다(D-9, GC-001). _import_run_log_core()는 importlib.util.spec_from_file_location으로 기록 코어를 sys.path 오염 없이 단일 모듈 적재한다(GC-007) — 형제 배치 우선, 없으면 배포본(_run_log_core_dir(), D-C). RUN_LOG_STATE_ERROR_CODES는 run-log 계열 상태 도구 오류 코드(profile_not_found/run_log_missing/run_log_pending/run_log_outbox_full/run_log_write_failed/event_too_large) 전용 별도 테이블이며 ERROR_CODES 딕셔너리 리터럴과 물리 분리된다(D-A, F-6) — err()의 _error_template()가 ERROR_CODES→RUN_LOG_STATE_ERROR_CODES 순으로 조회만 하고, 두 테이블 모두에 없는 코드는 .format() 호출 없이 code 문자열 그대로를 메시지로 쓴다(GC-008). run_log_commit()이 advance/mark/block/add-row/status의 상태 변경과 state.changed 적재(단일 event 또는 event list, build_state_changed_event, 조합 A7·event_id 사전 확정)를 한 번의 원자 쓰기로 커밋한 뒤 _run_log_drain()의 멱등 append와 보관함 비우기로 잇는다(CONTRACT §1.4, TRD D-2, D-3) — advance/mark는 auto_approve_prior_user_confirmations()가 자동 승인한 각 사용자 확인 행과 대상 행 전이를 각각 독립 state.changed로 만들어 event list로 넘기며, 리스트 admission은 순서대로 전부 통과해야만 보관함에 반영되는 전부-아니면-전무다(H-1) — append가 실패해도 상태 전이는 이미 커밋돼 교착되지 않고 응답 warnings에 run_log_pending만 실린다. run_log_outbox_admit()은 항목당 4 KiB·전체 128건(최악 512 KiB) 상한을 집행하며 일반 한도는 128 − 보관함 override 사건 수이고, 위반 시 각각 event_too_large·run_log_outbox_full로 전이를 시작하지 않는다. _run_log_drain()은 완전한 사건만 순서대로 재전송하고 첫 실패에서 멈추며 이미 조각에 있는 event_id는 건너뛰고, 보관함에 run.started가 있을 때만 실행 디렉터리·첫 조각을 다시 만든다(복구 가능 초기화). run_log_diagnose()는 validate에 합류해 보관함 잔량을 run_log_pending(recoverable_init 표시)으로, 활성 계약인데 조각·run.started가 없으면 run_log_missing으로 보고하며 스키마를 강등하거나 블록을 지우지 않는다(§1.4, AC-3). run_log 블록이 없는 1.0/1.1 태스크는 run_log_commit()이 곧바로 save_state_json()으로 우회해 산출물·응답 키 집합이 종전과 동일하다(C-3). state.schema.json은 schema_version 1.2와 run_log 블록(필수 7필드·pending_events maxItems 128)을 등재한다. init --actor {coordinator,worker}는 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화하고, legacy --actor pm은 actor_pm_retired로 거부한다. init --workspace worktree는 --worktree 없이 worktree_path_required, --workspace hub는 oppb에서 workspace_required_for_skill로 기록 전에 거부한다. cmd_advance/cmd_mark는 상태 전이 진입 경계(load_state_json 직후)에서 `_claim_task_lease_if_needed()`를 1회 호출해 공통 resolver로 세션 신원이 해석될 때 `_import_ownership_lease()`(ownership_tool.lease, 형제 배치 우선·sys.path 비오염 패키지 적재)의 claim(claim_source=state_transition — 138 D-21 능동 소유권, claimant_root=os.getcwd() — 150 W-5)으로 `<task>/run/.runtime/owner.json` lease를 원자 생성하거나 기존 session_start lease를 승격한다(138 W-9) — cmd_init은 claim하지 않고, 해석 가능한 세션 신원 부재·적재 실패·타 세션 live lease(foreign_owner)·이관 대기 태스크의 대상 외 루트 재-claim(handoff_pending)은 모두 stderr 경고 1줄만 남긴 채 전이를 그대로 통과시키며(fail-safe) 응답 JSON 키 집합·종료코드·state.json 산출물도 바꾸지 않는다(150 AC-10, C-6). claimant_root 전달로 허브의 재-claim은 이관을 되돌리지 못하고(150 H-2) 워크트리 루트 cwd의 전이는 이관을 소비해 claim에 성공한다(SessionStart 실패 시 자가 치유) — 집행자는 PreToolUse 쓰기 가드 하나이며 state-tool은 판정 지점을 늘리지 않는다. run-log 사건 4개 기록부의 actor.session_id는 `_current_session_id()`(ownership-tool 공통 resolver의 OPAL→Claude→Codex→payload 우선순위, 플랫폼 고유 변수명은 해당 어댑터가 소유 — C-15)로 채워지며 미설정 시 종전과 동일하게 None이다(run-log CONTRACT §58 선택 필드, 스키마 무변경). log-event/gate-request/gate-resolve(135 W-3, CONTRACT §2.4)는 run_log_commit()의 같은 outbox/admission/drain 경로를 재사용해 PM activity·gate.requested·gate.resolved 사건을 기록하며 (actor_not_allowed/schema_invalid/refs_invalid/gate_not_requested/gate_duplicate/task_path_not_absolute를 방출), run_log_core는 호출하지 않아 TRD D-5 단방향 의존을 유지한다. log-event의 --event는 activity와 pm.report 2종을 수용한다(TASK-147 W-5, D-2, §2.4) — stop.decision은 이 표면이 수용하지 않으며 Stop hook receipt의 drain 경로가 조립한다(D-6). _build_pm_report_data()는 _build_pm_activity_data()의 형제 앞단 중복 방어로, --data 원문 JSON이나 --report-type/--transition-action/--user-input-required 인자에서 data 폐쇄 3키를 구성하고 report_type 2종·transition_action 4종 enum과 user_input_required boolean 위반을 schema_invalid로 거부한다 — 두 enum 인자에 argparse choices를 걸지 않는 것은 argparse usage 오류(exit 2)가 기록 코어의 schema_invalid와 갈리면 §1.3이 요구하는 「두 지점의 판정 결과가 항상 일치한다」가 깨지기 때문이다. _PM_REPORT_DATA_KEYS·_PM_REPORT_TYPE_ENUM·_PM_TRANSITION_ACTION_ENUM은 기록 코어 동명 상수의 물리 분리 사본이며 상수를 import하지 않는다(§3.1 단방향 의존). _build_pm_report_event()는 _build_pm_activity_event()의 형제로 조합 A4 pm.report 사건을 조립하고, run_log_commit()은 커밋할 사건 목록에 pm.report가 있으면 admission 전건 통과 직후 같은 원자 쓰기 안에서 state.run_log.last_report 파생 포인터(폐쇄 5키 event_id/report_type/transition_action/user_input_required/at)를 갱신한다(D-7) — admission이 거부되면 err()가 먼저 종료시키므로 사건도 포인터도 남지 않는다(H-2, 사건이 SSOT·포인터는 파생). 포인터에는 summary·reason 같은 자유 서술을 복제하지 않아 §1.3의 원본 프롬프트·비밀값 비저장이 포인터에도 유지된다. state.schema.json의 run_log 블록에는 last_report가 선택 필드로 등재되며 필수 7필드는 불변이다(§1.4).",
+  "description": "OPAL 파이프라인 현황판 JSON SSOT 관리 CLI. 서브커맨드: init/show/resolve-mode/resolve-start/advance/mark/block/validate/add-row/status/run-start/finalize-attribution/spec-validate/event-verify/log-event/gate-request/gate-resolve/design-gate(start|record|reset)/design-decision, gate-pass(deprecated). resolve-mode는 명시 플래그 > 유효 저장 mode > 신규 기본값(--skill 지정 시 NEW_TASK_DEFAULTS, 미지정 시 semi-agentic)으로 effective mode를 판정하고 기존 태스크의 명시 override는 mode만 원자 갱신한다. resolve-start는 Pilot 원문 플래그로 mode·workspace·actor 세 축을 판정한다 — 신규는 NEW_TASK_DEFAULTS(opd·opds·oppd·oppl·oppb=agentic·worktree, opd·opds actor=coordinator, 그 외 semi-agentic·hub)로 읽기 전용 판정과 init_args를 돌려주고(opd·opds는 _pilot_dev_pipeline_path()가 판정한 --rows-from 절대경로 — coordinator→pipeline-pm.json, worker+opd→pipeline.json, worker+opds→pipeline-short.json, 부재 시 spec_file_not_found), 재개는 저장값을 상속하며 다른 workspace·actor 플래그는 resume_axis_locked, 플래그 충돌은 mode_flag_conflict·workspace_flag_conflict·actor_flag_conflict, oppb 허브 요청은 workspace_required_for_skill로 거부한다. run-start <task-path>는 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>` 형식의 새 run_id를 발급해 state.json.run_id에 기록하고 단일 라인 JSON으로 반환한다 — 현재 run은 항상 1개라 재호출 시 교체되며 이력을 누적하지 않고, run_id는 schema properties에만 있는 optional 필드라 init은 만들지 않으며 required 8필드는 불변이다(run_id 없는 기존 state.json도 계속 validate를 통과한다). 이 run_id는 run_log.active_run_id(run-log 계열, `run_<UUIDv4>`)와 서로 다른 축이다. event-verify는 단계 진입 전에 event-loader receipt의 이벤트·manifest·문서 hash 최신성을 검증하고 상태 파일은 변경하지 않는다. interactive/semi-agentic/agentic 3-way 모드를 지원하며 PLAN-equivalent 이전 단계(TASK/ANALYSIS/PLAN/TEST-SCENARIO/SPEC/REVIEW/DESIGN/WBS/WIREFRAME/DICT/MODEL/DDL·MIGRATION)는 semi-agentic 모드에서 사용자 검토를 강제한다. STATE.md는 state.json에서 파생되는 저널(의사결정 로그+블로커)이며 파이프라인 표·현재 상태·다음 액션 섹션은 없다(레거시 마커 포맷은 하위호환 인식만 유지). mark --step N/M은 N<M이면 in_progress를 유지하고 N==M에서만 done으로 닫는다. can_auto_approve_user_confirmation()은 CLOSE 축과 모드 축 2축 합성으로 사용자 확인 행 자동 승인 가부를 단일 판정하며, cmd_mark 사전검사와 cmd_validate 사후검사가 서로 다른 소비 범위(validate는 CLOSE 축 미평가)로 이를 참조한다. auto_approve_prior_user_confirmations()는 advance/mark가 대상 행 이전 구간의 미완 확인 행을 자동 승인하되 대상 행 자체가 CLOSE면 관여하지 않는다. 행 주소는 task-step 키 체계(--task-step/--task-step-id, --row는 deprecated)로 지정한다. check_gate_artifacts()는 task_steps[].gate.artifacts 존재를 검사하고(정적 경로·글롭 지원, 절대경로·'..' 이탈 토큰은 거부), 미충족 시 gate_artifact_missing으로 막되 --force+--note 조합에만 통과를 허용하며 그 경우 decision 로그에 gate_artifact_force를 강제 기록한다. verify 서브커맨드는 상호 배타적인 7개 검사 라우트를 갖는다 — --red-check(RED 증거 게이트), --fix-mode(+--changed-files/--test-globs, 테스트 불변성 게이트), --clarification-check(TASK 잠금 판정: sdlc-v2 5절 또는 legacy 명확화 4요소), --evidence-check(『명확화 결과』·『확정된 설계 방향』 인용을 근거 등급 4축으로 판정, 두 소스의 분모는 서로 분리 — confirmed_ratio는 명확화 결과 항목 수 기준 불변), --code-scan-citation-check(PLAN.md Work items 또는 legacy §4.2 파일 경로의 code-scan 인용 집행), --plan-contract-check(sdlc-v2 Work items 계약 검사), --run-log-completeness-check(135 W-4 run-log 완전성 진단, 비차단). task_root()는 task path 조상에서 .opal/MEMORY.json 앵커를 찾는 task root 목적 전용 탐색이며(118 D-4), 허브 쓰기 대상인 allocator root는 이 탐색으로 추론하지 않고 worktree registry 발급값을 명시 인자로만 받는다. 신규 pipeline은 명시적 close.final 행에서만 current_status를 completed_unmerged로 확정하고, close.final이 없는 legacy pipeline만 마지막 CLOSE 행을 final로 인정하며 MEMORY.json을 건드리지 않는다(118 D-4b, 136 W-2). 허브 .opal/MEMORY.json 이력 append는 finalize-attribution <task-path> --allocator-root <abs>가 전담한다 — link_memory_history()가 그 구현이고 동일 path 행이 있으면 건너뛰어 멱등이며, --allocator-root 미지정·상대경로는 추론 없이 exit 1로 거부된다. resolve_owner_placeholder()는 note 작성 경로(advance/mark/add-row/block/status/init)에서 '{owner_name}' 플레이스홀더를 identity.md owner_name으로 write-time 치환한다(부재 시 원문 유지, fail-safe). worker_duration_minutes는 1.0/1.1(run_log 블록 부재) 태스크에서는 종전과 동일하게 mark --worker-duration-minutes로 선택 기록되고, 워커 디스패치 행을 소요시간 없이 done 처리하면 --worker-duration-unknown 억제 인자가 없는 한 응답 warnings 배열에 worker_duration_missing이 실린다(exit 0 유지). 1.2 태스크(run_log 블록 보유)에서는 mark가 `_reconcile_worker_duration_minutes()`로 `_import_run_log_core()` 경로의 `run_log_core.reconcile_duration()`(W-6)을 호출해 해당 run의 terminal 사건(worker.completed/failed/blocked)에서 파생 분값을 읽는다(W-7, CONTRACT §2.5 시간 절, D-P8) — `--worker-run-id` 표면 인자가 없어 `_resolve_sole_terminal_worker_run_id()`가 `이 run의 terminal에 실린 worker_run_id가 정확히 1개`인 경우에만 그 값을 대상으로 삼고, 0건·2건 이상이면 조회를 건너뛰어 파생값 없음으로 처리한다. 파생값이 있으면 `--worker-duration-minutes` 미지정 시 자동 기록(경고 없음), 명시값이 파생값과 같으면 수용하되 `worker_duration_minutes_deprecated` 경고를 얹고, 다르면 상태 변경 이전 시점에 `worker_duration_conflict`(RUN_LOG_STATE_ERROR_CODES 등재, ERROR_CODES와 물리 분리)로 즉시 거부해 state.json을 손대지 않는다. 파생값을 아직 얻을 수 없으면(terminal 미기록 등) 명시값을 그대로 통과시켜 기존 수동 경로와 응답 키 집합이 바이트 동일하다(H-6, S-9). CONTRACT §2.5의 채널 등급·override 조항은 이번 범위에 포함하지 않는다(D-P9). build_todo_mirror()는 stdout 전용 파생 미러(state.json 비접촉)로 PostToolUse hook이 세션에 결정론적으로 주입한다. init --run-log-mode {shadow,active}는 CONTRACT §2.5 state-tool.init.run-log-mode를 구현한다 — shadow는 항상 지원하고, active는 `_resolve_active_channel()`이 호출자가 명시적으로 넘긴 `--profiles` 파일에서 `--channel-id` 항목을 찾은 경우에만 그 channel의 completion_profile/adapter_id/adapter_sha256/receipt_sha256을 completion_profile_receipt로 고정해 수용하며(135 W-4, H-4 — profiles.json 자체 생성·channel 자동 승격은 하지 않는다), 그 외(미지정 `--profiles`·미승인 channel)는 여전히 profile_not_found로 거부한다. _cmd_init_run_log()가 outbox 2단 원자 쓰기(_atomic_write_state_json, pending→기록 코어 init/append lock_held=True 호출→active)로 state.json schema_version 1.2 + run_log 블록과 첫 run.started 사건을 만든다. `_check_active_completion_evidence()`(135 W-4, CONTRACT §1.5)는 cmd_mark가 완료(--done, --step 최종 단계 포함) 전이를 시도할 때 row 주소 해석보다 먼저 실행되어, active mode + completion_profile≠cooperative인 run에 trusted terminal 사건 정확히 1건(그리고 observed_trajectory면 PM이 아닌 actor의 trusted activity 1건 이상)이 없으면 `completion_evidence_missing`으로 거부하고 state.json을 손대지 않는다. `verify --run-log-completeness-check`(135 W-4, CONTRACT §1.4/§1.5, 7번째 상호 배타 라우트)는 `_run_log_completeness_check()`로 state.json rows와 조각(committed)·보관함(pending) 사건을 대조해 `missing_state_changed`/`missing_pm_activity`/`missing_gate_event`/`unobserved_worker_boundary` 4종 누락 목록과, committed+pending 전 구간에서 조회하는 `last_observed_decision`/`last_observed_state_change`/`last_observed_boundary` 3필드(`{event_id, ts, ref}` 또는 None)를 항상 반환한다 — 구조 검증(run-log-tool validate-run)과 별개 축이며 read-only·비차단(exit 0)이다. `missing_pm_activity`는 CONTRACT §2.5 트리거 조문의 상태 앵커 2종(① `status=done` ∧ `owner=auto` ∧ `key` 보유 행에 `task_step` 일치 PM activity(decision)가 없으면 행마다 1건을 row_id 오름차순으로, ② `run_log.status=overridden`인데 run 전역에 PM activity(decision)가 0건이면 배열 마지막에 1건)을 committed+pending 합집합 사건과 대조해 채우며, 항목은 `row_id`·`row_key`·`stage`·`expected`·`anchor` 5키 고정이다(137 W-5). --run-log-mode 미지정 경로는 기존 save_state_json()을 그대로 타 바이트 동일성을 유지한다(D-L, C-3). _atomic_write_state_json()은 tmp→fsync→os.replace 원자 쓰기이며, run_log.pending_events가 있으면 쓰기 직전 기록 코어의 redact() 초크포인트를 통과시킨다(D-9, GC-001). _import_run_log_core()는 importlib.util.spec_from_file_location으로 기록 코어를 sys.path 오염 없이 단일 모듈 적재한다(GC-007) — 형제 배치 우선, 없으면 배포본(_run_log_core_dir(), D-C). RUN_LOG_STATE_ERROR_CODES는 run-log 계열 상태 도구 오류 코드(profile_not_found/run_log_missing/run_log_pending/run_log_outbox_full/run_log_write_failed/event_too_large) 전용 별도 테이블이며 ERROR_CODES 딕셔너리 리터럴과 물리 분리된다(D-A, F-6) — err()의 _error_template()가 ERROR_CODES→RUN_LOG_STATE_ERROR_CODES→DESIGN_GATE_ERROR_CODES 순으로 조회만 하고, 세 테이블 모두에 없는 코드는 .format() 호출 없이 code 문자열 그대로를 메시지로 쓴다(GC-008). run_log_commit()이 advance/mark/block/add-row/status의 상태 변경과 state.changed 적재(단일 event 또는 event list, build_state_changed_event, 조합 A7·event_id 사전 확정)를 한 번의 원자 쓰기로 커밋한 뒤 _run_log_drain()의 멱등 append와 보관함 비우기로 잇는다(CONTRACT §1.4, TRD D-2, D-3) — advance/mark는 auto_approve_prior_user_confirmations()가 자동 승인한 각 사용자 확인 행과 대상 행 전이를 각각 독립 state.changed로 만들어 event list로 넘기며, 리스트 admission은 순서대로 전부 통과해야만 보관함에 반영되는 전부-아니면-전무다(H-1) — append가 실패해도 상태 전이는 이미 커밋돼 교착되지 않고 응답 warnings에 run_log_pending만 실린다. run_log_outbox_admit()은 항목당 4 KiB·전체 128건(최악 512 KiB) 상한을 집행하며 일반 한도는 128 − 보관함 override 사건 수이고, 위반 시 각각 event_too_large·run_log_outbox_full로 전이를 시작하지 않는다. _run_log_drain()은 완전한 사건만 순서대로 재전송하고 첫 실패에서 멈추며 이미 조각에 있는 event_id는 건너뛰고, 보관함에 run.started가 있을 때만 실행 디렉터리·첫 조각을 다시 만든다(복구 가능 초기화). run_log_diagnose()는 validate에 합류해 보관함 잔량을 run_log_pending(recoverable_init 표시)으로, 활성 계약인데 조각·run.started가 없으면 run_log_missing으로 보고하며 스키마를 강등하거나 블록을 지우지 않는다(§1.4, AC-3). run_log 블록이 없는 1.0/1.1 태스크는 run_log_commit()이 곧바로 save_state_json()으로 우회해 산출물·응답 키 집합이 종전과 동일하다(C-3). state.schema.json은 schema_version 1.2와 run_log 블록(필수 7필드·pending_events maxItems 128)을 등재한다. init --actor {coordinator,worker}는 --skill opd/opds에서만 지원되며(그 외 skill과 조합 시 actor_unsupported_for_skill로 exit 1) 지정 시에만 state.json에 actor 키를 조건부 영속화하고, legacy --actor pm은 actor_pm_retired로 거부한다. init --workspace worktree는 --worktree 없이 worktree_path_required, --workspace hub는 oppb에서 workspace_required_for_skill로 기록 전에 거부한다. cmd_advance/cmd_mark는 상태 전이 진입 경계(load_state_json 직후)에서 `_claim_task_lease_if_needed()`를 1회 호출해 공통 resolver로 세션 신원이 해석될 때 `_import_ownership_lease()`(ownership_tool.lease, 형제 배치 우선·sys.path 비오염 패키지 적재)의 claim(claim_source=state_transition — 138 D-21 능동 소유권, claimant_root=os.getcwd() — 150 W-5)으로 `<task>/run/.runtime/owner.json` lease를 원자 생성하거나 기존 session_start lease를 승격한다(138 W-9) — cmd_init은 claim하지 않고, 해석 가능한 세션 신원 부재·적재 실패·타 세션 live lease(foreign_owner)·이관 대기 태스크의 대상 외 루트 재-claim(handoff_pending)은 모두 stderr 경고 1줄만 남긴 채 전이를 그대로 통과시키며(fail-safe) 응답 JSON 키 집합·종료코드·state.json 산출물도 바꾸지 않는다(150 AC-10, C-6). claimant_root 전달로 허브의 재-claim은 이관을 되돌리지 못하고(150 H-2) 워크트리 루트 cwd의 전이는 이관을 소비해 claim에 성공한다(SessionStart 실패 시 자가 치유) — 집행자는 PreToolUse 쓰기 가드 하나이며 state-tool은 판정 지점을 늘리지 않는다. run-log 사건 4개 기록부의 actor.session_id는 `_current_session_id()`(ownership-tool 공통 resolver의 OPAL→Claude→Codex→payload 우선순위, 플랫폼 고유 변수명은 해당 어댑터가 소유 — C-15)로 채워지며 미설정 시 종전과 동일하게 None이다(run-log CONTRACT §58 선택 필드, 스키마 무변경). log-event/gate-request/gate-resolve(135 W-3, CONTRACT §2.4)는 run_log_commit()의 같은 outbox/admission/drain 경로를 재사용해 PM activity·gate.requested·gate.resolved 사건을 기록하며 (actor_not_allowed/schema_invalid/refs_invalid/gate_not_requested/gate_duplicate/task_path_not_absolute를 방출), run_log_core는 호출하지 않아 TRD D-5 단방향 의존을 유지한다. log-event의 --event는 activity와 pm.report 2종을 수용한다(TASK-147 W-5, D-2, §2.4) — stop.decision은 이 표면이 수용하지 않으며 Stop hook receipt의 drain 경로가 조립한다(D-6). _build_pm_report_data()는 _build_pm_activity_data()의 형제 앞단 중복 방어로, --data 원문 JSON이나 --report-type/--transition-action/--user-input-required 인자에서 data 폐쇄 3키를 구성하고 report_type 2종·transition_action 4종 enum과 user_input_required boolean 위반을 schema_invalid로 거부한다 — 두 enum 인자에 argparse choices를 걸지 않는 것은 argparse usage 오류(exit 2)가 기록 코어의 schema_invalid와 갈리면 §1.3이 요구하는 「두 지점의 판정 결과가 항상 일치한다」가 깨지기 때문이다. _PM_REPORT_DATA_KEYS·_PM_REPORT_TYPE_ENUM·_PM_TRANSITION_ACTION_ENUM은 기록 코어 동명 상수의 물리 분리 사본이며 상수를 import하지 않는다(§3.1 단방향 의존). _build_pm_report_event()는 _build_pm_activity_event()의 형제로 조합 A4 pm.report 사건을 조립하고, run_log_commit()은 커밋할 사건 목록에 pm.report가 있으면 admission 전건 통과 직후 같은 원자 쓰기 안에서 state.run_log.last_report 파생 포인터(폐쇄 5키 event_id/report_type/transition_action/user_input_required/at)를 갱신한다(D-7) — admission이 거부되면 err()가 먼저 종료시키므로 사건도 포인터도 남지 않는다(H-2, 사건이 SSOT·포인터는 파생). 포인터에는 summary·reason 같은 자유 서술을 복제하지 않아 §1.3의 원본 프롬프트·비밀값 비저장이 포인터에도 유지된다. state.schema.json의 run_log 블록에는 last_report가 선택 필드로 등재되며 필수 7필드는 불변이다(§1.4). 157 PM 경로 독립 설계 게이트: _is_pm_design_path()가 rows의 key plan.design_gate 존재로만 PM 경로를 판정하고(참이 아니면 아래 가드·기록은 모두 no-op), state.design_gate 블록(status idle/evaluating/pass/fail/retry_limit, iteration, limit=DESIGN_GATE_LIMIT 3, limit_from, task_confirm_req_hash, current_attempt, passed/approved_bundle_hash, last_rewrite_target, history)이 해시·반복을 소유한다. 문서 묶음 hash는 TASK.md/PLAN.md/TEST-SCENARIO.md 파일 sha256의 결정론 결합, TASK 요구 hash는 Constraints·Acceptance criteria 본문 sha256이다. design-gate start는 PM 경로→execute.implement pending(design_gate_locked)→retry_limit→열린 시도(묶음 불변이면 design_gate_attempt_open, 변했으면 superseded로 닫고 진행)→plan.design_gate 앞 행 완료→문서 존재→TASK 요구 hash(task_reconfirm_required)→N=iteration+1→직전 rewrite 대상 불변(rewrite_target_unchanged) 순으로 상태 불변 거부한 뒤 _design_gate_deterministic_check()(TASK 5절, _check_plan_contract 전 항목, strict AC/C Work item 연결, Findings 4소절, 회귀 확인 경로의 변경 대상·직접 변경·문서 갱신 중복, 직접 변경·문서 갱신 경로의 Work item 부재, 미확인 가정 H-N 참조, 형제 test-tool을 sys.executable로 호출한 scenario-coverage-build/check exit 0)를 실행하고, 실패는 deterministic_fail 시도로 기록한 뒤 design_gate_deterministic_fail로, 통과는 status=evaluating·plan.design_gate in_progress·plan.user_confirm pending 복귀·gate.requested(design-gate-i{N})를 한 커밋으로 남긴다. design-gate record는 열린 시도·회차·묶음 불변과 pass/rewrite의 evaluator 축 계약(design.axes 4키, scenario.scores 3키, pass는 4축 PASS·각 ≥1·평균 ≥1.5를 도구가 재계산)을 거부 시 상태 불변으로 검사하고, pass는 passed_bundle_hash와 plan.design_gate done, 비-pass는 fail(상한 도달 시 retry_limit + await_user/decision_request)과 gate.resolved(data.verdict approved/rejected)를 같은 커밋으로 남긴다. design-gate reset --owner user만 retry_limit을 해제한다(limit_from=iteration). design-decision은 PM 경로 PLAN 단계에서 detail(STATE.md 결정 로그 + PM activity, continue)과 external(plan.plan_md failed·current_status blocked, decision_request)을 기록한다. apply_pm_design_guards()는 advance/mark의 자동 승인 직후·저장 전 구간에서 확인 행 해시 기록(task.user_confirm→task_confirm_req_hash, plan.user_confirm→통과 hash 일치 시 approved_bundle_hash), 자동 승인 불가 mode의 --owner user 없는 확인 행 거부, plan.design_gate 완료 가드, execute.implement pending 진입 가드(pass·TASK 요구 hash·현재=통과=승인)를 --force 우회 없이 집행한다. advance는 --force(--note 필수)를 받는다. 신규 오류 코드는 ERROR_CODES(키 집합 동결)와 물리 분리된 DESIGN_GATE_ERROR_CODES 14종이며 design_gate_retry_limit·task_reconfirm_required는 AWAIT_USER_ERROR_CODES다.",
   "note": "boot-summary는 허브 direct 태스크와 registry 발급 canonical task_path를 통합해 최신 3건, 잔여 건수, bounded 경로 이상을 읽기 전용 JSON으로 반환한다.",
   "exports": [
     "cmd_init", "cmd_show", "cmd_resolve_mode", "cmd_resolve_start", "cmd_advance", "cmd_mark",
@@ -35,7 +35,11 @@
     "_import_ownership_fingerprint", "_claim_task_lease_if_needed",
     "_stop_decision_project_root", "_last_activity_before",
     "_build_stop_decision_event", "_load_pending_stop_decisions",
-    "_drain_pending_stop_decisions", "_pending_stop_receipt_count"
+    "_drain_pending_stop_decisions", "_pending_stop_receipt_count",
+    "DESIGN_GATE_ERROR_CODES", "_pilot_dev_pipeline_path", "_is_pm_design_path",
+    "apply_pm_design_guards", "_design_gate_deterministic_check",
+    "cmd_design_gate_start", "cmd_design_gate_record", "cmd_design_gate_reset",
+    "cmd_design_decision"
   ]
 }
 """
@@ -43,6 +47,7 @@
 # PLAN §2.1 구현 명세 — TASK T-11: 표준 라이브러리만 import
 import argparse
 import fnmatch
+import hashlib
 import importlib.util
 import json
 import os
@@ -380,6 +385,45 @@ RUN_LOG_STATE_ERROR_CODES = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 157 설계 게이트 전용 오류 코드 (W-2, PLAN DEC-7~DEC-12, harness/design-gate.md 실패 코드 표)
+#   ERROR_CODES 키 집합은 동결 테스트(len==59, EXPECTED_CODES, README 헤더 수치, S-40
+#   HEAD 대조)가 고정하므로 RUN_LOG_STATE_ERROR_CODES(D-A) 선례대로 물리 분리한다.
+#   `_error_template()`이 ERROR_CODES → RUN_LOG_STATE_ERROR_CODES → 이 테이블 순으로
+#   조회한다. `user_confirmation_required`·`stage_transition_violation`은 기존
+#   ERROR_CODES 항목을 그대로 재사용한다.
+# ─────────────────────────────────────────────────────────────────────────────
+DESIGN_GATE_ERROR_CODES = {
+    "design_gate_not_applicable":
+        "PM 경로(rows에 plan.design_gate 존재) 태스크가 아니라 설계 게이트 명령을 쓸 수 없습니다",
+    "design_gate_locked":
+        "execute.implement가 pending이 아니라(현재 {status}) 설계 게이트·설계 결정을 다시 열 수 없습니다",
+    "design_gate_attempt_open":
+        "열린 설계 게이트 시도(i{iteration})가 있습니다 — 먼저 design-gate record로 판정을 기록하세요",
+    "design_gate_retry_limit":
+        "설계 게이트 반복 상한({limit}회)에 도달했습니다 — 사용자 결정 후 design-gate reset --owner user가 필요합니다",
+    "task_reconfirm_required":
+        "TASK.md Constraints·Acceptance criteria가 TASK 확인 이후 바뀌었습니다 — TASK 재확인이 필요합니다",
+    "design_gate_iteration_invalid":
+        "--iteration {iteration}이 허용 회차({expected})가 아닙니다",
+    "rewrite_target_unchanged":
+        "직전 rewrite 대상({rewrite_target}) 문서가 직전 시도와 같습니다: {unchanged}",
+    "design_gate_deterministic_fail":
+        "설계 게이트 결정론 검사 실패(i{iteration}): {missing}",
+    "design_gate_input_missing":
+        "설계 게이트 대상 문서가 없습니다: {missing}",
+    "design_gate_input_changed":
+        "시도 시작 이후 문서 묶음이 바뀌었습니다 — 다시 start하세요 (현재 {bundle_hash})",
+    "design_gate_result_invalid":
+        "evaluator 결과가 기록 계약을 충족하지 않습니다: {detail}",
+    "design_gate_verdict_mismatch":
+        "--verdict pass인데 설계 4축·시나리오 기준 미충족 (FAIL 축 {failed_axes}, 시나리오 평균 {scenario_average})",
+    "design_gate_not_passed":
+        "설계 게이트가 pass가 아닙니다(현재 {status}) — plan.design_gate 완료·EXECUTE 진입 불가",
+    "design_bundle_mismatch":
+        "현재 문서 묶음 hash({bundle_hash})가 설계 게이트 통과·승인 hash와 다릅니다 — 재평가·재승인이 필요합니다",
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 보관함 상한 (CONTRACT §1.4) — 항목당 4 KiB · 전체 128건(= 최악 512 KiB).
 #   일반 admission 한도는 `TOTAL_LIMIT − (보관함에 있는 override 사건 수)`이며
 #   별도 예약 슬롯 자료구조를 두지 않는다.
@@ -421,6 +465,9 @@ AWAIT_USER_ERROR_CODES = frozenset({
     "agentic_close_gate_requires_user",
     "user_confirmation_required",
     "semi_agentic_pre_execute_auto_pass_denied",
+    # 157 W-2: 설계 게이트 반복 상한·TASK 재확인은 사용자 대기다(DEC-9, DEC-11).
+    "design_gate_retry_limit",
+    "task_reconfirm_required",
 })
 
 
@@ -534,7 +581,7 @@ def ok(command, **kwargs):
     print(json.dumps(_with_transition_fields(payload), ensure_ascii=False, default=str))
 
 def _error_template(code):
-    """ERROR_CODES → RUN_LOG_STATE_ERROR_CODES 순으로 조회만 합성한다(PLAN D-A).
+    """ERROR_CODES → RUN_LOG_STATE_ERROR_CODES → DESIGN_GATE_ERROR_CODES 순으로 조회만 합성한다(PLAN D-A, 157 W-2).
 
     두 테이블에 같은 키가 있으면 `ERROR_CODES`(상태 도구 자기 계약)가 선순위다 —
     이 딕셔너리 리터럴 자체는 어느 경로로도 변경되지 않는다(T02 QA-SPEC F-4).
@@ -546,6 +593,8 @@ def _error_template(code):
         return ERROR_CODES[code]
     if code in RUN_LOG_STATE_ERROR_CODES:
         return RUN_LOG_STATE_ERROR_CODES[code]
+    if code in DESIGN_GATE_ERROR_CODES:
+        return DESIGN_GATE_ERROR_CODES[code]
     return None
 
 def err(command, code, message=None, exit_code=1, **kwargs):
@@ -3763,6 +3812,23 @@ def cmd_resolve_mode(args):
     ok(command, **payload)
 
 
+# 157 DEC-1: tools/state-tool → 루트(소스 opal/, 설치본 ~/.opal/) 아래 skills/ 형제 배치(H-1).
+_PILOT_DEV_REFS_DIR = (
+    pathlib.Path(__file__).resolve().parent.parent.parent
+    / "skills" / "opal-pilot-dev" / "references")
+
+
+def _pilot_dev_pipeline_path(skill, actor):
+    """DEC-1 — coordinator→pipeline-pm.json, worker+opd→pipeline.json, worker+opds→pipeline-short.json."""
+    if actor == "coordinator":
+        name = "pipeline-pm.json"
+    elif skill == "opd":
+        name = "pipeline.json"
+    else:
+        name = "pipeline-short.json"
+    return _PILOT_DEV_REFS_DIR / name
+
+
 def cmd_resolve_start(args):
     """156 DEC-2/DEC-3 — Pilot 시작·재개의 mode·workspace·actor 세 축 판정.
 
@@ -3842,6 +3908,12 @@ def cmd_resolve_start(args):
     init_args = ["--skill", skill, "--mode", mode, "--workspace", workspace]
     if skill in ACTOR_SKILLS:
         init_args += ["--actor", actor]
+        # 157 DEC-1: opd/opds 신규는 파이프라인 파일까지 도구가 판정한다. 재개 응답과
+        #   다른 Pilot의 init_args는 불변이다.
+        rows_from = _pilot_dev_pipeline_path(skill, actor)
+        if not rows_from.is_file():
+            err(command, "spec_file_not_found", path=str(rows_from))
+        init_args += ["--rows-from", str(rows_from)]
     ok(command, skill=skill, new_task=True,
        effective_mode=mode, mode_source="explicit" if explicit_mode else "default",
        workspace=workspace, workspace_source="explicit" if explicit_ws else "default",
@@ -3867,6 +3939,10 @@ def cmd_advance(args):
             message=f"row {row['row_id']} is already {row['status']}, advance only allows pending→in_progress",
             row_id=row["row_id"])
 
+    # 157 W-2: advance --force(설계 게이트 가드 우회 불가 검증용 표면)도 mark와 같이 --note 필수.
+    if getattr(args, "force", False) and not args.note:
+        err(command, "note_required_for_force")
+
     # 단계 건너뛰기 차단 (PLAN §M-A)
     # PM 경로: 앞 모든 행 검증 (full). 워커 경로: 앞 단계 행만 검증 (prior_stage_only).
     _guard_scope = "prior_stage_only" if getattr(args, "as_worker", False) else "full"
@@ -3880,6 +3956,11 @@ def cmd_advance(args):
         state, row_index, command,
         as_worker=getattr(args, "as_worker", False),
         force=getattr(args, "force", False), now_str=now_str)
+
+    # 157 DEC-6/DEC-11: PM 경로 확인 해시 기록·EXECUTE 진입 가드(자동 승인 직후·저장 전,
+    #   --force 우회 불가). PM 경로가 아니면 no-op.
+    apply_pm_design_guards(task_path, state, row_index, command,
+                           auto_approved=auto_approved, target_done=False)
 
     check_stage_transition_guard(state, row_index, command, force=False,
                                  scope=_guard_scope)
@@ -4209,6 +4290,13 @@ def cmd_mark(args):
     auto_approved = auto_approve_prior_user_confirmations(
         state, row_index, command,
         as_worker=args.as_worker, force=args.force, now_str=now_str)
+
+    # 157 DEC-6/DEC-11: PM 경로 확인 해시 기록·게이트/EXECUTE 가드(자동 승인 직후·저장 전,
+    #   --force 우회 불가). PM 경로가 아니면 no-op.
+    apply_pm_design_guards(task_path, state, row_index, command,
+                           auto_approved=auto_approved,
+                           target_done=_rl_gate_will_complete,
+                           owner=args.owner, auto_pass=args.auto_pass)
 
     check_stage_transition_guard(state, row_index, command, force=args.force,
                                  scope=_guard_scope)
@@ -6260,6 +6348,651 @@ def _check_evidence_gate(task_md_path):
             "unconfirmed": unconfirmed}
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 157 PM 경로 독립 설계 게이트 (DEC-3~DEC-12, 원문 SSOT harness/design-gate.md)
+#   PM 경로 판정은 rows에 key `plan.design_gate`가 있는지로만 내린다(DEC-3). 판정이
+#   거짓이면 아래 가드·기록은 모두 no-op이라 기존 태스크 코드 경로와 응답 키 집합이
+#   변하지 않는다(C-1).
+# ─────────────────────────────────────────────────────────────────────────────
+
+DESIGN_GATE_ROW_KEY = "plan.design_gate"
+DESIGN_GATE_DOCS = ("TASK.md", "PLAN.md", "TEST-SCENARIO.md")
+# 반복 상한 수치의 원문은 harness/guards.md §자동 루핑 제약 표가 소유한다(현재 3회).
+DESIGN_GATE_LIMIT = 3
+DESIGN_GATE_AXES = ("completeness", "decision_clarity", "executability", "recoverability")
+DESIGN_GATE_SCENARIO_KEYS = ("goal", "adoption", "boundary")
+DESIGN_GATE_FINDINGS_SECTIONS = ("직접 변경", "회귀 확인", "문서 갱신", "미확인 가정")
+_DESIGN_REWRITE_DOCS = {
+    "plan": ("PLAN.md",),
+    "scenario": ("TEST-SCENARIO.md",),
+    "both": ("PLAN.md", "TEST-SCENARIO.md"),
+}
+# 형제 test-tool — state-tool과 같은 인터프리터(sys.executable)로 직접 호출한다.
+# 소스(opal/tools)·설치본(~/.opal/tools) 모두 형제 배치다(_MEMORY_TOOL 선례).
+_TEST_TOOL_PY = pathlib.Path(__file__).resolve().parent.parent / "test-tool" / "test_tool.py"
+_FINDINGS_PATH_TOKEN_RE = re.compile(r"^[A-Za-z0-9_.가-힣/-]+\.[A-Za-z0-9]+$")
+
+
+def _is_pm_design_path(state):
+    """DEC-3 — PM 경로 판정 단일 지점."""
+    return any(r.get("key") == DESIGN_GATE_ROW_KEY for r in state.get("rows", []))
+
+
+def _design_gate_block(state):
+    """PM 경로 태스크의 state.design_gate 블록(DEC-5). 없으면 초기값으로 만든다."""
+    block = state.get("design_gate")
+    if not isinstance(block, dict):
+        block = {
+            "status": "idle",
+            "iteration": 0,
+            "limit": DESIGN_GATE_LIMIT,
+            "limit_from": 0,
+            "task_confirm_req_hash": None,
+            "current_attempt": None,
+            "passed_bundle_hash": None,
+            "approved_bundle_hash": None,
+            "last_rewrite_target": None,
+            "history": [],
+        }
+        state["design_gate"] = block
+    return block
+
+
+def _sha256_bytes(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def _design_bundle(task_path, command):
+    """DEC-4 — (파일별 sha256 dict, 묶음 hash). 부재 시 design_gate_input_missing."""
+    base = pathlib.Path(task_path)
+    missing = [name for name in DESIGN_GATE_DOCS if not (base / name).is_file()]
+    if missing:
+        err(command, "design_gate_input_missing", missing=missing)
+    files = {name: _sha256_bytes((base / name).read_bytes()) for name in DESIGN_GATE_DOCS}
+    joined = "\n".join(f"{name}\n{files[name]}" for name in DESIGN_GATE_DOCS)
+    return files, _sha256_bytes(joined.encode("utf-8"))
+
+
+def _task_requirement_hash(task_path, command):
+    """DEC-4 — TASK.md `## Constraints`·`## Acceptance criteria` 본문 sha256."""
+    task_md = pathlib.Path(task_path) / "TASK.md"
+    text = _read_markdown(task_md)
+    if text is None:
+        err(command, "design_gate_input_missing", missing=["TASK.md"])
+    constraints = _section_body_by_heading(text, "Constraints") or ""
+    acceptance = _section_body_by_heading(text, "Acceptance criteria") or ""
+    payload = f"## Constraints\n{constraints}\n## Acceptance criteria\n{acceptance}"
+    return _sha256_bytes(payload.encode("utf-8"))
+
+
+def _row_index_by_key(state, key):
+    for idx, row in enumerate(state.get("rows", [])):
+        if row.get("key") == key:
+            return idx
+    return None
+
+
+def apply_pm_design_guards(task_path, state, row_index, command, *, auto_approved,
+                           target_done, owner=None, auto_pass=False):
+    """DEC-6·DEC-11 — advance/mark의 자동 승인 직후·저장 전 구간 가드와 확인 해시 기록.
+
+    PM 경로가 아니면 즉시 반환한다. 거부는 err()로 종료되고 save 이전이라 state.json이
+    바뀌지 않는다(H-2). `--force`는 이 함수를 우회하지 못한다(호출자가 force를 넘기지 않는다).
+    EXECUTE 가드는 `execute.implement`가 pending인 진입 전이에서만 적용한다.
+    """
+    if not _is_pm_design_path(state):
+        return
+    rows = state["rows"]
+    row = rows[row_index]
+    key = row.get("key")
+
+    # DEC-6 — 자동 승인 불가 mode에서 --owner user 없는 확인 행 mark 거부
+    if (target_done and row.get("item") == "사용자 확인" and not auto_pass
+            and owner != "user" and row.get("status") not in _COMPLETE_STATUSES):
+        allowed, deny_reason = can_auto_approve_user_confirmation(row["stage"], state.get("mode"))
+        if not allowed:
+            err(command, "user_confirmation_required",
+                row_id=row["row_id"], stage=row["stage"], key=key, item=row["item"],
+                mode=state.get("mode"), reason=deny_reason,
+                required_action=(f"보고 → 캡틴 승인 → state mark <task-path> "
+                                 f"--task-step {key or row['row_id']} --done --owner user"))
+
+    dg = state.get("design_gate") if isinstance(state.get("design_gate"), dict) else {}
+    entering_execute = key == "execute.implement" and row.get("status") == "pending"
+    bundle = None
+    if entering_execute:
+        if dg.get("status") != "pass":
+            err(command, "design_gate_not_passed", status=dg.get("status") or "idle")
+        if _task_requirement_hash(task_path, command) != dg.get("task_confirm_req_hash"):
+            err(command, "task_reconfirm_required")
+        _files, bundle = _design_bundle(task_path, command)
+        if bundle != dg.get("passed_bundle_hash"):
+            err(command, "design_bundle_mismatch", bundle_hash=bundle,
+                passed_bundle_hash=dg.get("passed_bundle_hash"))
+
+    if key == DESIGN_GATE_ROW_KEY and target_done:
+        if dg.get("status") != "pass":
+            err(command, "design_gate_not_passed", status=dg.get("status") or "idle")
+        _files, bundle = _design_bundle(task_path, command)
+        if bundle != dg.get("passed_bundle_hash"):
+            err(command, "design_bundle_mismatch", bundle_hash=bundle,
+                passed_bundle_hash=dg.get("passed_bundle_hash"))
+
+    newly_done = [r for r in rows if r["row_id"] in set(auto_approved or [])]
+    if target_done and row.get("item") == "사용자 확인":
+        newly_done.append(row)
+    for confirm in newly_done:
+        ckey = confirm.get("key")
+        if ckey == "task.user_confirm":
+            _design_gate_block(state)["task_confirm_req_hash"] = (
+                _task_requirement_hash(task_path, command))
+        elif ckey == "plan.user_confirm":
+            if bundle is None:
+                _files, bundle = _design_bundle(task_path, command)
+            block = _design_gate_block(state)
+            if bundle != block.get("passed_bundle_hash"):
+                err(command, "design_bundle_mismatch", row_id=confirm["row_id"],
+                    bundle_hash=bundle, passed_bundle_hash=block.get("passed_bundle_hash"))
+            block["approved_bundle_hash"] = bundle
+
+    if entering_execute:
+        if _design_gate_block(state).get("approved_bundle_hash") != bundle:
+            err(command, "design_bundle_mismatch", bundle_hash=bundle,
+                approved_bundle_hash=state["design_gate"].get("approved_bundle_hash"))
+
+
+# ── 결정론 검사 (DEC-8) ────────────────────────────────────────────────────────
+
+def _h3_sections(body):
+    """H2 본문 안의 H3 소절 → {제목: 본문}."""
+    sections = {}
+    current = None
+    buf = []
+    for line in body.splitlines():
+        m = re.match(r"^###\s+(.+?)\s*$", line.strip())
+        if m:
+            if current is not None:
+                sections[current] = "\n".join(buf).strip()
+            current = m.group(1).strip()
+            buf = []
+        elif current is not None:
+            buf.append(line)
+    if current is not None:
+        sections[current] = "\n".join(buf).strip()
+    return sections
+
+
+def _findings_paths(body):
+    paths = []
+    for tok in re.findall(r"`([^`]+)`", body or ""):
+        tok = tok.strip()
+        if _FINDINGS_PATH_TOKEN_RE.match(tok) and _is_safe_artifact_token(tok) and tok not in paths:
+            paths.append(tok)
+    return paths
+
+
+def _path_matches(path, candidates):
+    for cand in candidates:
+        if path == cand or cand.endswith("/" + path) or path.endswith("/" + cand):
+            return True
+    return False
+
+
+def _run_scenario_coverage(task_path):
+    """DEC-8 ⑦ — test-tool coverage build+check. 반환: missing 문자열 리스트."""
+    task_dir = pathlib.Path(task_path)
+
+    def _call(argv):
+        try:
+            completed = subprocess.run([sys.executable, str(_TEST_TOOL_PY), *argv],
+                                       capture_output=True, text=True, timeout=300)
+        except (OSError, subprocess.SubprocessError) as e:
+            return None, {"detail": f"{type(e).__name__}: {e}"}
+        try:
+            payload = json.loads(completed.stdout.strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            payload = {}
+        return completed.returncode, payload if isinstance(payload, dict) else {}
+
+    code, payload = _call(["scenario-coverage-build", "--task-folder", str(task_dir),
+                           "--template", "sdlc-v2"])
+    if code != 0:
+        if code == 17:
+            return [f"scenario coverage input_error: {payload.get('detail')}"]
+        return [f"scenario coverage build failed (exit {code}): {payload.get('detail') or payload.get('error')}"]
+    code, payload = _call(["scenario-coverage-check", "--coverage-input",
+                           str(task_dir / ".scenario-coverage-input.json")])
+    if code == 0:
+        return []
+    if code == 16:
+        detail = payload.get("detail") if isinstance(payload.get("detail"), dict) else {}
+        missing = detail.get("missing") or {}
+        out = []
+        for label, kind in (("requirements", "requirement"), ("features", "feature"),
+                            ("hypotheses", "hypothesis")):
+            for ref in missing.get(label) or []:
+                out.append(f"scenario coverage missing {kind} {ref}")
+        return out or ["scenario coverage unmet"]
+    if code == 17:
+        return [f"scenario coverage input_error: {payload.get('detail')}"]
+    return [f"scenario coverage check failed (exit {code}): {payload.get('detail') or payload.get('error')}"]
+
+
+def _design_gate_deterministic_check(task_path):
+    """DEC-8 ①~⑦ — 전 항목을 모아 missing 리스트로 반환한다(빈 리스트면 통과)."""
+    task_dir = pathlib.Path(task_path)
+    missing = []
+
+    # ① sdlc-v2 TASK 필수 5절
+    task_missing = _check_sdlc_v2_task_contract(task_dir / "TASK.md")
+    if task_missing is None:
+        missing.append("TASK.md: sdlc-v2 frontmatter")
+    else:
+        missing += [f"TASK.md: {h}" for h in task_missing]
+
+    # ② 기존 PLAN 계약 전 항목 + strict AC/C 연결
+    plan_result = _check_plan_contract(task_dir)
+    if plan_result.get("status") == "skipped":
+        missing.append(f"PLAN.md: {plan_result.get('reason')}")
+    missing += list(plan_result.get("missing") or [])
+    rows = _extract_work_items(task_dir / "PLAN.md") or []
+    linked = set()
+    targets = []
+    for row in rows:
+        linked |= set(re.findall(r"\b(?:AC|C)-\d+\b", row.get("완료 기준 연결", "")))
+        for t in _work_item_targets(row):
+            if t not in targets:
+                targets.append(t)
+    ac_ids, c_ids = _extract_ac_c_ids(task_dir / "TASK.md")
+    for ref in sorted(ac_ids | c_ids, key=lambda r: (r.split("-")[0], int(r.split("-")[1]))):
+        if ref not in linked:
+            missing.append(f"uncovered requirement {ref}")
+
+    # ③~⑥ Findings 4소절
+    plan_text = _read_markdown(task_dir / "PLAN.md") or ""
+    findings = _section_body_by_heading(plan_text, "Findings")
+    if findings is None:
+        missing.append("Findings section")
+    else:
+        subs = _h3_sections(findings)
+        for name in DESIGN_GATE_FINDINGS_SECTIONS:
+            if name not in subs:
+                missing.append(f"Findings: {name} missing")
+            elif not subs[name].strip():
+                missing.append(f"Findings: {name} empty")
+        change_paths = _findings_paths(subs.get("직접 변경")) + _findings_paths(subs.get("문서 갱신"))
+        for path in _findings_paths(subs.get("회귀 확인")):
+            if _path_matches(path, targets) or path in change_paths:
+                missing.append(f"regression target listed as change: {path}")
+        for path in change_paths:
+            if not _path_matches(path, targets):
+                missing.append(f"finding not in work items: {path}")
+        if "미확인 가정" in subs:
+            risk_ids = set(re.findall(r"\bH-\d+\b", _section_body_by_heading(plan_text, "Risks") or ""))
+            body = subs["미확인 가정"]
+            items = [ln.strip()[2:].strip() for ln in body.splitlines()
+                     if ln.strip().startswith(("- ", "* "))]
+            if not items and body.strip():
+                items = [body.strip()]
+            for item in items:
+                refs = re.findall(r"\bH-\d+\b", item)
+                unknown = [h for h in refs if h not in risk_ids]
+                if unknown:
+                    missing.append(f"unconfirmed assumption references unknown {', '.join(unknown)}")
+                elif not refs and "없음" not in item:
+                    missing.append(f"unconfirmed assumption without Risks H-N reference: {item[:80]}")
+
+    # ⑦ scenario coverage (실제 test-tool 프로세스)
+    missing += _run_scenario_coverage(task_dir)
+    return missing
+
+
+# ── run-log 사건 조립 공용 ─────────────────────────────────────────────────────
+
+def _design_row_change(state, task_path, command, row, to_status, events, *, owner=None, note=None):
+    """행 상태를 바꾸고 state.changed 사건을 events에 쌓는다."""
+    from_status = row.get("status")
+    if from_status == to_status:
+        return
+    row["status"] = to_status
+    row["status_label"] = STATUS_LABEL_MAP.get(to_status, row.get("status_label"))
+    if owner is not None:
+        row["owner"] = owner
+    if note:
+        row["note"] = note
+    if _run_log_block(state) is not None:
+        events.append(build_state_changed_event(
+            state, task_id=pathlib.Path(task_path).name, command=command,
+            from_status=from_status, to_status=to_status, row=row, note=note))
+
+
+def _design_gate_event(state, task_path, command, event_name, iteration, summary, data):
+    if _run_log_block(state) is None:
+        return None
+    return _build_gate_event(
+        state, task_id=pathlib.Path(task_path).name, command=command,
+        event_name=event_name, gate_id=f"design-gate-i{iteration}", actor_kind="PM",
+        summary=summary, reason=None, data=data)
+
+
+def _require_pm_design_path(state, command):
+    if not _is_pm_design_path(state):
+        err(command, "design_gate_not_applicable")
+
+
+# ── design-gate start (DEC-7) ─────────────────────────────────────────────────
+
+def cmd_design_gate_start(args):
+    command = "design-gate start"
+    task_path = resolve_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+    _require_pm_design_path(state, command)                                    # ①
+    rows = state["rows"]
+    exec_idx = _row_index_by_key(state, "execute.implement")
+    if exec_idx is not None and rows[exec_idx].get("status") != "pending":
+        err(command, "design_gate_locked", status=rows[exec_idx].get("status"))  # ②
+    dg_view = state.get("design_gate") if isinstance(state.get("design_gate"), dict) else {}
+    if dg_view.get("status") == "retry_limit":                                 # ③
+        err(command, "design_gate_retry_limit", iteration=dg_view.get("iteration"),
+            limit=dg_view.get("limit", DESIGN_GATE_LIMIT))
+    files, bundle = _design_bundle(task_path, command)
+    open_attempt = dg_view.get("current_attempt") or {}
+    superseded = None
+    if dg_view.get("status") == "evaluating":                                  # ③-0
+        # 열린 시도의 묶음이 그대로면 먼저 record해야 한다. 묶음이 바뀌어 record가
+        # design_gate_input_changed로만 끝나는 시도는 새 start가 대체한다(회차는 이미 소비).
+        if open_attempt.get("bundle_hash") == bundle:
+            err(command, "design_gate_attempt_open", iteration=open_attempt.get("iteration"))
+        superseded = open_attempt
+    gate_idx = _row_index_by_key(state, DESIGN_GATE_ROW_KEY)
+    check_stage_transition_guard(state, gate_idx, command, force=False)        # ③-1
+    if _task_requirement_hash(task_path, command) != dg_view.get("task_confirm_req_hash"):
+        err(command, "task_reconfirm_required")                                # ④
+    iteration = int(dg_view.get("iteration") or 0)
+    if args.iteration != iteration + 1:                                        # ⑤
+        err(command, "design_gate_iteration_invalid",
+            iteration=args.iteration, expected=iteration + 1)
+    history = dg_view.get("history") or []
+    if history and history[-1].get("verdict") == "rewrite":                    # ⑥
+        target = dg_view.get("last_rewrite_target")
+        prev_files = (dg_view.get("current_attempt") or {}).get("files") or {}
+        unchanged = [name for name in _DESIGN_REWRITE_DOCS.get(target, ())
+                     if files.get(name) == prev_files.get(name)]
+        if unchanged:
+            err(command, "rewrite_target_unchanged", rewrite_target=target, unchanged=unchanged)
+
+    now_str = get_kst_datetime(command)
+    dg = _design_gate_block(state)
+    attempt = {"iteration": args.iteration, "bundle_hash": bundle, "files": files,
+               "started_at": now_str}
+    pre_events = []
+    if superseded:
+        dg["history"] = list(dg.get("history") or []) + [{
+            "iteration": superseded.get("iteration"), "verdict": "superseded",
+            "rewrite_target": None, "bundle_hash": superseded.get("bundle_hash"),
+            "reason": "document bundle changed before record", "at": now_str}]
+        dg["status"] = "fail"
+        _sup_event = _design_gate_event(
+            state, task_path, command, "gate.resolved", superseded.get("iteration"),
+            f"design gate i{superseded.get('iteration')} resolved: superseded",
+            {"verdict": "rejected"})
+        if _sup_event is not None:
+            pre_events.append(_sup_event)
+    missing = _design_gate_deterministic_check(task_path)                      # ⑦
+    if missing:
+        dg["iteration"] = args.iteration
+        dg["current_attempt"] = attempt
+        dg["history"] = list(dg.get("history") or []) + [{
+            "iteration": args.iteration, "verdict": "deterministic_fail",
+            "rewrite_target": None, "bundle_hash": bundle,
+            "reason": "; ".join(missing)[:500], "at": now_str}]
+        limit_reached = args.iteration - int(dg.get("limit_from") or 0) >= int(dg.get("limit") or DESIGN_GATE_LIMIT)
+        dg["status"] = "retry_limit" if limit_reached else "fail"
+        state["updated_at"] = now_str
+        run_log_commit(task_path, state, command, event=pre_events or None)
+        sync_state_md(task_path, state, now_str, command)
+        extra = {}
+        if limit_reached:
+            extra = {"transition_action": "await_user", "report_type": "decision_request"}
+        err(command, "design_gate_deterministic_fail", missing=missing,
+            iteration=args.iteration, status=dg["status"], **extra)
+
+    events = list(pre_events)
+    dg["status"] = "evaluating"
+    dg["iteration"] = args.iteration
+    dg["current_attempt"] = attempt
+    dg["passed_bundle_hash"] = None
+    dg["approved_bundle_hash"] = None
+    _design_row_change(state, task_path, command, rows[gate_idx], "in_progress", events,
+                       note=f"design gate i{args.iteration} evaluating")
+    rows[gate_idx]["timestamp"] = now_str
+    confirm_idx = _row_index_by_key(state, "plan.user_confirm")
+    if confirm_idx is not None and rows[confirm_idx].get("status") in _COMPLETE_STATUSES:
+        _design_row_change(state, task_path, command, rows[confirm_idx], "pending", events,
+                           note=f"design gate i{args.iteration} reopened")
+        rows[confirm_idx]["timestamp"] = now_str
+    gate_event = _design_gate_event(state, task_path, command, "gate.requested", args.iteration,
+                                    f"design gate i{args.iteration} requested", None)
+    if gate_event is not None:
+        events.append(gate_event)
+    state["updated_at"] = now_str
+    state["next_action"] = _derive_next_action(state)
+    _rl_fields = run_log_commit(task_path, state, command, event=events or None)
+    _jw = sync_state_md(task_path, state, now_str, command)
+    ok(command, status="evaluating", iteration=args.iteration,
+       gate_id=f"design-gate-i{args.iteration}", bundle_hash=bundle,
+       _transition_state=state, **(_jw or {}), **(_rl_fields or {}))
+
+
+# ── design-gate record (DEC-9) ────────────────────────────────────────────────
+
+def _load_evaluator_result(path):
+    try:
+        data = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _evaluator_axes(result):
+    """(axes dict, scores dict) 또는 계약 형식이 아니면 None."""
+    if not isinstance(result, dict):
+        return None
+    design = result.get("design")
+    scenario = result.get("scenario")
+    if not isinstance(design, dict) or not isinstance(scenario, dict):
+        return None
+    axes = design.get("axes")
+    scores = scenario.get("scores")
+    if not isinstance(axes, dict) or not isinstance(scores, dict):
+        return None
+    if any(k not in axes for k in DESIGN_GATE_AXES):
+        return None
+    if any(k not in scores for k in DESIGN_GATE_SCENARIO_KEYS):
+        return None
+    for k in DESIGN_GATE_SCENARIO_KEYS:
+        if isinstance(scores[k], bool) or not isinstance(scores[k], (int, float)):
+            return None
+    return axes, scores
+
+
+def cmd_design_gate_record(args):
+    command = "design-gate record"
+    task_path = resolve_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+    _require_pm_design_path(state, command)
+    dg_view = state.get("design_gate") if isinstance(state.get("design_gate"), dict) else {}
+    attempt = dg_view.get("current_attempt") or {}
+    if dg_view.get("status") != "evaluating":
+        err(command, "design_gate_iteration_invalid", iteration=args.iteration,
+            expected=None, detail="no open design gate attempt — run design-gate start first")
+    if args.iteration != attempt.get("iteration"):
+        err(command, "design_gate_iteration_invalid", iteration=args.iteration,
+            expected=attempt.get("iteration"))
+    _files, bundle = _design_bundle(task_path, command)
+    if bundle != attempt.get("bundle_hash"):
+        err(command, "design_gate_input_changed", bundle_hash=bundle,
+            attempt_bundle_hash=attempt.get("bundle_hash"))
+
+    verdict = args.verdict
+    reason = None
+    if verdict in ("pass", "rewrite"):
+        parsed = _evaluator_axes(_load_evaluator_result(args.evaluator_result))
+        if parsed is None:
+            err(command, "design_gate_result_invalid",
+                detail="evaluator result must contain design.axes(4) and scenario.scores(3)")
+        axes, scores = parsed
+        if verdict == "rewrite" and not args.rewrite_target:
+            err(command, "design_gate_result_invalid", detail="--rewrite-target required for rewrite")
+        values = [float(scores[k]) for k in DESIGN_GATE_SCENARIO_KEYS]
+        average = sum(values) / len(values)
+        failed_axes = [k for k in DESIGN_GATE_AXES if str(axes.get(k)).upper() != "PASS"]
+        if verdict == "pass":
+            if failed_axes or any(v < 1 for v in values) or average < 1.5:
+                err(command, "design_gate_verdict_mismatch", failed_axes=failed_axes,
+                    scenario_scores=scores, scenario_average=round(average, 3))
+        else:
+            parts = []
+            if failed_axes:
+                parts.append("design FAIL: " + ", ".join(failed_axes))
+            parts.append(f"scenario average {round(average, 3)}")
+            reason = "; ".join(parts)
+    else:
+        reason = "evaluator result not in contract format"
+
+    now_str = get_kst_datetime(command)
+    dg = _design_gate_block(state)
+    rows = state["rows"]
+    gate_idx = _row_index_by_key(state, DESIGN_GATE_ROW_KEY)
+    events = []
+    rewrite_target = args.rewrite_target if verdict == "rewrite" else None
+    dg["history"] = list(dg.get("history") or []) + [{
+        "iteration": args.iteration, "verdict": verdict, "rewrite_target": rewrite_target,
+        "bundle_hash": bundle, "reason": reason, "at": now_str}]
+    extra = {}
+    if verdict == "pass":
+        dg["status"] = "pass"
+        dg["passed_bundle_hash"] = bundle
+        _design_row_change(state, task_path, command, rows[gate_idx], "done", events,
+                           owner="PM", note=f"design gate i{args.iteration} pass")
+        rows[gate_idx]["timestamp"] = now_str
+    else:
+        dg["status"] = "fail"
+        if rewrite_target:
+            dg["last_rewrite_target"] = rewrite_target
+        if args.iteration - int(dg.get("limit_from") or 0) >= int(dg.get("limit") or DESIGN_GATE_LIMIT):
+            dg["status"] = "retry_limit"
+            extra = {"transition_action": "await_user", "report_type": "decision_request"}
+    gate_event = _design_gate_event(
+        state, task_path, command, "gate.resolved", args.iteration,
+        f"design gate i{args.iteration} resolved: {verdict}"
+        + (f" (rewrite_target={rewrite_target})" if rewrite_target else ""),
+        {"verdict": "approved" if verdict == "pass" else "rejected"})
+    if gate_event is not None:
+        events.append(gate_event)
+    state["updated_at"] = now_str
+    state["next_action"] = _derive_next_action(state)
+    _rl_fields = run_log_commit(task_path, state, command, event=events or None)
+    _jw = sync_state_md(task_path, state, now_str, command)
+    ok(command, status=dg["status"], iteration=args.iteration, verdict=verdict,
+       rewrite_target=rewrite_target, gate_id=f"design-gate-i{args.iteration}",
+       bundle_hash=bundle, _transition_state=state,
+       **extra, **(_jw or {}), **(_rl_fields or {}))
+
+
+# ── design-gate reset (DEC-10) ────────────────────────────────────────────────
+
+def cmd_design_gate_reset(args):
+    command = "design-gate reset"
+    task_path = resolve_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+    _require_pm_design_path(state, command)
+    if args.owner != "user":
+        err(command, "user_confirmation_required", row_id=DESIGN_GATE_ROW_KEY,
+            stage="PLAN", reason="design_gate_reset_requires_user",
+            required_action="design-gate reset <task-path> --owner user --note <사유>")
+    dg_view = state.get("design_gate") if isinstance(state.get("design_gate"), dict) else {}
+    if dg_view.get("status") != "retry_limit":
+        ok(command, reset=False, status=dg_view.get("status") or "idle",
+           iteration=dg_view.get("iteration") or 0)
+        return
+    now_str = get_kst_datetime(command)
+    dg = _design_gate_block(state)
+    dg["status"] = "idle"
+    dg["limit_from"] = int(dg.get("iteration") or 0)
+    state["updated_at"] = now_str
+    _rl_fields = run_log_commit(task_path, state, command, event=None)
+    note = resolve_owner_placeholder(args.note) if args.note else None
+    _jw = sync_state_md(task_path, state, now_str, command,
+                        decision=f"design gate retry limit reset at i{dg['iteration']} (owner=user)",
+                        reason=note or "(none)")
+    ok(command, reset=True, status="idle", iteration=dg["iteration"],
+       limit_from=dg["limit_from"], transition_action="continue",
+       **(_jw or {}), **(_rl_fields or {}))
+
+
+# ── design-decision (DEC-12) ──────────────────────────────────────────────────
+
+def cmd_design_decision(args):
+    command = "design-decision"
+    task_path = resolve_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+    _require_pm_design_path(state, command)
+    rows = state["rows"]
+    exec_idx = _row_index_by_key(state, "execute.implement")
+    if exec_idx is not None and rows[exec_idx].get("status") != "pending":
+        err(command, "design_gate_locked", status=rows[exec_idx].get("status"))
+    frontier = next((r for r in rows if r.get("status") not in _COMPLETE_STATUSES), None)
+    if frontier is None or frontier.get("stage") != "PLAN":
+        incomplete = [r["row_id"] for r in rows
+                      if r.get("stage") == "TASK" and r.get("status") not in _COMPLETE_STATUSES]
+        plan_idx = _row_index_by_key(state, "plan.plan_md")
+        err(command, "stage_transition_violation",
+            row_id=rows[plan_idx]["row_id"] if plan_idx is not None else None,
+            incomplete_rows=incomplete)
+
+    now_str = get_kst_datetime(command)
+    summary = resolve_owner_placeholder(args.summary)
+    basis = resolve_owner_placeholder(args.basis)
+    events = []
+    decision = f"design-decision({args.scope}): {summary}"
+    if args.scope == "detail":
+        if _run_log_block(state) is not None:
+            events.append(_build_pm_activity_event(
+                state, task_id=task_path.name, command=command, kind="decision",
+                summary=decision, reason=basis, refs=None,
+                stage="PLAN", task_step=frontier.get("key"), work_item=None))
+        state["updated_at"] = now_str
+        _rl_fields = run_log_commit(task_path, state, command, event=events or None)
+        _jw = sync_state_md(task_path, state, now_str, command, decision=decision, reason=basis)
+        ok(command, scope="detail", summary=summary, transition_action="continue",
+           report_type="progress_report", next_action=state.get("next_action") or _derive_next_action(state),
+           **(_jw or {}), **(_rl_fields or {}))
+        return
+
+    plan_idx = _row_index_by_key(state, "plan.plan_md")
+    row = rows[plan_idx]
+    prev_status = state.get("current_status")
+    row["status"] = "failed"
+    row["status_label"] = "❌"
+    row["timestamp"] = now_str
+    row["note"] = f"block: design-decision external: {summary}"
+    state["current_status"] = "blocked"
+    state["updated_at"] = now_str
+    if _run_log_block(state) is not None:
+        events.append(build_state_changed_event(
+            state, task_id=task_path.name, command=command,
+            from_status=prev_status, to_status="blocked", row=row))
+    _rl_fields = run_log_commit(task_path, state, command, event=events or None)
+    _jw = sync_state_md(task_path, state, now_str, command, decision=decision, reason=basis)
+    ok(command, scope="external", summary=summary, row_id=row["row_id"],
+       key=row.get("key"), status="failed", current_status="blocked",
+       transition_action="blocked", report_type="decision_request",
+       next_action=f"사용자 결정: {summary}",
+       todo_mirror=build_todo_mirror(state, "update"),
+       **(_jw or {}), **(_rl_fields or {}))
+
+
 def cmd_verify(args):
     """PLAN 013 §verify — TEST-SCENARIO.md mock 코드 패턴 + 증거 누락 검사.
     016 확장: --red-check(RED 증거 게이트) / --fix-mode(테스트 불변성).
@@ -6667,6 +7400,9 @@ def build_parser():
     p_adv.add_argument("--row", type=int, metavar="<n>",
                        help="[deprecated] --task-step / --task-step-id 사용 권장")
     p_adv.add_argument("--note")
+    p_adv.add_argument("--force", action="store_true",
+                       help="게이트 산출물·명확화·code-scan 인용 가드 우회(--note 필수). "
+                            "157 PM 경로 설계 게이트 가드는 우회하지 못한다")
     p_adv.add_argument("--next-action",
                        help="072: '다음 액션' per-transition 오버라이드(비지속, M-3) — "
                             "미지정 시 프론티어에서 자동 파생")
@@ -6930,6 +7666,35 @@ def build_parser():
     p_gres.add_argument("--note")
     p_gres.add_argument("--format", dest="format", choices=["json"])
     p_gres.set_defaults(func=cmd_gate_resolve)
+
+    # ── design-gate (157 DEC-7/DEC-9/DEC-10) ──
+    p_dg = sub.add_parser("design-gate", help="PM 경로 독립 설계 게이트 (start|record|reset)")
+    dg_sub = p_dg.add_subparsers(dest="design_gate_command", metavar="<start|record|reset>")
+    dg_sub.required = True
+    p_dgs = dg_sub.add_parser("start", help="결정론 검사 후 설계 게이트 시도 시작 (gate.requested)")
+    p_dgs.add_argument("task_path", metavar="<task-path>")
+    p_dgs.add_argument("--iteration", type=int, required=True, metavar="N")
+    p_dgs.set_defaults(func=cmd_design_gate_start)
+    p_dgr = dg_sub.add_parser("record", help="evaluator design-rubric 판정 기록 (gate.resolved)")
+    p_dgr.add_argument("task_path", metavar="<task-path>")
+    p_dgr.add_argument("--iteration", type=int, required=True, metavar="N")
+    p_dgr.add_argument("--verdict", required=True, choices=["pass", "rewrite", "input_error"])
+    p_dgr.add_argument("--evaluator-result", dest="evaluator_result", required=True, metavar="<json>")
+    p_dgr.add_argument("--rewrite-target", dest="rewrite_target", choices=["plan", "scenario", "both"])
+    p_dgr.set_defaults(func=cmd_design_gate_record)
+    p_dgx = dg_sub.add_parser("reset", help="반복 상한(retry_limit) 해제 — 사용자 결정 전용")
+    p_dgx.add_argument("task_path", metavar="<task-path>")
+    p_dgx.add_argument("--owner", choices=["PM", "worker", "user", "auto"])
+    p_dgx.add_argument("--note")
+    p_dgx.set_defaults(func=cmd_design_gate_reset)
+
+    # ── design-decision (157 DEC-12) ──
+    p_dd = sub.add_parser("design-decision", help="PM 경로 PLAN 단계 설계 결정 분류 기록")
+    p_dd.add_argument("task_path", metavar="<task-path>")
+    p_dd.add_argument("--scope", required=True, choices=["external", "detail"])
+    p_dd.add_argument("--summary", required=True)
+    p_dd.add_argument("--basis", required=True)
+    p_dd.set_defaults(func=cmd_design_decision)
 
     return parser
 

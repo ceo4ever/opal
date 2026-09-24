@@ -88,6 +88,7 @@ legacy TASK는 기존 `## 명확화 결과` 기반 검증을 재개 호환으로
 | 워커 폴백 반복 (동일 작업 내 동일 폴백 유형 재발) | 1회 | 즉시 에스컬레이션 |
 | PLAN 재진입 (재설계 루프) | 2회 | scope별 에스컬레이션 (action=상위 scope로 승격 / wbs=PM 에스컬레이션 / trd=사용자 에스컬레이션) |
 | 시나리오 목표-커버 게이트 (루브릭 미달) | 3회 | 사용자 에스컬레이션 |
+| 설계 게이트 (PM 경로 plan.design_gate) | 3회 | 사용자 대기 — 심각도 무관, reset은 사용자만 (`harness/design-gate.md`) |
 | 워커 프로세스 비정상 종료 (스톨 · 응답 중 연결 종료) | 1회 (동일 컨텍스트 재개) | 새 컨텍스트로 분할 재배치 (분할 기준: `pm/dispatch-process.md` Step 1) |
 
 > **재설계 루프 = 액션 VERIFY 실패가 '설계 수준'으로 분류될 때 PLAN으로 재진입하는 횟수 상한. action-agent·verification-loop-guide는 이 수치를 복제하지 않고 본 표를 참조한다.**

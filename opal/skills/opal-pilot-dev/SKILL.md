@@ -43,21 +43,42 @@ blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우
 
 | 저장 actor | 진입 | ANALYSIS·PLAN | EXECUTE 구현·TEST FAIL 수정 |
 |---|---|---|---|
-| `coordinator` | 신규 기본 또는 `--pm` | PM 직접 작성 | PLAN `담당`의 전문 워커 디스패치 |
+| `coordinator`(신규) | 신규 기본 또는 `--pm` — `state.json` 행을 `pipeline-pm.json`(`--rows-from`)으로 초기화, `rows`에 `plan.design_gate` 존재 | PM 직접 작성. PLAN 구간은 아래 §PM 경로 (actor=coordinator 신규) 절을 따른다 | PLAN `담당`의 전문 워커 디스패치 |
+| `coordinator`(기존 재개) | 저장 행으로 재개하는 기존 태스크(`rows`에 `plan.design_gate` 없음) | PM 직접 작성 — 아래 §PM 경로 절이 아니라 이 문서의 기존 Full/Short 절(ANALYSIS·PLAN 서술)을 그대로 따른다(C-1) | PLAN `담당`의 전문 워커 디스패치 |
 | `worker` | `--no-pm` 또는 actor 키 부재(legacy) | 전문 워커 디스패치 | 전문 워커 디스패치 |
 | `pm` | legacy 재개 전용 | PM 직접 작성 | PM 직접 수행 |
 
 최초 단계 보고 시 `harness/observability.md` §행위 주체 표시 형식으로 저장 actor 선언 1행을 포함한다.
+
+## PM 경로 (actor=coordinator 신규)
+
+`resolve-start`가 `actor=coordinator`이고 신규 태스크로 판정한 경우(= `init_args`가 `--rows-from pipeline-pm.json`을 가리키고, `state.json` `rows`에 key `plan.design_gate`가 존재)에만 이 절을 따른다. 저장 행으로 재개하는 기존 `coordinator` 태스크(`plan.design_gate` 없음)는 이 절이 아니라 이 문서의 기존 Full/Short 절을 그대로 따른다.
+
+**단계→이벤트 매핑**: TASK는 `stage.task`, PLAN 구간 전체(PLAN 작성·TEST-SCENARIO 작성·설계 게이트·설계 확인)는 `stage.design` 하나로 묶는다. 이후 EXECUTE·TEST·CLOSE는 위 §단계 이벤트 게이트 표의 기존 매핑(`stage.execute`·`stage.test`·`stage.close`)을 그대로 쓴다.
+
+**절차**:
+
+1. **TASK**: STEP 1과 동일하게 PM이 직접 작성한다.
+2. **PLAN**: PM이 `op-dev-plan/SKILL.md`를 직접 Read하고 STEP 3-1과 같은 입력·출력 계약으로 PLAN.md를 작성하되, 분석 결과를 `## Findings` H3 4소절(`직접 변경`·`회귀 확인`·`문서 갱신`·`미확인 가정`)로 PLAN 안에 함께 기록한다(형식 SSOT: `op-dev-plan/references/plan-guide.md` §2 PM 경로 Findings). 이 경로에서는 STEP 2 ANALYSIS.md를 별도로 만들지 않는다.
+3. **TEST-SCENARIO 작성**: STEP 3.5와 같은 절차로 `plan.test_scenario_md` 행을 mark한다.
+4. **설계 게이트**: `op-scenario-gate` 스킬을 `gate: design` 입력으로 호출한다(내부에서 `state-tool design-gate start` → evaluator `design-rubric` 1회 디스패치 → `state-tool design-gate record`를 수행). 절차·해시·오류 코드 원문 SSOT는 `opal/core/references/harness/design-gate.md`다. `verdict: pass`를 받으면 `plan.design_gate` 행이 자동으로 done 처리된다. `rewrite`면 `rewrite_target` 문서를 보완해 재호출한다. 반복 상한 도달 시 `harness/guards.md` §자동 루핑 제약 표의 설계 게이트 행대로 심각도와 무관하게 사용자 대기한다.
+5. **설계 확인**(`plan.user_confirm`): 진행 모드의 사용자 확인·자동 승인 규칙을 그대로 적용한다(agentic은 EXECUTE 진입 시 자동 승인). 확인 통과 후 Full profile의 STEP 4~6(EXECUTE·TEST·CLOSE 공통 절차)으로 진입한다.
+
+**결정 체크포인트**: PLAN 작성 중 새로 내려야 하는 결정은 `~/.opal/tools/state-tool/run.sh design-decision <task-path> --scope external|detail --summary <text> --basis <text>`로 기록한다. `detail`(구현 세부, 외부 영향 없음)은 PM이 기록하고 계속 진행하며, `external`(목표·수용 기준 / 외부 동작·정책·계약 / 구조·기술 선택)은 사용자 대기로 전이한다. 분류 기준 원문은 `opal/skills/opal-pilot-dev/references/track-routing.md` §2다. 반복 상한·해시 불일치·TASK 재확인 요구는 도구가 결정론으로 거부하며 원문은 `opal/core/references/harness/design-gate.md`다.
+
+**PM 경로에서 수행하지 않는 것(DEC-17)**: 이 경로에서는 별도 ANALYSIS.md 작성, `plan.pm_gate`(자기 검토 게이트), 트랙 강등/강업 제안(§트랙 강등 제안·Short profile PLAN §4)을 수행하지 않는다 — PM 경로는 opd·opds 두 트랙이 같은 행(`pipeline-pm.json`)을 쓰므로 트랙 전환 대상이 아니다.
 
 ## 프로필 선택
 
 [MUST] 사용자가 선택한 프로필을 기본 수행한다. `//opd`는 Full profile, `//opds`는 Short profile이다.
 
 - Full profile은 아래 STEP 1~6을 수행한다.
-- Short profile은 `references/pipeline-short.json`을 상태 행 SSOT로 사용하고, TASK 후 아래 Short PLAN 절을 거쳐 Full profile의 STEP 4~6(EXECUTE·TEST·CLOSE 공통 절차)을 재사용한다.
+- Short profile은 `actor=worker`와 기존 `coordinator`·legacy `pm` 재개 태스크에서 `references/pipeline-short.json`을 상태 행 SSOT로 사용하고, TASK 후 아래 Short PLAN 절을 거쳐 Full profile의 STEP 4~6(EXECUTE·TEST·CLOSE 공통 절차)을 재사용한다. `coordinator` 신규 태스크(PM 경로)는 opd와 같은 `pipeline-pm.json` 행을 쓰며 §PM 경로 (actor=coordinator 신규) 절을 따른다.
 - 프로필 전환은 자동으로 수행하지 않는다. 강등·강업은 해당 기준 문서에 따른 사용자 제안으로만 처리한다.
 
 ### Short profile PLAN
+
+> 이 절은 `actor=worker`와, 저장 행으로 재개하는 기존 `coordinator`·legacy `pm` 태스크(`pipeline-short.json` 행, `plan.design_gate` 없음)에 적용된다. `coordinator` 신규 태스크(PM 경로)의 `opds`는 이 절이 아니라 위 §PM 경로 (actor=coordinator 신규) 절을 opd와 동일하게 따른다(DEC-17 — opd·opds 두 트랙이 같은 `pipeline-pm.json` 행을 쓴다).
 
 Short profile(`opds`)은 Full profile의 ANALYSIS를 생략하고, PLAN 작성자(`coordinator`·legacy `pm`은 PM, `worker`는 `op-dev-plan` 워커)가 TASK와 프로젝트 문서를 직접 분석해 PLAN을 작성한다.
 
@@ -87,7 +108,7 @@ TASK 완료 → 사용자 보고.
 ## STEP 2: ANALYSIS
 
 **actor=worker**: 워커를 디스패치하여 코드베이스를 분석한다(아래 디스패치 프롬프트).
-**actor=coordinator·legacy pm**: PM이 `op-dev-analysis/SKILL.md`를 직접 Read하고 아래 디스패치 프롬프트와 같은 입력·출력·산출물 경로 계약(태스크 폴더·이전 산출물·프로젝트 컨텍스트·산출물 저장 경로·하네스 Guards·참조 문서·분석 질문)을 적용해 ANALYSIS.md를 직접 작성한다. 이 작성에는 워커를 호출하지 않으므로 `worker.dispatch`가 발생하지 않는다.
+**actor=coordinator(기존 행으로 재개하는 태스크)·legacy pm**: PM이 `op-dev-analysis/SKILL.md`를 직접 Read하고 아래 디스패치 프롬프트와 같은 입력·출력·산출물 경로 계약(태스크 폴더·이전 산출물·프로젝트 컨텍스트·산출물 저장 경로·하네스 Guards·참조 문서·분석 질문)을 적용해 ANALYSIS.md를 직접 작성한다. 이 작성에는 워커를 호출하지 않으므로 `worker.dispatch`가 발생하지 않는다. `coordinator` 신규 태스크(PM 경로)는 이 STEP을 적용하지 않는다 — 위 §PM 경로 (actor=coordinator 신규) 절을 따른다.
 
 **디스패치 프롬프트** (actor=worker):
 ```
@@ -121,7 +142,7 @@ op-dev-analysis 스킬을 수행하라.
 ### 3-1. PLAN 디스패치
 
 **actor=worker**: 워커를 디스패치한다(아래 디스패치 프롬프트).
-**actor=coordinator**: PM이 `op-dev-plan/SKILL.md`를 직접 Read하고 아래 디스패치 프롬프트와 같은 입력·출력·산출물 경로 계약을 적용해 PLAN.md를 직접 작성한다. PLAN.md `Work items`의 `담당` 열에는 구현을 맡을 전문 워커 역할명(`docs/PROJECT.md` 프로젝트 구성 매핑, 없으면 `opal-task-agent`)을 기록하고, 같은 실행 그룹에는 선행 관계가 없고 변경 파일이 겹치지 않는 W만 둔다.
+**actor=coordinator(기존 행으로 재개하는 태스크)**: PM이 `op-dev-plan/SKILL.md`를 직접 Read하고 아래 디스패치 프롬프트와 같은 입력·출력·산출물 경로 계약을 적용해 PLAN.md를 직접 작성한다. PLAN.md `Work items`의 `담당` 열에는 구현을 맡을 전문 워커 역할명(`docs/PROJECT.md` 프로젝트 구성 매핑, 없으면 `opal-task-agent`)을 기록하고, 같은 실행 그룹에는 선행 관계가 없고 변경 파일이 겹치지 않는 W만 둔다. `coordinator` 신규 태스크(PM 경로)는 위 §PM 경로 (actor=coordinator 신규) 절의 PLAN 작성 방식(`## Findings` 포함)을 따른다.
 **actor=pm(legacy)**: 위와 같이 PM이 직접 작성하되 `담당` 열은 `PM`으로 기록한다.
 
 ```
@@ -170,7 +191,7 @@ PLAN 완료
    - `test_scenario.scenario_gate` 행 mark 시점은 문서 작성 완료(3) 후 `verdict: pass` 수신 이후다.
 5. 사용자에게 TEST-SCENARIO 보고 — 승인 = EXECUTE 시작 허가
 
-> **[MUST] actor 무관 유지**: 목표-커버 게이트(`op-scenario-gate` 디스패치와 `verdict: pass` 요건)는 `actor` 값과 무관하게 항상 동일하게 적용된다 — PM이 TEST-SCENARIO를 쓰는 어느 actor에서도 PM 산문 판단만으로 `test_scenario.scenario_gate`(opds는 `plan.scenario_gate`) 행을 mark할 수 없다(`harness/actor.md` §독립 검증 경계).
+> **[MUST] actor 무관 유지**: 목표-커버 게이트(`op-scenario-gate` 디스패치와 `verdict: pass` 요건)는 `actor` 값과 무관하게 항상 동일하게 적용된다 — PM이 TEST-SCENARIO를 쓰는 어느 actor에서도 PM 산문 판단만으로 `test_scenario.scenario_gate`(opds는 `plan.scenario_gate`) 행을 mark할 수 없다(`harness/actor.md` §독립 검증 경계). `coordinator` 신규 태스크(PM 경로)는 이 STEP 3.5의 독립 요건이 `plan.design_gate` 행으로 대체된다 — `state-tool design-gate record`가 `verdict: pass`를 기록하고 현재 문서 묶음 hash가 통과 hash와 같아야 EXECUTE로 진입한다(위 §PM 경로 (actor=coordinator 신규) 절, 원문 SSOT `harness/design-gate.md`).
 
 > **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
 > - 자동 승인 구간(agentic 전 구간 / semi-agentic의 EXECUTE-equivalent 이후) — **PM은 호출하지 않는다.**
@@ -361,7 +382,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
 
 ## STATE.md 도메인 치환값
 
-> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> <resolve-start init_args> [--worktree <worktree_root>] --rows-from opal/skills/opal-pilot-dev/references/pipeline.json`(Short profile은 `pipeline-short.json`) 호출. `init_args`는 `--skill`·`--mode`·`--workspace`·`--actor`를 담으며, `workspace=worktree`면 `harness/task-process.md` 스텝 4.5가 발급한 `--worktree`를 반드시 덧붙인다. 행 구성 SSOT는 `references/pipeline.json`(task-step key 포함) — `--rows-from`이 확장자로 분기해 파싱한다(070).
+> **[MUST] STATE.md 초기 생성**: `~/.opal/tools/state-tool/run.sh init <task-path> <resolve-start init_args> [--worktree <worktree_root>]` 호출. `init_args`는 `resolve-start` 응답을 그대로 쓴다 — `--skill`·`--mode`·`--workspace`·`--actor`에 더해 `--rows-from` 절대경로(`coordinator`→`pipeline-pm.json`, `worker`+`opd`→`pipeline.json`, `worker`+`opds`→`pipeline-short.json`)를 resolver가 이미 판정해 포함한다. PM이 `--rows-from`을 별도로 고르지 않는다. `workspace=worktree`면 `harness/task-process.md` 스텝 4.5가 발급한 `--worktree`를 반드시 덧붙인다. 행 구성 SSOT는 `init_args`가 가리키는 pipeline fixture(task-step key 포함) — `--rows-from`이 확장자로 분기해 파싱한다(070).
 > **[MUST] actor 영속화**: `init_args`의 `--actor coordinator|worker`를 그대로 전달한다. legacy `--actor pm`은 `actor_pm_retired`로 거부된다. 지원 범위·거부 조건은 `harness/actor.md`(SSOT)를 따른다.
 > 근거: `tasks/134-260501-opp-pipeline-state-tool/TASK.md` F-15 / `PLAN.md` §2.3 / §2.20.2 / §3 Step 8 (P-3 advance, P-1 mark) / `tasks/070-260720-opd-태스크스텝-키주소-1차/PLAN.md` §3.6.2 (pipeline.json 전환)
 

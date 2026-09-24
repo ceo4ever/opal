@@ -30,6 +30,8 @@
 
 신규 태스크 기본값(플래그 없음): **agentic · worktree · PM 조율(`actor=coordinator`)**. 기존 태스크 재개는 저장된 mode·작업본·actor를 그대로 쓴다. 판정은 `state-tool resolve-start`가 한다.
 
+신규 `coordinator`(PM 경로) 태스크는 opd·opds 모두 EXECUTE 진입 전에 TASK 작성 → TASK 확인 → PLAN 작성(`## Findings` 포함) → TEST-SCENARIO 작성 → 설계 게이트 → 설계 확인의 6행을 거친다. 설계 게이트는 결정론 검사(TASK 5절·Findings 4소절·Work item 연결 등)와 독립 `opal-evaluator-agent`(`design-rubric` phase) 1회 판정을 함께 요구하며, TASK·PLAN·TEST-SCENARIO 세 문서의 묶음 hash가 통과 hash와 일치할 때만 EXECUTE에 진입한다. 원문 SSOT는 `opal/core/references/harness/design-gate.md`.
+
 | 플래그 | 효과 |
 |---|---|
 | `--semi-agentic` / `--interactive` / `--agentic` | 모드 선택 (둘 이상이면 `mode_flag_conflict`) |
@@ -37,7 +39,7 @@
 | `--no-pm` | PM 조율 해제 — 분석·PLAN도 전문 워커가 수행(`actor=worker`) |
 | `--pm` | PM 조율 명시(기본값과 같음) |
 
-PM 조율에서는 PM이 TASK·분석·PLAN·TEST-SCENARIO와 분배·파일 소유권·검토·재작업·마감을 맡고, 구현·자가 점검·TEST FAIL 수정은 전문 워커가 맡는다. TEST-SCENARIO의 목표-커버 게이트와 TEST 단계의 실제 실행 검증은 actor와 무관하게 항상 독립된 서브에이전트가 수행한다. 계약 원문은 `opal/core/references/harness/actor.md`다.
+PM 조율에서는 PM이 TASK·분석·PLAN·TEST-SCENARIO와 분배·파일 소유권·검토·재작업·마감을 맡고, 구현·자가 점검·TEST FAIL 수정은 전문 워커가 맡는다. TEST-SCENARIO의 목표-커버 게이트(신규 PM 경로는 설계 게이트가 그 자리를 대체)와 TEST 단계의 실제 실행 검증은 actor와 무관하게 항상 독립된 서브에이전트가 수행한다. `--no-pm`은 PM 경로가 아니라 기존 Full/Short 전문 워커 디스패치 경로(`actor=worker`)를 그대로 쓴다. 계약 원문은 `opal/core/references/harness/actor.md`다.
 
 모드별 CLOSE 전이는 공통 SSOT `harness/modes.md` §CLOSE 전이 계약을 따른다. Full/Short의 행 키는 각 pipeline JSON을 사용한다.
 
@@ -87,7 +89,7 @@ ANALYSIS가 없는 대신 PLAN 워커가 분석을 겸한다. PLAN 완료 직후
 Short profile은 "단계를 줄이는 것이지 분석을 줄이는 것이 아니다." PLAN 워커가 ANALYSIS 없이 호출되면 코드 분석을 직접 수행하며, 그 품질은 Full profile과 동일한 기준을 따른다.
 
 ### TEST-SCENARIO 작성자가 PLAN 워커와 다른 이유는?
-PLAN을 작성한 워커가 스스로 시나리오를 작성하면 자기 확인(self-confirming)이 되기 때문에, TEST-SCENARIO는 PM이 별도로 작성하고 독립된 게이트(`op-scenario-gate`)로 검증한다.
+PLAN을 작성한 워커가 스스로 시나리오를 작성하면 자기 확인(self-confirming)이 되기 때문에, TEST-SCENARIO는 PM이 별도로 작성하고 독립된 게이트(`op-scenario-gate`)로 검증한다. 신규 `coordinator`(PM 경로)는 PLAN도 PM이 쓰므로, 이 게이트가 `op-scenario-gate`의 `gate: design` 입력으로 설계 게이트를 겸해 독립 `opal-evaluator-agent`가 PLAN 설계 4축과 시나리오 3축을 함께 채점한다.
 
 ### 트랙 전환은 언제, 몇 번 제안되나요?
 `opd`는 ANALYSIS 완료 직후 PLAN 진입 전에, `opds`는 PLAN 완료 직후 EXECUTE 진입 전에 각각 1회만 판정한다. 사용자가 응답하지 않으면 현재 트랙을 유지한다.

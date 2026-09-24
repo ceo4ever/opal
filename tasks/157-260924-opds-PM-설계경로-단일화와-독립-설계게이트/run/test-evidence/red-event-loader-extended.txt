@@ -1,0 +1,87 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0 -- /Users/iskang/.opal/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157
+plugins: asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 14 items
+
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_disabled_and_worker_are_distinct_zero_document_receipts PASSED [  7%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_every_event_loads_and_its_receipt_verifies 
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_every_event_loads_and_its_receipt_verifies PASSED [ 14%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_manifest_declares_exactly_fourteen_standard_events FAILED [ 21%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_missing_required_document_is_structured_failure PASSED [ 28%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_non_project_cwd_does_not_promote_parent_home_opal_to_project PASSED [ 35%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_project_brief_cli_preserves_inputs_and_multitask_counts PASSED [ 42%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_project_brief_empty_project_keeps_short_prefix PASSED [ 50%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_project_brief_omits_only_the_failed_query_block PASSED [ 57%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_project_brief_output_is_bounded_to_1024_utf8_bytes PASSED [ 64%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_project_brief_renders_many_items_remainder_and_anomaly_count_bounded PASSED [ 71%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_project_brief_renders_ready_to_emit_markdown PASSED [ 78%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_s6_boot_summary_adds_normalized_mode_and_source PASSED [ 85%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_s6_invalid_legacy_mode_is_visible_as_fail_closed PASSED [ 92%]
+opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_s6_project_brief_mode_output_remains_bounded_and_partial_failure_isolated PASSED [100%]
+
+=================================== FAILURES ===================================
+_ EventLoaderExtendedContractTest.test_every_event_loads_and_its_receipt_verifies (event='stage.design') _
+
+self = <test_event_loader_extended.EventLoaderExtendedContractTest testMethod=test_every_event_loads_and_its_receipt_verifies>
+
+    def test_every_event_loads_and_its_receipt_verifies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            deployed = temp / "deployed"
+            deployed.mkdir()
+    
+            for event in STANDARD_EVENTS:
+                with self.subTest(event=event):
+                    loaded_result, loaded = self._run(
+                        "load",
+                        "--event",
+                        event,
+                        deployed_root=deployed,
+                    )
+>                   self.assertEqual(loaded_result.returncode, 0, loaded_result.stderr)
+E                   AssertionError: 1 != 0 :
+
+opal/tools/event-loader/tests/test_event_loader_extended.py:107: AssertionError
+_ EventLoaderExtendedContractTest.test_manifest_declares_exactly_fourteen_standard_events _
+
+self = <test_event_loader_extended.EventLoaderExtendedContractTest testMethod=test_manifest_declares_exactly_fourteen_standard_events>
+
+    def test_manifest_declares_exactly_fourteen_standard_events(self):
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        events = manifest["events"]
+    
+>       self.assertEqual(tuple(event["id"] for event in events), STANDARD_EVENTS)
+E       AssertionError: Tuples differ: ('ses[175 chars]tage.execute', 'stage.test', 'stage.close', 'worker.dispatch') != ('ses[175 chars]tage.design', 'stage.execute', 'stage.test', '[27 chars]tch')
+E       
+E       First differing element 10:
+E       'stage.execute'
+E       'stage.design'
+E       
+E       Second tuple contains 1 additional elements.
+E       First extra element 14:
+E       'worker.dispatch'
+E       
+E         ('session.disabled',
+E          'session.worker',
+E          'session.assistant',
+E          'session.project',
+E          'pm.activate',
+E          'pilot.start',
+E          'stage.task',
+E          'stage.analysis',
+E          'stage.plan',
+E          'stage.test_scenario',
+E       +  'stage.design',
+E          'stage.execute',
+E          'stage.test',
+E          'stage.close',
+E          'worker.dispatch')
+
+opal/tools/event-loader/tests/test_event_loader_extended.py:78: AssertionError
+=========================== short test summary info ============================
+SUBFAILED(event='stage.design') opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_every_event_loads_and_its_receipt_verifies
+FAILED opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_manifest_declares_exactly_fourteen_standard_events
+=============== 2 failed, 13 passed, 14 subtests passed in 3.21s ===============

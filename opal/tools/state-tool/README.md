@@ -64,7 +64,8 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 
 - 사용자가 입력한 원문 플래그를 그대로 넘긴다. 응답: `effective_mode`·`mode_source`, `workspace`(`worktree`|`hub`)·`workspace_source`, `actor`(`coordinator`|`worker`|`pm`)·`actor_source`(`default`|`explicit`|`state`|`legacy_default`), `warnings`. 신규는 `init_args`도 반환한다.
 - 신규 기본값(`NEW_TASK_DEFAULTS`): `opd`·`opds`·`oppd`·`oppl`·`oppb`는 `agentic`·`worktree`, 그 외 Pilot은 `semi-agentic`·`hub`. actor는 `opd`·`opds`만 `coordinator`이고 그 외는 `worker`(state.json에 키를 만들지 않음). 축별 원문은 `harness/modes.md`·`worktree.md`·`actor.md`가 소유한다.
-- 신규는 읽기 전용이다. `init_args`(`--skill`·`--mode`·`--workspace`·opd/opds만 `--actor`)에 worktree면 `worktree-tool create`가 발급한 `--worktree <worktree_root>`를 덧붙여 `init`에 넘긴다.
+- 신규는 읽기 전용이다. `init_args`(`--skill`·`--mode`·`--workspace`·opd/opds만 `--actor`와 `--rows-from`)에 worktree면 `worktree-tool create`가 발급한 `--worktree <worktree_root>`를 덧붙여 `init`에 넘긴다.
+- opd/opds 신규의 `--rows-from`은 `state_tool.py` 기준 `../../skills/opal-pilot-dev/references/`의 절대경로다 — actor `coordinator`→`pipeline-pm.json`(PM 경로), `worker`+opd→`pipeline.json`, `worker`+opds→`pipeline-short.json`. 파일이 없으면 `spec_file_not_found`. 재개 응답과 다른 Pilot의 `init_args`에는 넣지 않는다.
 - 충돌: 모드 플래그 2개 이상 `mode_flag_conflict`, `--wt`+`--no-wt` `workspace_flag_conflict`, `--pm`+`--no-pm` `actor_flag_conflict`, opd/opds 밖 `--pm` `actor_unsupported_for_skill`(`--no-pm`은 경고 `no_pm_redundant`만), oppb `--no-wt` `workspace_required_for_skill`.
 - 재개(state.json 존재, `--new-task` 없음): 저장값을 상속한다. workspace는 `worktree` 키 유무, actor는 키 값(부재 시 `worker`/`legacy_default`). 저장값과 다른 workspace·actor 플래그는 `resume_axis_locked`(`axis` 동봉). 명시 mode 플래그만 `resolve-mode`와 같이 mode를 원자 갱신한다.
 
@@ -140,11 +141,13 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 ~/.opal/tools/state-tool/run.sh advance <task-path> \
   (--task-step <key> | --task-step-id <n> | --row <n>) \
   [--note <text>] \
+  [--force --note <text>] \
   [--next-action <text>]                    # per-transition 오버라이드, 비지속 (072)
 ```
 
 - 행 주소는 `--task-step`(key) / `--task-step-id`(숫자) / `--row`(숫자, deprecated 별칭) 중 정확히 하나 (070 R-4)
 - `pending` 상태인 행만 `in_progress`로 전환 (T-7)
+- `--force`는 `--note`가 필수(`note_required_for_force`)이며 자동 승인·게이트 산출물·명확화·code-scan 인용 가드를 우회한다. PM 경로 설계 게이트 가드(아래 `design-gate` 절)는 우회하지 못한다.
 - CLOSE 단계 첫 행의 처리도 mode-aware 단일 판정을 따른다. interactive/fail-closed만 직전 사용자 확인 또는 확인 행 없는 Pilot의 `--owner user` 승인을 요구한다.
 - `state.json` `next_action`이 파이프라인 프론티어(첫 미완료 행)에서 자동 파생·갱신된다. `--next-action <text>` 지정 시 해당 값이 파생값보다 우선하며, 이 오버라이드는 **해당 전이 1회에만** 적용된다 — 다음 전이가 `--next-action` 없이 실행되면 자동 파생으로 복귀한다(072). **094부터 STATE.md에 이를 렌더하는 `## 현재 상태`/`## 다음 액션` 섹션은 없다** — 현재 상태 조회는 `show`로 한다
 - STATE.md는 `> 최종 갱신:` 헤더 타임스탬프만 갱신된다(저널 후처리, 094)
@@ -411,6 +414,39 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 
 ---
 
+### `design-gate` — PM 경로 독립 설계 게이트 (157)
+
+```bash
+~/.opal/tools/state-tool/run.sh design-gate start  <task-path> --iteration N
+~/.opal/tools/state-tool/run.sh design-gate record <task-path> --iteration N \
+  --verdict pass|rewrite|input_error --evaluator-result <json> [--rewrite-target plan|scenario|both]
+~/.opal/tools/state-tool/run.sh design-gate reset  <task-path> --owner user --note <사유>
+```
+
+- PM 경로(rows에 key `plan.design_gate` 존재) 태스크에서만 동작하고, 그 외는 `design_gate_not_applicable`. 흐름·해시·상한 규칙 원문은 `opal/core/references/harness/design-gate.md`가 소유한다.
+- 상태는 `state.json` `design_gate` 블록(`status` idle/evaluating/pass/fail/retry_limit, `iteration`, `limit`=3, `limit_from`, `task_confirm_req_hash`, `current_attempt`, `passed_bundle_hash`, `approved_bundle_hash`, `last_rewrite_target`, `history[]`)이 소유한다.
+- 문서 묶음 hash = sha256(`"TASK.md\n"+h1+"\nPLAN.md\n"+h2+"\nTEST-SCENARIO.md\n"+h3`). TASK 요구 hash = TASK.md `## Constraints`·`## Acceptance criteria` 본문 sha256.
+- `start` 검사 순서: PM 경로 → `execute.implement` pending(`design_gate_locked`) → `retry_limit`(`design_gate_retry_limit`) → 열린 시도(`design_gate_attempt_open`, 단 열린 시도의 묶음 hash가 현재와 다르면 그 시도를 `superseded`로 닫고 진행) → `plan.design_gate` 앞 행 완료(`stage_transition_violation`) → 대상 문서 존재(`design_gate_input_missing`) → TASK 요구 hash(`task_reconfirm_required`) → `N = iteration+1`(`design_gate_iteration_invalid`) → 직전 verdict가 rewrite면 대상 문서 중 하나라도 불변이면 `rewrite_target_unchanged` → 결정론 검사. 결정론 검사 전 거부는 상태를 바꾸지 않는다.
+- 결정론 검사: sdlc-v2 TASK 5절, 기존 PLAN 계약 검사 전 항목, 모든 AC/C의 Work item `완료 기준 연결`(`uncovered requirement AC-N`), `## Findings` H3 4소절(`직접 변경`·`회귀 확인`·`문서 갱신`·`미확인 가정`) 존재·비공백, `회귀 확인` 경로가 Work item `변경 대상` 또는 `직접 변경`·`문서 갱신`에도 있으면 `regression target listed as change`, `직접 변경`·`문서 갱신` 경로가 Work item `변경 대상`에 없으면 `finding not in work items`, `미확인 가정` 항목은 `없음` 또는 Risks의 `H-N` 참조, 형제 test-tool(`sys.executable test-tool/test_tool.py`) `scenario-coverage-build --template sdlc-v2` + `scenario-coverage-check`의 exit 0(16은 missing 병합, 17은 input_error). 실패는 `design_gate_deterministic_fail`(exit 1, `missing` 동봉)이며 시도 1회로 history에 `deterministic_fail`로 남고 상한 계산에 포함된다. `verify --plan-contract-check`는 이 strict 검사를 쓰지 않는다.
+- `start` 통과: `status=evaluating`, `current_attempt` 기록, 통과·승인 hash 삭제, `plan.design_gate`→in_progress, done이던 `plan.user_confirm`→pending, run-log `gate.requested`(`gate_id=design-gate-i{N}`)를 같은 커밋으로 기록.
+- `record` 거부(상태 불변·시도 유지): 열린 시도 없음·회차 불일치 `design_gate_iteration_invalid`, 묶음 변경 `design_gate_input_changed`, pass·rewrite에서 `design.axes` 4키(`completeness`·`decision_clarity`·`executability`·`recoverability`)·`scenario.scores` 3키(`goal`·`adoption`·`boundary`) 누락이나 rewrite의 `--rewrite-target` 누락 `design_gate_result_invalid`, pass인데 4축 전부 PASS·시나리오 각 ≥1·평균 ≥1.5가 아니면 `design_gate_verdict_mismatch`. `input_error`는 축 검사를 하지 않는다(파일 부재·파싱 실패 허용).
+- `record` 성공: pass→`status=pass`, `passed_bundle_hash`, `plan.design_gate` done. 그 외→`status=fail`, `iteration - limit_from ≥ limit`이면 `status=retry_limit`과 `transition_action=await_user`·`report_type=decision_request`. 모두 history에 추가하고 run-log `gate.resolved`(`data.verdict` pass→`approved`, 그 외→`rejected`, 원문 verdict는 summary)를 같은 커밋으로 남긴다.
+- `reset`: `--owner user`가 없으면 `user_confirmation_required`. `retry_limit`일 때만 `status=idle`, `limit_from=iteration`으로 해제하고 STATE.md 의사결정 로그에 기록한다(history·회차 번호 유지). 그 외 상태에서는 변경 없이 `reset: false`로 성공한다.
+- `advance`/`mark` 가드(PM 경로, 자동 승인 직후·저장 전, `--force` 우회 불가): `task.user_confirm`이 done이 되는 순간 `task_confirm_req_hash` 기록. `plan.user_confirm`이 done이 되는 순간 현재 묶음이 `passed_bundle_hash`와 다르면 `design_bundle_mismatch`, 같으면 `approved_bundle_hash` 기록. 자동 승인 불가 mode에서 `--owner user` 없는 확인 행 mark는 `user_confirmation_required`. `mark plan.design_gate --done`은 `status=pass`·현재=통과 hash일 때만(`design_gate_not_passed`/`design_bundle_mismatch`). `execute.implement`가 pending에서 진입할 때 `status=pass`(`design_gate_not_passed`) → TASK 요구 hash 일치(`task_reconfirm_required`) → 현재=통과=승인 hash(`design_bundle_mismatch`)를 요구한다.
+
+### `design-decision` — PM 경로 설계 결정 분류 기록 (157)
+
+```bash
+~/.opal/tools/state-tool/run.sh design-decision <task-path> --scope external|detail --summary <text> --basis <text>
+```
+
+- PM 경로 PLAN 단계에서만 허용한다. PM 경로가 아니면 `design_gate_not_applicable`, `execute.implement`가 pending이 아니면 `design_gate_locked`, 첫 미완 행이 PLAN이 아니면 `stage_transition_violation`.
+- `detail`: STATE.md 의사결정 로그 + PM `activity`(decision) 사건 기록, `transition_action=continue`.
+- `external`: `plan.plan_md` 행을 `block`과 같은 방식으로 failed·`current_status=blocked` 처리하고 STATE.md 의사결정 로그를 남긴다. `transition_action=blocked`·`report_type=decision_request`. 해소는 기존 `status --set`·`advance` 재개 경로.
+- 두 scope 모두 기록 성공이므로 `ok: true`·exit 0이다.
+
+---
+
 ### `verify` — TEST-SCENARIO.md 검증 + TASK/PLAN 게이트 (013/016/005/098/100/111)
 
 위 11개 번호 명령과 별개로 동작하는 검증 전용 명령. task-path 하나에 여러 독립
@@ -639,9 +675,29 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 
 ## 에러 코드 카탈로그 (59종)
 
-코드는 `state_tool.py`의 두 물리 분리 테이블이 소유한다. 기본 상태 오류는 `ERROR_CODES` 53종,
-run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종이다. `err()`가 조회 시에만 두 테이블을
-합성하며, 종수는 문서가 아니라 코드의 키 집합을 실측한다.
+코드는 `state_tool.py`의 세 물리 분리 테이블이 소유한다. 기본 상태 오류는 `ERROR_CODES` 59종,
+run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종, 설계 게이트 오류는 `DESIGN_GATE_ERROR_CODES`
+14종이다. `err()`가 조회 시에만 `ERROR_CODES` → `RUN_LOG_STATE_ERROR_CODES` → `DESIGN_GATE_ERROR_CODES`
+순으로 합성하며, 종수는 문서가 아니라 코드의 키 집합을 실측한다. 이 절 헤딩의 종수는 `ERROR_CODES` 기준이다.
+
+### 설계 게이트 오류 (14종, 157)
+
+| 코드 | 의미 |
+|---|---|
+| `design_gate_not_applicable` | PM 경로가 아닌 태스크에서 설계 게이트·설계 결정 명령 호출 |
+| `design_gate_locked` | `execute.implement`가 pending이 아닌 상태에서 `start`·`design-decision` 호출 |
+| `design_gate_attempt_open` | 묶음이 그대로인 열린 시도가 있는 상태에서 새 `start`(먼저 `record`) |
+| `design_gate_retry_limit` | 반복 상한 도달, `reset` 전 `start` 불가(사용자 대기) |
+| `task_reconfirm_required` | TASK 요구 hash가 `task_confirm_req_hash`와 불일치(사용자 대기) |
+| `design_gate_iteration_invalid` | `start`의 N≠iteration+1, `record`의 N≠열린 시도 회차 또는 열린 시도 없음 |
+| `rewrite_target_unchanged` | 직전 rewrite 대상 문서 중 하나라도 직전 시도와 동일 |
+| `design_gate_deterministic_fail` | 결정론 검사 실패(`missing` 동봉) |
+| `design_gate_input_missing` | TASK/PLAN/TEST-SCENARIO 부재 |
+| `design_gate_input_changed` | `record` 시점 묶음 hash가 시도 시작 시점과 다름 |
+| `design_gate_result_invalid` | evaluator 결과 필수 축 누락 또는 rewrite의 `--rewrite-target` 누락(pass·rewrite만) |
+| `design_gate_verdict_mismatch` | `--verdict pass`인데 설계 4축·시나리오 기준 미충족 |
+| `design_gate_not_passed` | `status≠pass`에서 `plan.design_gate` 완료·EXECUTE 진입 시도 |
+| `design_bundle_mismatch` | 현재 묶음 hash가 통과·승인 hash와 불일치 |
 
 ### run-log 연동 오류 (15종)
 

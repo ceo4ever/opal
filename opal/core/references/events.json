@@ -276,6 +276,47 @@
       }
     },
     {
+      "id": "stage.design",
+      "required_docs": [
+        {
+          "id": "analysis-core",
+          "source": "{source_root}/opal/core/references/harness/analysis-core.md",
+          "deployed": "{deployed_root}/references/harness/analysis-core.md"
+        },
+        {
+          "id": "citation-rules",
+          "source": "{source_root}/opal/core/references/harness/citation-rules.md",
+          "deployed": "{deployed_root}/references/harness/citation-rules.md"
+        },
+        {
+          "id": "red-first",
+          "source": "{source_root}/opal/core/references/harness/red-first.md",
+          "deployed": "{deployed_root}/references/harness/red-first.md"
+        },
+        {
+          "id": "scenario-gate",
+          "source": "{source_root}/opal/core/references/harness/scenario-gate.md",
+          "deployed": "{deployed_root}/references/harness/scenario-gate.md"
+        },
+        {
+          "id": "design-gate",
+          "source": "{source_root}/opal/core/references/harness/design-gate.md",
+          "deployed": "{deployed_root}/references/harness/design-gate.md"
+        }
+      ],
+      "optional_docs": [],
+      "predecessors": [
+        "pilot.start"
+      ],
+      "receipt_required": true,
+      "consumer": {
+        "type": "stage",
+        "paths": [
+          "opal/skills/opal-pilot-dev/SKILL.md"
+        ]
+      }
+    },
+    {
       "id": "stage.execute",
       "required_docs": [
         {

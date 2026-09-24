@@ -34,6 +34,7 @@ STANDARD_EVENTS = (
     "stage.analysis",
     "stage.plan",
     "stage.test_scenario",
+    "stage.design",
     "stage.execute",
     "stage.test",
     "stage.close",

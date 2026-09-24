@@ -34,6 +34,7 @@ STANDARD_EVENTS = (
     "stage.analysis",
     "stage.plan",
     "stage.test_scenario",
+    "stage.design",
     "stage.execute",
     "stage.test",
     "stage.close",
@@ -75,7 +76,7 @@ class EventLoaderExtendedContractTest(unittest.TestCase):
         events = manifest["events"]
 
         self.assertEqual(tuple(event["id"] for event in events), STANDARD_EVENTS)
-        self.assertEqual(len(events), 14)
+        self.assertEqual(len(events), 15)
         for event in events:
             self.assertEqual(
                 set(event),

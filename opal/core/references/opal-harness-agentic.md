@@ -95,6 +95,8 @@ PM Gate와 사용자 확인 행 갱신 직후에는 `state-tool` 응답의 `tran
 
 사용자 선택, 사람 전용 검증, 권한 부족, 보안·데이터 손실 위험, 재시도 상한 초과는 이 자동 경로를 사용하지 않고 `await_user|blocked` / `decision_request`로 에스컬레이션한다. merge/push/deploy/worktree 제거와 OPPB P5 merge gate는 별도 권한 경계다 (`harness/modes.md` §CLOSE 전이 계약).
 
+PM 경로 설계 구간(`plan.plan_md`~`plan.user_confirm`, 행 key `plan.design_gate` 보유 태스크)은 PM 대행 강화 검토 대신 `harness/design-gate.md`의 설계 게이트 판정을 따른다. 다른 단계·다른 Pilot은 이 절의 기존 규칙 그대로.
+
 ## 5. Gate 루핑 규칙
 
 모든 Gate에 동일하게 적용되는 단일 규칙. 스킬별 차등이나 태스크 레벨 한도 없음.
@@ -119,6 +121,8 @@ Gate Fail → 재지시 (루핑 카운트 +1)
 
 **oppd Phase 3에도 동일 적용**: 각 액션 내부가 opds 파이프라인(TASK→PLAN→EXECUTE)이므로, 액션 내 각 Gate + 액션 간 Gate 모두 동일 규칙 적용.
 
+PM 경로 설계 게이트는 이 루핑 규칙을 적용하지 않는다. `design-gate record`가 반복 상한에 도달하면 심각도와 무관하게 사용자 대기(`await_user`/`decision_request`)이며 Normal/Minor 기록 후 진행을 쓰지 않는다(상한 수치 `harness/guards.md`).
+
 ## 6. 에스컬레이션 조건
 
 PM이 자율 진행을 중단하고 사용자에게 올리는 기준:
@@ -130,6 +134,7 @@ PM이 자율 진행을 중단하고 사용자에게 올리는 기준:
 - 자동 루핑 제약 한도 초과 (공통 하네스 §1 Guards 준수)
 - **판단이 모호한 경우** (확신이 없으면 에스컬레이션이 기본)
 - **배치 패턴 실패**: 배치 내 과반수 워커가 동일 폴백/오류 패턴 반환 시 즉시 에스컬레이션 (하네스 §7 병렬 처리 모듈 §7.6 준수)
+- PM 경로 설계 중 외부 영향 결정(`design-decision --scope external`)
 
 보정 가능한 이슈는 권한 범위 안에서 수정·재검증하고, 재검증이 통과하면 중간 보고로 실행을 끊지 않고 이어간다. 위 조건에 해당하는 unresolved 상태만 올린다 (`harness/guards.md` §커밋 규칙).
 

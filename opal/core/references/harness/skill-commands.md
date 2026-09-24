@@ -31,11 +31,11 @@
 
 - `//` 뒤에 이어지는 텍스트는 작업 설명(arguments)으로 전달한다
 
-모드·워크스페이스·actor 플래그의 해석은 `state-tool resolve-start`가 집행하고, 신규 기본값 원문은 `harness/modes.md`·`harness/worktree.md`·`harness/actor.md`가 소유한다(여기서는 복제하지 않는다). `opd`·`opds`·`oppd`·`oppl`·`oppb`는 무플래그 신규 태스크가 agentic·worktree이고, `opd`·`opds`는 PM 조율(`--pm`과 같음)이 기본이다.
+모드·워크스페이스·actor 플래그의 해석은 `state-tool resolve-start`가 집행하고, 신규 기본값 원문은 `harness/modes.md`·`harness/worktree.md`·`harness/actor.md`가 소유한다(여기서는 복제하지 않는다). `opd`·`opds`·`oppd`·`oppl`·`oppb`는 무플래그 신규 태스크가 agentic·worktree이고, `opd`·`opds`는 PM 조율(`--pm`과 같음)이 기본이다. `opd`·`opds`의 PM 조율(기본) 신규 태스크는 PM 설계 경로(설계 게이트 — 원문 `harness/design-gate.md`)를 거친다.
 
 ```
 형식: //{스킬명 또는 약식} [--interactive|--semi-agentic|--agentic] [--wt|--no-wt] [--pm|--no-pm] {작업 설명}
-예시: //opds 로그인 버그 수정해줘                  (기본 — agentic·worktree·PM 조율)
+예시: //opds 로그인 버그 수정해줘                  (기본 — agentic·worktree·PM 조율, PM 설계 경로)
       //opd --interactive 회원가입 기능 전체 개발해줘
       //opds --no-pm --no-wt 로그인 버그 수정해줘 (허브 작업본, 분석·PLAN도 전문 워커)
       //opp --agentic 자율 진행                    (opp 기본은 semi-agentic·허브)

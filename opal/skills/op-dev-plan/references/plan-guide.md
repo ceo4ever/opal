@@ -6,11 +6,23 @@
 
 TASK의 AC/C와 영향 범위, ANALYSIS의 Findings/Change boundary/Critical assumptions/Handoff를 그대로 사용한다. 요구를 다시 설명하거나 코드베이스 조사 내용을 복제하지 않는다.
 
-## 2. 결정과 계약
+## 2. PM 경로 Findings
+
+TASK가 opd/opds PM 경로(state 행에 `plan.design_gate`가 있는 태스크 — PM이 PLAN을 직접 쓰는 경로)일 때만 적용한다. `## Approach` 다음에 `## Findings` 절을 두고 H3 4소절을 모두 둔다: `### 직접 변경`, `### 회귀 확인`, `### 문서 갱신`, `### 미확인 가정`. 각 소절 본문은 비워두지 않는다 — 해당 사항이 없으면 `없음.` 한 문장으로 닫는다.
+
+규칙:
+
+- `직접 변경`·`문서 갱신`에 적는 백틱 경로는 반드시 어느 Work item `변경 대상`에도 있어야 한다.
+- `회귀 확인`에 적는 백틱 경로는 Work item `변경 대상`에 넣지 않는다.
+- `미확인 가정`은 `없음` 또는 `Risks`의 `H-N` 참조만 포함한다.
+
+이 규칙은 `state-tool design-gate start`가 결정론으로 검사한다.
+
+## 3. 결정과 계약
 
 `Decisions and contracts`에는 구현자가 선택할 필요가 없도록 확정된 결정, 변경 후 계약, 근거만 적는다. 폐기한 대안은 현재 구현·복구 판단에 영향을 줄 때만 한 문장으로 남긴다.
 
-## 3. Work items
+## 4. Work items
 
 EXECUTE와 PM Gate는 이 표를 공식 입력으로 읽는다.
 
@@ -37,7 +49,7 @@ EXECUTE와 PM Gate는 이 표를 공식 입력으로 읽는다.
 - 참조만 한 문서는 Work item으로 만들지 않는다.
 - 문서 전문을 PLAN에 옮기지 않고, 경로와 바뀔 계약·절만 적는다.
 
-## 4. Risks
+## 5. Risks
 
 `Risks` 절은 유지하되 실제로 틀리면 구현·검증·배포가 실패하는 가정만 `H-N`으로 적는다. 그런 위험이 없으면 `추가 검증이 필요한 위험 없음.` 한 문장으로 닫고 H를 만들지 않는다.
 
@@ -47,7 +59,7 @@ EXECUTE와 PM Gate는 이 표를 공식 입력으로 읽는다.
 |---|---|---|---|
 | H-1. {가정} | {계약} | {사용자·운영·배포 영향} | {Work item 또는 시나리오 대응} |
 
-## 5. Release and recovery
+## 6. Release and recovery
 
 실제 적용에 필요한 항목만 적는다.
 
@@ -70,6 +82,21 @@ template: sdlc-v2
 
 ## Approach
 {접근과 범위}
+
+## Findings
+> PM 경로(`plan.design_gate` 있음)일 때만 이 절을 둔다. `## Approach` 다음, `## Decisions and contracts` 앞.
+
+### 직접 변경
+{또는 없음.}
+
+### 회귀 확인
+{또는 없음.}
+
+### 문서 갱신
+{또는 없음.}
+
+### 미확인 가정
+{또는 없음.}
 
 ## Decisions and contracts
 

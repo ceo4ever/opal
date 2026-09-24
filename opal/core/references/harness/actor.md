@@ -9,7 +9,7 @@ load: pilot.start
   "module": "actor-harness",
   "layer": "reference",
   "domain": "opal-pipeline",
-  "description": "모드 축(interactive/semi-agentic/agentic)과 직교하는 실행 주체(actor) 축의 값(coordinator/worker/legacy pm)·신규 기본값·재개 상속·지원 Pilot 범위·PM 조율 계약·독립 검증 경계·GC 호출 지점을 규정하는 단일 SSOT.",
+  "description": "모드 축(interactive/semi-agentic/agentic)과 직교하는 실행 주체(actor) 축의 값(coordinator/worker/legacy pm)·신규 기본값·재개 상속·지원 Pilot 범위·PM 조율 계약(coordinator 신규 PM 경로와 저장 행 재개의 역할 분담 분리 포함)·독립 검증 경계(PM 경로 `plan.design_gate` 포함)·GC 호출 지점을 규정하는 단일 SSOT.",
   "exports": ["모드 축과 직교하는 별개 축", "actor 값과 신규 기본값", "지원 Pilot 폐쇄 목록과 미지원 통보", "PM 조율 계약", "legacy pm 재개 계약", "독립 검증 경계와 GC 호출 지점"]
 }
 -->
@@ -70,21 +70,21 @@ actor 축을 지원하는 Pilot은 다음 폐쇄 목록 하나뿐이다.
 
 역할 분담:
 
-| 책임 | `coordinator` | `worker` |
-|---|---|---|
-| TASK | PM | PM |
-| ANALYSIS(opd) | PM이 단계 skill을 직접 Read하고 같은 입력·출력 계약으로 작성 | 전문 워커 |
-| PLAN | PM이 직접 작성. Work item `담당`에는 구현할 전문 워커 역할명을 기입 | `opal-plan-agent` |
-| TEST-SCENARIO | PM | PM |
-| EXECUTE 구현·자가 점검 | PLAN `담당`의 전문 워커(FE/BE/DB 또는 `opal-task-agent`) | 같음 |
-| TEST 실행·판정 | `opal-test-agent` | 같음 |
-| TEST FAIL 수정 | 해당 Work item을 구현한 전문 워커(fix 모드) | 같음 |
-| 분배·파일 소유권·결과 검토·재작업 지시·마감 | PM | PM |
+| 책임 | `coordinator`(신규 — PM 경로) | `coordinator`(저장 행 재개) | `worker` |
+|---|---|---|---|
+| TASK | PM | PM | PM |
+| ANALYSIS(opd) | 없음 — ANALYSIS.md를 별도로 만들지 않고 분석 결과를 PLAN `## Findings`에 기록 | PM이 단계 skill을 직접 Read하고 같은 입력·출력 계약으로 작성 | 전문 워커 |
+| PLAN | PM이 직접 작성하며 `## Findings`(직접 변경·회귀 확인·문서 갱신·미확인 가정) 4소절을 포함. Work item `담당`에는 구현할 전문 워커 역할명을 기입 | PM이 직접 작성(Findings 절 없음). Work item `담당`에는 구현할 전문 워커 역할명을 기입 | `opal-plan-agent` |
+| TEST-SCENARIO | PM | PM | PM |
+| EXECUTE 구현·자가 점검 | PLAN `담당`의 전문 워커(FE/BE/DB 또는 `opal-task-agent`) | 같음 | 같음 |
+| TEST 실행·판정 | `opal-test-agent` | 같음 | 같음 |
+| TEST FAIL 수정 | 해당 Work item을 구현한 전문 워커(fix 모드) | 같음 | 같음 |
+| 분배·파일 소유권·결과 검토·재작업 지시·마감 | PM | PM | PM |
 
 - **[MUST] `coordinator`에서 PM은 구현 코드를 직접 작성하지 않는다.** 구현·자가 점검·FAIL 수정은 전문 워커에게 디스패치하고, 매 디스패치마다 `worker.dispatch`를 load·verify한다.
 - **[MUST] 병렬은 같은 실행 그룹 안에서 선행 관계가 없고 변경 파일이 겹치지 않을 때만 허용한다.** 그 외에는 순차로 디스패치한다. 같은 파일은 한 워커가 소유한다(`pm/dispatch-process.md` Step 1).
 - PM은 워커 결과를 PM Gate로 검토하고, 부족하면 같은 워커에게 재작업을 지시한다. 재시도 상한은 `harness/guards.md` §자동 루핑 제약을 따른다.
-- PLAN과 TEST-SCENARIO를 같은 PM이 쓰므로 자기 확인 방지는 아래 §독립 검증 경계의 evaluator와 테스트 에이전트가 맡는다.
+- PLAN과 TEST-SCENARIO를 같은 PM이 쓰므로 자기 확인 방지는 아래 §독립 검증 경계의 evaluator와 테스트 에이전트가 맡는다. `coordinator`(신규 — PM 경로)는 이 자기 확인 방지를 설계 게이트의 독립 `opal-evaluator-agent`(`design-rubric` phase)가 PLAN·TEST-SCENARIO를 함께 채점하는 방식으로 수행한다(아래 §독립 검증 경계 표).
 - `worker`는 위 표의 워커 열을 따르며 PLAN 작성자(`opal-plan-agent`)와 TEST-SCENARIO 작성자(PM)가 분리된다.
 
 ## legacy `pm` 재개 계약
@@ -102,6 +102,7 @@ legacy `pm` 태스크에서 PM이 구현을 워커에게 넘겨야 하면 사용
 | 행 | 필요 증거 |
 |---|---|
 | `plan.scenario_gate`(opds)·`test_scenario.scenario_gate`(opd) | `op-scenario-gate` 디스패치 결과 `verdict: pass` |
+| `plan.design_gate`(PM 경로 — `coordinator` 신규, opd·opds 공통) | `state-tool design-gate record`가 기록한 `verdict: pass` + 독립 `opal-evaluator-agent`(`design-rubric` phase) 결과 + 현재 문서 묶음 hash와 통과 hash 일치. 원문 SSOT `harness/design-gate.md` |
 | `test.run_tests` + `test.pm_gate` | `test-scenario.json` 전 시나리오 PASS + 실제 실행 증거 |
 
 CLOSE 첫 행은 actor와 무관하게 `harness/modes.md` §CLOSE 전이 계약의 effective mode 판정만 따른다. merge·push·배포 승인 경계는 `harness/guards.md` §커밋 규칙이 소유한다.

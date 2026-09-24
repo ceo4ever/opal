@@ -379,6 +379,48 @@
       "type": "string",
       "pattern": "^run-[0-9]{14}-[0-9a-f]{8}$",
       "description": "현재 실행 run 식별자 `run-<UTC YYYYMMDDHHMMSS>-<8자리 hex>`. `state-tool run-start` 발급 시에만 존재하는 optional 필드이며 재호출하면 새 id로 교체된다(현재 run은 항상 1개, 이력 누적 없음). required에는 넣지 않는다 — run_id 없는 기존 state.json이 계속 validate를 통과해야 한다 (131 D8)"
+    },
+    "actor": {
+      "type": "string",
+      "enum": ["coordinator", "worker", "pm"],
+      "description": "실행 주체(opd/opds 전용). `init --actor` 지정 시에만 존재하는 optional 필드 — pm은 재개 전용 legacy 값이다 (122, 156)"
+    },
+    "design_gate": {
+      "type": "object",
+      "description": "PM 경로(rows에 plan.design_gate 존재) 태스크에만 존재하는 독립 설계 게이트 블록. 해시·반복·이력을 소유하며 EXECUTE 가드가 이 블록만 읽는다 (157 DEC-5, harness/design-gate.md)",
+      "properties": {
+        "status": {"type": "string", "enum": ["idle", "evaluating", "pass", "fail", "retry_limit"]},
+        "iteration": {"type": "integer", "minimum": 0},
+        "limit": {"type": "integer", "minimum": 1},
+        "limit_from": {"type": "integer", "minimum": 0},
+        "task_confirm_req_hash": {"type": ["string", "null"]},
+        "current_attempt": {
+          "type": ["object", "null"],
+          "properties": {
+            "iteration": {"type": "integer"},
+            "bundle_hash": {"type": "string"},
+            "files": {"type": "object", "additionalProperties": {"type": "string"}},
+            "started_at": {"type": "string"}
+          }
+        },
+        "passed_bundle_hash": {"type": ["string", "null"]},
+        "approved_bundle_hash": {"type": ["string", "null"]},
+        "last_rewrite_target": {"type": ["string", "null"], "enum": ["plan", "scenario", "both", null]},
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "iteration": {"type": ["integer", "null"]},
+              "verdict": {"type": "string", "enum": ["pass", "rewrite", "input_error", "deterministic_fail", "superseded"]},
+              "rewrite_target": {"type": ["string", "null"]},
+              "bundle_hash": {"type": ["string", "null"]},
+              "reason": {"type": ["string", "null"]},
+              "at": {"type": "string"}
+            }
+          }
+        }
+      }
     }
   }
 }

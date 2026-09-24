@@ -3,6 +3,7 @@ name: op-scenario-gate
 description: |
   TEST-SCENARIO 또는 pilot별 등가 산출물의 목표·요구·위험 커버리지를 판정한다.
   필수 입력은 task_folder, producer_artifact, pilot, iteration이며 pass, rewrite, escalate 중 하나를 반환한다.
+  선택 입력 gate: design을 주면 opd/opds PM 경로 전용 설계 게이트로 동작한다(§6).
 ---
 
 # op-scenario-gate
@@ -158,6 +159,51 @@ builder를 쓰지 않는다. `<run_root>/acceptance.json`을 읽어 §2가 그�
 `verdict: pass` 회차의 evidence 색인이 성공한 뒤에만 호출자가
 `task accept --run-root <run_root> --task-id <scope>`로 전이를 시도할 수 있다.
 게이트는 `task accept`를 직접 호출하지 않는다.
+
+## 6. 설계 게이트 (`gate: design`)
+
+입력 `gate: design`은 pilot이 `opd`/`opds`이고 태스크 state가 PM 경로(state.json 행 key에 `plan.design_gate`가 있음)일 때만 유효하다. 이 절은 §1~§4의 `.scenario-gate-history.json`을 쓰지 않는다 — 이력은 `state.json`의 `design_gate.history`가 소유한다. 원문 SSOT는 `opal/core/references/harness/design-gate.md`다.
+
+### 6.1 절차
+
+① 시작
+
+```bash
+~/.opal/tools/state-tool/run.sh design-gate start <task_folder> --iteration <N>
+```
+
+실패 코드별 처리:
+
+- `design_gate_deterministic_fail`: 반환된 missing으로 PM이 PLAN/TEST-SCENARIO를 보완한 뒤 N+1로 재호출한다.
+- `design_gate_retry_limit`, `task_reconfirm_required`: 사용자에게 에스컬레이션한다.
+- 그 외 입력 오류: 중단한다.
+
+② `worker.dispatch`로 `opal-evaluator-agent`를 로드·검증한 뒤 다음 입력으로 1회 디스패치한다.
+
+```yaml
+phase: design-rubric
+task_folder: <task_folder>
+task_md: <task_folder>/TASK.md
+plan_md: <task_folder>/PLAN.md
+scenario_source: <producer_artifact 또는 TEST-SCENARIO.md>
+iteration: <N>
+```
+
+③ evaluator 반환 JSON을 `<task_folder>/run/design-gate-i<N>.json`에 저장하고 기록한다. 인자 매핑: evaluator `verdict: pass` → `--verdict pass`, `verdict: fail` → `--verdict rewrite --rewrite-target <evaluator rewrite_target>`, evaluator `status: blocked` 또는 결과 JSON이 계약 형식이 아니면 `--verdict input_error`로 기록한다.
+
+```bash
+~/.opal/tools/state-tool/run.sh design-gate record <task_folder> --iteration <N> --verdict <pass|rewrite|input_error> --evaluator-result <run/design-gate-i<N>.json> [--rewrite-target <plan|scenario|both>]
+```
+
+④ 반환
+
+```json
+{"verdict": "pass | rewrite | escalate", "reason": "...", "rewrite_target": "plan|scenario|both|null", "iteration": 1}
+```
+
+`rewrite`면 PM이 `rewrite_target` 문서만 보완해 N+1로 다시 호출한다. `record` 응답이 `status=retry_limit`이면 `escalate`로 반환한다.
+
+이 경로에서는 §1~§5의 절차·이력·evidence 제출을 수행하지 않는다.
 
 ## 변경이력
 
