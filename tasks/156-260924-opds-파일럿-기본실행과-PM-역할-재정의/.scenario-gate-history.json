@@ -1,0 +1,16 @@
+[
+  {
+    "iteration": 1,
+    "missing": {"requirements": [], "features": [], "hypotheses": []},
+    "scores": {"goal": 2, "adoption": 2, "boundary": 2},
+    "gaps": [],
+    "verdict": "pass",
+    "reason": "converged",
+    "evaluator": "opal-evaluator-agent (scenario-rubric)",
+    "coverage_check_exit": 0,
+    "advisory": [
+      "H-2/AC-6 허브 폴더 미생성은 PM 절차라 실행 시나리오 대신 S-5 init 게이트와 S-7 문서 검사로 확인",
+      "PM 조율 실행 방식은 C-8상 merge·install 이후 적용이므로 S-7 문서 계약 검사로 확인"
+    ]
+  }
+]

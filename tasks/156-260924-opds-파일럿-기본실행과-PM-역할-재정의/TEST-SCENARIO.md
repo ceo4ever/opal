@@ -1,0 +1,31 @@
+---
+template: sdlc-v2
+---
+# TEST-SCENARIO: 파일럿 기본 실행 정책과 PM 역할 재정의
+
+> 입력: [TASK.md](TASK.md), [PLAN.md](PLAN.md) | 작성자: PM
+
+## Setup
+
+- 환경: macOS, 태스크 worktree `/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_156`(브랜치 `feat/OP-TASK-156`), OPAL venv `~/.opal/.venv/bin/python`(pytest 포함), git CLI.
+- 공통 데이터: 도구 테스트는 `tempfile`로 만든 임시 태스크 폴더와 임시 git 저장소만 쓴다. 저장소의 실제 `tasks/`·`.opal/`은 쓰지 않는다.
+- 대역 사용과 한계: 사용하지 않는다. `state-tool`·`worktree-tool`은 실제 CLI 프로세스로 호출하고, worktree 중첩 검사는 실제 `git worktree add`로 만든 linked worktree를 대상으로 한다.
+- 실행 조건: 자동 실행. 설치 후 시나리오(S-9)는 `scripts/install-mac.sh` 실행 뒤 설치본 `~/.opal/`을 대상으로 한다. 사람 협업 없음.
+- 증거 보관: 각 명령의 stdout/stderr와 exit code를 태스크 `run/test-evidence/`에 저장한다. 실패 후 재실행이 있으면 회차별로 남긴다.
+
+## Scenarios
+
+| ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|
+| S-1 | AC-1, C-1 | state.json이 없는 임시 태스크 경로, 플래그 없음 | `state-tool resolve-start <path> --skill <alias> --new-task`를 `opd`·`opds`·`oppd`·`oppl`·`oppb`와 `opp`·`opwt`·`opsdd`·`opdd`·`opgc`·`opdw` 각각에 실행 | 앞 5개는 `effective_mode=agentic`·`workspace=worktree`·`mode_source=default`, 뒤 6개는 `semi-agentic`·`hub`. 모두 exit 0이고 state.json을 만들지 않는다 | unit(CLI subprocess) `opal/tools/state-tool/tests/test_start_resolution.py` | 구현 전 RED |
+| S-2 | AC-2, C-2 | S-1과 같은 신규 조건 | `opd`·`opds` resolve-start 결과의 `init_args`로 `state-tool init`을 실행하고 state.json을 읽는다. `oppd`·`oppl`·`oppb`도 같은 절차. `oppd`에 `--pm`을 붙여 resolve-start | opd/opds는 `actor=coordinator`이고 state.json `actor`가 `coordinator`. oppd·oppl·oppb는 resolver `actor=worker`(`actor_source=default`)이고 state.json에 `actor` 키가 없다. `oppd --pm`은 exit 1·`actor_unsupported_for_skill` | unit(CLI subprocess) | 구현 전 RED |
+| S-3 | AC-3, C-3, H-1 | 저장 mode·worktree·actor가 서로 다른 기존 태스크 5종: (a) agentic+worktree+coordinator (b) semi-agentic+hub+actor 키 없음 (c) interactive+worktree+legacy `pm` (d) agentic+hub+`worker` (e) invalid mode | 각 태스크에 플래그 없이 `resolve-start`(no `--new-task`) 실행. (c)에 `advance`/`mark`로 행 전이. (a)에 `--no-wt`, (b)에 `--pm`, (a)에 `--interactive`를 붙여 재실행 | 무플래그는 저장값 그대로(`mode_source`/`workspace_source`/`actor_source`=`state`, (b)의 actor는 `worker`/`legacy_default`, (c)는 `pm`, (e)는 `interactive`/`fail_closed`). (c)의 전이는 exit 0. `--no-wt`·`--pm` 재개는 exit 1·`resume_axis_locked`(`axis` 필드 각각 `workspace`·`actor`). `--interactive`는 mode만 원자 갱신되고 workspace·actor는 불변 | unit(CLI subprocess) | 구현 전 RED |
+| S-4 | AC-4, C-4 | 신규 태스크 경로 | 모드 플래그 2개(`--agentic --interactive`), `--wt --no-wt`, `--pm --no-pm`, `oppb --no-wt`로 resolve-start. `init --actor pm --skill opds` 실행. `opds --no-pm` resolve-start 후 init | 순서대로 exit 1 + `mode_flag_conflict`·`workspace_flag_conflict`·`actor_flag_conflict`·`workspace_required_for_skill`·`actor_pm_retired`이며 state.json이 생기지 않는다. `--no-pm`은 `actor=worker`·`init_args`에 `--actor worker`, init 후 state.json `actor=worker` | unit(CLI subprocess) | 구현 전 RED |
+| S-5 | AC-6, C-4, H-2 | worktree 기본 Pilot(opds)과 oppb의 신규 태스크 | `init --workspace worktree`를 `--worktree` 없이, `init --workspace hub --skill oppb`, `init --workspace hub --skill opds`(명시 `--no-wt` 경로), `init --workspace worktree --worktree <abs>` 실행 | 앞 둘은 exit 1 + `worktree_path_required`·`workspace_required_for_skill`이고 state.json·STATE.md가 생기지 않는다. 뒤 둘은 exit 0이며 마지막만 state.json에 `worktree` 키가 있다. `--workspace` 미지정 init은 기존과 같이 exit 0(호환) | unit(CLI subprocess) | 구현 전 RED |
+| S-6 | AC-6 | 임시 git 저장소에 `.opal/worktree.json`(monorepo)을 두고 `git worktree add`로 linked worktree를 만든다. 별도로 `<hub>/.opal-worktrees/task_900/` 아래 디렉터리를 만든다 | `worktree-tool create --project-root <linked worktree> --task 901`, `--project-root <hub>/.opal-worktrees/task_900`, `--project-root <hub> --task 902` | 앞 둘은 exit 1 + `PROJECT_ROOT_IS_WORKTREE`이며 새 worktree·브랜치·meta가 생기지 않는다. 마지막은 ok:true | integration(실제 git) `opal/tools/worktree-tool/tests/test_worktree_tool.py` | 구현 전 RED |
+| S-7 | AC-5, AC-6, AC-8, C-5, C-6 | W-4·W-5 적용 후 소스 문서 | 문서 계약 검사 스크립트 실행: (1) `actor.md`에 PM 조율 계약(구현·자가 점검·FAIL 수정=전문 워커, 병렬=선행 없음+파일 비중첩, PM=분배·소유권·검토·재작업·마감)이 있고 독립 검증 표에 CLOSE `--owner user` 행이 없다 (2) `opal-pilot-dev/SKILL.md`의 EXECUTE·TEST FAIL·TEST-SCENARIO 작성자·CLOSE 절이 actor.md·modes.md를 참조하고 coordinator에서 PM이 구현한다는 문장이 없다 (3) `task-process.md` 스텝 4.5에 `ok: false` 허브 폴더 생성 문장이 없고 `--no-wt`만 허브를 쓴다 (4) 독립 evaluator·opal-test-agent·조건부 GC 검사·oppb P5 사용자 merge 게이트·merge/push 승인 문장이 유지된다 | 모든 검사 항목이 참이고 모순 문장 0건. 결과를 `run/test-evidence/doc-contract.txt`에 남긴다 | 결정론 검사(grep 기반 스크립트) + 테스트 에이전트의 문서 대조 | 구현 후 |
+| S-8 | AC-7, C-5, C-6, C-7, H-3 | 모든 W 적용 후 | `opal/tools/state-tool/run-tests.sh`, worktree-tool·worktree-launcher·oppb-runtime-tool·run-log-tool 테스트 스위트, 전 Pilot `state-tool spec-validate`, `code-scan validate` 실행 | 전건 PASS(새 실패 0). `test_pilot_isolation.py`의 actor.md 검사는 132 마지막 커밋 기준으로 PASS하고 SelfCheck 3종도 PASS. oppb `p5.user_merge_gate` 등 기존 CLOSE 게이트 테스트가 그대로 PASS | 회귀(unit+integration) | 구현 후 |
+| S-9 | AC-7, C-7, C-8 | `scripts/install-mac.sh` 재배포 완료 | 설치본 `~/.opal/tools/state-tool/run.sh resolve-start <tmp> --skill opds --new-task`, `--skill oppb --new-task`, `--skill opp --new-task`, `--skill oppb --new-task --no-wt`와 설치본 `~/.opal/references/harness/actor.md`·`task-process.md` 문구 확인 | opds=agentic·worktree·coordinator, oppb=agentic·worktree·worker, opp=semi-agentic·hub, oppb `--no-wt`=`workspace_required_for_skill`. 설치본 문서가 소스와 같은 계약을 담는다 | 설치 후 실제 CLI | 설치 후 |
+| S-10 | AC-8, C-7 | W-6 적용 후 | 대상 문서(README.md·docs/PROJECT.md·ARCHITECTURE.md·CONVENTIONS.md·architecture html·skill-commands.md·opal-pilot-dev README·brain 2페이지)에서 `--pm`·기본 mode·workspace 서술을 grep하고 `brain-tool lint` 실행 | "`--pm` = PM이 단계 skill을 직접 수행/구현"을 현행 기본 계약으로 서술하는 문장 0건(legacy 재개 설명은 legacy로 명시된 경우만 허용), 기본 모드 서술이 Pilot별 표와 일치, brain lint 오류 0 | 결정론 검사(grep) + brain-tool | 구현 후 |
+| S-11 | C-9 | 체크포인트 커밋 직전·CLOSE 직전 | 허브 `git -C <hub> status --short`와 브랜치 `git show --stat`을 확인 | 허브의 기존 미커밋 변경(`.opal/MEMORY.json`, `.claude/skills/`)이 그대로 남고 태스크 커밋에 포함되지 않는다. 테스트 명령·결과·재실행 기록이 `run/test-evidence/`에 있고 run-log 완전성 검사가 차단 누락을 보고하지 않는다 | 결정론 검사(git·`state-tool verify --run-log-completeness-check`) | 구현 후 |
+| S-12 | AC-7 | TEST 단계 | 프로젝트 `.opal/e2e/`의 등록 여정과 opal-e2e 적용 조건을 확인하고 적용/미적용 판정을 기록 | 판정(실행/미실행/차단)과 근거가 `run/test-evidence/opal-e2e-review.md`에 남는다. 미실행이면 대체한 실제 CLI 검증 시나리오 ID를 명시한다 | 검토 기록 | 구현 후 |
