@@ -23,16 +23,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/test-S-1to5.txt: 23 passed, 16 subtests passed, exit=0 (test_start_resolution.py covers S1-S5 named tests)",
+      "marked_at": "2026-09-24T17:36:24+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-2",
@@ -52,16 +52,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/test-S-1to5.txt: 23 passed, 16 subtests passed, exit=0 (test_start_resolution.py covers S1-S5 named tests)",
+      "marked_at": "2026-09-24T17:36:24+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-3",
@@ -81,16 +81,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/test-S-1to5.txt: 23 passed, 16 subtests passed, exit=0 (test_start_resolution.py covers S1-S5 named tests)",
+      "marked_at": "2026-09-24T17:36:24+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-4",
@@ -110,16 +110,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/test-S-1to5.txt: 23 passed, 16 subtests passed, exit=0 (test_start_resolution.py covers S1-S5 named tests)",
+      "marked_at": "2026-09-24T17:36:24+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-5",
@@ -139,16 +139,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/test-S-1to5.txt: 23 passed, 16 subtests passed, exit=0 (test_start_resolution.py covers S1-S5 named tests)",
+      "marked_at": "2026-09-24T17:36:24+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-6",
@@ -168,16 +168,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/test-S-6.txt: 3 passed (t156_s6 tests), exit=0",
+      "marked_at": "2026-09-24T17:36:24+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-7",
@@ -197,16 +197,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/doc-contract.txt: 4개 항목 grep 검사 전부 PASS, 모순 문장 0건",
+      "marked_at": "2026-09-24T17:37:00+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-8",
@@ -226,16 +226,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/S8-*.txt: 전 스위트 실행, hub(main) 대조로 기존 실패 확인(신규 실패 0), spec-validate 11/11 0 violations, code-scan 1 violation 동일",
+      "marked_at": "2026-09-24T17:48:04+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-9",
@@ -255,16 +255,47 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "opds-mode",
+          "expected": "agentic/worktree/coordinator",
+          "actual": "agentic/worktree/coordinator"
+        },
+        {
+          "id": "oppb-mode",
+          "expected": "agentic/worktree/worker",
+          "actual": "agentic/worktree/worker"
+        },
+        {
+          "id": "opp-mode",
+          "expected": "semi-agentic/hub",
+          "actual": "semi-agentic/hub"
+        },
+        {
+          "id": "oppb-no-wt",
+          "expected": "exit1/workspace_required_for_skill",
+          "actual": "exit1/workspace_required_for_skill"
+        },
+        {
+          "id": "hash-parity",
+          "expected": "source==installed for 6 files",
+          "actual": "source==installed for 6 files"
+        }
+      ],
+      "observed_evidence": [
+        "cli_output",
+        "hash_diff"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-24T20:08:58+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-10",
@@ -284,16 +315,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/S10-summary.txt, S10-brain-lint-worktree.txt, S10-brain-lint-hub.txt: 320=320 동일(기존), --pm 문장 0건 위반",
+      "marked_at": "2026-09-24T17:47:16+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-11",
@@ -313,16 +344,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/S11-hub-status.txt, S11-worktree-commits.txt, S11-run-log-completeness.txt: 허브 diff 2줄만, 커밋에 허브 변경 없음, completeness ok:true 차단없음",
+      "marked_at": "2026-09-24T17:48:14+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-12",
@@ -342,16 +373,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "run/test-evidence/opal-e2e-review.md: .opal/e2e/에 등록 여정 없음 확인, 미실행 판정, 대체 S-ID 명시",
+      "marked_at": "2026-09-24T17:48:39+09:00",
+      "fidelity": "real-usage"
     }
   ]
 }

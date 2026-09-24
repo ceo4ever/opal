@@ -1,0 +1,8 @@
+S-10: --pm/기본 mode/workspace 서술 grep 결과
+- "--pm"에 대한 모든 언급(README.md L269, docs/PROJECT.md L77,213, brain actor-axis L26,39,49,51,54, opal-pilot-dev/README.md L38, architecture html L451, skill-commands.md L34,37)은
+  "PM 조율"(coordinator: PM이 분석/PLAN/검토/재작업/마감, 워커가 구현) 의미로 서술됨.
+  brain L31 "당시 `--pm`은 PM 직접 수행을 뜻했다" — task 122 도입 당시 역사적 배경 서술로 명시("당시"), legacy 예외 허용 범위 내.
+  → "--pm = PM이 단계 skill을 직접 수행/구현"을 현행 기본 계약으로 서술하는 문장 0건.
+- 기본 모드 서술(README.md L43,818,823,824,837,838 / docs/PROJECT.md L79,261,262): opd/opds/oppd/oppl/oppb=agentic+worktree, 그 외=semi-agentic+hub — Pilot별 표와 일치.
+- brain-tool lint: worktree(.opal/brain) issues_count=320, hub(.opal/brain) issues_count=320 — 동일(기존 frontmatter 'related' 배열 문법 이슈, 이번 변경과 무관, 신규 이슈 0건).
+판정: PASS (신규 issue 0, 서술 일관)

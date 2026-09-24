@@ -1,0 +1,2 @@
+validate: 1 violation(s) — coverage 44.5% (278/625)
+exit=2

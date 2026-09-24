@@ -1,0 +1,32 @@
+{
+  "status": "skipped",
+  "deferred": true,
+  "reason": "worktree_defer_until_hub_finalize_after_merge",
+  "ingested_pages": [],
+  "summary": "워크트리에서는 후보 선언만 검증; 실제 brain 갱신은 merge 후 허브 finalize에서 수행",
+  "skill": "/Users/iskang/.opal/skills/op-brain-ingest/SKILL.md",
+  "contract": "/Users/iskang/.opal/references/harness/done-template.md §회고적 학습 후보 계약",
+  "contract_quote": "워크트리 태스크는 실행 중 워크트리의 brain 파일을 직접 바꾸지 않는다.",
+  "task_folder": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_156/tasks/156-260924-opds-파일럿-기본실행과-PM-역할-재정의",
+  "source": "DONE.md ## 회고적 학습 후보",
+  "candidates": [
+    {
+      "path": ".opal/brain/pages/concept/new-task-defaults-vs-resume-inheritance.md",
+      "exists": false,
+      "decision": "eligible_for_post_merge_ingest",
+      "eligibility_reason": "아키텍처 결정 — 신규 vs. 재개 태스크의 기본값 결정(opd/opds/oppd/oppl/oppb agentic·worktree) 및 기존 태스크 저장값 상속 계약이 DEC-1·DEC-2·DEC-4·DEC-10·DEC-12에 선언되어 있음. 세 축(mode·workspace·actor) resolver의 설계 방향과 상속 규칙을 통합 개념으로 정리하는 페이지."
+    }
+  ],
+  "note_on_already_committed_pages": "W-6에서 커밋된 두 페이지(actor-axis-orthogonal-to-mode.md, opal-self-pm.md)는 이미 브랜치 작업본에 포함되어 있으며, 후보 재심 대상이 아님. actor-axis-orthogonal-to-mode.md는 세 축 직교성 설계를, opal-self-pm.md는 PM 조율 actor와 독립 검증 경계를 각각 설명함.",
+  "brain_mutated": false,
+  "memory_mutated": false,
+  "hub_mutated": false,
+  "commands_not_executed": [
+    "brain-tool add-page",
+    "brain-tool update-page",
+    "brain-tool index",
+    "brain-tool log"
+  ],
+  "worker_dispatch_receipt": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_156/tasks/156-260924-opds-파일럿-기본실행과-PM-역할-재정의/run/worker-dispatch-brain-ingest.json",
+  "worker_dispatch_verified": true
+}

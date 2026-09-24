@@ -1,0 +1,5 @@
+S-11 판정
+1) 허브 git status --short: ` M .opal/MEMORY.json`, `?? .claude/skills/` — 정확히 기대한 2줄만 존재. (S11-hub-status.txt)
+2) 워크트리 HEAD·HEAD~1 stat: 커밋 파일 목록에 허브 전용 경로(.opal/MEMORY.json, .claude/skills/) 없음. (S11-worktree-commits.txt)
+3) state-tool verify --run-log-completeness-check: ok:true, exit=0. missing_* 필드에 일부 anchor 누락 항목이 있으나 stop_block_without_followup·차단(blocking) 표시는 없음(빈 배열) — 차단 누락 보고 없음으로 판단. (S11-run-log-completeness.txt)
+판정: PASS

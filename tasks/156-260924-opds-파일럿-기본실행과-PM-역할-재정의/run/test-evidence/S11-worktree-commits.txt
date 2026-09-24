@@ -1,0 +1,74 @@
+commit a18745ba4ee2bc91311121cf92e920e5be2c6905
+Author: iskang <iskang@storelink.io>
+Date:   Thu Sep 24 17:33:41 2026 +0900
+
+    feat(156): 파일럿 기본 실행을 agentic·worktree로 바꾸고 PM 조율 actor 도입
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+
+ .../pages/concept/actor-axis-orthogonal-to-mode.md |  13 +-
+ .opal/brain/pages/entity/opal-self-pm.md           |   2 +-
+ README.md                                          |  21 +-
+ docs/ARCHITECTURE.md                               |   5 +-
+ docs/CONVENTIONS.md                                |   4 +-
+ docs/PROJECT.md                                    |  10 +-
+ .../opal_framework_architecture.html               |  16 +-
+ opal/core/references/harness/actor.md              |  84 ++-
+ opal/core/references/harness/guards.md             |  11 +-
+ opal/core/references/harness/modes.md              |  23 +-
+ opal/core/references/harness/skill-commands.md     |  10 +-
+ opal/core/references/harness/task-process.md       |  22 +-
+ opal/core/references/harness/worktree.md           |  26 +-
+ opal/core/references/opal-harness-agentic.md       |  21 +-
+ opal/core/references/opal-harness-semi-agentic.md  |  10 +-
+ opal/core/references/opal-harness.md               |   2 +-
+ opal/core/references/opal-pm.md                    |  10 +-
+ opal/core/references/pm/dispatch-process.md        |   4 +-
+ opal/skills/opal-pilot-dev/README.md               |  13 +-
+ opal/skills/opal-pilot-dev/SKILL.md                |  69 ++-
+ opal/skills/opal-pilot-project-build/SKILL.md      |   9 +-
+ opal/skills/opal-pilot-project-dev/SKILL.md        |  14 +-
+ opal/skills/opal-pilot-project-loop/SKILL.md       |  14 +-
+ .../tests/test_pilot_isolation.py                  |  28 +-
+ opal/tools/state-tool/README.md                    |  36 +-
+ opal/tools/state-tool/state_tool.py                | 221 ++++++-
+ .../state-tool/tests/test_start_resolution.py      | 415 +++++++++++++
+ .../state-tool/tests/test_state_tool_core_cli.py   |  27 +-
+ .../tests/test_state_tool_extended_contracts.py    |  44 +-
+ .../tests/test_state_tool_mode_contracts.py        |   7 +
+ opal/tools/worktree-tool/README.md                 |   1 +
+ .../worktree-tool/tests/test_worktree_tool.py      |  71 +++
+ opal/tools/worktree-tool/worktree_tool.py          |  27 +-
+ .../AGENTIC-LOG.md                                 |  10 +
+ .../STATE.md                                       |   2 +-
+ .../run-log-run_c0f2d245-2bdb-4a1b-a181-84f1b163000d-0001.jsonl |   9 +
+ .../run/test-evidence/code-scan-validate.txt       |   1 +
+ .../run/test-evidence/isolated-install-observation.txt |  26 +
+ .../run/test-evidence/pm-regression-pytest.txt     |   9 +
+ .../run/test-evidence/red-state-tool.txt           | 688 +++++++++++++++++++++
+ .../run/test-evidence/red-worktree-tool.txt        |  59 ++
+ .../run/test-evidence/spec-validate.txt            |  11 +
+ .../run/worker-dispatch-red.json                   |   1 +
+ .../state.json                                     |  32 +-
+ .../test-scenario.json                             | 357 +++++++++++
+ 45 files changed, 2243 insertions(+), 252 deletions(-)
+
+commit cebcf542fb782c906950e14e0329c46feecf0a75
+Author: iskang <iskang@storelink.io>
+Date:   Thu Sep 24 16:41:31 2026 +0900
+
+    docs(156): 파일럿 기본 실행 정책 PLAN과 TEST-SCENARIO 확정
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+
+ .../.scenario-coverage-input.json                  | 183 ++++++++++++++++
+ .../.scenario-gate-history.json                    |  16 ++
+ .../AGENTIC-LOG.md                                 |  30 +++
+ .../PLAN.md                                        |  62 ++++++
+ .../STATE.md                                       |  12 ++
+ .../TASK.md                                        |  38 ++++
+ .../TEST-SCENARIO.md                               |  31 +++
+ .../run-log-run_c0f2d245-2bdb-4a1b-a181-84f1b163000d-0001.jsonl |  11 +
+ .../run/worker-dispatch-scenario-gate-i1.json      |   1 +
+ .../state.json                                     | 230 +++++++++++++++++++++
+ 10 files changed, 614 insertions(+)

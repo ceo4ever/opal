@@ -1,0 +1,79 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    ".opal/brain/pages/concept/actor-axis-orthogonal-to-mode.md",
+    ".opal/brain/pages/entity/opal-self-pm.md",
+    "README.md",
+    "docs/ARCHITECTURE.md",
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    "docs/architecture-diagram/opal_framework_architecture.html",
+    "opal/core/references/harness/actor.md",
+    "opal/core/references/harness/guards.md",
+    "opal/core/references/harness/modes.md",
+    "opal/core/references/harness/skill-commands.md",
+    "opal/core/references/harness/task-process.md",
+    "opal/core/references/harness/worktree.md",
+    "opal/core/references/opal-harness-agentic.md",
+    "opal/core/references/opal-harness-semi-agentic.md",
+    "opal/core/references/opal-harness.md",
+    "opal/core/references/opal-pm.md",
+    "opal/core/references/pm/dispatch-process.md",
+    "opal/skills/opal-pilot-dev/README.md",
+    "opal/skills/opal-pilot-dev/SKILL.md",
+    "opal/skills/opal-pilot-project-build/SKILL.md",
+    "opal/skills/opal-pilot-project-dev/SKILL.md",
+    "opal/skills/opal-pilot-project-loop/SKILL.md",
+    "opal/tools/oppb-runtime-tool/tests/test_pilot_isolation.py",
+    "opal/tools/state-tool/README.md",
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/tests/test_start_resolution.py",
+    "opal/tools/state-tool/tests/test_state_tool_core_cli.py",
+    "opal/tools/state-tool/tests/test_state_tool_extended_contracts.py",
+    "opal/tools/state-tool/tests/test_state_tool_mode_contracts.py",
+    "opal/tools/worktree-tool/README.md",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-101",
+      "fingerprint": "a1b2c3d4e5f60718",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "header-standard.md §2.1/§4.2 (header_history)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool.py",
+        "line": 7
+      },
+      "evidence": "@header의 description 필드 하나에 서로 다른 태스크 번호 인용이 7개 이상(118, 135, 136, 137, 138, 147, 150) 섞여 있다. code-scan.js의 TASK_TAG_THRESHOLD(=2)를 초과하는 패턴으로, header-standard.md §4.2가 정의하는 header_history 비차단 경고 조건에 해당한다. 이번 태스크(156) diff는 동일 문자열을 그대로 옮겼을 뿐 새 태그를 추가하지 않았으므로 이번 변경이 새로 만든 위반은 아니지만, target_files 스냅숏 시점 기준으로는 여전히 존재하는 상태다.",
+      "impact": "description 필드가 시점별 변경 서술이 누적된 형태로 읽혀 '현재 사실만 기재' 원칙과 충돌하고, 필드가 계속 길어져 code-scan 토큰 절약 목적을 해친다.",
+      "remediation": {
+        "guidance": "description을 현재 동작 요약으로 재작성하고, 개별 태스크 근거는 git log 및 tasks/{NNN}-*/DONE.md로 이관한다. 자산 출신 단발 인용 1개만 남긴다.",
+        "reference": "opal/core/references/header-standard.md §2.1, §4.2",
+        "auto_fixable": false
+      },
+      "verification": "code-scan validate 실행 시 해당 파일의 header_history 경고 소멸을 확인한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git diff main --stat -- <target_files 33개> (2026-09-24)",
+    "git diff main -- opal/tools/state-tool/state_tool.py, opal/tools/worktree-tool/worktree_tool.py 전문 검토",
+    "git diff main --check -- <target_files> → whitespace 오류 0건",
+    "python3 -m py_compile <5개 .py 파일> → 컴파일 성공",
+    "docs/CONVENTIONS.md, header-standard.md, gc-finding-schema.md, convention-categories.md 로드"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md §5",
+    "opal/core/references/header-standard.md §2.1, §4.2",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/156-260924-opds-파일럿-기본실행과-PM-역할-재정의/GC-CONVENTION-2026-09-24T17-35.md"
+}

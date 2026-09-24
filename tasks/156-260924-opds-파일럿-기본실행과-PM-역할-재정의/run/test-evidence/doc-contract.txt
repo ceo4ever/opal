@@ -1,0 +1,30 @@
+S-7 문서 계약 검사 (grep 기반, 실제 명령 실행 결과)
+
+(1) actor.md PM 조율 계약
+- L84: [MUST] coordinator에서 PM은 구현 코드를 직접 작성하지 않는다. 구현/자가점검/FAIL수정=전문 워커. 확인.
+- L85: [MUST] 병렬은 선행 관계 없고 파일 비중첩일 때만 허용. 확인.
+- L76-81: 표에 ANALYSIS/PLAN/EXECUTE/TEST FAIL/TEST 실행 모두 전문 워커 배정, PM 열은 없음(분배/소유권/검토/재작업/마감 역할 텍스트만).
+- grep "owner user" / "owner=user" on actor.md: 0 matches. CLOSE 섹션(L67,69,107)에 --owner user 행 없음. 확인.
+결과: PASS
+
+(2) opal-pilot-dev/SKILL.md
+- L40: actor 값/신규 기본값/재개 상속/PM 조율 계약/독립 검증 경계는 harness/actor.md(SSOT)를 따른다 — 참조 존재.
+- L159, L248: 독립 evaluator·opal-test-agent 참조, harness/actor.md §독립 검증 경계 참조.
+- grep "coordinator에서 PM이 구현" / "PM이 구현": 0 matches in SKILL.md.
+- L185: "PM은 구현하지 않고 분배·파일 소유권·결과 검토·재작업 지시를 맡는다"(coordinator/worker), legacy pm만 담당=PM인 행에서 예외.
+결과: PASS
+
+(3) task-process.md 스텝 4.5
+- L60: ok: false 시 "허브 tasks/에 폴더를 만들지 않고, TASK.md도 쓰지 않고, 허브에서 코드 수정을 시작하지 않는다" — 허브 폴더 생성 문장 없음(생성 금지 문장만 존재). 확인.
+- 허브를 쓰는 경로: "(2) 사용자가 허브 작업본을 원하면 --no-wt로 다시 시작(oppb는 불가)" — --no-wt만 허브 사용. 확인.
+결과: PASS
+
+(4) 독립 검증 유지 여부
+- actor.md L80: "TEST 실행·판정 | opal-test-agent | 같음"
+- actor.md L87, SKILL.md L159: 독립 evaluator 유지 문구.
+- SKILL.md L173: 목표-커버 게이트(op-scenario-gate) actor 무관 유지, PM 산문 판단만으로 mark 불가.
+- SKILL.md L248: TEST 단계 actor 무관 유지, coordinator/legacy pm에서도 생략 안 됨.
+- actor.md L107, SKILL.md L407,430: merge/push/deploy 승인 경계는 harness/guards.md §커밋 규칙 유지, interactive는 --owner user 확인 유지, semi-agentic/agentic은 실제 미해결 이슈 없으면 자동 진행(승인 문장 삭제 아님, 조건부 자동화로 명시).
+결과: PASS (조건부 GC 검사는 이 grep 범위에서 직접 언급되지 않으나 모순 문장 없음 확인)
+
+종합 판정: (1)(2)(3)(4) 전항목 PASS, 모순 문장 0건 확인.

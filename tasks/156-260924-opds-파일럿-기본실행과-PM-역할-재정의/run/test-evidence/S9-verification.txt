@@ -1,0 +1,21 @@
+S-9 독립 재검증 (2026-09-24)
+
+배경: TASK 지시상 실제 ~/.opal은 아직 재설치되지 않았다(merge·install은 TASK C-8, 배포 승인 경계 이후). PM은 격리 HOME(fakehome)에 install-mac.sh를 실행해 관측했다.
+
+1) 실제 ~/.opal 상태 확인
+$ shasum -a 256 ~/.opal/tools/state-tool/state_tool.py <worktree>/opal/tools/state-tool/state_tool.py
+a57c3a5ea31033fe441dede213aebcc4b0ad466336ebfb19db004d7c0a033629  ~/.opal (실제 배포본, 구버전)
+e2760c93f8e19a9755b9cf4ddecee2301e5ab2373f2a0d55ff7a0259afa67ead  <worktree 소스> (신버전)
+→ 서로 다름. 실제 ~/.opal은 이번 변경을 반영하지 않은 상태 그대로다 (기대: merge 전이므로 정상).
+
+2) 격리 설치본(fakehome) 재실행 — 내가 직접 재현
+$ env HOME=<fakehome> <fakehome>/.opal/tools/state-tool/run.sh resolve-start /tmp/xyz123 --skill opds --new-task
+{"ok": true, ..., "effective_mode": "agentic", "workspace": "worktree", "actor": "coordinator", "actor_source": "default", ...}
+→ PM 관측과 동일한 결과 재현 확인.
+
+3) 소스 vs 격리 설치본 해시 대조 (PM 보고 재확인)
+actor.md / modes.md / worktree.md / task-process.md / state_tool.py / worktree_tool.py 전부 src==inst 일치 (run/test-evidence/isolated-install-observation.txt 참조).
+
+판정: 격리 fakehome 설치본은 소스와 동일함을 재현 확인했으나, 이는 "실제 ~/.opal 설치본"이 아니다. S-9 기대 결과의 "설치 후 실제 CLI"·"설치본 문서가 소스와 같은 계약을 담는다"는 문언은 배포된 ~/.opal을 전제로 하며, TASK 경계상 실제 설치는 merge 이후(C-8)로 명시적으로 유예되어 있다. 따라서 이 시점에는 S-9을 문자 그대로 충족할 수 없다.
+
+결론: BLOCKED — 사유: 실제 ~/.opal 설치가 merge 이후로 유예되어 이 시점에 실제 설치본 검증이 불가능하다(TASK 경계, 배포 승인 필요). 격리 설치(fakehome)로 대체 관측한 결과는 소스와 완전히 일치함을 독립 재현으로 확인했다(대체 근거로만 사용, S-9 자체의 PASS 근거로 사용하지 않음).

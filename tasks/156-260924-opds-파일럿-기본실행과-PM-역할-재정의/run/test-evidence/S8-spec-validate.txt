@@ -1,0 +1,33 @@
+=== opal/skills/opal-pilot-write-tech/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-project-dev/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-dev-wireframe/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-data-design/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-gc/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-project-build/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-project/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-sdd/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-dev/references/pipeline-short.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-dev/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0
+=== opal/skills/opal-pilot-project-loop/references/pipeline.json ===
+{"ok": true, "command": "spec-validate", "violations": [], "violations_count": 0}
+exit=0

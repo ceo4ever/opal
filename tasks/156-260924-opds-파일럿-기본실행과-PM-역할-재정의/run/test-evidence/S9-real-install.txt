@@ -1,0 +1,42 @@
+# S-9 real-usage 재검증 (독립 검증자)
+설치 경로: ~/.opal (사용자가 scripts/install-mac.sh 직접 실행하여 실설치 완료)
+
+## 1) resolve-start --skill opds --new-task
+$ ~/.opal/tools/state-tool/run.sh resolve-start <tmp>/x --skill opds --new-task
+{"ok": true, "command": "resolve-start", "skill": "opds", "new_task": true, "effective_mode": "agentic", "mode_source": "default", "workspace": "worktree", "workspace_source": "default", "actor": "coordinator", "actor_source": "default", "persisted": false, ...}
+exit=0
+=> agentic / worktree / coordinator — 기대와 일치
+
+## 2) resolve-start --skill oppb --new-task
+$ ~/.opal/tools/state-tool/run.sh resolve-start <tmp>/x --skill oppb --new-task
+{"ok": true, "command": "resolve-start", "skill": "oppb", "new_task": true, "effective_mode": "agentic", "mode_source": "default", "workspace": "worktree", "workspace_source": "default", "actor": "worker", "actor_source": "default", "persisted": false, ...}
+exit=0
+=> agentic / worktree / worker — 기대와 일치
+
+## 3) resolve-start --skill opp --new-task
+$ ~/.opal/tools/state-tool/run.sh resolve-start <tmp>/x --skill opp --new-task
+{"ok": true, "command": "resolve-start", "skill": "opp", "new_task": true, "effective_mode": "semi-agentic", "mode_source": "default", "workspace": "hub", "workspace_source": "default", "actor": "worker", "actor_source": "default", "persisted": false, ...}
+exit=0
+=> semi-agentic / hub — 기대와 일치
+
+## 4) resolve-start --skill oppb --new-task --no-wt
+$ ~/.opal/tools/state-tool/run.sh resolve-start <tmp>/x --skill oppb --new-task --no-wt
+{"ok": false, "command": "resolve-start", "error": "workspace_required_for_skill", "message": "oppb은 프로젝트 worktree가 필수입니다 — 허브 작업본(--no-wt, --workspace hub)을 쓸 수 없습니다", "skill": "oppb", "transition_action": "blocked", "report_type": "decision_request", ...}
+exit=1
+=> exit 1 workspace_required_for_skill — 기대와 일치
+
+## 해시 대조 (source vs installed)
+611b0ecf27edc601d288f8568c012d6df18de72c2fef4b9673be7401336da1a6  opal/core/references/harness/actor.md
+611b0ecf27edc601d288f8568c012d6df18de72c2fef4b9673be7401336da1a6  /Users/iskang/.opal/references/harness/actor.md
+6efbf6d59f6228a10497037045e82392206ec3950260d88627fa300077a19c5d  opal/core/references/harness/modes.md
+6efbf6d59f6228a10497037045e82392206ec3950260d88627fa300077a19c5d  /Users/iskang/.opal/references/harness/modes.md
+9f76c3dcbf4ab57871935674085325499a1f80144e21baf9e0210e95bf335b86  opal/core/references/harness/worktree.md
+9f76c3dcbf4ab57871935674085325499a1f80144e21baf9e0210e95bf335b86  /Users/iskang/.opal/references/harness/worktree.md
+a3d8424de7709e4c454b308b54170cdf2e0089df4ee258234b60171e8629c704  opal/core/references/harness/task-process.md
+a3d8424de7709e4c454b308b54170cdf2e0089df4ee258234b60171e8629c704  /Users/iskang/.opal/references/harness/task-process.md
+e2760c93f8e19a9755b9cf4ddecee2301e5ab2373f2a0d55ff7a0259afa67ead  opal/tools/state-tool/state_tool.py
+e2760c93f8e19a9755b9cf4ddecee2301e5ab2373f2a0d55ff7a0259afa67ead  /Users/iskang/.opal/tools/state-tool/state_tool.py
+ec14c35f896a1abe45db4322153aaca3619ce8e2b871b614616a9751c9fdc4b1  opal/tools/worktree-tool/worktree_tool.py
+ec14c35f896a1abe45db4322153aaca3619ce8e2b871b614616a9751c9fdc4b1  /Users/iskang/.opal/tools/worktree-tool/worktree_tool.py
+
+모든 소스/설치본 해시 일치. 4개 CLI 호출 결과 모두 기대치와 일치. 판정: PASS

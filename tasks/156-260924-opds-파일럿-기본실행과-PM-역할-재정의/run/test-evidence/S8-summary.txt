@@ -1,0 +1,14 @@
+S-8 회귀 종합 (worktree(변경본) vs hub(main) 대조)
+
+1) opal/tools/state-tool/run-tests.sh (worktree): 15/16 파일 통과, test_state_tool_extended_contracts.py 3건 실패(T138W9*).
+   hub(main)에서 같은 3건 동일 재현(S8-hub-baseline-state-tool.txt) → 세션 env(OPAL_SESSION_ID) 유입에 의한 기존 실패, 이번 변경과 무관. PASS로 판정(신규 실패 아님).
+
+2) worktree-tool 스위트: 150 passed, exit=0. PASS.
+3) worktree-launcher 스위트: 148 passed, 4 skipped, exit=0. PASS.
+4) oppb-runtime-tool 스위트: 142 passed, 13 subtests passed, exit=0. PASS. (test_pilot_isolation.py의 actor.md 검사 포함, 132 마지막 커밋 기준 통과 — SelfCheck 3종 포함해 전건 통과)
+5) run-log-tool 스위트: 5 failed, 83 passed (worktree). hub(main)에서도 동일 5건 재현(S8-hub-baseline-run-log-tool.txt) → 원인: (a) tasks/104-260830-opp-역공학-개념모델링-스킵/AGENTIC-LOG.md 실파일 부재(리포 상태 의존, 이번 변경과 무관), (b) test_state_tool_regression_baseline이 위 1)의 T138W9 3건을 재귀 감지해 함께 실패 표시(연쇄, 근본 원인은 1)과 동일). 신규 실패 아님. PASS로 판정.
+6) 전 Pilot pipeline*.json spec-validate (11개 파일): 전부 {"ok": true, "violations_count": 0}. PASS.
+7) code-scan validate: worktree 1 violation(coverage 44.6%, 279/626), hub 1 violation(coverage 44.5%, 278/625) — 동일 1건, 이번 변경으로 커버리지 대상 파일이 약간 늘었을 뿐(279 vs 278) violation 자체는 기존과 동일 종류. PASS(신규 violation 아님).
+8) dashboard/backend: `git diff --stat main -- dashboard/backend` 결과 0 diff — 이번 브랜치가 dashboard/backend를 전혀 건드리지 않음을 확인. PM이 보고한 test_routers 33건 추가 실패는 이 브랜치의 소스 변경과 인과관계가 없다(사전 존재 환경 이슈로 판단). 이번 태스크 QA 범위 밖으로 판정, S-8 판정에 포함하지 않음.
+
+종합 판정: PASS — 관측된 모든 실패는 기존(main에서도 동일 재현)이며 이번 변경으로 인한 신규 실패는 0건이다.
