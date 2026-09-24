@@ -17,8 +17,8 @@ PM 경로 태스크에만 적용한다. PM 경로 판정은 `state.json` `rows`�
 2. `TEST-SCENARIO.md`를 작성한다.
 3. `op-scenario-gate`를 `gate: design` 입력으로 호출한다. 내부에서 다음 순서로 진행한다.
    1. `state-tool design-gate start <task> --iteration N`
-   2. evaluator `design-rubric` phase를 1회 디스패치
-   3. `state-tool design-gate record <task> --iteration N --verdict <verdict> --evaluator-result <json> [--rewrite-target ...]`
+   2. evaluator `design-rubric` phase를 1회 디스패치 — 입력에 `start` 응답의 `bundle_hash`를 `input_bundle_hash`로 함께 전달한다.
+   3. `state-tool design-gate record <task> --iteration N --verdict <verdict> --evaluator-result <json> [--rewrite-target ...]` — evaluator 결과 JSON 최상위는 전달받은 `input_bundle_hash`와 `iteration`을 그대로 반환해야 한다(ADD-1, verdict pass|rewrite 전용, input_error 제외).
 4. `record`가 `pass`를 반환하면 설계 확인(`plan.user_confirm`)을 진행하고 EXECUTE로 넘어간다.
 5. `record`가 `pass`가 아니면 `rewrite-target` 문서를 고쳐 다시 1부터 반복한다.
 
@@ -66,8 +66,9 @@ PM 경로 태스크에만 적용한다. PM 경로 판정은 `state.json` `rows`�
 - `record`의 `--verdict rewrite`는 `--rewrite-target plan|scenario|both`를 필수로 요구한다.
 - 직전 verdict가 rewrite였던 다음 `start`에서는 `last_rewrite_target` 문서(plan→PLAN.md, scenario→TEST-SCENARIO.md, both→둘 다)의 hash가 직전 시도와 같으면 `rewrite_target_unchanged`로 거부한다(상태 불변). `both`는 PLAN.md·TEST-SCENARIO.md 둘 중 하나라도 hash가 불변이면 거부한다(둘 다 바뀌어야 통과).
 - `start` 통과 시 `passed_bundle_hash`·`approved_bundle_hash`를 삭제해 이전 승인을 무효화한다.
-- `record`의 거부(`design_gate_input_changed`·`design_gate_result_invalid`·`design_gate_verdict_mismatch`)는 상태를 바꾸지 않고 시도를 열린 채 둔다(회차 미소비). `iteration`은 마지막으로 시작된 시도 번호이며 결정론 실패 시도도 1회로 센다.
-- `--verdict input_error`는 evaluator 결과가 계약 형식이 아닐 때(evaluator blocked 포함) 쓰며 축 필수 검사를 적용하지 않는다.
+- `record`의 거부(`design_gate_input_changed`·`design_gate_result_stale`·`design_gate_result_invalid`·`design_gate_verdict_mismatch`)는 상태를 바꾸지 않고 시도를 열린 채 둔다(회차 미소비). `iteration`은 마지막으로 시작된 시도 번호이며 결정론 실패 시도도 1회로 센다.
+- `--verdict pass|rewrite`는 `--evaluator-result` JSON 최상위 `input_bundle_hash`가 현재 열린 시도의 `bundle_hash`와 같고 `iteration`이 `--iteration` N과 같아야 한다(ADD-1, 157) — 없거나 다르면 `design_gate_result_stale`로 거부한다. 검사 순서는 열린 시도·회차 → `design_gate_input_changed` → `design_gate_result_stale` → `design_gate_result_invalid` → `design_gate_verdict_mismatch`다.
+- `--verdict input_error`는 evaluator 결과가 계약 형식이 아닐 때(evaluator blocked 포함) 쓰며 축 필수 검사와 `design_gate_result_stale` 검사 모두 적용하지 않는다.
 - 열린 시도(`status=evaluating`)가 없는 상태에서 `record`를 호출하면 `design_gate_iteration_invalid`로 거부한다(먼저 `start` 필요).
 
 ## 반복 상한과 reset
@@ -91,7 +92,7 @@ PM 경로 설계 구간(`plan.plan_md`~`plan.user_confirm`)은 agentic 대행 �
 
 ## 실패 코드
 
-아래 14종은 `DESIGN_GATE_ERROR_CODES`(ERROR_CODES와 물리 분리된 별도 테이블) 소속이다. `design_gate_iteration_invalid`는 `--iteration N`이 `iteration+1`이 아닐 때와, 열린 시도 없이 `record`를 호출했을 때(먼저 `start` 필요) 두 경우 모두에 쓴다.
+아래 15종은 `DESIGN_GATE_ERROR_CODES`(ERROR_CODES와 물리 분리된 별도 테이블) 소속이다. `design_gate_iteration_invalid`는 `--iteration N`이 `iteration+1`이 아닐 때와, 열린 시도 없이 `record`를 호출했을 때(먼저 `start` 필요) 두 경우 모두에 쓴다.
 
 | 코드 | 의미 |
 |---|---|
@@ -105,6 +106,7 @@ PM 경로 설계 구간(`plan.plan_md`~`plan.user_confirm`)은 agentic 대행 �
 | `design_gate_deterministic_fail` | 결정론 검사(①~⑦) 실패 |
 | `design_gate_input_missing` | 대상 문서(TASK/PLAN/TEST-SCENARIO) 부재 |
 | `design_gate_input_changed` | `record` 시점 현재 묶음 hash가 `current_attempt.bundle_hash`와 불일치 |
+| `design_gate_result_stale` | evaluator 결과 JSON 최상위 `input_bundle_hash`·`iteration`이 현재 열린 시도와 불일치 또는 부재 (pass·rewrite에만 적용, ADD-1) |
 | `design_gate_result_invalid` | evaluator 결과 JSON에 필수 축 누락 또는 rewrite인데 `--rewrite-target` 누락 (pass·rewrite에만 적용) |
 | `design_gate_verdict_mismatch` | `--verdict pass`인데 설계 4축·시나리오 기준 미충족 |
 | `design_gate_not_passed` | `status≠pass`인 상태에서 `plan.design_gate`를 done 처리 시도 |

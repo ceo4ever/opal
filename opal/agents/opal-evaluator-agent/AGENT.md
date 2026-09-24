@@ -42,10 +42,11 @@ tools: [Read, Grep, Glob, Bash]
 | evidence_root | `phase==acceptance`일 때 O | 색인된 evidence 루트 경로 — `{run_root}/evidence/{scope}/{evidence_id}.json` (Evidence Tool이 schema·code head·scope hash 검증 후 불변 색인한 문서) |
 | task_md | `phase==design-rubric`일 때 O | 태스크 폴더 `TASK.md` 경로 — 요구·변경 범위 완전성 판정의 AC/C 원천 |
 | plan_md | `phase==design-rubric`일 때 O | 태스크 폴더 `PLAN.md` 경로 — 설계 4축 판정 대상 |
+| input_bundle_hash | `phase==design-rubric`일 때 O | `design-gate start` 응답의 `bundle_hash` — 결과 JSON 최상위에 입력값 그대로 반환해야 한다(ADD-1, 157). `state-tool design-gate record`가 `--verdict pass|rewrite`에서 이 값과 `iteration`을 현재 열린 시도와 대조해 다르거나 없으면 `design_gate_result_stale`로 거부한다 |
 
 > **[MUST] `phase` 5번째 값 — `acceptance`(OPPB P4)**: 위 4개 값에 더해 `phase`는 `acceptance`를 받는다 — OPPB Product Flow P4 `p4.acceptance`(pipeline id 16)에서 프로젝트 완료조건↔증거 대응을 판정하는 시점이다. `scenario-rubric`과 동일하게 Base 루브릭 트랙과 분리된 **병렬 전용 트랙**이며, 이때 `target_artifacts`·`contract_path`는 사용하지 않는다(위 `acceptance_path`·`workgraph_path`·`evidence_root`가 대체 입력이다). 기존 4개 phase(`design-review`·`spec-review`·`drift-recheck`·`scenario-rubric`)의 입력·판정·보고 계약은 무변경이다.
 
-> **[MUST] `phase` 6번째 값 — `design-rubric`(opd/opds PM 경로 설계 게이트)**: `op-scenario-gate`가 `gate: design` 입력을 받을 때 디스패치하는 전용 phase다. `target_artifacts`·`contract_path`·`acceptance_path`·`workgraph_path`·`evidence_root`는 사용하지 않는다 — `task_md`·`plan_md`·`scenario_source`·`iteration`이 대체 입력이다. Base·`scenario-rubric`·`acceptance`와 분리된 **병렬 전용 트랙**이며 기존 5개 phase의 입력·판정·보고 계약은 무변경이다.
+> **[MUST] `phase` 6번째 값 — `design-rubric`(opd/opds PM 경로 설계 게이트)**: `op-scenario-gate`가 `gate: design` 입력을 받을 때 디스패치하는 전용 phase다. `target_artifacts`·`contract_path`·`acceptance_path`·`workgraph_path`·`evidence_root`는 사용하지 않는다 — `task_md`·`plan_md`·`scenario_source`·`iteration`·`input_bundle_hash`가 대체 입력이다. Base·`scenario-rubric`·`acceptance`와 분리된 **병렬 전용 트랙**이며 기존 5개 phase의 입력·판정·보고 계약은 무변경이다. 결과 JSON 최상위에 입력받은 `input_bundle_hash`와 `iteration`을 그대로 반환한다 — `state-tool design-gate record`가 이 두 값으로 stale 결과를 거부한다(ADD-1, 157).
 
 ---
 
@@ -177,10 +178,10 @@ verdict은 Phase 1-A의 `[MUST]` 규칙(완료조건별 ⓐ~ⓓ 전부 yes AND �
 **`phase == "design-rubric"` 결과 계약 (전용, 다른 트랙과 분리)**:
 
 ```json
-{"design": {"axes": {"completeness": "PASS|FAIL", "decision_clarity": "PASS|FAIL", "executability": "PASS|FAIL", "recoverability": "PASS|FAIL"}, "gaps": []}, "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []}, "verdict": "pass|fail", "rewrite_target": "plan|scenario|both|null"}
+{"input_bundle_hash": "<입력받은 값 그대로>", "iteration": "<입력받은 값 그대로>", "design": {"axes": {"completeness": "PASS|FAIL", "decision_clarity": "PASS|FAIL", "executability": "PASS|FAIL", "recoverability": "PASS|FAIL"}, "gaps": []}, "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []}, "verdict": "pass|fail", "rewrite_target": "plan|scenario|both|null"}
 ```
 
-verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용한다.
+verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용한다. `input_bundle_hash`·`iteration`은 입력받은 값을 그대로 최상위에 반환한다(가공·재계산 금지) — `state-tool design-gate record`의 stale 검사 대상이다.
 
 ### Phase 5: 자기완결 보고서 생성
 
@@ -255,6 +256,8 @@ verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용�
   "summary": "design-rubric 판정 완료: verdict={pass|fail}, rewrite_target={plan|scenario|both|null}",
   "status": "completed | blocked",
   "verdict": "pass | fail",
+  "input_bundle_hash": "<입력받은 값 그대로>",
+  "iteration": "<입력받은 값 그대로>",
   "design": {"axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"}, "gaps": []},
   "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []},
   "rewrite_target": null,

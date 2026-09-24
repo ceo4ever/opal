@@ -3,7 +3,7 @@
   "module": "test_design_gate",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "PM 설계 경로(pipeline-pm.json)와 state-tool 독립 설계 게이트(design-gate start/record/reset, design-decision)의 공개 CLI 계약 — init_args 파이프라인 판정, 결정론 검사, 문서 묶음 해시·확인 해시, rewrite 대상, 반복 상한·reset, EXECUTE 진입 가드, run-log gate 사건.",
+  "description": "PM 설계 경로(pipeline-pm.json)와 state-tool 독립 설계 게이트(design-gate start/record/reset, design-decision)의 공개 CLI 계약 — init_args 파이프라인 판정, 결정론 검사, 문서 묶음 해시·확인 해시, rewrite 대상, 반복 상한·reset, EXECUTE 진입 가드, run-log gate 사건, ADD-1 evaluator 결과 stale 거부(input_bundle_hash·iteration 일치 검사, verdict pass/rewrite 전용).",
   "exports": [],
   "depends": ["state_tool"]
 }
@@ -242,9 +242,39 @@ class DesignGateCliContractTest(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
         return task
 
-    def _record(self, task: Path, iteration: int, *, verdict: str, evaluator: dict | None = None, rewrite_target: str | None = None):
+    def _record(
+        self,
+        task: Path,
+        iteration: int,
+        *,
+        verdict: str,
+        evaluator: dict | None = None,
+        rewrite_target: str | None = None,
+        input_bundle_hash: str | None = "auto",
+        stale_iteration: int | None = None,
+    ):
+        """ADD-1: 기본(input_bundle_hash="auto")은 현재 열린 시도의 bundle_hash·iteration을
+        evaluator 결과에 그대로 채워 기존 테스트 흐름의 판정 의미를 바꾸지 않는다.
+        stale 시나리오 전용으로 input_bundle_hash=None(필드 생략) 또는 명시 문자열,
+        stale_iteration으로 회차 불일치를 만들 수 있다.
+        """
+        payload = json.loads(json.dumps(evaluator or EVALUATOR_PASS_JSON, ensure_ascii=False))
+        if input_bundle_hash == "auto":
+            state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+            attempt = (state.get("design_gate") or {}).get("current_attempt") or {}
+            payload["input_bundle_hash"] = attempt.get("bundle_hash")
+            payload["iteration"] = (
+                stale_iteration if stale_iteration is not None else attempt.get("iteration")
+            )
+        elif input_bundle_hash is None:
+            payload.pop("input_bundle_hash", None)
+            if stale_iteration is not None:
+                payload["iteration"] = stale_iteration
+        else:
+            payload["input_bundle_hash"] = input_bundle_hash
+            payload["iteration"] = stale_iteration if stale_iteration is not None else iteration
         eval_path = task / f"evaluator-result-i{iteration}.json"
-        eval_path.write_text(json.dumps(evaluator or EVALUATOR_PASS_JSON, ensure_ascii=False), encoding="utf-8")
+        eval_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
         args = [
             "design-gate", "record", str(task),
             "--iteration", str(iteration),
@@ -821,6 +851,87 @@ class DesignGateCliContractTest(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertEqual(payload.get("missing_gate_event"), [], payload)
+
+    # ------------------------------------------------------------------
+    # ADD-1 — stale evaluator 결과 거부 (input_bundle_hash·iteration 일치)
+    # ------------------------------------------------------------------
+
+    def test_add1_stale_evaluator_result_rejected(self):
+        task = self._make_pm_task("add1-stale")
+        self._assert_ok(self._run("design-gate", "start", str(task), "--iteration", "1"))
+
+        # i1을 pass로 정상 기록해두고, 그 결과 JSON을 stale 재사용 재료로 삼는다.
+        completed, payload1 = self._record(task, 1, verdict="pass")
+        self._assert_ok((completed, payload1))
+        i1_result_path = task / "evaluator-result-i1.json"
+        i1_result = json.loads(i1_result_path.read_text(encoding="utf-8"))
+        self.assertIn("input_bundle_hash", i1_result, i1_result)
+        self.assertEqual(i1_result.get("iteration"), 1, i1_result)
+
+        # PLAN 수정 후 i2 start — 새 bundle_hash 발급
+        self._plan_variant(task, lambda t: t + "\n<!-- add1-stale-i2 -->\n")
+        self._assert_ok(self._run("design-gate", "start", str(task), "--iteration", "2"))
+
+        # (a) i1의 결과 JSON(input_bundle_hash·iteration=1)을 그대로 i2에 pass로 제출 → stale 거부
+        stale_path = task / "evaluator-result-i2-stale.json"
+        stale_path.write_text(json.dumps(i1_result, ensure_ascii=False), encoding="utf-8")
+        before_sha = _sha256(task / "state.json")
+        completed, payload = self._run(
+            "design-gate", "record", str(task),
+            "--iteration", "2", "--verdict", "pass",
+            "--evaluator-result", str(stale_path),
+        )
+        self.assertEqual(completed.returncode, 1, completed.stdout)
+        self.assertEqual(payload.get("error"), "design_gate_result_stale", payload)
+        after_sha = _sha256(task / "state.json")
+        self.assertEqual(before_sha, after_sha)
+        state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            state.get("design_gate", {}).get("current_attempt", {}).get("iteration"), 2, state
+        )
+
+        # (b) input_bundle_hash 누락 JSON → stale 거부
+        missing_hash = json.loads(json.dumps(EVALUATOR_PASS_JSON))
+        missing_hash["iteration"] = 2
+        self._assert_err(
+            self._record(
+                task, 2, verdict="pass", evaluator=missing_hash, input_bundle_hash=None
+            ),
+            "design_gate_result_stale",
+        )
+        after_sha_b = _sha256(task / "state.json")
+        self.assertEqual(before_sha, after_sha_b)
+
+        # (c) 해시는 맞고 iteration만 다름 → stale 거부
+        state2 = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        current_hash = state2.get("design_gate", {}).get("current_attempt", {}).get("bundle_hash")
+        self.assertIsNotNone(current_hash, state2)
+        self._assert_err(
+            self._record(
+                task, 2, verdict="pass",
+                input_bundle_hash=current_hash, stale_iteration=99,
+            ),
+            "design_gate_result_stale",
+        )
+        after_sha_c = _sha256(task / "state.json")
+        self.assertEqual(before_sha, after_sha_c)
+
+        # (d) 올바른 해시·회차로 기록하면 pass
+        self._assert_ok(self._record(task, 2, verdict="pass"))
+        state3 = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual(state3.get("design_gate", {}).get("status"), "pass", state3)
+
+        # (e) --verdict input_error는 해시 없는 evaluator 결과로도 기록 성공한다
+        self._plan_variant(task, lambda t: t + "\n<!-- add1-stale-i3 -->\n")
+        (task / "TEST-SCENARIO.md").write_text(
+            TEST_SCENARIO_MD_TEMPLATE.format(scenario_refs="AC-1, AC-2, AC-3, C-1, H-1"),
+            encoding="utf-8",
+        )
+        self._assert_ok(self._run("design-gate", "start", str(task), "--iteration", "3"))
+        broken = {"not": "a contract shaped result"}
+        self._assert_ok(
+            self._record(task, 3, verdict="input_error", evaluator=broken, input_bundle_hash=None)
+        )
 
 
 if __name__ == "__main__":

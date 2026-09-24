@@ -1,0 +1,66 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0 -- /Users/iskang/.opal/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157
+plugins: asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 18 items
+
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_add1_stale_evaluator_result_rejected FAILED [  5%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_new_task_rows_from_init_args 
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_new_task_rows_from_init_args PASSED [ 11%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_no_pm_uses_worker_pipeline 
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_no_pm_uses_worker_pipeline PASSED [ 16%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_opp_unchanged PASSED [ 22%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_pm_row_keys_order PASSED [ 27%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_resume_no_init_args PASSED [ 33%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s2_uncovered_requirement_blocks_start PASSED [ 38%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_finding_not_in_work_items PASSED [ 44%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_missing_section_removed PASSED [ 50%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_normal_plan_passes PASSED [ 55%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_regression_target_listed_as_change PASSED [ 61%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_unconfirmed_assumption_bad_reference PASSED [ 66%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s5_rewrite_flow PASSED [ 72%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s6_agentic_auto_approval_flow PASSED [ 77%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s6_semi_agentic_reconfirm_flow PASSED [ 83%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s7_retry_limit_and_reset PASSED [ 88%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s8_design_decision PASSED [ 94%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s9_run_log_gate_events PASSED [100%]
+
+=================================== FAILURES ===================================
+_____ DesignGateCliContractTest.test_add1_stale_evaluator_result_rejected ______
+
+self = <test_design_gate.DesignGateCliContractTest testMethod=test_add1_stale_evaluator_result_rejected>
+
+    def test_add1_stale_evaluator_result_rejected(self):
+        task = self._make_pm_task("add1-stale")
+        self._assert_ok(self._run("design-gate", "start", str(task), "--iteration", "1"))
+    
+        # i1을 pass로 정상 기록해두고, 그 결과 JSON을 stale 재사용 재료로 삼는다.
+        completed, payload1 = self._record(task, 1, verdict="pass")
+        self._assert_ok((completed, payload1))
+        i1_result_path = task / "evaluator-result-i1.json"
+        i1_result = json.loads(i1_result_path.read_text(encoding="utf-8"))
+        self.assertIn("input_bundle_hash", i1_result, i1_result)
+        self.assertEqual(i1_result.get("iteration"), 1, i1_result)
+    
+        # PLAN 수정 후 i2 start — 새 bundle_hash 발급
+        self._plan_variant(task, lambda t: t + "\n<!-- add1-stale-i2 -->\n")
+        self._assert_ok(self._run("design-gate", "start", str(task), "--iteration", "2"))
+    
+        # (a) i1의 결과 JSON(input_bundle_hash·iteration=1)을 그대로 i2에 pass로 제출 → stale 거부
+        stale_path = task / "evaluator-result-i2-stale.json"
+        stale_path.write_text(json.dumps(i1_result, ensure_ascii=False), encoding="utf-8")
+        before_sha = _sha256(task / "state.json")
+        completed, payload = self._run(
+            "design-gate", "record", str(task),
+            "--iteration", "2", "--verdict", "pass",
+            "--evaluator-result", str(stale_path),
+        )
+>       self.assertEqual(completed.returncode, 1, completed.stdout)
+E       AssertionError: 0 != 1 : {"ok": true, "command": "design-gate record", "status": "pass", "iteration": 2, "verdict": "pass", "rewrite_target": null, "gate_id": "design-gate-i2", "bundle_hash": "9bcfcdec6f503643358224eba6edb945f349cbda9fdc7105427ddfcaa016c447", "run_log": {"status": "active", "pending": 0, "active_run_id": "run_e54d1ceb-15bb-41df-a6d4-af0d18de7f4d"}, "transition_action": "continue", "report_type": "progress_report", "next_action": "EXECUTE 작업 진입"}
+
+opal/tools/state-tool/tests/test_design_gate.py:884: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_add1_stale_evaluator_result_rejected
+=============== 1 failed, 17 passed, 4 subtests passed in 29.66s ===============

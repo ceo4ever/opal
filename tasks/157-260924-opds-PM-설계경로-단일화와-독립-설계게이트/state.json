@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-24 22:58:26",
-  "updated_at": "2026-09-25 01:09:16",
-  "current_status": "completed_unmerged",
+  "updated_at": "2026-09-25 08:06:11",
+  "current_status": "additional_work",
   "rows": [
     {
       "row_id": 1,
@@ -218,6 +218,18 @@
       "timestamp": "2026-09-25 01:09:16",
       "owner": "PM",
       "note": "agentic 정상 CLOSE. 14/14 PASS, 설치본 source=installed, finalize ok. merge/push/remove 미수행"
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "ADD-1 evaluator 결과 재사용 차단(input_bundle_hash 대조)",
+      "key": "close.add_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-25 08:06:11",
+      "owner": "PM",
+      "note": "ADD-1 완료 — RED(test-agent)·GREEN(task-agent), 18 pass, 설치 반영",
+      "worker_duration_minutes": 8
     }
   ],
   "next_action": "태스크 완료",

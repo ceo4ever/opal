@@ -187,9 +187,10 @@ task_md: <task_folder>/TASK.md
 plan_md: <task_folder>/PLAN.md
 scenario_source: <producer_artifact 또는 TEST-SCENARIO.md>
 iteration: <N>
+input_bundle_hash: <①start 응답의 bundle_hash>
 ```
 
-③ evaluator 반환 JSON을 `<task_folder>/run/design-gate-i<N>.json`에 저장하고 기록한다. 인자 매핑: evaluator `verdict: pass` → `--verdict pass`, `verdict: fail` → `--verdict rewrite --rewrite-target <evaluator rewrite_target>`, evaluator `status: blocked` 또는 결과 JSON이 계약 형식이 아니면 `--verdict input_error`로 기록한다.
+③ evaluator 반환 JSON을 `<task_folder>/run/design-gate-i<N>.json`에 저장하기 전에, 그 JSON 최상위 `input_bundle_hash`·`iteration`이 ②에서 전달한 값과 같은지 확인한다. 다르거나 없으면(evaluator가 값을 누락·오기했다는 뜻이므로) `--verdict input_error`로 기록한다(`state-tool`이 이 stale 결과를 `design_gate_result_stale`로 다시 거부하지 않도록 사전에 걸러낸다). 그 외 인자 매핑: evaluator `verdict: pass` → `--verdict pass`, `verdict: fail` → `--verdict rewrite --rewrite-target <evaluator rewrite_target>`, evaluator `status: blocked` 또는 결과 JSON이 계약 형식이 아니면 `--verdict input_error`로 기록한다.
 
 ```bash
 ~/.opal/tools/state-tool/run.sh design-gate record <task_folder> --iteration <N> --verdict <pass|rewrite|input_error> --evaluator-result <run/design-gate-i<N>.json> [--rewrite-target <plan|scenario|both>]
