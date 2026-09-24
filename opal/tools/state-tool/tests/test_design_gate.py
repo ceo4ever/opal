@@ -3,7 +3,7 @@
   "module": "test_design_gate",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "Task 157 PM 설계 경로 단일화·독립 설계 게이트 공개 CLI RED 계약(S-1,S-2,S-3,S-5,S-6,S-7,S-8,S-9, DEC-1~DEC-12). 아직 미구현이라 모두 실패해야 한다.",
+  "description": "PM 설계 경로(pipeline-pm.json)와 state-tool 독립 설계 게이트(design-gate start/record/reset, design-decision)의 공개 CLI 계약 — init_args 파이프라인 판정, 결정론 검사, 문서 묶음 해시·확인 해시, rewrite 대상, 반복 상한·reset, EXECUTE 진입 가드, run-log gate 사건.",
   "exports": [],
   "depends": ["state_tool"]
 }

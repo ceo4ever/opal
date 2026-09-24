@@ -1,6 +1,6 @@
 # STATE: PM 설계 경로 단일화와 독립 설계 게이트
 
-> 최종 갱신: 2026-09-25 00:21:53
+> 최종 갱신: 2026-09-25 01:09:16
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 

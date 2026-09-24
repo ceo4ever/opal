@@ -1,0 +1,1561 @@
+............................................................................................................................................................... [ 23%]
+................................FFFFFF.FF............. [ 32%]
+FFFF.F..F.....FFFFF..FFF..F.FFFF..F.. [ 37%]
+................................F...F................ [ 45%]
+................................F................EEE.......................................... [ 59%]
+................................................................................... [ 72%]
+......................................................... [ 80%]
+........................................................................ [ 91%]
+........................................................                 [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of TestVerdictLedger.test_brain_query_is_recorded_blocked_and_not_promoted _
+
+cls = <class 'test_e2e_sut_http_surfaces.TestVerdictLedger'>
+
+    @classmethod
+    def setUpClass(cls):
+        if not _EVIDENCE_ROOT.is_dir() or not any(_EVIDENCE_ROOT.iterdir()):
+            raise unittest.SkipTest("표면 run이 돌지 않았다(단건 실행) — 되짚을 근거가 없다")
+>       cls.spec = json.loads(_SPEC_PATH.read_text(encoding="utf-8"))
+                              ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'read_text'
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:894: AttributeError
+_ ERROR at setup of TestVerdictLedger.test_each_preserved_verdict_satisfies_the_frozen_pass_gate _
+
+cls = <class 'test_e2e_sut_http_surfaces.TestVerdictLedger'>
+
+    @classmethod
+    def setUpClass(cls):
+        if not _EVIDENCE_ROOT.is_dir() or not any(_EVIDENCE_ROOT.iterdir()):
+            raise unittest.SkipTest("표면 run이 돌지 않았다(단건 실행) — 되짚을 근거가 없다")
+>       cls.spec = json.loads(_SPEC_PATH.read_text(encoding="utf-8"))
+                              ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'read_text'
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:894: AttributeError
+_ ERROR at setup of TestVerdictLedger.test_ledger_covers_every_declared_http_surface_once _
+
+cls = <class 'test_e2e_sut_http_surfaces.TestVerdictLedger'>
+
+    @classmethod
+    def setUpClass(cls):
+        if not _EVIDENCE_ROOT.is_dir() or not any(_EVIDENCE_ROOT.iterdir()):
+            raise unittest.SkipTest("표면 run이 돌지 않았다(단건 실행) — 되짚을 근거가 없다")
+>       cls.spec = json.loads(_SPEC_PATH.read_text(encoding="utf-8"))
+                              ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'read_text'
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:894: AttributeError
+=================================== FAILURES ===================================
+____ TestJournalTransitionOrder.test_executor_ready_is_emitted_exactly_once ____
+
+self = <test_e2e_drivers.TestJournalTransitionOrder testMethod=test_executor_ready_is_emitted_exactly_once>
+
+    def test_executor_ready_is_emitted_exactly_once(self):
+        _payload, states = self._run(selected=True)
+>       self.assertEqual(states.count(self.orchestrator.STATE_EXECUTOR_READY), 1)
+E       AssertionError: 0 != 1
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:579: AssertionError
+_ TestJournalTransitionOrder.test_no_selected_candidate_keeps_the_shortcut_and_never_starts_a_sut _
+
+self = <test_e2e_drivers.TestJournalTransitionOrder testMethod=test_no_selected_candidate_keeps_the_shortcut_and_never_starts_a_sut>
+
+    def test_no_selected_candidate_keeps_the_shortcut_and_never_starts_a_sut(self):
+        """§A.1.2 [MUST] — selected 0건이면 executor_unavailable이며 SUT를 기동하지 않는다."""
+        payload, states = self._run(selected=False)
+>       self.assertEqual(payload["status"], "executor_unavailable")
+E       AssertionError: 'blocked' != 'executor_unavailable'
+E       - blocked
+E       + executor_unavailable
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:584: AssertionError
+_ TestJournalTransitionOrder.test_profile_resolved_follows_sut_ready_on_the_progress_path _
+
+self = <test_e2e_drivers.TestJournalTransitionOrder testMethod=test_profile_resolved_follows_sut_ready_on_the_progress_path>
+
+    def test_profile_resolved_follows_sut_ready_on_the_progress_path(self):
+        """진행 경로에서 profile_resolved가 sut_ready보다 앞서면 §A.2.1 위반이다."""
+        _payload, states = self._run(selected=True)
+        self.assertLess(
+>           states.index(self.orchestrator.STATE_SUT_READY),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            states.index(self.orchestrator.STATE_PROFILE_RESOLVED),
+        )
+E       ValueError: list.index(x): x not in list
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:573: ValueError
+____ TestJournalTransitionOrder.test_selected_candidate_emits_the_a21_order ____
+
+self = <test_e2e_drivers.TestJournalTransitionOrder testMethod=test_selected_candidate_emits_the_a21_order>
+
+    def test_selected_candidate_emits_the_a21_order(self):
+        _payload, states = self._run(selected=True)
+        order = [
+            self.orchestrator.STATE_SUT_STARTING,
+            self.orchestrator.STATE_SUT_READY,
+            self.orchestrator.STATE_PROFILE_RESOLVED,
+            self.orchestrator.STATE_EXECUTOR_READY,
+        ]
+>       positions = [states.index(state) for state in order]
+                     ^^^^^^^^^^^^^^^^^^^
+E       ValueError: list.index(x): x not in list
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:565: ValueError
+___ TestSutDependentProbeOrdering.test_api_probe_receives_a_live_backend_url ___
+
+self = <test_e2e_drivers.TestSutDependentProbeOrdering testMethod=test_api_probe_receives_a_live_backend_url>
+
+    def test_api_probe_receives_a_live_backend_url(self):
+        """backend_url이 채워진다는 것은 health를 물어볼 대상이 실제로 있다는 뜻이다."""
+        self._run_api_profile()
+>       self.assertTrue(self.probe_contexts)
+E       AssertionError: [] is not true
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:698: AssertionError
+______ TestSutDependentProbeOrdering.test_api_profile_emits_the_a21_order ______
+
+self = <test_e2e_drivers.TestSutDependentProbeOrdering testMethod=test_api_profile_emits_the_a21_order>
+
+    def test_api_profile_emits_the_a21_order(self):
+        _payload, _run_json, states = self._run_api_profile()
+        order = [
+            self.orchestrator.STATE_SUT_STARTING,
+            self.orchestrator.STATE_SUT_READY,
+            self.orchestrator.STATE_PROFILE_RESOLVED,
+            self.orchestrator.STATE_EXECUTOR_READY,
+        ]
+>       positions = [states.index(state) for state in order]
+                     ^^^^^^^^^^^^^^^^^^^
+E       ValueError: list.index(x): x not in list
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:711: ValueError
+__ TestSutDependentProbeOrdering.test_selected_api_candidate_is_recorded_once __
+
+self = <test_e2e_drivers.TestSutDependentProbeOrdering testMethod=test_selected_api_candidate_is_recorded_once>
+
+    def test_selected_api_candidate_is_recorded_once(self):
+        _payload, run_json, _states = self._run_api_profile()
+        selected = [c for c in run_json["candidates"] if c["outcome"] == "selected"]
+>       self.assertEqual(len(selected), 1)
+E       AssertionError: 0 != 1
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:717: AssertionError
+___ TestSutDependentProbeOrdering.test_sut_starts_before_the_api_probe_runs ____
+
+self = <test_e2e_drivers.TestSutDependentProbeOrdering testMethod=test_sut_starts_before_the_api_probe_runs>
+
+    def test_sut_starts_before_the_api_probe_runs(self):
+        _payload, _run_json, _states = self._run_api_profile()
+>       self.assertEqual(self.events, ["start_sut", "probe"])
+E       AssertionError: Lists differ: [] != ['start_sut', 'probe']
+E       
+E       Second list contains 2 additional elements.
+E       First extra element 0:
+E       'start_sut'
+E       
+E       - []
+E       + ['start_sut', 'probe']
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:693: AssertionError
+_ TestHandoffContract.test_handoff_carries_all_eight_required_fields_plus_the_identity_fields _
+
+self = <test_e2e_human_executor.TestHandoffContract testMethod=test_handoff_carries_all_eight_required_fields_plus_the_identity_fields>
+
+    def test_handoff_carries_all_eight_required_fields_plus_the_identity_fields(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+__________ TestHandoffContract.test_handoff_is_recorded_as_an_action ___________
+
+self = <test_e2e_human_executor.TestHandoffContract testMethod=test_handoff_is_recorded_as_an_action>
+
+    def test_handoff_is_recorded_as_an_action(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+__ TestHandoffContract.test_handoff_json_is_written_through_the_evidence_gate __
+
+self = <test_e2e_human_executor.TestHandoffContract testMethod=test_handoff_json_is_written_through_the_evidence_gate>
+
+    def test_handoff_json_is_written_through_the_evidence_gate(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestHandoffContract.test_handoff_without_an_evidence_writer_is_a_contract_error _
+
+self = <test_e2e_human_executor.TestHandoffContract testMethod=test_handoff_without_an_evidence_writer_is_a_contract_error>
+
+    def test_handoff_without_an_evidence_writer_is_a_contract_error(self):
+        """§C.2 [MUST] — executor는 파일을 직접 쓰지 않는다."""
+        executor = e2e_human.HumanExecutor(runtime_context={"artifact_dir": "/tmp"})
+        with self.assertRaises(e2e_executors.ExecutorError) as ctx:
+            executor.dispatch(
+                "handoff",
+                {"run_id": _RUN_ID, "scenario_id": "S-11", "step_id": "h",
+>                "handoff_spec": _frozen_scenario("S-11")[1]["handoff"]},
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+            )
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:196: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_______ TestResumeState.test_declared_policy_text_is_preserved_verbatim ________
+
+self = <test_e2e_human_executor.TestResumeState testMethod=test_declared_policy_text_is_preserved_verbatim>
+
+    def test_declared_policy_text_is_preserved_verbatim(self):
+        """추적 가능성 — 선언 원문은 `server_policy_declared`에 그대로 남는다."""
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:243: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+__________ TestResumeState.test_resume_state_has_every_contract_field __________
+
+self = <test_e2e_human_executor.TestResumeState testMethod=test_resume_state_has_every_contract_field>
+
+    def test_resume_state_has_every_contract_field(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:212: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestServerPolicyNormalization.test_emitted_policy_is_always_inside_the_contract_enum (scenario='S-11') _
+
+self = <test_e2e_human_executor.TestServerPolicyNormalization testMethod=test_emitted_policy_is_always_inside_the_contract_enum>
+
+    def test_emitted_policy_is_always_inside_the_contract_enum(self):
+        """MV-17 — 산출물 `handoff.json`의 값만이 검사 대상이다."""
+        for scenario_id in ("S-11", "S-28"):
+            with self.subTest(scenario=scenario_id):
+>               fixture = _HandoffFixture(scenario_id=scenario_id)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:267: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestServerPolicyNormalization.test_emitted_policy_is_always_inside_the_contract_enum (scenario='S-28') _
+
+self = <test_e2e_human_executor.TestServerPolicyNormalization testMethod=test_emitted_policy_is_always_inside_the_contract_enum>
+
+    def test_emitted_policy_is_always_inside_the_contract_enum(self):
+        """MV-17 — 산출물 `handoff.json`의 값만이 검사 대상이다."""
+        for scenario_id in ("S-11", "S-28"):
+            with self.subTest(scenario=scenario_id):
+>               fixture = _HandoffFixture(scenario_id=scenario_id)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:267: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+______ TestServerPolicyNormalization.test_normalizing_terminates_nothing _______
+
+self = <test_e2e_human_executor.TestServerPolicyNormalization testMethod=test_normalizing_terminates_nothing>
+
+    def test_normalizing_terminates_nothing(self):
+        """C-2 — 이 executor에는 프로세스를 종료할 수단 자체가 없다."""
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:372: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestServerPolicyNormalization.test_the_declared_original_survives_on_the_handoff _
+
+self = <test_e2e_human_executor.TestServerPolicyNormalization testMethod=test_the_declared_original_survives_on_the_handoff>
+
+    def test_the_declared_original_survives_on_the_handoff(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:295: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestServerPolicyNormalization.test_the_journal_resume_records_both_sides_of_the_normalization _
+
+self = <test_e2e_human_executor.TestServerPolicyNormalization testMethod=test_the_journal_resume_records_both_sides_of_the_normalization>
+
+    def test_the_journal_resume_records_both_sides_of_the_normalization(self):
+        """PM 확정 — 정규화 전/후를 함께 남겨 조용한 대체를 만들지 않는다."""
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:304: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestServerPolicyNormalization.test_the_key_means_the_same_thing_in_every_artifact _
+
+self = <test_e2e_human_executor.TestServerPolicyNormalization testMethod=test_the_key_means_the_same_thing_in_every_artifact>
+
+    def test_the_key_means_the_same_thing_in_every_artifact(self):
+        """같은 키 이름이 산출물마다 다른 것을 가리키지 않는다(PM 확정)."""
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestServerPolicyNormalization.test_the_persisted_resume_index_carries_the_normalization_record _
+
+self = <test_e2e_human_executor.TestServerPolicyNormalization testMethod=test_the_persisted_resume_index_carries_the_normalization_record>
+
+    def test_the_persisted_resume_index_carries_the_normalization_record(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:342: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestServerPolicyNormalization.test_the_resume_server_policy_is_inside_the_contract_a23_enum (scenario='S-11') _
+
+self = <test_e2e_human_executor.TestServerPolicyNormalization testMethod=test_the_resume_server_policy_is_inside_the_contract_a23_enum>
+
+    def test_the_resume_server_policy_is_inside_the_contract_a23_enum(self):
+        """§A.2.3 (`CONTRACT.md:187`) — resume.server_policy는 `keep`|`terminate`다.
+    
+        MV-17은 `handoff.server_policy`만 보지만 §A.2.3도 같은 enum을 규정한다. 나중에
+        journal 쪽 검사가 추가돼도 걸리지 않도록 지금 고정한다.
+        """
+        for scenario_id in ("S-11", "S-28"):
+            with self.subTest(scenario=scenario_id):
+>               fixture = _HandoffFixture(scenario_id=scenario_id)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:318: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestServerPolicyNormalization.test_the_resume_server_policy_is_inside_the_contract_a23_enum (scenario='S-28') _
+
+self = <test_e2e_human_executor.TestServerPolicyNormalization testMethod=test_the_resume_server_policy_is_inside_the_contract_a23_enum>
+
+    def test_the_resume_server_policy_is_inside_the_contract_a23_enum(self):
+        """§A.2.3 (`CONTRACT.md:187`) — resume.server_policy는 `keep`|`terminate`다.
+    
+        MV-17은 `handoff.server_policy`만 보지만 §A.2.3도 같은 enum을 규정한다. 나중에
+        journal 쪽 검사가 추가돼도 걸리지 않도록 지금 고정한다.
+        """
+        for scenario_id in ("S-11", "S-28"):
+            with self.subTest(scenario=scenario_id):
+>               fixture = _HandoffFixture(scenario_id=scenario_id)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:318: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestAwaitingHumanPause.test_marking_awaiting_human_preserves_run_id_and_the_handoff_state _
+
+self = <test_e2e_human_executor.TestAwaitingHumanPause testMethod=test_marking_awaiting_human_preserves_run_id_and_the_handoff_state>
+
+    def test_marking_awaiting_human_preserves_run_id_and_the_handoff_state(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:391: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_____ TestAwaitingHumanPause.test_the_resume_index_keeps_what_resume_needs _____
+
+self = <test_e2e_human_executor.TestAwaitingHumanPause testMethod=test_the_resume_index_keeps_what_resume_needs>
+
+    def test_the_resume_index_keeps_what_resume_needs(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:405: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeUsesTheExistingScenarioPath.test_a_complete_submission_passes_only_after_the_contract_gate _
+
+self = <test_e2e_human_executor.TestResumeUsesTheExistingScenarioPath testMethod=test_a_complete_submission_passes_only_after_the_contract_gate>
+
+    def test_a_complete_submission_passes_only_after_the_contract_gate(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:448: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeUsesTheExistingScenarioPath.test_a_mismatched_token_or_run_id_is_refused (case='wrong_token') _
+
+self = <test_e2e_human_executor.TestResumeUsesTheExistingScenarioPath testMethod=test_a_mismatched_token_or_run_id_is_refused>
+
+    def test_a_mismatched_token_or_run_id_is_refused(self):
+        for label, kwargs in (
+            ("wrong_token", {"token": "RT-WRONG"}),
+            ("wrong_run_id", {"run_id": "e2e-20260914-999"}),
+        ):
+            with self.subTest(case=label):
+>               fixture = _HandoffFixture()
+                          ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:485: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeUsesTheExistingScenarioPath.test_a_mismatched_token_or_run_id_is_refused (case='wrong_run_id') _
+
+self = <test_e2e_human_executor.TestResumeUsesTheExistingScenarioPath testMethod=test_a_mismatched_token_or_run_id_is_refused>
+
+    def test_a_mismatched_token_or_run_id_is_refused(self):
+        for label, kwargs in (
+            ("wrong_token", {"token": "RT-WRONG"}),
+            ("wrong_run_id", {"run_id": "e2e-20260914-999"}),
+        ):
+            with self.subTest(case=label):
+>               fixture = _HandoffFixture()
+                          ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:485: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeUsesTheExistingScenarioPath.test_completed_true_alone_does_not_make_a_pass (case='no_assertions') _
+
+self = <test_e2e_human_executor.TestResumeUsesTheExistingScenarioPath testMethod=test_completed_true_alone_does_not_make_a_pass>
+
+    def test_completed_true_alone_does_not_make_a_pass(self):
+        """R-13 [MUST] / §A.10 — 사람의 완료 선언은 pass 선언이 아니다."""
+        for label, overrides in (
+            ("no_assertions", {"assertion_results": []}),
+            ("no_evidence", {"observed_evidence": []}),
+            ("no_human_executor", {"observed_executors": []}),
+            ("assertion_mismatch", {"assertion_results": [
+                {"id": "S-11-a1", "expected": "x", "actual": "y", "passed": True}
+            ]}),
+        ):
+            with self.subTest(case=label):
+>               fixture = _HandoffFixture()
+                          ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:469: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeUsesTheExistingScenarioPath.test_completed_true_alone_does_not_make_a_pass (case='no_evidence') _
+
+self = <test_e2e_human_executor.TestResumeUsesTheExistingScenarioPath testMethod=test_completed_true_alone_does_not_make_a_pass>
+
+    def test_completed_true_alone_does_not_make_a_pass(self):
+        """R-13 [MUST] / §A.10 — 사람의 완료 선언은 pass 선언이 아니다."""
+        for label, overrides in (
+            ("no_assertions", {"assertion_results": []}),
+            ("no_evidence", {"observed_evidence": []}),
+            ("no_human_executor", {"observed_executors": []}),
+            ("assertion_mismatch", {"assertion_results": [
+                {"id": "S-11-a1", "expected": "x", "actual": "y", "passed": True}
+            ]}),
+        ):
+            with self.subTest(case=label):
+>               fixture = _HandoffFixture()
+                          ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:469: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeUsesTheExistingScenarioPath.test_completed_true_alone_does_not_make_a_pass (case='no_human_executor') _
+
+self = <test_e2e_human_executor.TestResumeUsesTheExistingScenarioPath testMethod=test_completed_true_alone_does_not_make_a_pass>
+
+    def test_completed_true_alone_does_not_make_a_pass(self):
+        """R-13 [MUST] / §A.10 — 사람의 완료 선언은 pass 선언이 아니다."""
+        for label, overrides in (
+            ("no_assertions", {"assertion_results": []}),
+            ("no_evidence", {"observed_evidence": []}),
+            ("no_human_executor", {"observed_executors": []}),
+            ("assertion_mismatch", {"assertion_results": [
+                {"id": "S-11-a1", "expected": "x", "actual": "y", "passed": True}
+            ]}),
+        ):
+            with self.subTest(case=label):
+>               fixture = _HandoffFixture()
+                          ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:469: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeUsesTheExistingScenarioPath.test_completed_true_alone_does_not_make_a_pass (case='assertion_mismatch') _
+
+self = <test_e2e_human_executor.TestResumeUsesTheExistingScenarioPath testMethod=test_completed_true_alone_does_not_make_a_pass>
+
+    def test_completed_true_alone_does_not_make_a_pass(self):
+        """R-13 [MUST] / §A.10 — 사람의 완료 선언은 pass 선언이 아니다."""
+        for label, overrides in (
+            ("no_assertions", {"assertion_results": []}),
+            ("no_evidence", {"observed_evidence": []}),
+            ("no_human_executor", {"observed_executors": []}),
+            ("assertion_mismatch", {"assertion_results": [
+                {"id": "S-11-a1", "expected": "x", "actual": "y", "passed": True}
+            ]}),
+        ):
+            with self.subTest(case=label):
+>               fixture = _HandoffFixture()
+                          ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:469: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeUsesTheExistingScenarioPath.test_resume_delegates_to_cmd_scenario_mark _
+
+self = <test_e2e_human_executor.TestResumeUsesTheExistingScenarioPath testMethod=test_resume_delegates_to_cmd_scenario_mark>
+
+    def test_resume_delegates_to_cmd_scenario_mark(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:420: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestTimeoutIsBlocked.test_an_expired_run_never_reaches_the_scenario_judgement _
+
+self = <test_e2e_human_executor.TestTimeoutIsBlocked testMethod=test_an_expired_run_never_reaches_the_scenario_judgement>
+
+    def test_an_expired_run_never_reaches_the_scenario_judgement(self):
+>       fixture = self._expired_fixture()
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:545: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:511: in _expired_fixture
+    fixture = _HandoffFixture(scenario_id="S-28", timeout_seconds=1)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_____ TestTimeoutIsBlocked.test_an_expired_token_ends_blocked_with_exit_19 _____
+
+self = <test_e2e_human_executor.TestTimeoutIsBlocked testMethod=test_an_expired_token_ends_blocked_with_exit_19>
+
+    def test_an_expired_token_ends_blocked_with_exit_19(self):
+>       fixture = self._expired_fixture()
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:521: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:511: in _expired_fixture
+    fixture = _HandoffFixture(scenario_id="S-28", timeout_seconds=1)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+__ TestTimeoutIsBlocked.test_expiry_is_recorded_in_the_journal_resume_object ___
+
+self = <test_e2e_human_executor.TestTimeoutIsBlocked testMethod=test_expiry_is_recorded_in_the_journal_resume_object>
+
+    def test_expiry_is_recorded_in_the_journal_resume_object(self):
+>       fixture = self._expired_fixture()
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:533: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:511: in _expired_fixture
+    fixture = _HandoffFixture(scenario_id="S-28", timeout_seconds=1)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeCli.test_a_complete_resume_exits_with_a_contract_exit_code_and_payload _
+
+self = <test_e2e_human_executor.TestResumeCli testMethod=test_a_complete_resume_exits_with_a_contract_exit_code_and_payload>
+
+    def test_a_complete_resume_exits_with_a_contract_exit_code_and_payload(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:590: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestResumeCli.test_the_stdout_payload_is_the_run_shape_plus_verifier_results _
+
+self = <test_e2e_human_executor.TestResumeCli testMethod=test_the_stdout_payload_is_the_run_shape_plus_verifier_results>
+
+    def test_the_stdout_payload_is_the_run_shape_plus_verifier_results(self):
+>       fixture = _HandoffFixture()
+                  ^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_human_executor.py:605: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_human_executor.py:74: in __init__
+    self.task_path, self.scenario = _temp_task(scenario_id)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:61: in _temp_task
+    spec, scenario = _frozen_scenario(scenario_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_human_executor.py:52: in _frozen_scenario
+    spec = json.loads((_TASK_PATH / "test-scenario.json").read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/tasks/127-260912-oppl-E2E-하네스-구현/test-scenario.json'
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py:771: FileNotFoundError
+_ TestOrchestratorRunJson.test_run_json_carries_every_contract_a1_required_key _
+
+self = <test_e2e_runtime.TestOrchestratorRunJson testMethod=test_run_json_carries_every_contract_a1_required_key>
+
+    def test_run_json_carries_every_contract_a1_required_key(self):
+        _, run_json, _, _ = self._run(
+            target=e2e_target.TARGET_SOURCE_WORKTREE, worktree_root=str(_SOURCE_ROOT)
+        )
+        for key in (
+            "schema_version", "run_id", "scenario_id", "profile", "actors", "surface_kind",
+            "target", "project_root", "worktree_root", "opal_home", "commit", "dirty",
+            "dirty_files", "urls", "executors", "candidates", "state", "status",
+            "operational_status", "error", "exit_code", "assertion_summary",
+            "required_evidence", "observed_evidence", "missing_evidence",
+            "evidence_complete", "fidelity", "cleanup", "artifact_dir", "started_at",
+            "ended_at", "driver_version",
+        ):
+            self.assertIn(key, run_json, f"run.json missing CONTRACT §A.1 key: {key}")
+        self.assertEqual(run_json["schema_version"], e2e_contract.E2E_CONTRACT_SCHEMA_VERSION)
+        self.assertEqual(run_json["target"], e2e_target.TARGET_SOURCE_WORKTREE)
+        self.assertIsNone(run_json["opal_home"])
+        self.assertEqual(run_json["scenario_id"], "S-1")
+>       self.assertEqual(run_json["profile"], "api")
+E       AssertionError: None != 'api'
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:363: AssertionError
+_ TestOrchestratorRunJson.test_zero_executor_candidates_ends_before_the_sut_is_started _
+
+self = <test_e2e_runtime.TestOrchestratorRunJson testMethod=test_zero_executor_candidates_ends_before_the_sut_is_started>
+
+    def test_zero_executor_candidates_ends_before_the_sut_is_started(self):
+        """§A.1.2 [MUST] — selected가 0개이면 status는 executor_unavailable이다.
+    
+        판정이 기동 전에 확정되므로 아무도 구동하지 않을 uvicorn·vite를 띄우지 않는다
+        (TASK.md C-4·C-5).
+    
+        재현 대상은 **SUT probe가 필요 없는 profile**이다. `api` executor의 probe는 실제
+        SUT `/health`를 호출해야 가용성을 확정하므로(§A.8 [MUST], NR-7) `api` profile은
+        원리상 기동 전에 판정할 수 없다 — 그 경로까지 이 단축으로 묶으면 probe 없이
+        가용성을 추정하게 된다. `browser` profile은 driver binary 해석만으로 판정되므로
+        단축이 성립하며, 여기서는 driver 레지스트리를 비워 후보 전건을 미가용으로 만든다.
+        """
+        original_registry = e2e_drivers.registered_drivers
+        e2e_drivers.registered_drivers = lambda: {}
+        try:
+            with tempfile.TemporaryDirectory() as other_tree:
+                payload, run_json, journal, owned = self._run(
+                    target=e2e_target.TARGET_SOURCE_WORKTREE,
+                    worktree_root=other_tree,
+                    scenario_id="S-8",  # profile=browser — SUT probe가 필요 없다.
+                )
+        finally:
+            e2e_drivers.registered_drivers = original_registry
+>       self.assertEqual(payload["status"], "executor_unavailable")
+E       AssertionError: 'blocked' != 'executor_unavailable'
+E       - blocked
+E       + executor_unavailable
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:304: AssertionError
+_______ TestSutHttpSurfaces.test_every_declared_http_surface_is_covered ________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_every_declared_http_surface_is_covered>
+
+    def test_every_declared_http_surface_is_covered(self):
+        """[MUST] surfaces.json이 선언한 http 표면이 이 스위트 + S-10으로 전부 덮인다.
+    
+        표면 목록을 이 파일에 복제하지 않고 분모에서 읽는다 — surfaces.json이 소유한다.
+        """
+>       self.assertIsNotNone(_SURFACES_PATH, "surfaces.json(분모)을 찾지 못했다")
+E       AssertionError: unexpectedly None : surfaces.json(분모)을 찾지 못했다
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:508: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestJournalTransitionOrder::test_executor_ready_is_emitted_exactly_once
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestJournalTransitionOrder::test_no_selected_candidate_keeps_the_shortcut_and_never_starts_a_sut
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestJournalTransitionOrder::test_profile_resolved_follows_sut_ready_on_the_progress_path
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestJournalTransitionOrder::test_selected_candidate_emits_the_a21_order
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestSutDependentProbeOrdering::test_api_probe_receives_a_live_backend_url
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestSutDependentProbeOrdering::test_api_profile_emits_the_a21_order
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestSutDependentProbeOrdering::test_selected_api_candidate_is_recorded_once
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestSutDependentProbeOrdering::test_sut_starts_before_the_api_probe_runs
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestHandoffContract::test_handoff_carries_all_eight_required_fields_plus_the_identity_fields
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestHandoffContract::test_handoff_is_recorded_as_an_action
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestHandoffContract::test_handoff_json_is_written_through_the_evidence_gate
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestHandoffContract::test_handoff_without_an_evidence_writer_is_a_contract_error
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeState::test_declared_policy_text_is_preserved_verbatim
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeState::test_resume_state_has_every_contract_field
+SUBFAILED(scenario='S-11') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestServerPolicyNormalization::test_emitted_policy_is_always_inside_the_contract_enum
+SUBFAILED(scenario='S-28') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestServerPolicyNormalization::test_emitted_policy_is_always_inside_the_contract_enum
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestServerPolicyNormalization::test_normalizing_terminates_nothing
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestServerPolicyNormalization::test_the_declared_original_survives_on_the_handoff
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestServerPolicyNormalization::test_the_journal_resume_records_both_sides_of_the_normalization
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestServerPolicyNormalization::test_the_key_means_the_same_thing_in_every_artifact
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestServerPolicyNormalization::test_the_persisted_resume_index_carries_the_normalization_record
+SUBFAILED(scenario='S-11') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestServerPolicyNormalization::test_the_resume_server_policy_is_inside_the_contract_a23_enum
+SUBFAILED(scenario='S-28') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestServerPolicyNormalization::test_the_resume_server_policy_is_inside_the_contract_a23_enum
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestAwaitingHumanPause::test_marking_awaiting_human_preserves_run_id_and_the_handoff_state
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestAwaitingHumanPause::test_the_resume_index_keeps_what_resume_needs
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeUsesTheExistingScenarioPath::test_a_complete_submission_passes_only_after_the_contract_gate
+SUBFAILED(case='wrong_token') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeUsesTheExistingScenarioPath::test_a_mismatched_token_or_run_id_is_refused
+SUBFAILED(case='wrong_run_id') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeUsesTheExistingScenarioPath::test_a_mismatched_token_or_run_id_is_refused
+SUBFAILED(case='no_assertions') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeUsesTheExistingScenarioPath::test_completed_true_alone_does_not_make_a_pass
+SUBFAILED(case='no_evidence') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeUsesTheExistingScenarioPath::test_completed_true_alone_does_not_make_a_pass
+SUBFAILED(case='no_human_executor') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeUsesTheExistingScenarioPath::test_completed_true_alone_does_not_make_a_pass
+SUBFAILED(case='assertion_mismatch') opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeUsesTheExistingScenarioPath::test_completed_true_alone_does_not_make_a_pass
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeUsesTheExistingScenarioPath::test_resume_delegates_to_cmd_scenario_mark
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestTimeoutIsBlocked::test_an_expired_run_never_reaches_the_scenario_judgement
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestTimeoutIsBlocked::test_an_expired_token_ends_blocked_with_exit_19
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestTimeoutIsBlocked::test_expiry_is_recorded_in_the_journal_resume_object
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeCli::test_a_complete_resume_exits_with_a_contract_exit_code_and_payload
+FAILED opal/tools/test-tool/tests/test_e2e_human_executor.py::TestResumeCli::test_the_stdout_payload_is_the_run_shape_plus_verifier_results
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestOrchestratorRunJson::test_run_json_carries_every_contract_a1_required_key
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestOrchestratorRunJson::test_zero_executor_candidates_ends_before_the_sut_is_started
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_every_declared_http_surface_is_covered
+ERROR opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestVerdictLedger::test_brain_query_is_recorded_blocked_and_not_promoted
+ERROR opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestVerdictLedger::test_each_preserved_verdict_satisfies_the_frozen_pass_gate
+ERROR opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestVerdictLedger::test_ledger_covers_every_declared_http_surface_once
+41 failed, 631 passed, 3 errors, 317 subtests passed in 163.69s (0:02:43)
+EXIT:1

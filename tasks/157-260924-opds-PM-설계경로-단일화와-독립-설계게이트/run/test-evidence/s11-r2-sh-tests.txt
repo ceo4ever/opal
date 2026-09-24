@@ -1,0 +1,55 @@
+== scripts/tests/test_agent_adapter_fields.sh ==
+exit:1
+[PASS] TS-027: install/windows.ps1가 source Claude hooks를 사용자 설정 보존 병합(_opal_managed)으로 설치 흐름에 연결
+
+==============================================
+PASS=16 FAIL=2 SKIP=0
+==============================================
+== scripts/tests/test_archive_contents.sh ==
+exit:1
+
+========================================================
+PASS: 11 | FAIL: 1
+========================================================
+verdict: FAIL (1 failures)
+== scripts/tests/test_codex_model_mapping.sh ==
+exit:0
+[PASS] Codex 모델 매핑 Luna/Terra/Sol 정합
+[PASS] 이전 기본값만 셀 단위 승격하고 사용자 지정값 보존
+[PASS] 현행 설정 멱등 및 models 미보유 설정 시드
+[PASS] macOS/Windows effort minimal→none, max→max 정합
+== scripts/tests/test_console_ownership.sh ==
+exit:0
+
+========================================================
+PASS: 23 | FAIL: 0 | SKIP: 0
+========================================================
+verdict: ALL PASS
+== scripts/tests/test_console_scan.sh ==
+exit:0
+
+========================================================
+PASS: 16 | FAIL: 0 | SKIP: 0
+========================================================
+verdict: ALL PASS
+== scripts/tests/test_download_contract.sh ==
+exit:0
+
+========================================================
+PASS: 26 | FAIL: 0 | SKIP: 0
+========================================================
+verdict: ALL PASS
+== scripts/tests/test_version_stamp.sh ==
+exit:0
+
+========================================================
+PASS: 11 | FAIL: 0 | SKIP: 0
+========================================================
+verdict: ALL PASS
+== scripts/tests/test-install-skill-cleanup.sh ==
+exit:1
+
+========================================================
+PASS: 10 | FAIL: 1
+========================================================
+verdict: FAIL (1 failures)

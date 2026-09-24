@@ -1,0 +1,25 @@
+{
+  "status": "completed",
+  "summary": "Brain ingest candidate validation — 1 candidate validated",
+  "deferred": true,
+  "reason": "Worktree task contract: brain files modified by designated party only, not by worker. Candidate validated for format and readiness.",
+  "candidates": [
+    {
+      "path": ".opal/brain/pages/concept/pm-design-path-independent-gate.md",
+      "type": "concept",
+      "name": "pm-design-path-independent-gate",
+      "validation": {
+        "format_valid": true,
+        "structure_valid": true,
+        "kebab_case_valid": true
+      },
+      "status": "ready_for_ingest"
+    }
+  ],
+  "brain_exists": true,
+  "brain_location": ".opal/brain",
+  "validation_summary": "1 candidate passed validation. Candidate path is relative POSIX path, follows pages/{type}/{kebab-name}.md pattern, and type (concept) is valid for architectural decisions.",
+  "worktree_contract": "This worker validated only; brain-tool ingestion deferred to designated party per worktree task contract (done-template.md §회고적 학습 후보 계약).",
+  "changed_files": [],
+  "blockers": []
+}

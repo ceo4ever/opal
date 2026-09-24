@@ -1,0 +1,3 @@
+pass-attempt design_gate_verdict_mismatch
+rewrite 0 fail
+execute design_gate_not_passed

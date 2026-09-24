@@ -1,0 +1,18 @@
+opal/skills/opal-pilot-dev/SKILL.md:
+-rw-r--r--@ 1 iskang  admin  43849 Sep 25 00:16 opal/skills/opal-pilot-dev/SKILL.md
+README.md:
+-rw-r--r--@ 1 iskang  admin  42563 Sep 24 22:56 README.md
+opal/core/references/opal-harness-agentic.md:
+-rw-r--r--@ 1 iskang  admin  17638 Sep 25 00:17 opal/core/references/opal-harness-agentic.md
+opal/core/references/harness/actor.md:
+-rw-r--r--@ 1 iskang  admin  10774 Sep 25 00:18 opal/core/references/harness/actor.md
+opal/core/references/harness/skill-commands.md:
+-rw-r--r--@ 1 iskang  admin  5262 Sep 25 00:18 opal/core/references/harness/skill-commands.md
+opal/core/references/harness/guards.md:
+-rw-r--r--@ 1 iskang  admin  9649 Sep 24 23:21 opal/core/references/harness/guards.md
+docs/PROJECT.md:
+-rw-r--r--@ 1 iskang  admin  37431 Sep 25 00:19 docs/PROJECT.md
+---grep analysis.pm_gate / plan.pm_gate self-review---
+opal/skills/opal-pilot-dev/SKILL.md:69:**PM 경로에서 수행하지 않는 것(DEC-17)**: 이 경로에서는 별도 ANALYSIS.md 작성, `plan.pm_gate`(자기 검토 게이트), 트랙 강등/강업 제안(§트랙 강등 제안·Short profile PLAN §4)을 수행하지 않는다 — PM 경로는 opd·opds 두 트랙이 같은 행(`pipeline-pm.json`)을 쓰므로 트랙 전환 대상이 아니다.
+opal/skills/opal-pilot-dev/SKILL.md:87:3. PLAN 수신 후 PM이 TEST-SCENARIO를 작성하고 `plan.scenario_gate`와 `plan.pm_gate`를 통과시킨다.
+---exit: 0---

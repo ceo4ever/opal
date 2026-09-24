@@ -1,0 +1,132 @@
+
+===== PASS test_design_gate.py (30.21s) =====
+.................                                                    [100%]
+17 passed, 4 subtests passed in 29.86s
+
+===== PASS test_event_verify.py (1.29s) =====
+....                                                                     [100%]
+4 passed in 0.94s
+
+===== PASS test_mode_resolution.py (8.66s) =====
+........                                                   [100%]
+8 passed, 14 subtests passed in 8.31s
+
+===== PASS test_mode_transition_contract.py (72.61s) =====
+... [ 42%]
+....                                                                   [100%]
+7 passed, 71 subtests passed in 72.28s (0:01:12)
+
+===== PASS test_parallel_runner.py (0.89s) =====
+..                                                                       [100%]
+2 passed in 0.65s
+
+===== PASS test_pilot_shared_contract.py (2.42s) =====
+....................                                             [100%]
+20 passed, 152 subtests passed in 2.17s
+
+===== PASS test_run_identity.py (3.50s) =====
+.............                                                            [100%]
+13 passed in 3.25s
+
+===== PASS test_start_resolution.py (7.71s) =====
+.......................                                  [100%]
+23 passed, 16 subtests passed in 7.45s
+
+===== PASS test_state_tool_core_cli.py (7.39s) =====
+................................................................... [ 49%]
+................................................................. [ 97%]
+....                                                                     [100%]
+136 passed, 12 subtests passed in 7.13s
+
+===== FAIL test_state_tool_extended_contracts.py (46.60s) =====
+................................................................FF..F...........                                      [100%]
+=================================== FAILURES ===================================
+_ TestT138W9OwnershipClaimBoundary.test_ownership_tool_import_failure_is_fail_safe _
+
+self = <test_state_tool_extended_contracts.TestT138W9OwnershipClaimBoundary testMethod=test_ownership_tool_import_failure_is_fail_safe>
+
+    def test_ownership_tool_import_failure_is_fail_safe(self):
+        """C-9 — ownership-tool을 적재할 수 없어도 state-tool은 죽지 않는다."""
+        with patch.dict(os.environ, {"OPAL_SESSION_ID": "sess-w9-noimport"}), \
+                patch.object(ST, "_import_ownership_lease",
+                             side_effect=ModuleNotFoundError("ownership_tool")):
+            outcome = ST._claim_task_lease_if_needed(self.task_path)
+        self.assertFalse(outcome["claimed"])
+>       self.assertEqual(outcome["warning"], "ownership_claim_failed")
+E       AssertionError: 'ownership_session_id_missing' != 'ownership_claim_failed'
+E       - ownership_session_id_missing
+E       + ownership_claim_failed
+
+opal/tools/state-tool/tests/test_state_tool_extended_contracts.py:1794: AssertionError
+----------------------------- Captured stderr call -----------------------------
+{"warning": "ownership_import_failed", "message": "ownership_tool"}
+{"warning": "ownership_session_id_missing", "message": "해석 가능한 session ID가 없어 task lease를 claim하지 않았습니다. 상태 전이는 그대로 진행됩니다."}
+_ TestT138W9OwnershipClaimBoundary.test_session_env_absent_skips_claim_without_blocking _
+
+self = <test_state_tool_extended_contracts.TestT138W9OwnershipClaimBoundary testMethod=test_session_env_absent_skips_claim_without_blocking>
+
+    def test_session_env_absent_skips_claim_without_blocking(self):
+        """C-9 — OPAL_SESSION_ID 부재는 경고만 남기고 기존 전이 계약을 그대로 둔다."""
+        self._init()
+        result = self._run(["advance", str(self.task_path), "--row", "1"])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self._row_status(1), "in_progress")
+>       self.assertFalse(self._lease_file.exists(),
+                         "세션 식별자가 없으면 lease를 만들지 않는다")
+E       AssertionError: True is not false : 세션 식별자가 없으면 lease를 만들지 않는다
+
+opal/tools/state-tool/tests/test_state_tool_extended_contracts.py:1762: AssertionError
+_______ TestT138W9ActorSessionId.test_session_id_stays_none_without_env ________
+
+self = <test_state_tool_extended_contracts.TestT138W9ActorSessionId testMethod=test_session_id_stays_none_without_env>
+
+    def test_session_id_stays_none_without_env(self):
+        """회귀 — OPAL_SESSION_ID 부재 시 4개 기록부 모두 종전처럼 None이다(스키마 무변경)."""
+        by_event = self._record_all(None)
+        for event_name in ("run.started", "state.changed", "activity", "gate.requested"):
+            self.assertIn(event_name, by_event)
+>           self.assertIsNone(by_event[event_name]["actor"]["session_id"],
+                              f"{event_name}의 actor.session_id는 None이어야 한다")
+E           AssertionError: 'd8764f45-027c-4fad-96d6-4c0fadbebe62' is not None : run.started의 actor.session_id는 None이어야 한다
+
+opal/tools/state-tool/tests/test_state_tool_extended_contracts.py:1859: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/state-tool/tests/test_state_tool_extended_contracts.py::TestT138W9OwnershipClaimBoundary::test_ownership_tool_import_failure_is_fail_safe
+FAILED opal/tools/state-tool/tests/test_state_tool_extended_contracts.py::TestT138W9OwnershipClaimBoundary::test_session_env_absent_skips_claim_without_blocking
+FAILED opal/tools/state-tool/tests/test_state_tool_extended_contracts.py::TestT138W9ActorSessionId::test_session_id_stays_none_without_env
+3 failed, 77 passed, 27 subtests passed in 46.34s
+
+===== PASS test_state_tool_journal_worktree.py (9.33s) =====
+.........................................ss.s.                           [100%]
+43 passed, 3 skipped in 9.09s
+
+===== PASS test_state_tool_mode_contracts.py (45.28s) =====
+............................ [ 96%]
+.                                                                   [100%]
+29 passed, 49 subtests passed in 44.99s
+
+===== PASS test_state_tool_ownership.py (4.58s) =====
+.........                                                                [100%]
+9 passed in 4.35s
+
+===== PASS test_state_tool_pipeline_schema.py (7.19s) =====
+............................................... [ 94%]
+...                                                                      [100%]
+50 passed, 25 subtests passed in 6.94s
+
+===== PASS test_state_tool_run_log.py (27.54s) =====
+..................................................             [100%]
+50 passed, 10 subtests passed in 27.30s
+
+===== PASS test_state_tool_verification_gates.py (0.51s) =====
+..................................................................... [ 75%]
+......................                                                   [100%]
+91 passed, 3 subtests passed in 0.27s
+
+===== PASS test_todo_mirror_hook.py (0.63s) =====
+.................                                                        [100%]
+17 passed in 0.40s
+
+Parallel summary: 16/17 files passed with 4 jobs in 72.62s
+Failed files: test_state_tool_extended_contracts.py
+EXIT:1

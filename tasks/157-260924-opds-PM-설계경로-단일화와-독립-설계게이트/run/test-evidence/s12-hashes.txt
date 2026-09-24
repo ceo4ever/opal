@@ -1,0 +1,10 @@
+opal/skills/opal-pilot-dev/references/pipeline-pm.json -> e1e8b85efe1e9d0ee2d032bc0433939e6871aca802398ea855b20c2696dde05f
+/Users/iskang/.opal/skills/opal-pilot-dev/references/pipeline-pm.json -> e1e8b85efe1e9d0ee2d032bc0433939e6871aca802398ea855b20c2696dde05f  [MATCH]
+opal/core/references/harness/design-gate.md -> d88e9ec12fe3d44e2c407a1a52095c8d920f4719c07346605dee464b23cf4293
+/Users/iskang/.opal/references/harness/design-gate.md -> d88e9ec12fe3d44e2c407a1a52095c8d920f4719c07346605dee464b23cf4293  [MATCH]
+opal/core/references/events.json -> 23ad2b8b58fa527dfe09ad12e15242ddb0b860a69563fb06b4da344ca18671a7
+/Users/iskang/.opal/references/events.json -> 23ad2b8b58fa527dfe09ad12e15242ddb0b860a69563fb06b4da344ca18671a7  [MATCH]
+opal/tools/state-tool/state_tool.py -> 2a55fc46c4881c0b5f3b89945815212fe4f6f72c31c6b5580addb232861ba4ab
+/Users/iskang/.opal/tools/state-tool/state_tool.py -> 2a55fc46c4881c0b5f3b89945815212fe4f6f72c31c6b5580addb232861ba4ab  [MATCH]
+opal/agents/opal-evaluator-agent/AGENT.md -> 060e966403f4b96c0e71b13223ac587c10490127a9d0f64ec6e2cf1a4d45c0da
+/Users/iskang/.opal/agents/opal-evaluator-agent/AGENT.md -> 060e966403f4b96c0e71b13223ac587c10490127a9d0f64ec6e2cf1a4d45c0da  [MATCH]

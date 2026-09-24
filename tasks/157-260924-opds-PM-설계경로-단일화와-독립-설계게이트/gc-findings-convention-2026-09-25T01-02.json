@@ -1,0 +1,59 @@
+{
+  "check": "convention",
+  "status": "partial",
+  "checked_files": [
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/schema/state.schema.json",
+    "opal/tools/state-tool/tests/test_design_gate.py",
+    "opal/tools/state-tool/tests/test_start_resolution.py",
+    "opal/tools/event-loader/event_loader.py",
+    "opal/tools/event-loader/tests/test_event_loader_design_event.py",
+    "opal/tools/event-loader/tests/test_event_loader_extended.py",
+    "opal/core/references/events.json",
+    "opal/skills/opal-pilot-dev/references/pipeline-pm.json",
+    "scripts/tests/task113_bootstrap_audit.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-101",
+      "fingerprint": "a1c9e2f6b4d7091a",
+      "category": "documentation",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/event-loader/tests/test_event_loader_design_event.py",
+        "line": 6,
+        "symbol": "@header.description"
+      },
+      "evidence": "@header.description: \"...아직 미구현이라 static-check/load 모두 실패해야 한다.\" / pytest 실행 결과: 4 passed, 3 subtests passed (전건 GREEN, RED 아님)",
+      "impact": "@header가 이력(RED-first 설계 의도)을 현재 사실처럼 서술해 코드 상태를 오독시킨다 — 이후 독자가 이 테스트를 여전히 미구현 상태로 착각할 수 있다",
+      "remediation": {
+        "guidance": "description을 구현 완료 후 시점의 사실(GREEN 계약, stage.design 등록 검증)로 갱신한다",
+        "reference": "docs/CONVENTIONS.md §@header 규칙; opal/core/references/header-standard.md §2.1",
+        "auto_fixable": false
+      },
+      "verification": "python -m pytest opal/tools/event-loader/tests/test_event_loader_design_event.py -q 로 GREEN 유지 확인 후 description 문구가 RED 서술을 포함하지 않는지 육안 확인",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git diff main -- <각 target_files> (trailing whitespace/tab/EOF newline 검사, 결과 없음)",
+    "python3 -m py_compile <7개 .py 파일> (전건 OK)",
+    "python3 -c json.load(open(<3개 .json 파일>)) (전건 OK)",
+    "/Users/iskang/.opal/.venv/bin/python -m pytest opal/tools/event-loader/tests/test_event_loader_design_event.py -q → 4 passed, 3 subtests passed"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    ".opal/AGENT.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "~/.opal/skills/op-gc-convention/references/convention-categories.md"
+  ],
+  "missing_capabilities": [
+    "pyflakes 등 외부 python lint 도구 미설치(PEP668 제약으로 설치 차단) — 대신 py_compile·수동 grep·pytest 실행으로 대체 검사"
+  ],
+  "report_path": "tasks/157-260924-opds-PM-설계경로-단일화와-독립-설계게이트/GC-CONVENTION-2026-09-25T01-02.md"
+}

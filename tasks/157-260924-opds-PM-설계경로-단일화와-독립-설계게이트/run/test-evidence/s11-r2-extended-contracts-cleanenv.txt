@@ -1,0 +1,26 @@
+................................................................F...............                                      [100%]
+=================================== FAILURES ===================================
+_ TestT138W9OwnershipClaimBoundary.test_ownership_tool_import_failure_is_fail_safe _
+
+self = <test_state_tool_extended_contracts.TestT138W9OwnershipClaimBoundary testMethod=test_ownership_tool_import_failure_is_fail_safe>
+
+    def test_ownership_tool_import_failure_is_fail_safe(self):
+        """C-9 — ownership-tool을 적재할 수 없어도 state-tool은 죽지 않는다."""
+        with patch.dict(os.environ, {"OPAL_SESSION_ID": "sess-w9-noimport"}), \
+                patch.object(ST, "_import_ownership_lease",
+                             side_effect=ModuleNotFoundError("ownership_tool")):
+            outcome = ST._claim_task_lease_if_needed(self.task_path)
+        self.assertFalse(outcome["claimed"])
+>       self.assertEqual(outcome["warning"], "ownership_claim_failed")
+E       AssertionError: 'ownership_session_id_missing' != 'ownership_claim_failed'
+E       - ownership_session_id_missing
+E       + ownership_claim_failed
+
+opal/tools/state-tool/tests/test_state_tool_extended_contracts.py:1794: AssertionError
+----------------------------- Captured stderr call -----------------------------
+{"warning": "ownership_import_failed", "message": "ownership_tool"}
+{"warning": "ownership_session_id_missing", "message": "해석 가능한 session ID가 없어 task lease를 claim하지 않았습니다. 상태 전이는 그대로 진행됩니다."}
+=========================== short test summary info ============================
+FAILED opal/tools/state-tool/tests/test_state_tool_extended_contracts.py::TestT138W9OwnershipClaimBoundary::test_ownership_tool_import_failure_is_fail_safe
+1 failed, 79 passed, 27 subtests passed in 42.50s
+EXIT:1

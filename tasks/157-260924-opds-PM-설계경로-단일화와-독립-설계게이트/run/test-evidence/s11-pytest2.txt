@@ -1,0 +1,29 @@
+..............................F                                          [100%]
+=================================== FAILURES ===================================
+____________ Task113BootstrapContractTest.test_source_audit_passes _____________
+
+self = <test_task113_bootstrap_contract.Task113BootstrapContractTest testMethod=test_source_audit_passes>
+
+    def test_source_audit_passes(self):
+        completed = subprocess.run(
+            [sys.executable, str(AUDIT), "--mode", "source", "--iterations", "3"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertTrue(completed.stdout.strip(), completed.stderr)
+        payload = json.loads(completed.stdout)
+    
+>       self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+E       AssertionError: 1 != 0 : {
+E         "detail": "four platform bootstrap bodies are not byte-equivalent after wrappers",
+E         "error": "AuditFailure",
+E         "mode": "source",
+E         "ok": false
+E       }
+
+scripts/tests/test_task113_bootstrap_contract.py:48: AssertionError
+=========================== short test summary info ============================
+FAILED scripts/tests/test_task113_bootstrap_contract.py::Task113BootstrapContractTest::test_source_audit_passes
+1 failed, 30 passed in 0.69s
+EXIT:1

@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0 -- /Users/iskang/.opal/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157
+plugins: asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 17 items
+
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_new_task_rows_from_init_args 
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_new_task_rows_from_init_args PASSED [  5%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_no_pm_uses_worker_pipeline 
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_no_pm_uses_worker_pipeline PASSED [ 11%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_opp_unchanged PASSED [ 17%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_pm_row_keys_order PASSED [ 23%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s1_resume_no_init_args PASSED [ 29%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s2_uncovered_requirement_blocks_start PASSED [ 35%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_finding_not_in_work_items PASSED [ 41%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_missing_section_removed PASSED [ 47%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_normal_plan_passes PASSED [ 52%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_regression_target_listed_as_change PASSED [ 58%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s3_unconfirmed_assumption_bad_reference PASSED [ 64%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s5_rewrite_flow PASSED [ 70%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s6_agentic_auto_approval_flow PASSED [ 76%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s6_semi_agentic_reconfirm_flow PASSED [ 82%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s7_retry_limit_and_reset PASSED [ 88%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s8_design_decision PASSED [ 94%]
+opal/tools/state-tool/tests/test_design_gate.py::DesignGateCliContractTest::test_s9_run_log_gate_events PASSED [100%]
+
+==================== 17 passed, 4 subtests passed in 27.92s ====================
+EXIT:0

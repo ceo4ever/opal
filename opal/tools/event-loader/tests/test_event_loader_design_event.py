@@ -3,7 +3,7 @@
   "module": "test_event_loader_design_event",
   "layer": "test",
   "domain": "opal-harness",
-  "description": "Task 157 S-10 RED — events.json `stage.design`(DEC-13) 정적 계약과 세 Pilot SKILL.md 단계→이벤트 표 불변성. 아직 미구현이라 static-check/load 모두 실패해야 한다.",
+  "description": "events.json stage.design 이벤트 정적 계약(required_docs 5종·load)과 기존 stage.* 문서 목록 및 opwt·opp·opsdd SKILL.md 단계→이벤트 매핑의 main 대비 불변성.",
   "exports": [],
   "depends": ["event_loader"]
 }

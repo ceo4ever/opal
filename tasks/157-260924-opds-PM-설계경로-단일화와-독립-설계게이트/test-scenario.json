@@ -23,15 +23,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest opal/tools/state-tool/tests/test_design_gate.py -v; exit 0; test_s1_new_task_rows_from_init_args/no_pm_uses_worker_pipeline/opp_unchanged/pm_row_keys_order/resume_no_init_args ALL PASSED; run/test-evidence/test-design-gate.txt",
+      "marked_at": "2026-09-25T00:35:56+09:00",
       "fidelity": "mock"
     },
     {
@@ -52,15 +52,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest ...; exit 0; test_s2_uncovered_requirement_blocks_start PASSED; run/test-evidence/test-design-gate.txt",
+      "marked_at": "2026-09-25T00:35:56+09:00",
       "fidelity": "mock"
     },
     {
@@ -81,15 +81,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest ...; exit 0; test_s3_finding_not_in_work_items/missing_section_removed/normal_plan_passes/regression_target_listed_as_change/unconfirmed_assumption_bad_reference ALL PASSED; run/test-evidence/test-design-gate.txt",
+      "marked_at": "2026-09-25T00:35:56+09:00",
       "fidelity": "mock"
     },
     {
@@ -110,16 +110,45 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "bad_plan_decision_clarity_fails",
+          "expected": "decision_clarity=FAIL,verdict=fail,rewrite_target=plan",
+          "actual": "decision_clarity=FAIL,verdict=fail,rewrite_target=plan"
+        },
+        {
+          "id": "good_plan_four_axes_pass_and_scenario_three_scores",
+          "expected": "all4axesPASS,scenarioScores3axes",
+          "actual": "all4axesPASS,scenarioScores3axes"
+        },
+        {
+          "id": "no_mutation",
+          "expected": "changed_files=[]_both",
+          "actual": "changed_files=[]_both"
+        },
+        {
+          "id": "evaluator_readonly_tools",
+          "expected": "tools_no_Edit_Write",
+          "actual": "tools_no_Edit_Write"
+        }
+      ],
+      "observed_evidence": [
+        "run/test-evidence/s4-good-design-rubric.json",
+        "run/test-evidence/s4-bad-design-rubric.json",
+        "run/test-evidence/s4-bad-record-installed.txt",
+        "run/worker-dispatch-s4-good.receipt.json",
+        "run/worker-dispatch-s4-bad.receipt.json"
+      ],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "installed opal-evaluator-agent phase=design-rubric dispatched twice (good/bad PLAN fixtures); bad: verdict=fail decision_clarity FAIL rewrite_target=plan; good: verdict=pass 4 axes PASS scenario 3 scores; both changed_files=[]; AGENT.md frontmatter tools=[Read,Grep,Glob,Bash] no Edit/Write",
+      "marked_at": "2026-09-25T00:38:20+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-5",
@@ -139,15 +168,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest ...; exit 0; test_s5_rewrite_flow PASSED; run/test-evidence/test-design-gate.txt",
+      "marked_at": "2026-09-25T00:35:56+09:00",
       "fidelity": "mock"
     },
     {
@@ -168,15 +197,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest ...; exit 0; test_s6_agentic_auto_approval_flow/test_s6_semi_agentic_reconfirm_flow PASSED; run/test-evidence/test-design-gate.txt",
+      "marked_at": "2026-09-25T00:35:56+09:00",
       "fidelity": "mock"
     },
     {
@@ -197,15 +226,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest ...; exit 0; test_s7_retry_limit_and_reset PASSED; run/test-evidence/test-design-gate.txt",
+      "marked_at": "2026-09-25T00:35:56+09:00",
       "fidelity": "mock"
     },
     {
@@ -226,15 +255,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest ...; exit 0; test_s8_design_decision PASSED; run/test-evidence/test-design-gate.txt",
+      "marked_at": "2026-09-25T00:35:56+09:00",
       "fidelity": "mock"
     },
     {
@@ -255,15 +284,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest ...; exit 0; test_s9_run_log_gate_events PASSED; run/test-evidence/test-design-gate.txt",
+      "marked_at": "2026-09-25T00:35:56+09:00",
       "fidelity": "mock"
     },
     {
@@ -284,15 +313,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest opal/tools/event-loader/tests -v; exit 0; 24 passed; + python3 event_loader.py static-check --source-root .; exit 0; violation_count 0; run/test-evidence/test-S-10.txt",
+      "marked_at": "2026-09-25T00:36:20+09:00",
       "fidelity": "mock"
     },
     {
@@ -313,15 +342,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "PM 진단(1회차 dist 오염) 확인: worktree에 dashboard/frontend/dist 부재 재확인 후 재실행. state-tool run-tests.sh: 16/17 통과(test_state_tool_extended_contracts.py 3건 실패는 CLAUDE_CODE_SESSION_ID/OPAL_SESSION_ID가 세션 env에 주입돼 발생 — env clean 시 1건만 남고 그 1건은 main에서도 동일 재현되는 기존 결함). pytest test-tool/event-loader/ownership-tool: 41 failed/631 passed/3 errors — 전부 main에서 동일 파일·동일 케이스로 재현 확인(test_e2e_drivers.py, test_e2e_human_executor.py, test_e2e_runtime.py, test_e2e_sut_http_surfaces.py) = 기존 결함, 이 태스크 무관. pytest scripts/tests: 1 failed(test_task113_bootstrap_contract.py::test_source_audit_passes) — main 동일 재현 = 기존 결함. scripts/tests/*.sh: 8개 중 5 pass, 3 fail(test_agent_adapter_fields.sh, test_archive_contents.sh, test-install-skill-cleanup.sh) — main 동일 재현 = 기존 결함. git diff main -- pipeline.json pipeline-short.json: 빈 결과 확인. 새로 발생한 실패 없음, 코드 변경 없음. 증거: run/test-evidence/s11-r2-state-tool.txt, s11-r2-extended-contracts-noenv.txt, s11-r2-extended-contracts-cleanenv.txt, s11-r2-pytest1.txt, s11-r2-pytest2.txt, s11-r2-sh-tests.txt",
+      "marked_at": "2026-09-25T01:00:34+09:00",
       "fidelity": "mock"
     },
     {
@@ -342,16 +371,41 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "install_completed",
+          "expected": "install PID64489 finished exit0, console health ok",
+          "actual": "install PID64489 finished exit0, console health ok"
+        },
+        {
+          "id": "resolve_init_show_event_load_ok",
+          "expected": "resolve-start->init->show(설계게이트 row 5 present)->event-loader load stage.design(document_count=5) all ok",
+          "actual": "resolve-start->init->show(설계게이트 row 5 present)->event-loader load stage.design(document_count=5) all ok"
+        },
+        {
+          "id": "five_hash_pairs_match",
+          "expected": "pipeline-pm.json/design-gate.md/events.json/state_tool.py/AGENT.md source==installed sha256 match",
+          "actual": "pipeline-pm.json/design-gate.md/events.json/state_tool.py/AGENT.md source==installed sha256 match"
+        }
+      ],
+      "observed_evidence": [
+        "run/test-evidence/install.txt",
+        "run/test-evidence/s12-hashes.txt",
+        "/tmp/s12-resolve.txt",
+        "/tmp/s12-init.txt",
+        "/tmp/s12-show.txt",
+        "/tmp/s12-eventload.txt"
+      ],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "install PID64489 waited to completion (25min budget not needed, finished earlier) exit success 'OPAL 설치 완료'; installed state-tool resolve-start --skill opds --new-task + init(--worktree) + show → 파이프라인 현황판 row5 '설계 게이트' present; installed event-loader load --event stage.design → document_count=5 ok; 5 source<->installed sha256 pairs all MATCH; concurrent other-terminal install PID60610 confirmed still running, left untouched, no hash mismatch observed so no evidence of interference",
+      "marked_at": "2026-09-25T00:47:12+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-13",
@@ -371,15 +425,40 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "zero_unconditional_self_review_sentences",
+          "expected": "0_unconditional_analysis_or_plan_pm_gate_self_review_for_PM_path",
+          "actual": "0_unconditional_analysis_or_plan_pm_gate_self_review_for_PM_path"
+        },
+        {
+          "id": "agentic_4_5_scoped_to_pm_design_section",
+          "expected": "SS4_SS5_end_with_explicit_PM_design_gate_scoping_exception_sentence",
+          "actual": "SS4_SS5_end_with_explicit_PM_design_gate_scoping_exception_sentence"
+        },
+        {
+          "id": "no_deleted_lines_in_agentic_md_diff",
+          "expected": "git_diff_main_deleted_lines=0",
+          "actual": "git_diff_main_deleted_lines=0"
+        },
+        {
+          "id": "guards_actor_project_docs_present",
+          "expected": "guards.md/actor.md/PROJECT.md exist and readable",
+          "actual": "guards.md/actor.md/PROJECT.md exist and readable"
+        }
+      ],
+      "observed_evidence": [
+        "run/test-evidence/s13-grep.txt"
+      ],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "grep 'analysis.pm_gate|plan.pm_gate' across 7 target files -> 2 hits, both conditional/scoped (SKILL.md:69 DEC-17 negation '수행하지 않는다', SKILL.md:87 inside Short-profile-PLAN section explicitly marked as not applying to new coordinator/PM-path tasks) -> 0 unconditional self-review contract sentences; opal-harness-agentic.md SS4 ends '...design-gate.md의 설계 게이트 판정을 따른다. 다른 단계·다른 Pilot은 이 절의 기존 규칙 그대로' and SS5 ends 'PM 경로 설계 게이트는 이 루핑 규칙을 적용하지 않는다...' both confirming PM-path-design-only scoping; git diff main -- opal/core/references/opal-harness-agentic.md deleted-line count = 0; guards.md/actor.md/skill-commands.md/PROJECT.md all exist with content (ls -la in run/test-evidence/s13-grep.txt)",
+      "marked_at": "2026-09-25T00:48:14+09:00",
       "fidelity": "mock"
     },
     {
@@ -400,15 +479,33 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "row_keys_present",
+          "expected": "state-tool show row keys include plan.scenario_gate and plan.pm_gate",
+          "actual": "state-tool show row keys include plan.scenario_gate and plan.pm_gate"
+        },
+        {
+          "id": "no_claude_dir_changes",
+          "expected": "git diff --name-only main...HEAD count of ^.claude/ paths = 0",
+          "actual": "git diff --name-only main...HEAD count of ^.claude/ paths = 0"
+        },
+        {
+          "id": "hub_claude_skills_readonly_observed",
+          "expected": "hub git status --short .claude/skills observed without modification",
+          "actual": "hub git status --short .claude/skills observed without modification"
+        }
+      ],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "state-tool show --format json task 157 -> data.rows keys include plan.scenario_gate=True, plan.pm_gate=True; git diff --name-only main...HEAD | grep -c '^\\.claude/' = 0; hub /Volumes/Data/AIStudio/workspace/ai-framework git status --short .claude/skills (read-only) shows '?? .claude/skills/'",
+      "marked_at": "2026-09-25T00:49:03+09:00",
       "fidelity": "mock"
     }
   ]
