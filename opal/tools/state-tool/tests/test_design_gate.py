@@ -3,7 +3,7 @@
   "module": "test_design_gate",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "PM 설계 경로(pipeline-pm.json)와 state-tool 독립 설계 게이트(design-gate start/record/reset, design-decision)의 공개 CLI 계약 — init_args 파이프라인 판정, 결정론 검사, 문서 묶음 해시·확인 해시, rewrite 대상, 반복 상한·reset, EXECUTE 진입 가드, run-log gate 사건, ADD-1 evaluator 결과 stale 거부(input_bundle_hash·iteration 일치 검사, verdict pass/rewrite 전용).",
+  "description": "PM 설계 경로(pipeline-pm.json)와 state-tool 독립 설계 게이트(design-gate start/record/reset, design-decision)의 공개 CLI 계약 — init_args 파이프라인 판정, 결정론 검사, 문서 묶음 해시·확인 해시, rewrite 대상, 반복 상한·reset, EXECUTE 진입 가드, run-log gate 사건, ADD-1 evaluator 결과 stale 거부(input_bundle_hash·iteration 일치 검사, verdict pass/rewrite 전용), ADD-2 design-decision detail/external의 run-log activity 사건 data 형식(계약: {\"kind\": \"decision\"} 객체) 위반으로 인한 drain 정지·pending_events 적체 회귀(RED, 미수정).",
   "exports": [],
   "depends": ["state_tool"]
 }
@@ -931,6 +931,104 @@ class DesignGateCliContractTest(unittest.TestCase):
         broken = {"not": "a contract shaped result"}
         self._assert_ok(
             self._record(task, 3, verdict="input_error", evaluator=broken, input_bundle_hash=None)
+        )
+
+    # ------------------------------------------------------------------
+    # ADD-2 — design-decision detail/external의 run-log activity 사건 data 형식
+    # ------------------------------------------------------------------
+
+    def _make_shadow_pm_task_plan_in_progress(self, name: str) -> Path:
+        """run-log-mode shadow PM 태스크를 plan.plan_md in_progress까지 준비한다."""
+        task = self.root / name
+        self._write_pm_docs(task)
+        resolved = self._assert_ok(
+            self._run("resolve-start", str(task), "--skill", "opd", "--new-task")
+        )
+        init_args = list(resolved.get("init_args") or [])
+        completed, _ = self._run(
+            "init", str(task), *init_args, "--worktree", str(task), "--run-log-mode", "shadow"
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        for key in ("task.task_md", "task.user_confirm"):
+            completed, _ = self._run("mark", str(task), "--task-step", key, "--done")
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+        completed, _ = self._run("advance", str(task), "--task-step", "plan.plan_md")
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        rows = {row.get("key"): row for row in state.get("rows", [])}
+        self.assertEqual(rows.get("plan.plan_md", {}).get("status"), "in_progress", state)
+        return task
+
+    def _collect_run_log_entries(self, task: Path) -> list[dict]:
+        entries: list[dict] = []
+        run_dir = task / "run"
+        if run_dir.exists():
+            for log_file in run_dir.glob("run-log-*.jsonl"):
+                for line in log_file.read_text(encoding="utf-8").splitlines():
+                    if line.strip():
+                        entries.append(json.loads(line))
+        return entries
+
+    def test_add2_design_decision_detail_commits_activity(self):
+        # ① --scope detail: design-decision 사건이 run-log activity로 정상 drain돼야
+        # 한다. 계약(docs/run-log/CONTRACT.md §1.3, log-event --event activity와 동일
+        # 형식)은 data가 {"kind": "decision"} 객체이지만 결함 구현은 문자열 "decision"을
+        # 만들어 기록 코어가 거부하고 drain이 멈춘다 — 이 단언에서 실패해야 한다(RED).
+        task = self._make_shadow_pm_task_plan_in_progress("add2-detail")
+
+        result = self._assert_ok(
+            self._run(
+                "design-decision", str(task),
+                "--scope", "detail",
+                "--summary", "예시 세부 결정",
+                "--basis", "예시 근거",
+            )
+        )
+        self.assertEqual(result.get("transition_action"), "continue", result)
+
+        state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        pending = (state.get("run_log") or {}).get("pending_events") or []
+        self.assertEqual(pending, [], state)
+        self.assertNotEqual(
+            (state.get("run_log") or {}).get("status"), "pending", state
+        )
+
+        entries = self._collect_run_log_entries(task)
+        activity_entries = [
+            e for e in entries
+            if e.get("event") == "activity"
+            and e.get("data") == {"kind": "decision"}
+            and str(e.get("summary", "")).startswith("design-decision(detail):")
+        ]
+        self.assertEqual(len(activity_entries), 1, entries)
+
+        # drain이 막히지 않았으면 이어지는 log-event도 정상 처리돼야 한다.
+        completed, payload = self._run(
+            "log-event", str(task),
+            "--event", "activity", "--kind", "progress", "--summary", "x",
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+        self.assertIsInstance(payload, dict, completed.stdout)
+        self.assertTrue(payload.get("ok"), payload)
+        warnings = payload.get("warnings") or []
+        self.assertNotIn("run_log_pending", warnings, payload)
+
+        # ② --scope external도 같은 조건(pending 0)으로 확인한다.
+        ext_task = self._make_shadow_pm_task_plan_in_progress("add2-external")
+        result_ext = self._assert_ok(
+            self._run(
+                "design-decision", str(ext_task),
+                "--scope", "external",
+                "--summary", "예시 외부 결정",
+                "--basis", "예시 근거",
+            )
+        )
+        self.assertEqual(result_ext.get("current_status"), "blocked", result_ext)
+        state_ext = json.loads((ext_task / "state.json").read_text(encoding="utf-8"))
+        pending_ext = (state_ext.get("run_log") or {}).get("pending_events") or []
+        self.assertEqual(pending_ext, [], state_ext)
+        self.assertNotEqual(
+            (state_ext.get("run_log") or {}).get("status"), "pending", state_ext
         )
 
 

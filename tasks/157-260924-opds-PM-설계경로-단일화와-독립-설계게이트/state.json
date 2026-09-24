@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-24 22:58:26",
-  "updated_at": "2026-09-25 08:06:11",
+  "updated_at": "2026-09-25 08:40:24",
   "current_status": "additional_work",
   "rows": [
     {
@@ -230,6 +230,18 @@
       "owner": "PM",
       "note": "ADD-1 완료 — RED(test-agent)·GREEN(task-agent), 18 pass, 설치 반영",
       "worker_duration_minutes": 8
+    },
+    {
+      "row_id": 18,
+      "stage": "CLOSE",
+      "item": "ADD-2 design-decision activity 사건 data 형식 수정(run-log drain 정지)",
+      "key": "close.add_2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-25 08:40:24",
+      "owner": "PM",
+      "note": "ADD-2 완료 — design-decision activity data 객체화, 19 pass (설치는 실험 종료 후)",
+      "worker_duration_minutes": 5
     }
   ],
   "next_action": "태스크 완료",

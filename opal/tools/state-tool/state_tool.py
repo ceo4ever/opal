@@ -6971,7 +6971,8 @@ def cmd_design_decision(args):
     if args.scope == "detail":
         if _run_log_block(state) is not None:
             events.append(_build_pm_activity_event(
-                state, task_id=task_path.name, command=command, kind="decision",
+                state, task_id=task_path.name, command=command,
+                kind={"kind": "decision"},
                 summary=decision, reason=basis, refs=None,
                 stage="PLAN", task_step=frontier.get("key"), work_item=None))
         state["updated_at"] = now_str
