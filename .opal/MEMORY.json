@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 154,
+  "last_task_number": 156,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -157,6 +157,27 @@
   ],
   "history": [
     {
+      "title": "156 파일럿 기본실행과 PM 역할 재정의",
+      "date": "2026-09-24",
+      "stage": "완료",
+      "path": "tasks/156-260924-opds-파일럿-기본실행과-PM-역할-재정의/",
+      "result": "5개 Pilot 신규 기본값 agentic·worktree, opd/opds PM 조율 및 전문 워커 구현. main에 a752b94 fast-forward 병합, 핵심 회귀 23 passed·16 subtests passed, 완료 귀속 반영."
+    },
+    {
+      "title": "155 코덱스 세션 이관 복구",
+      "date": "2026-09-24",
+      "stage": "완료",
+      "path": "tasks/155-260924-opds-코덱스-세션-이관-복구/",
+      "result": "Codex native 신원·부모 상속 차단·lease handoff/cancel 전달 및 registry 정합성 수정. 독립 시나리오 9/9와 실제 Orca E2E 통과, main 머지 완료."
+    },
+    {
+      "title": "153 훅 세션 식별 분리",
+      "date": "2026-09-24",
+      "stage": "완료",
+      "path": "tasks/153-260923-opds-훅-세션-식별-분리/",
+      "result": "훅 신원을 이벤트 session_id로 분리하여 자식 CLI 종료 시 부모 lease 해제를 방지. 실 CLI 수정 전후 대조 및 ownership 회귀 157건 통과, main 머지 완료."
+    },
+    {
       "title": "142 E2E 여정조각 라이브러리",
       "date": "2026-09-20",
       "stage": "완료",
@@ -169,27 +190,6 @@
       "stage": "완료",
       "path": "tasks/142-260918-oppb-E2E-여정조각-라이브러리",
       "result": "여정·조각 재사용, 신선도 생략, 선언형 driver, //e2e 승격 게이트 구현"
-    },
-    {
-      "title": "148 semi agentic close 자율주행",
-      "date": "2026-09-20",
-      "stage": "완료",
-      "path": "tasks/148-260920-opds-semi-agentic-close-자율주행/",
-      "result": "semi-agentic은 PLAN 검토 이후, agentic은 정상 전 구간에서 미해결 이슈가 없으면 CLOSE 최종 확정까지 자율 진행하도록 mode-aware 계약을 통합했다. 메인 통합 회귀 551 passed, 3 skipped, 363 subtests를 확인하고 전역 설치본 parity를 복구했다."
-    },
-    {
-      "title": "147 PM 보고 활동이벤트 정지판정 관측배선",
-      "date": "2026-09-20",
-      "stage": "완료",
-      "path": "tasks/147-260919-opds-PM-보고-활동이벤트-정지판정-관측배선/",
-      "result": "PM 보고 의도와 Stop 판정, 워커 활동을 표준 run-log 사건으로 연결하고 Claude Agent 훅의 시작·활동·완료 3경계를 실제 설치본에서 검증했다. 병합 후 전체 회귀 709 passed, 3 skipped, 431 subtests를 확인했다."
-    },
-    {
-      "title": "146 프로브 핸드오프 계약개정",
-      "date": "2026-09-19",
-      "stage": "완료",
-      "path": "tasks/146-260919-opds-프로브-핸드오프-계약개정/",
-      "result": "OPPB Environment Probe를 전체 tracked-tree snapshot과 순차 bootstrap 준비 baseline으로 개정하고 명령별 독립 실행·timeout 계약을 추가했다. probe 17건이 통과해 태스크 142의 P2 probe 재개가 가능해졌다."
     }
   ]
 }
