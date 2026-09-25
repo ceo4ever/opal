@@ -61,3 +61,4 @@
 | 41 | 2026-09-25 09:13 | CLOSE | `GATE` | ADD-2 설치 반영 확인(exit 0, state_tool MATCH). opd 비교 실험 완료: 두 경로 숨은 인수 테스트 17/17 | Pass |
 | 42 | 2026-09-26 00:02 | CLOSE | `DECISION` | ADD-3 진입(캡틴 권고 승인). 비교 실험 PM 경로 설계 게이트 i1이 Findings의 ``os.replace``를 경로로 인식해 결정론 실패(오탐, 반복 상한 1회 소모). 결정: 백틱 토큰은 '/' 포함 또는 알려진 파일 확장자일 때만 경로로 판정 | ADD-3 |
 | 43 | 2026-09-26 00:12 | CLOSE | `GATE` | ADD-3 검토: RED (a) fail→GREEN 20 pass, 실제 실험 PLAN 재파싱으로 오탐 해소 확인, 설치 반영 | Pass |
+| 44 | 2026-09-26 08:45 | CLOSE | `GATE` | 추가작업 ADD-1~3 캡틴 확인 → additional_work_done. 모의 테스트 체계(opal-skill-tester)는 허브 신규 태스크로 분리 | Pass |
