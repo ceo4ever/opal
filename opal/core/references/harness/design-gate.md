@@ -41,7 +41,7 @@ PM 경로 태스크에만 적용한다. PM 경로 판정은 `state.json` `rows`�
 2. 기존 PLAN 계약 검사 전 항목 + strict: TASK의 모든 AC/C가 어느 Work item `완료 기준 연결`에도 없으면 `uncovered requirement AC-N`(시나리오 연결 여부와 무관하게 적용)
 3. PLAN `## Findings`에 H3 `직접 변경`·`회귀 확인`·`문서 갱신`·`미확인 가정`이 모두 존재하고 본문이 비지 않음(`없음.` 허용)
 4. `회귀 확인`의 백틱 경로가 어느 Work item `변경 대상`에 있거나 `직접 변경`·`문서 갱신`에도 있으면(superset) `regression target listed as change`
-5. `직접 변경`·`문서 갱신`의 백틱 경로가 어느 Work item `변경 대상`에도 없으면 `finding not in work items`
+5. `직접 변경`·`문서 갱신`의 백틱 경로가 어느 Work item `변경 대상`에도 없으면 `finding not in work items`(④⑤의 경로 판정: 백틱 토큰이 `/`를 포함하거나 마지막 확장자가 알려진 파일 확장자일 때만 경로로 보고, `os.replace`·`json.loads`·`v1.2` 같은 코드 심볼·버전 표기는 무시한다)
 6. `미확인 가정` 항목은 `없음` 또는 PLAN `## Risks`에 존재하는 `H-N` 참조를 포함
 7. `test-tool scenario-coverage-build --template sdlc-v2` + `scenario-coverage-check`를 subprocess로 실행해 exit 0을 요구(16→missing 병합, 17→`input_error`)
 

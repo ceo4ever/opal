@@ -6374,7 +6374,13 @@ _DESIGN_REWRITE_DOCS = {
 # 형제 test-tool — state-tool과 같은 인터프리터(sys.executable)로 직접 호출한다.
 # 소스(opal/tools)·설치본(~/.opal/tools) 모두 형제 배치다(_MEMORY_TOOL 선례).
 _TEST_TOOL_PY = pathlib.Path(__file__).resolve().parent.parent / "test-tool" / "test_tool.py"
-_FINDINGS_PATH_TOKEN_RE = re.compile(r"^[A-Za-z0-9_.가-힣/-]+\.[A-Za-z0-9]+$")
+_FINDINGS_TOKEN_CHARS_RE = re.compile(r"^[A-Za-z0-9_.가-힣/-]+$")
+# ADD-3: 백틱 토큰의 경로 판정 기준 — '/' 포함 또는 마지막 확장자가 알려진 파일 확장자일 때만 경로로 본다.
+# os.replace, json.loads, v1.2 같은 코드 심볼/버전 표기를 경로로 오판하지 않기 위함.
+_FINDINGS_KNOWN_EXTS = {
+    "py", "md", "json", "js", "ts", "tsx", "jsx", "yaml", "yml", "toml",
+    "sh", "txt", "csv", "html", "css", "sql", "cfg", "ini",
+}
 
 
 def _is_pm_design_path(state):
@@ -6530,7 +6536,12 @@ def _findings_paths(body):
     paths = []
     for tok in re.findall(r"`([^`]+)`", body or ""):
         tok = tok.strip()
-        if _FINDINGS_PATH_TOKEN_RE.match(tok) and _is_safe_artifact_token(tok) and tok not in paths:
+        if not _FINDINGS_TOKEN_CHARS_RE.match(tok):
+            continue
+        has_slash = "/" in tok
+        ext = tok.rsplit(".", 1)[-1].lower() if "." in tok else ""
+        looks_like_path = has_slash or ext in _FINDINGS_KNOWN_EXTS
+        if looks_like_path and _is_safe_artifact_token(tok) and tok not in paths:
             paths.append(tok)
     return paths
 

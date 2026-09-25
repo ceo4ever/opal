@@ -1,0 +1,39 @@
+test_add1_stale_evaluator_result_rejected (test_design_gate.DesignGateCliContractTest.test_add1_stale_evaluator_result_rejected) ... ok
+test_add2_design_decision_detail_commits_activity (test_design_gate.DesignGateCliContractTest.test_add2_design_decision_detail_commits_activity) ... ok
+test_add3_findings_code_token_not_treated_as_path (test_design_gate.DesignGateCliContractTest.test_add3_findings_code_token_not_treated_as_path) ... FAIL
+test_s1_new_task_rows_from_init_args (test_design_gate.DesignGateCliContractTest.test_s1_new_task_rows_from_init_args) ... ok
+test_s1_no_pm_uses_worker_pipeline (test_design_gate.DesignGateCliContractTest.test_s1_no_pm_uses_worker_pipeline) ... ok
+test_s1_opp_unchanged (test_design_gate.DesignGateCliContractTest.test_s1_opp_unchanged) ... ok
+test_s1_pm_row_keys_order (test_design_gate.DesignGateCliContractTest.test_s1_pm_row_keys_order) ... ok
+test_s1_resume_no_init_args (test_design_gate.DesignGateCliContractTest.test_s1_resume_no_init_args) ... ok
+test_s2_uncovered_requirement_blocks_start (test_design_gate.DesignGateCliContractTest.test_s2_uncovered_requirement_blocks_start) ... ok
+test_s3_finding_not_in_work_items (test_design_gate.DesignGateCliContractTest.test_s3_finding_not_in_work_items) ... ok
+test_s3_missing_section_removed (test_design_gate.DesignGateCliContractTest.test_s3_missing_section_removed) ... ok
+test_s3_normal_plan_passes (test_design_gate.DesignGateCliContractTest.test_s3_normal_plan_passes) ... ok
+test_s3_regression_target_listed_as_change (test_design_gate.DesignGateCliContractTest.test_s3_regression_target_listed_as_change) ... ok
+test_s3_unconfirmed_assumption_bad_reference (test_design_gate.DesignGateCliContractTest.test_s3_unconfirmed_assumption_bad_reference) ... ok
+test_s5_rewrite_flow (test_design_gate.DesignGateCliContractTest.test_s5_rewrite_flow) ... ok
+test_s6_agentic_auto_approval_flow (test_design_gate.DesignGateCliContractTest.test_s6_agentic_auto_approval_flow) ... ok
+test_s6_semi_agentic_reconfirm_flow (test_design_gate.DesignGateCliContractTest.test_s6_semi_agentic_reconfirm_flow) ... ok
+test_s7_retry_limit_and_reset (test_design_gate.DesignGateCliContractTest.test_s7_retry_limit_and_reset) ... ok
+test_s8_design_decision (test_design_gate.DesignGateCliContractTest.test_s8_design_decision) ... ok
+test_s9_run_log_gate_events (test_design_gate.DesignGateCliContractTest.test_s9_run_log_gate_events) ... ok
+
+======================================================================
+FAIL: test_add3_findings_code_token_not_treated_as_path (test_design_gate.DesignGateCliContractTest.test_add3_findings_code_token_not_treated_as_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/opal/tools/state-tool/tests/test_design_gate.py", line 453, in test_add3_findings_code_token_not_treated_as_path
+    result = self._assert_ok(
+        self._run("design-gate", "start", str(task), "--iteration", "1")
+    )
+  File "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_157/opal/tools/state-tool/tests/test_design_gate.py", line 176, in _assert_ok
+    self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : {"ok": false, "command": "design-gate start", "error": "design_gate_deterministic_fail", "message": "설계 게이트 결정론 검사 실패(i1): ['finding not in work items: os.replace']", "missing": ["finding not in work items: os.replace"], "iteration": 1, "status": "fail", "transition_action": "blocked", "report_type": "decision_request", "next_action": "설계 게이트 결정론 검사 실패(i1): ['finding not in work items: os.replace']"}
+
+
+----------------------------------------------------------------------
+Ran 20 tests in 34.124s
+
+FAILED (failures=1)

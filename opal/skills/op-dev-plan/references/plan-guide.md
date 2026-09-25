@@ -14,6 +14,7 @@ TASK가 opd/opds PM 경로(state 행에 `plan.design_gate`가 있는 태스크 �
 
 - `직접 변경`·`문서 갱신`에 적는 백틱 경로는 반드시 어느 Work item `변경 대상`에도 있어야 한다.
 - `회귀 확인`에 적는 백틱 경로는 Work item `변경 대상`에 넣지 않는다.
+- 경로 판정 기준: 백틱 토큰은 `/`를 포함하거나 마지막 확장자가 알려진 파일 확장자(`py md json js ts tsx jsx yaml yml toml sh txt csv html css sql cfg ini`)일 때만 경로로 인식된다. `os.replace`·`json.loads`·`v1.2` 같은 코드 심볼·버전 표기는 경로로 판정되지 않으니 실제 경로만 백틱으로 감싼다.
 - `미확인 가정`은 `없음` 또는 `Risks`의 `H-N` 참조만 포함한다.
 
 이 규칙은 `state-tool design-gate start`가 결정론으로 검사한다.

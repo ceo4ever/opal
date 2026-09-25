@@ -3,7 +3,7 @@
   "module": "test_design_gate",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "PM 설계 경로(pipeline-pm.json)와 state-tool 독립 설계 게이트(design-gate start/record/reset, design-decision)의 공개 CLI 계약 — init_args 파이프라인 판정, 결정론 검사, 문서 묶음 해시·확인 해시, rewrite 대상, 반복 상한·reset, EXECUTE 진입 가드, run-log gate 사건, ADD-1 evaluator 결과 stale 거부(input_bundle_hash·iteration 일치 검사, verdict pass/rewrite 전용), ADD-2 design-decision detail/external의 run-log activity 사건 data 형식(계약: {\"kind\": \"decision\"} 객체) 위반으로 인한 drain 정지·pending_events 적체 회귀(RED, 미수정).",
+  "description": "PM 설계 경로(pipeline-pm.json)와 state-tool 독립 설계 게이트(design-gate start/record/reset, design-decision)의 공개 CLI 계약 — init_args 파이프라인 판정, 결정론 검사, 문서 묶음 해시·확인 해시, rewrite 대상, 반복 상한·reset, EXECUTE 진입 가드, run-log gate 사건, ADD-1 evaluator 결과 stale 거부(input_bundle_hash·iteration 일치 검사, verdict pass/rewrite 전용), ADD-2 design-decision detail/external의 run-log activity 사건 data 형식(계약: {\"kind\": \"decision\"} 객체) 위반으로 인한 drain 정지·pending_events 적체 회귀(RED, 미수정), ADD-3 Findings 백틱 코드 토큰(확장자 없는 os.replace/json.loads 등)이 경로로 오판되어 발생하는 regression/finding 오탐 회귀(RED, 미수정).",
   "exports": [],
   "depends": ["state_tool"]
 }
@@ -438,6 +438,50 @@ class DesignGateCliContractTest(unittest.TestCase):
             self._run("design-gate", "start", str(task), "--iteration", "1")
         )
         self.assertEqual(result.get("status"), "evaluating", result)
+
+    def test_add3_findings_code_token_not_treated_as_path(self):
+        # (a) 확장자 없는 백틱 코드 토큰(os.replace, json.loads)은 경로가 아니므로
+        # 정상 PM 경로 픽스처에 설명 문구로 추가해도 결정론 검사를 통과해야 한다.
+        task = self._make_pm_task("add3-ok")
+        self._plan_variant(task, lambda t: t.replace(
+            "### 직접 변경\n\n- `pkg/mod.py`\n",
+            "### 직접 변경\n\n- `pkg/mod.py` (`os.replace`로 원자적 교체)\n",
+        ).replace(
+            "### 회귀 확인\n\n- `pkg/mod_test.py`\n",
+            "### 회귀 확인\n\n- `pkg/mod_test.py` (`json.loads` 파싱 결과 검증)\n",
+        ))
+        result = self._assert_ok(
+            self._run("design-gate", "start", str(task), "--iteration", "1")
+        )
+        self.assertEqual(result.get("status"), "evaluating", result)
+
+        # (b) 회귀 확인에 Work item 변경 대상과 같은 경로(pkg/mod.py)를 넣으면
+        # 기존 판정(regression target listed as change)이 유지되어야 한다.
+        task_b = self._make_pm_task("add3-regression")
+        self._plan_variant(task_b, lambda t: t.replace(
+            "### 회귀 확인\n\n- `pkg/mod_test.py`\n",
+            "### 회귀 확인\n\n- `pkg/mod_test.py`\n- `pkg/mod.py`\n",
+        ))
+        result_b = self._assert_err(
+            self._run("design-gate", "start", str(task_b), "--iteration", "1"),
+            "design_gate_deterministic_fail",
+        )
+        missing_b = " ".join(str(m) for m in (result_b.get("missing") or []))
+        self.assertIn("regression target listed as change", missing_b, result_b)
+
+        # (c) 직접 변경에 슬래시 없는 파일명(README.md, Work item 변경 대상에 없음)을
+        # 넣으면 기존 판정(finding not in work items)이 유지되어야 한다.
+        task_c = self._make_pm_task("add3-not-in-work-items")
+        self._plan_variant(task_c, lambda t: t.replace(
+            "### 직접 변경\n\n- `pkg/mod.py`\n",
+            "### 직접 변경\n\n- `pkg/mod.py`\n- `README.md`\n",
+        ))
+        result_c = self._assert_err(
+            self._run("design-gate", "start", str(task_c), "--iteration", "1"),
+            "design_gate_deterministic_fail",
+        )
+        missing_c = " ".join(str(m) for m in (result_c.get("missing") or []))
+        self.assertIn("finding not in work items", missing_c, result_c)
 
     # ------------------------------------------------------------------
     # S-5 — rewrite 대상 판정 (DEC-7 ⑥, DEC-9)
