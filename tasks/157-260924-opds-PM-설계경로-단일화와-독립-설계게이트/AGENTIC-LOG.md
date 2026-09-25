@@ -58,3 +58,4 @@
 | 38 | 2026-09-25 08:06 | CLOSE | `GATE` | ADD-1 검토: RED 1 fail→GREEN 18 pass, 신규 회귀 0, 모의 재사용 재현이 stale로 거부, 설치 반영 확인 | Pass |
 | 39 | 2026-09-25 08:34 | CLOSE | `ERROR` | 비교 실험 PM 경로 세션에서 run-log pending 32건·log-event 거부 발생. 첫 막힌 사건이 `design-decision --scope detail`의 PM activity(`data: "decision"` 문자열) — 정상 경로 `log-event`는 `{"kind": "decision"}` 객체(`state_tool.py` _build_pm_activity_data). 기록 코어 거부로 drain이 첫 실패에서 멈춰 이후 사건 전부 적체. W-2 구현 결함이며 S-8이 run-log 반영을 단언하지 않아 누락. ADD-2 진입 | 발견 |
 | 40 | 2026-09-25 08:40 | CLOSE | `FIX` | (#39 참조) ADD-2: design-decision detail의 activity 사건 data를 `{"kind": "decision"}`로 수정(+2/-1). RED 신규 1건 fail→GREEN 19 pass, state-tool 신규 실패 0. 재설치는 진행 중인 비교 실험 종료 후 | 반영 |
+| 41 | 2026-09-25 09:13 | CLOSE | `GATE` | ADD-2 설치 반영 확인(exit 0, state_tool MATCH). opd 비교 실험 완료: 두 경로 숨은 인수 테스트 17/17 | Pass |
