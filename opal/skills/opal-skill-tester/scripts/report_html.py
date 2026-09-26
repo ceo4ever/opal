@@ -279,7 +279,7 @@ def history_panel(variant, current, scenario_id, hist_same, hist_skill, here_dir
 <div class="card" style="margin-bottom:16px"><b>{e(variant)}</b> · 이번 시나리오 <code>{e(scenario_id)}</code> 이력 {len(hist_same)}회 + 이번 실행</div>
 <div class="grid g4">{charts}</div>
 <div class="card"><h2>{e(variant)} 스킬 테스트 이력 (전체 시나리오)</h2><div class="tag" style="margin-bottom:8px">링크는 새 탭으로 열립니다. 태스크가 backup/으로 아카이브됐으면 'backup 위치'를 쓰거나 <code>refresh</code>로 링크를 다시 만드세요.</div>
-<div class="overflow"><table><tr><th>일시</th><th>시나리오</th><th>모드</th><th>판정</th><th class="n">소요(분)</th><th class="n">비용($)</th><th class="n">게이트 반복</th><th>프레임워크</th><th>보고서</th></tr>{table}</table></div></div>"""
+<div class="overflow"><table><tr><th>일시</th><th>시나리오</th><th>모드</th><th>판정</th><th class="n">최종 수행 시간(분)</th><th class="n">비용($)</th><th class="n">게이트 반복</th><th>프레임워크</th><th>보고서</th></tr>{table}</table></div></div>"""
 
 
 def render_report(scenario, runs, history, here_dir, created_at):
