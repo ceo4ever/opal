@@ -1,0 +1,150 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/skills/opal-skill-tester/README.md",
+    "opal/skills/opal-skill-tester/SKILL.md",
+    "opal/skills/opal-skill-tester/references/metrics.md",
+    "opal/skills/opal-skill-tester/references/scenario-spec.md",
+    "opal/skills/opal-skill-tester/scripts/skill_tester.py",
+    "opal/skills/opal-skill-tester/scenarios/function-oppb-low-stock/scenario.json",
+    "opal/skills/opal-skill-tester/scenarios/function-oppb-low-stock/request.md",
+    "opal/skills/opal-skill-tester/scenarios/function-oppb-low-stock/hidden/test_hidden.py",
+    "opal/skills/opal-skill-tester/tests/test_skill_tester_oppb.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "b05d25807792053e",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §@header + code-scan inline coverage",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/README.md",
+        "line": 1
+      },
+      "evidence": "code-scan validate returned uncovered/pre_existing for this file and exited 2; code-scan target selects inline.",
+      "impact": "Source code-map coverage is incomplete and deterministic integrity validation fails.",
+      "remediation": {
+        "guidance": "Add a current-facts-only inline @header block at the file top according to code-scan target.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙/§@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "Rerun code-scan validate for the same changed-file set and confirm this uncovered item is absent and the command exits 0.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "b05d25807792053e",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §@header + code-scan inline coverage",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/SKILL.md",
+        "line": 1
+      },
+      "evidence": "code-scan validate returned uncovered/pre_existing for this file and exited 2; YAML frontmatter does not satisfy code-scan @header coverage.",
+      "impact": "Source code-map coverage is incomplete and deterministic integrity validation fails.",
+      "remediation": {
+        "guidance": "Preserve YAML frontmatter and add current-facts-only inline @header metadata according to code-scan target.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙/§@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "Rerun code-scan validate for the same changed-file set and confirm this uncovered item is absent and the command exits 0.",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "b05d25807792053e",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §@header + code-scan inline coverage",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/references/metrics.md",
+        "line": 1
+      },
+      "evidence": "code-scan validate returned uncovered/pre_existing for this file and exited 2; code-scan target selects inline.",
+      "impact": "Source code-map coverage is incomplete and deterministic integrity validation fails.",
+      "remediation": {
+        "guidance": "Add a current-facts-only inline @header block at the file top according to code-scan target.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙/§@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "Rerun code-scan validate for the same changed-file set and confirm this uncovered item is absent and the command exits 0.",
+      "suppression": null
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "b05d25807792053e",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §@header + code-scan inline coverage",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/references/scenario-spec.md",
+        "line": 1
+      },
+      "evidence": "code-scan validate returned uncovered/pre_existing for this file and exited 2; code-scan target selects inline.",
+      "impact": "Source code-map coverage is incomplete and deterministic integrity validation fails.",
+      "remediation": {
+        "guidance": "Add a current-facts-only inline @header block at the file top according to code-scan target.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙/§@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "Rerun code-scan validate for the same changed-file set and confirm this uncovered item is absent and the command exits 0.",
+      "suppression": null
+    },
+    {
+      "id": "GC-005",
+      "fingerprint": "b05d25807792053e",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §@header + code-scan inline coverage",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/scenarios/function-oppb-low-stock/request.md",
+        "line": 1
+      },
+      "evidence": "code-scan validate returned uncovered/newly_uncovered for this file and exited 2; code-scan target selects inline.",
+      "impact": "The new Markdown file is absent from source code-map coverage and deterministic integrity validation fails.",
+      "remediation": {
+        "guidance": "Add a current-facts-only inline @header block at the file top according to code-scan target.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙/§@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "Rerun code-scan validate for the same changed-file set and confirm this uncovered item is absent and the command exits 0.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "worker.dispatch receipt verification: ok=true, verified_document_count=4",
+    "target path existence and project-root containment check: 9/9",
+    "code-scan validate --scope framework --changed <9 target files> --json: exit 2, uncovered=5, inline covered=3, unsupported JSON=1",
+    "code-scan target for three Python files: write_to=inline",
+    "git diff --check for target files: exit 0",
+    "Python ast.parse for three Python targets: pass",
+    "scenario.json parse: pass",
+    "EOF newline check for nine targets: pass"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    ".opal/code-scan.json",
+    "opal/skills/op-gc-convention/references/convention-categories.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_160/tasks/160-260926-opst-OPPB-지원/GC-CONVENTION-20260926-2134.md"
+}

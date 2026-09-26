@@ -1,0 +1,27 @@
+{
+  "id": "function-todo-crud",
+  "mode": "function",
+  "title": "TODO CRUD 웹 앱",
+  "base": "_bases/todo-web",
+  "target_pilots": [
+    "opd",
+    "opds",
+    "opsdd",
+    "oppb"
+  ],
+  "default_variant": "//opd",
+  "utterance": "{variant} 요구서 {request} 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다. 격리 저장소 안에서 필요한 사용자 gate와 local merge/finalize는 승인한다. 이 승인은 모의 저장소 밖 merge·push·배포로 확장되지 않는다.",
+  "existing_test_cmd": [
+    "python3",
+    "-m",
+    "pytest",
+    "-q",
+    "tests"
+  ],
+  "timeout_min": 90,
+  "estimate": {
+    "minutes": 30,
+    "usd": 12
+  },
+  "decision_points": []
+}

@@ -1,0 +1,14 @@
+.opal-worktrees/
+.opal-runs/
+.opal-cache/
+.oppl-run/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+.DS_Store
+data/
+tasks/*/run/
+tasks/*/.opal-task.lock
+*.db
+*.sqlite
+*.json.tmp

@@ -4,7 +4,7 @@
   "module": "skill_tester",
   "layer": "util",
   "domain": "opal-skill-tester",
-  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report)·tasks/ 기록(record)·대시보드 링크 재생성(refresh)을 수행한다. 기록 폴더에는 record.json과 report.html(요약/비교+스킬별 이력 탭)이 생기고, 이력은 tasks/와 tasks/backup/의 모든 record.json에서 모은다. run은 끝나면 보고서·지표·실행별 핵심 산출물을 진행 중 태스크의 skill-tests/ 또는 tasks/ 아래 YYMMDD-opst-{대상}-{모드}-{제목} 폴더에 기록하며(모의 저장소는 복사하지 않음), 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, 체크포인트 커밋은 worktree 태스크에만 요구한다.",
+  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report)·tasks/ 기록(record)·대시보드 링크 재생성(refresh)을 수행한다. 기록 폴더에는 record.json과 report.html(요약/비교+스킬별 이력 탭)이 생기고, 이력은 tasks/와 tasks/backup/의 모든 record.json에서 모은다. run은 끝나면 보고서·지표·실행별 핵심 산출물을 진행 중 태스크의 skill-tests/ 또는 tasks/ 아래 YYMMDD-opst-{대상}-{모드}-{제목} 폴더에 기록하며(모의 저장소는 복사하지 않음), 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd·oppb)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, OPPB는 canonical 태스크의 닫힌 .oppb-run 보존본과 legacy .opal-runs 미생성을 추가로 판정한다. 체크포인트 커밋은 worktree 태스크에만 요구한다.",
   "exports": ["main", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report", "record_results", "collect_history"]
 }
 """
@@ -36,9 +36,17 @@ PROFILES = {
     "opds":  {"exec": "execute.implement", "test_done": "test.pm_gate", "gate_rows": [], "scenario_json": True},
     "opsdd": {"exec": "execute.act_run", "test_done": "verify.pm_gate",
               "gate_rows": ["review.scenario_gate", "verify.ts_green"], "scenario_json": False},
+    "oppb":  {"exec": "p3.continuous_execution", "test_done": "p4.pm_gate",
+              "close": "p5.worktree_finalize", "gate_source": "rows",
+              "gate_rows": ["p1.user_gate", "p3.pm_gate", "p4.project_checkpoint",
+                            "p4.pm_gate", "p5.user_merge_gate", "p5.done_md",
+                            "p5.worktree_finalize"],
+              "scenario_json": False, "archive_required": True,
+              "checkpoint_policy": "finalized"},
 }
 PILOT_SKILL_DIRS = {"opd": "opal-pilot-dev", "opds": "opal-pilot-dev", "opsdd": "opal-pilot-sdd", "opp": "opal-pilot-project",
-                    "oppd": "opal-pilot-project-dev", "oppl": "opal-pilot-project-loop", "opwt": "opal-pilot-write-tech"}
+                    "oppd": "opal-pilot-project-dev", "oppl": "opal-pilot-project-loop", "opwt": "opal-pilot-write-tech",
+                    "oppb": "opal-pilot-project-build"}
 REQUIRED_BASE = ["_opal/AGENT.md", "_opal/code-scan.json", "_opal/MEMORY.json", "docs/PROJECT.md", "_gitignore"]
 
 
@@ -216,7 +224,31 @@ def _registry_checkpoint_shas(repo, code):
 def checkpoint_ok(m):
     if not m.get("worktree_task"):
         return True
+    if m.get("checkpoint_policy") == "finalized":
+        return bool(m.get("oppb_archive_ok") and m.get("oppb_worktree_finalized"))
     return (m.get("checkpoint_commits") or 0) >= 1 and not m.get("raw_commits")
+
+
+def _oppb_archive_status(task_dir, repo):
+    """OPPB 종료 보존본과 legacy 허브 run root 미생성을 판정한다."""
+    archive_dir = task_dir / ".oppb-run"
+    roots = sorted(p for p in archive_dir.iterdir() if p.is_dir()) if archive_dir.is_dir() else []
+    closed = [p for p in roots if (p / "run.closed.json").is_file()]
+    return {
+        "oppb_archive_count": len(roots),
+        "oppb_archive_ok": bool(roots) and len(closed) == len(roots),
+        "oppb_legacy_root_absent": not (repo / ".opal-runs").exists(),
+    }
+
+
+def _canonical_task_dir(repo, task_dir, state):
+    """worktree state로 수집했더라도 task-local 보존본은 canonical repo/tasks에서 찾는다."""
+    names = [state.get("task_id"), task_dir.name]
+    for name in dict.fromkeys(n for n in names if n):
+        candidate = repo / "tasks" / name
+        if (candidate / "state.json").is_file():
+            return candidate
+    return task_dir
 
 
 def _find_state(repo):
@@ -243,7 +275,8 @@ def collect_run(rd, s):
         return m
     tdir = sp.parent
     st = json.loads(sp.read_text(encoding="utf-8"))
-    code = pathlib.Path(st.get("worktree") or repo)
+    stored_worktree = pathlib.Path(st["worktree"]) if st.get("worktree") else None
+    code = stored_worktree if stored_worktree and stored_worktree.is_dir() else repo
     m.update(task_found=True, task=tdir.name, actor=st.get("actor"), status=st.get("current_status"),
              pipeline_complete=st.get("current_status") in ("completed_unmerged", "done"))
     v = subprocess.run([str(STATE_TOOL), "validate", str(tdir)], capture_output=True, text=True)
@@ -259,7 +292,7 @@ def collect_run(rd, s):
     gh = tdir / ".scenario-gate-history.json"
     prof = PROFILES.get(st.get("skill"))
     m["profile"] = st.get("skill") if prof else None
-    gate_ok, iters = False, 0
+    gate_ok, iters = bool(prof and prof.get("gate_source") == "rows"), 0
     if dg:
         gate_ok, iters = dg.get("status") == "pass", len(dg.get("history") or [])
     elif gh.exists():
@@ -274,9 +307,20 @@ def collect_run(rd, s):
         if tsj.exists():
             sc = json.loads(tsj.read_text(encoding="utf-8")).get("scenarios") or []
             sc_ok = bool(sc) and all((x.get("result") or x.get("status")) == "pass" for x in sc)
-    m.update(gate_iterations=iters, gate_evidence=gate_ok and sc_ok and rows_ok, worktree_task=bool(st.get("worktree")))
-    branch_shas = _git(code, "rev-list", "main..HEAD").stdout.split() if st.get("worktree") else []
-    tool_shas = set(_registry_checkpoint_shas(rd / "repo", code))
+    archive_task = _canonical_task_dir(repo, tdir, st) if st.get("skill") == "oppb" else tdir
+    archive = _oppb_archive_status(archive_task, repo) if st.get("skill") == "oppb" else {
+        "oppb_archive_count": 0, "oppb_archive_ok": True, "oppb_legacy_root_absent": True,
+    }
+    archive["oppb_worktree_finalized"] = not stored_worktree or not stored_worktree.exists()
+    archive_gate = (archive["oppb_archive_ok"] and archive["oppb_legacy_root_absent"]
+                    and archive["oppb_worktree_finalized"]
+                    if (prof or {}).get("archive_required") else True)
+    m.update(gate_iterations=iters, gate_evidence=gate_ok and sc_ok and rows_ok and archive_gate,
+             worktree_task=bool(st.get("worktree")),
+             checkpoint_policy=(prof or {}).get("checkpoint_policy", "branch"), **archive)
+    branch_shas = (_git(code, "rev-list", "main..HEAD").stdout.split()
+                   if st.get("worktree") and m["checkpoint_policy"] == "branch" else [])
+    tool_shas = set(_registry_checkpoint_shas(rd / "repo", code)) if branch_shas else set()
     # 체크포인트는 worktree-tool checkpoint로만 인정한다(harness/guards.md §커밋 규칙). git commit
     # 직접 실행은 registry checkpoint_shas에 남지 않으므로 우회 커밋으로 따로 센다.
     m["checkpoint_commits"] = sum(sha in tool_shas for sha in branch_shas)
@@ -364,7 +408,7 @@ def _phases(evs, prof):
         xs = [_pt(e["timestamp"]) for e in sc if e.get("task_step") == step and (e.get("data") or {}).get("to") == to]
         return min(xs) if xs else None
     marks = [min(ts), at(prof["exec"], "in_progress"), at(prof["exec"], "done"),
-             at(prof["test_done"], "done"), at("close.final", "done")]
+             at(prof["test_done"], "done"), at(prof.get("close", "close.final"), "done")]
     names = ["design", "execute", "test", "close"]
     return {n: round((b - a).total_seconds() / 60, 1) for n, a, b in zip(names, marks, marks[1:]) if a and b}
 

@@ -1,0 +1,9 @@
+{
+ "scenario": "function-oppb-low-stock",
+ "mode": "function",
+ "created_at": "2026-09-26 19:57",
+ "variants": [
+  "oppb"
+ ],
+ "source": "/tmp/opal-skill-tester/function-oppb-low-stock-20260926-191940"
+}

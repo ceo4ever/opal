@@ -1,0 +1,12 @@
+{
+ "scenario": "function-oppb-low-stock",
+ "mode": "function",
+ "variant": "//oppb",
+ "rep": 1,
+ "utterance": "//oppb 요구서 /tmp/opal-skill-tester/function-oppb-low-stock-20260926-191940/oppb-r1/REQUEST.md 대로 수행한다. 요구서의 목표·제외 범위·완료조건·비가역 제약을 INTENT로 승인한다. 이 격리 테스트 저장소에서 필수 검증을 모두 통과한 최종 project head의 로컬 merge와 worktree finalize도 승인한다.",
+ "start": 1790417980.376191,
+ "framework": "v0.7.2-229-g6bc7b1a+dcbc9c",
+ "exit": 0,
+ "timeout": false,
+ "end": 1790420262.873269
+}

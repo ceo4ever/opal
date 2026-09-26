@@ -17,7 +17,7 @@
 | `state_valid`* | `state-tool validate` 위반 0건 | true |
 | `runlog_pending`* | `state.json` `run_log.pending_events` 수 | 0 |
 | `gate_evidence` | Pilot 프로필(아래 표)의 게이트 증거가 모두 충족 | true |
-| `checkpoint_commits` / `raw_commits` | 작업 브랜치의 기본 브랜치 대비 커밋 중 허브 registry `execution_ownership.checkpoint_shas`에 있는 것(`worktree-tool checkpoint`로 만든 커밋)과 없는 것(`git commit` 직접 실행한 우회 커밋). 허브 작업본 태스크는 규칙상 커밋하지 않으므로 worktree 태스크에만 요구 | 도구 커밋 ≥ 1 + 우회 커밋 0 (worktree) |
+| `checkpoint_commits` / `raw_commits` | 일반 worktree Pilot은 기본 브랜치 대비 커밋 중 허브 registry `execution_ownership.checkpoint_shas`에 있는 것(`worktree-tool checkpoint`)과 없는 것(`git commit` 직접 실행)을 구분한다. OPPB는 merge·finalize 후 worktree와 활성 registry가 회수되므로 `p4.project_checkpoint`·`p5.worktree_finalize` 행과 task-local 닫힌 archive로 대체 판정한다. | 일반 worktree: 도구 커밋 ≥ 1 + 우회 커밋 0. OPPB: finalize archive PASS |
 
 Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프로필이 없는 Pilot은 "판정 프로필 없음"으로 불합격 처리되므로, 새 Pilot을 시험하려면 먼저 프로필을 추가한다.
 
@@ -25,6 +25,7 @@ Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프�
 |---|---|---|
 | opd·opds | 설계 게이트 `design_gate.status=pass` 또는 `.scenario-gate-history.json` 마지막 pass, 그리고 `test-scenario.json` 전 시나리오 pass | `execute.implement` / `test.pm_gate` |
 | opsdd | `.scenario-gate-history.json` 마지막 pass, 그리고 `review.scenario_gate`·`verify.ts_green` 행 done | `execute.act_run` / `verify.pm_gate` |
+| oppb | P1·P3·P4·P5 필수 gate/checkpoint/finalize 행 done, canonical 태스크의 `.oppb-run/<run_id>/run.closed.json` 존재, 허브 `.opal-runs` 미생성, `state.worktree` 경로 회수 | `p3.continuous_execution` / `p4.pm_gate` / `p5.worktree_finalize` |
 
 `runlog_pending`이 0이 아니면 기록 코어가 어떤 사건을 거부해 drain이 멈춘 상태다. 첫 pending 사건을 보고서에 함께 싣는다.
 

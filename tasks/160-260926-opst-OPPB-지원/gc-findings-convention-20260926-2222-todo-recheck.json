@@ -1,0 +1,66 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/skills/opal-skill-tester/README.md",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_gitignore",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/AGENT.md",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/MEMORY.json",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/code-scan.json",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/worktree.json",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/docs/PROJECT.md",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/tasks/.gitkeep",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/tests/test_basic.py",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/todo_web/__init__.py",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/todo_web/app.py",
+    "opal/skills/opal-skill-tester/scenarios/function-todo-crud/hidden/test_hidden.py",
+    "opal/skills/opal-skill-tester/scenarios/function-todo-crud/request.md",
+    "opal/skills/opal-skill-tester/scenarios/function-todo-crud/scenario.json",
+    "opal/skills/opal-skill-tester/tests/test_skill_tester_todo_crud.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "b05d25807792053e",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CONVENTIONS.md §@header + code-scan inline coverage",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/README.md",
+        "line": 1
+      },
+      "evidence": "code-scan validate reports uncovered/pre_existing, but returns ok=true and exit 0 with newly_uncovered=0 for the exact target set.",
+      "impact": "Overall code-map coverage remains below 100%, while the deterministic changed-file gate passes without new coverage regression.",
+      "remediation": {
+        "guidance": "Handle as separate pre-existing debt: add a current-facts-only inline @header block according to code-scan target.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙/§@header 구칙",
+        "auto_fixable": false
+      },
+      "verification": "Rerun code-scan validate for the same target set and confirm the pre_existing item is absent.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "worker.dispatch receipt verification: ok=true, verified_document_count=4",
+    "baseline report and JSON loaded from 20260926-2214-todo",
+    "same baseline target set: 15 files; existence and project-root containment 15/15",
+    "code-scan validate --scope framework --changed <15 target files> --json: ok=true, exit 0, uncovered=1 (pre_existing=1, newly_uncovered=0), inline covered=8, unsupported extension=6",
+    "git diff --check for the exact target set: exit 0",
+    "Python ast.parse for five Python targets: pass",
+    "JSON parse for four JSON targets: pass",
+    "trailing whitespace/tab scan and EOF newline check for non-empty targets: pass",
+    "manual project-SSOT language recheck: prior AGENT.md and PROJECT.md language findings resolved"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    ".opal/code-scan.json",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md",
+    "/Users/iskang/.opal/references/harness/gc-finding-schema.md",
+    "tasks/160-260926-opst-OPPB-지원/gc-findings-convention-20260926-2214-todo.json"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_160/tasks/160-260926-opst-OPPB-지원/GC-CONVENTION-20260926-2222-todo-recheck.md"
+}

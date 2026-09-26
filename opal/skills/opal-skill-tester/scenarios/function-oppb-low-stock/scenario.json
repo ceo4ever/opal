@@ -1,0 +1,24 @@
+{
+  "id": "function-oppb-low-stock",
+  "mode": "function",
+  "title": "OPPB worktree·run 기록 수명주기와 low-stock 기능",
+  "base": "_bases/stockctl",
+  "target_pilots": [
+    "oppb"
+  ],
+  "default_variant": "//oppb",
+  "utterance": "{variant} 요구서 {request} 대로 수행한다. 요구서의 목표·제외 범위·완료조건·비가역 제약을 INTENT로 승인한다. 이 격리 테스트 저장소에서 필수 검증을 모두 통과한 최종 project head의 로컬 merge와 worktree finalize도 승인한다.",
+  "existing_test_cmd": [
+    "python3",
+    "-m",
+    "pytest",
+    "-q",
+    "tests"
+  ],
+  "timeout_min": 120,
+  "estimate": {
+    "minutes": 45,
+    "usd": 20
+  },
+  "decision_points": []
+}

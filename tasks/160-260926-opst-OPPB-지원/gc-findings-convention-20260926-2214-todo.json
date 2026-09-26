@@ -1,0 +1,133 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/skills/opal-skill-tester/README.md",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_gitignore",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/AGENT.md",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/MEMORY.json",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/code-scan.json",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/worktree.json",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/docs/PROJECT.md",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/tasks/.gitkeep",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/tests/test_basic.py",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/todo_web/__init__.py",
+    "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/todo_web/app.py",
+    "opal/skills/opal-skill-tester/scenarios/function-todo-crud/hidden/test_hidden.py",
+    "opal/skills/opal-skill-tester/scenarios/function-todo-crud/request.md",
+    "opal/skills/opal-skill-tester/scenarios/function-todo-crud/scenario.json",
+    "opal/skills/opal-skill-tester/tests/test_skill_tester_todo_crud.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "b05d25807792053e",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §@header + code-scan inline coverage",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/README.md",
+        "line": 1
+      },
+      "evidence": "code-scan validate returned uncovered/pre_existing for this explicitly targeted file and exited 2.",
+      "impact": "Source code-map coverage is incomplete and deterministic integrity validation fails.",
+      "remediation": {
+        "guidance": "Add a current-facts-only inline @header block at the file top according to code-scan target.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙/§@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "Rerun code-scan validate for the same changed-file set and confirm this uncovered item is absent and the command exits 0.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "b05d25807792053e",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §@header + code-scan inline coverage",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/AGENT.md",
+        "line": 1
+      },
+      "evidence": "code-scan validate returned uncovered/newly_uncovered for this new file and exited 2.",
+      "impact": "The new Markdown file is absent from source code-map coverage and deterministic integrity validation fails.",
+      "remediation": {
+        "guidance": "Add a current-facts-only inline @header block at the file top according to code-scan target.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙/§@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "Rerun code-scan validate for the same changed-file set and confirm this uncovered item is absent and the command exits 0.",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "62d972fb58563424",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §언어 구칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/_opal/AGENT.md",
+        "line": 1
+      },
+      "evidence": "The title, role, required-review items, and constraints are written only in English, beyond technical-term annotation.",
+      "impact": "The framework document is inconsistent with the project's required Korean prose language.",
+      "remediation": {
+        "guidance": "Keep technical identifiers in English but rewrite descriptive headings, review sentences, and constraints in Korean.",
+        "reference": "docs/CONVENTIONS.md §언어 구칙",
+        "auto_fixable": false
+      },
+      "verification": "Review that descriptive prose is Korean and English remains only for technical terms and identifiers.",
+      "suppression": null
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "dad59363dad258b5",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §언어 구칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/opal-skill-tester/scenarios/_bases/todo-web/docs/PROJECT.md",
+        "line": 11
+      },
+      "evidence": "The project description, section headings, table headers, and purpose prose are written in English.",
+      "impact": "The framework document is inconsistent with the project's required Korean prose language.",
+      "remediation": {
+        "guidance": "Keep project, stack, path, and agent identifiers but rewrite descriptive prose, sections, and table explanations in Korean.",
+        "reference": "docs/CONVENTIONS.md §언어 구칙",
+        "auto_fixable": false
+      },
+      "verification": "Review that descriptive prose is Korean and English remains only for technical terms and identifiers.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "worker.dispatch receipt verification: ok=true, verified_document_count=4",
+    "target expansion with hidden files: 15 files; existence and project-root containment 15/15",
+    "code-scan validate --scope framework --changed <15 target files> --json: exit 2, uncovered=2 (pre_existing=1, newly_uncovered=1), inline covered=7, unsupported extension=6",
+    "git diff --check for the exact target set: exit 0",
+    "Python ast.parse for five Python targets: pass",
+    "JSON parse for four JSON targets: pass",
+    "trailing whitespace/tab scan and EOF newline check for non-empty targets: pass",
+    "manual project-SSOT language review of targeted Markdown files"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    ".opal/code-scan.json",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md",
+    "/Users/iskang/.opal/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_160/tasks/160-260926-opst-OPPB-지원/GC-CONVENTION-20260926-2214-todo.md"
+}
