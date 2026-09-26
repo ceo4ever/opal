@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-26 19:05:53",
-  "updated_at": "2026-09-26 21:03:38",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-26 21:06:19",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -36,9 +36,10 @@
       "key": "plan.plan_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-26 19:22:07",
+      "timestamp": "2026-09-26 21:04:35",
       "owner": "PM",
-      "note": null
+      "note": "PM 직접 작성(coordinator PM 경로), 워커 미실행",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 4,
@@ -91,10 +92,11 @@
       "key": "execute.implement",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-26 19:34:08",
+      "timestamp": "2026-09-26 21:04:35",
       "owner": "PM",
-      "note": null,
-      "step": "1/1"
+      "note": "W-1~W-6+RED 워커 duration_ms 합산(직렬 합, 병렬 구간 포함)",
+      "step": "1/1",
+      "worker_duration_minutes": 61
     },
     {
       "row_id": 8,
@@ -114,9 +116,10 @@
       "key": "test.run_tests",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-26 20:37:46",
+      "timestamp": "2026-09-26 21:04:35",
       "owner": "PM",
-      "note": "S-1~S-13 13/13 pass (opal-test-agent)"
+      "note": "opal-test-agent 568216ms",
+      "worker_duration_minutes": 9
     },
     {
       "row_id": 10,
@@ -168,20 +171,20 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 21:04:40",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
     },
     {
       "row_id": 14,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 21:04:40",
       "owner": "PM",
       "note": null
     },
@@ -190,11 +193,11 @@
       "stage": "CLOSE",
       "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
       "key": "close.docs_sync",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 21:05:01",
       "owner": "PM",
-      "note": null,
+      "note": "W-5에서 test-tool README·PROJECT.md·skills-registry·opal-e2e SKILL/setup·.opal/e2e/README 갱신 완료. ARCHITECTURE.md E2E 경계 서술은 사실 불변(no-op)",
       "conditional": true
     },
     {
@@ -202,11 +205,11 @@
       "stage": "CLOSE",
       "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
       "key": "close.brain_ingest",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 21:05:15",
       "owner": "PM",
-      "note": null,
+      "note": "worktree 태스크 — brain 직접 변경 금지. DONE.md 회고적 학습 후보 1건 선언, merge 후 허브 worktree-tool finalize가 수행",
       "conditional": true
     },
     {
@@ -214,22 +217,22 @@
       "stage": "CLOSE",
       "item": "회고/개선 후보 기록",
       "key": "close.retrospective",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 21:05:40",
       "owner": "PM",
-      "note": null
+      "note": "FW 개선 후보 4건 improve-tool 기록(설계 게이트 점 경로 정규화, 워커 단계 행 조기 done, RED 잠금 전 정합 검토 부재, backup 이동의 fixture 참조 파손)"
     },
     {
       "row_id": 18,
       "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
       "key": "close.worktree_finalize",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 21:06:19",
       "owner": "PM",
-      "note": null,
+      "note": "worktree-tool finalize ok(state closed, violations 0, 선언 brain 후보 1건). merge는 사용자 승인 후 허브",
       "conditional": true
     },
     {
@@ -237,14 +240,14 @@
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 21:06:19",
       "owner": "PM",
       "note": null
     }
   ],
-  "next_action": "CLOSE DONE.md 생성 진입",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_159",
   "actor": "coordinator",
   "run_log": {

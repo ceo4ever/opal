@@ -6,13 +6,13 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 0회 (Pass: 0 / Fail: 0) |
+| 게이트 판단 | 21회 (Pass: 15 / Fail: 6) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 1건 |
-| 수정 지시 | 0건 (반영: 0 / 미반영: 0) |
-| PM 의사결정 | 1건 |
-| 개선 사항 | 0건 |
-| 에스컬레이션 | 1건 |
+| 오류 발견 | 7건 |
+| 수정 지시 | 10건 (반영: 10 / 미반영: 0) |
+| PM 의사결정 | 17건 |
+| 개선 사항 | 3건 |
+| 에스컬레이션 | 2건 |
 
 ## 대행 일지
 
@@ -71,7 +71,7 @@
 | 51 | 2026-09-26 20:43 | TEST | GATE | 컨벤션 Critical/High 0(Low 1: README 레거시 변경이력 절, 기존 위반). 보안 Critical/High 0·Medium 3·Low 3 — 수치 기준은 충족하나 GC-003(env-inspect가 프로젝트 선언 driver 명령 실행 → "읽기 전용" 약속 위반, C-6)·GC-006(readiness 로그 비마스킹 → C-3)·GC-001(start_service 비SutStartupError 예외 시 프로세스 고아)·GC-004(cwd 토큰 우회)는 이번 변경의 계약 위반·신규 결함이라 PM Gate 보류 | Fail(보정) |
 | 52 | 2026-09-26 20:43 | TEST | DECISION | GC-001·003·004·006 이번 태스크에서 보정(기존 계약 안, 외부 결정 불요). GC-002(run 전체 finally 부재, 기존 구조)·GC-005(위반 메시지의 설정 텍스트 재출력, Low)는 후속으로 DONE에 기록 | 결정 |
 | 53 | 2026-09-26 20:52 | TEST | FIX | #51 보정 완료(fix 1/3) — GC-001: start_service BaseException 회수+HTTPException→health_bad_response. GC-004: cwd 비루트 토큰 path_escape, render 시 realpath 루트 확인. GC-003: discover_installed가 driver 생성·명령 실행 없이 binary 정적 해석. GC-006: readiness 로그를 알려진 비밀값 치환+redact_text 후 저장, 원문 삭제. 신규 테스트 7건(보정 전 코드에서 실패 확인) | 반영 |
-| 54 | 2026-09-26 20:52 | TEST | GATE | 보정 후 전체 회귀 554 passed·0 failed. 독립 보안 재검증(baseline delta) 디스패치 | 진행 |
+| 54 | 2026-09-26 20:52 | TEST | GATE | 보정 후 전체 회귀 554 passed·0 failed. 독립 보안 재검증(baseline delta) 디스패치 | Pass(재검증 대기) |
 | 55 | 2026-09-26 20:56 | TEST | GATE | 보안 재검증 — baseline 4건 resolved(GC-001·003·004·006), 후속 2건 persisting, 신규 1건(low): GC-004 보정 후 run `_start_sut`에서 render_service path_escape ValueError 시 선기동 서비스 누수 | Fail(보정) |
 | 56 | 2026-09-26 20:56 | TEST | FIX | #55 — 기동 전 전 서비스 선렌더링, render 실패 시 무기동 blocked(e2e_env_config_invalid) 보정 지시(fix 2/3) | 진행 |
 | 57 | 2026-09-26 21:03 | TEST | GATE | fix 2/3 직접 검증 — 전 서비스 선렌더링, render 위반 시 무기동 blocked(e2e_env_config_invalid), 신규 테스트가 보정 전 코드에서 누수 재현. 전체 회귀 555 passed·0 failed | Pass |

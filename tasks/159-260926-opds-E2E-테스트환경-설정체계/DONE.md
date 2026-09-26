@@ -23,6 +23,7 @@
   - 기존 `author`·`run`·`status` 모드
   - 설정이 없는 트리에서의 포트 임대 모양(`backend`·`frontend`)과 기동 전 판정(정적 거부·후보 게이트·신선도 재사용)
 - **회귀 fixture 고정**: 태스크 127 backup 이동(7e2184c)으로 끊겼던 test-tool 회귀 테스트 9개의 fixture를 `opal/tools/test-tool/tests/fixtures/e2e-harness/`로 옮겼다.
+- **보안 경계**: `env-inspect`는 어떤 외부 명령도 실행하지 않는다. driver는 binary 존재만 본다. env-check 로그는 알려진 비밀값 치환과 `redaction` 패턴을 거쳐 저장한다. 서비스 `cwd`는 치환 뒤 실제 경로가 프로젝트 루트 안이어야 한다. run은 모든 서비스를 먼저 해석한 뒤 기동하므로, 설정 위반이면 아무것도 띄우지 않는다.
 - **배포**: 설치본(`~/.opal`)은 재배포하지 않았다. 재배포는 main merge 뒤 수행한다(아래 참고).
 
 ## 변경 파일
@@ -61,7 +62,14 @@
   - 기존 여정 `login-to-dashboard`의 변경 전후 판정이 같다(`blocked`/19/`fragment_value_ref_missing`/agent-browser orca-managed/urls `backend`·`frontend`). 증거는 `evidence/baseline-*`·`evidence/after-*`다.
   - 저장소 밖 FastAPI 표본에서 env-inspect 제안 명령을 그대로 써서 validate→check ready→run pass(real-http)까지 갔다. url 기반 web 표면은 임대·기동 없이 ready였다. 증거는 `evidence/external-project/`다.
 - 설치본 미변경: `~/.opal/tools/test-tool/lib/e2e/environment.py` 부재를 확인했다.
-- PM Gate 보안·컨벤션 진단: {GC_RESULT}
+- 전체 회귀(보안 보정 후 최종): 555 passed, 0 failed.
+- PM Gate 컨벤션 진단(`GC-CONVENTION-2026-09-26T20-37-00.md`): Critical/High 0, Low 1. README의 기존 `## 변경이력` 절이며, 이번 태스크가 만든 위반이 아니다.
+- PM Gate 보안 진단(`GC-SECURITY-2026-09-26T20-37-00.md` → 재진단 `GC-SECURITY-2026-09-26T21-05-00.md`): 두 차례 모두 Critical/High 0이다. 계약 위반에 해당하는 4건을 이번 태스크에서 보정했고, baseline delta 기준 resolved 4다.
+  - env-inspect가 선언 driver 명령을 실행하던 문제
+  - readiness 로그 비마스킹
+  - 기동 중 비예상 예외 시 프로세스 고아
+  - cwd 토큰·symlink 이탈
+  - 재진단에서 새로 나온 run 선렌더링 누수 1건도 보정했다.
 
 ## 회고적 학습 후보
 
@@ -71,6 +79,9 @@
 
 - **재배포(사용자 승인 필요)**: main merge 뒤 `./scripts/install-mac.sh`로 재배포하고 `~/.opal/tools/test-tool/run.sh e2e env-validate --project-root <repo>`가 exit 0인지 확인한다. 병합 전에 재배포하면 설정 파일이 없는 main 체크아웃의 E2E가 `blocked`로 바뀐다.
 - 후속 후보:
+  - 보안 GC-002(Medium): `e2e run` 수명주기 전체에 finally가 없어, 기동 뒤 예상 밖 예외가 나면 서비스와 lease가 회수되지 않는다. 기존 구조 문제이며 이번 태스크로 영향 범위가 넓어졌다.
+  - 보안 GC-005(Low): env-validate 위반 메시지가 설정의 키 이름·토큰 등 텍스트를 다시 출력한다.
   - 서비스를 띄우지 않은 run의 안내 로그 경로가 `lib/e2e/evidence.py` `EVIDENCE_PATHS["server_log"]`의 `server/backend.log`로 고정돼 있다. 실제 서비스 로그는 `server/<서비스id>.log`다.
   - `drivers.discover_installed`는 생성자가 binary 경로를 노출하지 않는 driver(ego-lite)를 `installed:false`로 보고한다.
   - 데스크톱 앱 실행기(드라이버) 구현은 TASK 범위 밖이다.
+- 변경 전 코드로 돌린 최초 기준선이 남긴 이 작업본의 고아 uvicorn 22개는 종료했다. 다른 세션이 남긴 고아 uvicorn(task_157 워크트리, 다른 세션 scratchpad)은 건드리지 않았으며, 해당 세션이나 사용자가 정리해야 한다.
