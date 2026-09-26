@@ -64,3 +64,13 @@
 | 44 | 2026-09-26 20:22 | EXECUTE | ERROR | RED S-4 문서 검사가 `## setup` 이후 파일 끝까지 검사해 run 절의 정당한 금지 문장까지 걸림 — 테스트 범위 결함 | 보정 지시 |
 | 45 | 2026-09-26 20:22 | EXECUTE | FIX | #43·#44 — RED 작성자: 검사 범위를 setup 절로 좁히고 폴백 계약 단언 추가. W-5: run 문장 원문 복원, 절 이름 "프로젝트 구성"으로 정정(병행, 파일 겹침 없음) | 진행(W-5 1/3) |
 | 46 | 2026-09-26 20:27 | EXECUTE | GATE | W-5 재작업·RED 보정 직접 검증 — run 문장 원문 복원, 폴백 절 "프로젝트 구성", RED 16 passed(setup 절 한정 검사 + 폴백 계약 단언 추가). 병행 간섭 없는 전체 회귀 547 passed·0 failed(변경 전 41 failed·3 errors) | Pass |
+| 47 | 2026-09-26 20:28 | EXECUTE | DECISION | 체크포인트 74753d5(W-5). EXECUTE 행 8 완료 처리 | 완료 |
+| 48 | 2026-09-26 20:28 | TEST | DECISION | stage.test 검증 후 opal-test-agent 디스패치 — S-1~S-13 전건 실행·scenario-mark, S-9 기준선 비교 증거·S-12 저장소 밖 CLI 수동 관통(url 기반 web 표면 포함) 증거 저장 | 진행 |
+| 49 | 2026-09-26 20:38 | TEST | GATE | TEST 결과 직접 검증 — scenario-status 13/13 pass, 기준선 대비 login-to-dashboard 판정 완전 일치(blocked/19/fragment_value_ref_missing/agent-browser orca-managed/urls backend·frontend), 저장소 밖 관통 check ready(url 표면은 reachable·response·executor만, 임대·기동 없음)·run pass exit 0. test.run_tests 완료 | Pass |
+| 50 | 2026-09-26 20:38 | TEST | DECISION | PM Gate 보안·컨벤션 자동 진단 — 변경 파일 32건 대상 opal-convention-checker·opal-security-checker 병렬 디스패치(Critical/High 0 기준) | 진행 |
+| 51 | 2026-09-26 20:43 | TEST | GATE | 컨벤션 Critical/High 0(Low 1: README 레거시 변경이력 절, 기존 위반). 보안 Critical/High 0·Medium 3·Low 3 — 수치 기준은 충족하나 GC-003(env-inspect가 프로젝트 선언 driver 명령 실행 → "읽기 전용" 약속 위반, C-6)·GC-006(readiness 로그 비마스킹 → C-3)·GC-001(start_service 비SutStartupError 예외 시 프로세스 고아)·GC-004(cwd 토큰 우회)는 이번 변경의 계약 위반·신규 결함이라 PM Gate 보류 | Fail(보정) |
+| 52 | 2026-09-26 20:43 | TEST | DECISION | GC-001·003·004·006 이번 태스크에서 보정(기존 계약 안, 외부 결정 불요). GC-002(run 전체 finally 부재, 기존 구조)·GC-005(위반 메시지의 설정 텍스트 재출력, Low)는 후속으로 DONE에 기록 | 결정 |
+| 53 | 2026-09-26 20:52 | TEST | FIX | #51 보정 완료(fix 1/3) — GC-001: start_service BaseException 회수+HTTPException→health_bad_response. GC-004: cwd 비루트 토큰 path_escape, render 시 realpath 루트 확인. GC-003: discover_installed가 driver 생성·명령 실행 없이 binary 정적 해석. GC-006: readiness 로그를 알려진 비밀값 치환+redact_text 후 저장, 원문 삭제. 신규 테스트 7건(보정 전 코드에서 실패 확인) | 반영 |
+| 54 | 2026-09-26 20:52 | TEST | GATE | 보정 후 전체 회귀 554 passed·0 failed. 독립 보안 재검증(baseline delta) 디스패치 | 진행 |
+| 55 | 2026-09-26 20:56 | TEST | GATE | 보안 재검증 — baseline 4건 resolved(GC-001·003·004·006), 후속 2건 persisting, 신규 1건(low): GC-004 보정 후 run `_start_sut`에서 render_service path_escape ValueError 시 선기동 서비스 누수 | Fail(보정) |
+| 56 | 2026-09-26 20:56 | TEST | FIX | #55 — 기동 전 전 서비스 선렌더링, render 실패 시 무기동 blocked(e2e_env_config_invalid) 보정 지시(fix 2/3) | 진행 |

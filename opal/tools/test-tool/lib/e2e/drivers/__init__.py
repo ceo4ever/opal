@@ -3,7 +3,7 @@
   "module": "drivers",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T05 Browser driver 계약 — probe·open·snapshot·act·wait·assert·capture·close 8연산 JSON 입출력 계약(CONTRACT.md §B.2), session 후보 순서 resolver, 후보 순서별 설치 탐색(discover_installed: binary 탐색·`--version`까지만, 세션 연산 미호출), driver manifest(§A.15) semver 게이트, §A.8 probe 결과 정규화와 probe.json 기록. 구체 driver 구현(agent-browser·cmux)은 여기 등록만 되고 별도 모듈이 소유한다.",
+  "description": "T05 Browser driver 계약 — probe·open·snapshot·act·wait·assert·capture·close 8연산 JSON 입출력 계약(CONTRACT.md §B.2), session 후보 순서 resolver, 후보 순서별 설치 탐색(discover_installed: driver 미생성·외부 명령 미실행, 환경 변수 override·PATH·번들 경로 존재로 binary만 해석), driver manifest(§A.15) semver 게이트, §A.8 probe 결과 정규화와 probe.json 기록. 구체 driver 구현(agent-browser·cmux)은 여기 등록만 되고 별도 모듈이 소유한다.",
   "exports": [
     "DRIVER_OPERATIONS", "CAPABILITY_KEYS", "CANDIDATE_ORDER", "SESSION_MODES",
     "DriverError", "BrowserDriver", "default_capabilities", "load_manifest",
@@ -570,12 +570,14 @@ def resolve_candidates(
 def discover_installed(project_root: Optional[str] = None) -> List[Dict[str, Any]]:
     """후보 순서별 설치 여부 `{driver, session_mode, installed, binary}` 목록을 돌려준다.
 
-    `env-inspect`(읽기 전용 검토)가 쓴다. driver 생성자가 하는 binary 탐색과 `--version`
-    해석까지만 수행하고 `probe`를 포함한 §B.2 세션 연산은 호출하지 않는다. 그래서 이
-    결과는 가용성 판정이 아니다 — 가용성은 `resolve_candidates()`의 probe만 정한다
-    (C-DRV-2). 생성자가 binary를 드러내지 않는 driver(`binary_path` 부재)와 미등록 후보는
-    `installed=false`, `binary=null`이다. 후보 순서는 `load_candidate_order()`가 정하며
-    opt-in 후보도 목록에 포함한다.
+    `env-inspect`(읽기 전용 검토)가 쓴다. driver 인스턴스를 만들지 않고 외부 명령도
+    실행하지 않는다 — `--version`·`probe`·세션 연산 모두 호출하지 않는다. binary는
+    `_static_binary()`가 환경 변수 override 경로, `PATH` 탐색(`shutil.which`), 번들·기본
+    설치 경로의 존재만으로 해석한다. 프로젝트 `.opal/e2e/drivers/*.json` 선언 driver도
+    manifest의 `binary` 필드만 읽고 선언된 명령은 실행하지 않는다. 그래서 이 결과는
+    가용성 판정이 아니다 — 가용성은 `resolve_candidates()`의 probe만 정한다(C-DRV-2).
+    미등록 후보와 정적 해석 규칙이 없는 등록 driver는 `installed=false`, `binary=null`이다.
+    후보 순서는 `load_candidate_order()`가 정하며 opt-in 후보도 목록에 포함한다.
     """
     factories = registered_drivers()
     root = _project_root(project_root)
@@ -599,9 +601,8 @@ def discover_installed(project_root: Optional[str] = None) -> List[Dict[str, Any
         factory = factories.get((driver_name, session_mode))
         if factory is not None:
             try:
-                driver = factory(runtime_context={"project_root": str(root) if root else None})
-                binary = getattr(driver, "binary_path", None)
-            except Exception:  # noqa: BLE001 — 생성 실패는 미설치로 보고한다.
+                binary = _static_binary(driver_name, session_mode, factory)
+            except Exception:  # noqa: BLE001 — 해석 실패는 미설치로 보고한다.
                 binary = None
         installed = bool(binary) and os.path.isfile(str(binary)) and os.access(str(binary), os.X_OK)
         results.append(
@@ -613,6 +614,60 @@ def discover_installed(project_root: Optional[str] = None) -> List[Dict[str, Any
             }
         )
     return results
+
+
+def _static_binary(driver_name: str, session_mode: Optional[str], factory: Any) -> Optional[str]:
+    """driver를 생성하지 않고 binary 경로만 해석한다. subprocess를 실행하지 않는다."""
+    manifest = getattr(factory, "driver_manifest", None)
+    if isinstance(manifest, Mapping):
+        return _manifest_binary(manifest)
+    if driver_name == "agent-browser":
+        from lib.e2e.drivers import agent_browser
+
+        return agent_browser.resolve_binary(str(session_mode))[0]
+    if driver_name == "cmux":
+        from lib.e2e.drivers import cmux
+
+        return _which_or_path(cmux.resolve_cmux_tool_cmd(None))
+    if driver_name == "ego-lite":
+        from lib.e2e.drivers import ego_lite
+
+        argv = ego_lite.resolve_ego_tool_cmd(None)
+        return _which_or_path(argv[0]) if argv else None
+    return None
+
+
+def _manifest_binary(manifest: Mapping[str, Any]) -> Optional[str]:
+    """선언 driver manifest의 `binary.env`·`binary.discover`만 해석한다(명령 미실행)."""
+    import shlex
+
+    spec = manifest.get("binary") or {}
+    if not isinstance(spec, Mapping):
+        return None
+    env_name = spec.get("env")
+    if env_name and os.environ.get(str(env_name)):
+        try:
+            argv = shlex.split(os.environ[str(env_name)])
+        except ValueError:
+            return None
+        return _which_or_path(argv[0]) if argv else None
+    for candidate in spec.get("discover") or []:
+        resolved = _which_or_path(os.path.expanduser(str(candidate)))
+        if resolved:
+            return resolved
+    return None
+
+
+def _which_or_path(command: Optional[str]) -> Optional[str]:
+    """경로면 존재하는 파일일 때만, 이름이면 `PATH` 탐색 결과를 돌려준다."""
+    import shutil
+
+    if not command:
+        return None
+    text = os.path.expanduser(str(command))
+    if os.sep in text or "/" in text:
+        return text if os.path.isfile(text) else None
+    return shutil.which(text)
 
 
 def _blank_candidate(order: int, driver: str, session_mode: Optional[str]) -> Dict[str, Any]:

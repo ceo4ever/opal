@@ -1,0 +1,51 @@
+{
+  "valid": true,
+  "total": 92,
+  "groups": [
+    "opal-pilot",
+    "op-dev",
+    "op-gc",
+    "op-oppb",
+    "op-sdd",
+    "op-data",
+    "op-task",
+    "standalone",
+    "opal",
+    "op-brain"
+  ],
+  "communityGroups": [
+    "anthropics",
+    "google-labs-code",
+    "vercel-labs",
+    "trailofbits",
+    "getsentry",
+    "openai",
+    "citrolabs",
+    "obra"
+  ],
+  "communitySchema": "opal-community-skills-registry-v2.1",
+  "errors": [],
+  "warnings": [
+    "google-labs-code/design-md: source_repo 미정 — 수동 설치 안내 필요",
+    "google-labs-code/design-md: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "google-labs-code/enhance-prompt: source_repo 미정 — 수동 설치 안내 필요",
+    "google-labs-code/enhance-prompt: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "google-labs-code/react-components: source_repo 미정 — 수동 설치 안내 필요",
+    "google-labs-code/react-components: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "google-labs-code/remotion: source_repo 미정 — 수동 설치 안내 필요",
+    "google-labs-code/remotion: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "google-labs-code/stitch-loop: source_repo 미정 — 수동 설치 안내 필요",
+    "google-labs-code/stitch-loop: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "vercel-labs/react-best-practices: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "vercel-labs/web-design-guidelines: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "vercel-labs/composition-patterns: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "vercel-labs/next-best-practices: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "vercel-labs/shadcn: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "trailofbits/modern-python: source_repo 미정 — 수동 설치 안내 필요",
+    "trailofbits/modern-python: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시",
+    "getsentry/code-review: source_repo 미정 — 수동 설치 안내 필요",
+    "getsentry/code-review: license Unknown — 사용자 동의 prompt에 \"라이선스 미확인\" 표시"
+  ],
+  "unregistered": []
+}
+exit=0

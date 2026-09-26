@@ -19,6 +19,7 @@ import shutil
 import socket
 import sys
 import tempfile
+import time
 import unittest
 
 _TOOL_DIR = pathlib.Path(__file__).parent.parent
@@ -161,6 +162,13 @@ class TestValidateViolations(unittest.TestCase):
         v = self._mutate(lambda c: c["services"][0].update(cwd="{project_root}/sub"))
         self.assertEqual(v, [])
 
+    def test_cwd_non_root_token_is_path_escape(self):
+        # GC-004: cwd에서는 `{project_root}` 외 토큰을 path_escape로 거부한다(치환 값이 루트 밖일 수 있다).
+        for cwd in ("{python}/..", "{python}", "logs-{port}", "{service.api.url}"):
+            v = self._mutate(lambda c, cwd=cwd: c["services"][0].update(cwd=cwd))
+            self.assertIn(("services[0].cwd", "path_escape"), _codes(v), cwd)
+            self.assertNotIn(("services[0].cwd", "invalid_placeholder"), _codes(v), cwd)
+
     def test_secret_literal_rules_do_not_echo_values(self):
         leak = "sk-literal-should-not-leak"
         v = self._mutate(lambda c: c["secrets"][0].update(value=leak))
@@ -282,6 +290,33 @@ class TestRenderService(unittest.TestCase):
         self.assertEqual(rendered["url"], "http://127.0.0.1:4100")
         self.assertEqual(rendered["startup_timeout_s"], 60.0)
 
+    def test_cwd_placeholder_outside_root_is_rejected(self):
+        root = tempfile.mkdtemp(prefix="opal-e2e-render-")
+        self.addCleanup(shutil.rmtree, root, True)
+        with self.assertRaises(ValueError) as ctx:
+            env.render_service({"id": "a", "command": ["x"], "cwd": "{python}/.."}, port=1, ports_by_id={},
+                               project_root=root)
+        self.assertTrue(str(ctx.exception).startswith("path_escape"), str(ctx.exception))
+
+    def test_cwd_symlink_outside_root_is_rejected(self):
+        root = pathlib.Path(tempfile.mkdtemp(prefix="opal-e2e-render-"))
+        outside = pathlib.Path(tempfile.mkdtemp(prefix="opal-e2e-outside-"))
+        self.addCleanup(shutil.rmtree, root, True)
+        self.addCleanup(shutil.rmtree, outside, True)
+        (root / "inside").mkdir()
+        (root / "link-in").symlink_to(root / "inside", target_is_directory=True)
+        (root / "link-out").symlink_to(outside, target_is_directory=True)
+        service = {"id": "a", "command": ["x"], "cwd": "link-out"}
+        # 어휘 검증은 통과하지만(파일 시스템을 보지 않는다) 기동 값 확정에서 거부된다.
+        self.assertNotIn("path_escape", [item["code"] for item in env.validate({"schema_version": "1.0", "services": [service]})])
+        with self.assertRaises(ValueError) as ctx:
+            env.render_service(service, port=1, ports_by_id={}, project_root=str(root))
+        self.assertTrue(str(ctx.exception).startswith("path_escape"), str(ctx.exception))
+        self.assertNotIn(str(outside), str(ctx.exception))
+        # 루트 안을 가리키는 symlink는 허용된다.
+        rendered = env.render_service(dict(service, cwd="link-in"), port=1, ports_by_id={}, project_root=str(root))
+        self.assertEqual(rendered["cwd"], os.path.join(str(root.resolve()), "link-in"))
+
     def test_bare_command_is_resolved_on_path(self):
         rendered = env.render_service({"id": "a", "command": ["sh", "-c", "true"]}, port=1, ports_by_id={},
                                       project_root=str(_SOURCE_ROOT))
@@ -327,6 +362,24 @@ class H(http.server.BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
 http.server.HTTPServer(('127.0.0.1', port), H).serve_forever()
+"""
+
+# http health를 선언했지만 HTTP가 아닌 바이트를 돌려주는 raw TCP 서비스. 같은 그룹에 자식 1건을 둔다.
+_RAW_TCP_SERVER = """
+import os, socket, subprocess, sys
+port = int(sys.argv[1]); pid_file = sys.argv[2]
+child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+with open(pid_file, 'w') as fh:
+    fh.write(str(os.getpid()))
+srv = socket.socket(); srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+srv.bind(('127.0.0.1', port)); srv.listen(8)
+while True:
+    conn, _ = srv.accept()
+    try:
+        conn.recv(4096)
+        conn.sendall(b'NOT-HTTP garbage bytes\\r\\n\\r\\n')
+    finally:
+        conn.close()
 """
 
 
@@ -396,6 +449,40 @@ class TestStartService(unittest.TestCase):
     def test_missing_json_field_is_bad_response(self):
         port, rendered = self._render(body='{"ok": true}', health={"type": "http", "path": "/", "json_field": "status"})
         self._assert_fails(rendered, port, "health_bad_response")
+
+    def _assert_group_gone(self, pid_file):
+        pgid = int(pid_file.read_text(encoding="utf-8"))
+        self.assertEqual(e2e_process.process_group_members(pgid), [])
+        self.assertFalse(e2e_process.pid_alive(pgid))
+
+    def test_non_http_bytes_is_bad_response_and_group_reclaimed(self):
+        # GC-001: http.client.HTTPException(BadStatusLine 등)은 health_bad_response로 바뀌고 그룹이 남지 않는다.
+        (self.root / "raw.py").write_text(_RAW_TCP_SERVER, encoding="utf-8")
+        pid_file = self.root / "raw.pid"
+        port, rendered = self._render(command=["{python}", "raw.py", "{port}", str(pid_file)],
+                                      health={"type": "http", "path": "/health"}, timeout=5)
+        self._assert_fails(rendered, port, "health_bad_response")
+        self._assert_group_gone(pid_file)
+
+    def test_unexpected_exception_reclaims_group_and_propagates(self):
+        # GC-001: SutStartupError가 아닌 예외도 그룹을 회수한 뒤 그대로 올린다.
+        pid_file = self.root / "sleep.pid"
+        script = f"import os, time; open({str(pid_file)!r}, 'w').write(str(os.getpid())); time.sleep(60)"
+        port, rendered = self._render(command=["{python}", "-c", script.replace("{", "{{").replace("}", "}}")],
+                                      health={"type": "http", "path": "/"}, timeout=5)
+
+        def _boom(*_args, **_kwargs):
+            deadline = time.monotonic() + 5
+            while not pid_file.exists() and time.monotonic() < deadline:
+                time.sleep(0.05)
+            raise RuntimeError("unexpected")
+
+        original = e2e_runtime.wait_http_health
+        e2e_runtime.wait_http_health = _boom
+        self.addCleanup(setattr, e2e_runtime, "wait_http_health", original)
+        with self.assertRaises(RuntimeError):
+            e2e_runtime.start_service(rendered, role="svc", port=port, artifact_dir=self.artifact_dir)
+        self._assert_group_gone(pid_file)
 
     def test_port_never_opens_is_timeout(self):
         port, rendered = self._render(command=["{python}", "-c", "import time; time.sleep(30)"], timeout=1)

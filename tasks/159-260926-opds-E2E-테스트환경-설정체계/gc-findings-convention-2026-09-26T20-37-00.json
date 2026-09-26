@@ -1,0 +1,86 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    ".opal/e2e/README.md",
+    ".opal/e2e/environment.json",
+    "docs/PROJECT.md",
+    "opal/core/references/opal-skills-registry.json",
+    "opal/skills/opal-e2e/SKILL.md",
+    "opal/skills/opal-e2e/references/setup.md",
+    "opal/tools/test-tool/README.md",
+    "opal/tools/test-tool/lib/e2e/drivers/__init__.py",
+    "opal/tools/test-tool/lib/e2e/environment.py",
+    "opal/tools/test-tool/lib/e2e/inspect.py",
+    "opal/tools/test-tool/lib/e2e/orchestrator.py",
+    "opal/tools/test-tool/lib/e2e/process.py",
+    "opal/tools/test-tool/lib/e2e/readiness.py",
+    "opal/tools/test-tool/lib/e2e/runtime.py",
+    "opal/tools/test-tool/test_tool.py",
+    "opal/tools/test-tool/tests/fixtures/e2e-harness/surfaces.json",
+    "opal/tools/test-tool/tests/fixtures/e2e-harness/test-scenario.json",
+    "opal/tools/test-tool/tests/test_e2e_drivers.py",
+    "opal/tools/test-tool/tests/test_e2e_env_commands.py",
+    "opal/tools/test-tool/tests/test_e2e_environment.py",
+    "opal/tools/test-tool/tests/test_e2e_external_project.py",
+    "opal/tools/test-tool/tests/test_e2e_human_executor.py",
+    "opal/tools/test-tool/tests/test_e2e_run_environment.py",
+    "opal/tools/test-tool/tests/test_e2e_runtime.py",
+    "opal/tools/test-tool/tests/test_e2e_skeleton.py",
+    "opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py",
+    "opal/tools/test-tool/tests/test_red_s159_env.py",
+    "opal/tools/test-tool/tests/test_red_s1_concurrent_port_isolation.py",
+    "opal/tools/test-tool/tests/test_red_s2_stale_lease_reclaim.py",
+    "opal/tools/test-tool/tests/test_red_s3_run_json_shape.py",
+    "opal/tools/test-tool/tests/test_red_s4_no_repo_pollution.py",
+    "opal/tools/test-tool/tests/test_red_s7_redaction.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "d7b2867764ef91af",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/test-tool/README.md",
+        "line": 586
+      },
+      "evidence": "README.md:586-596에 '## 변경이력' 표(v1.0~v1.7, 날짜·변경내용 누적)가 존재한다. git diff main 대조 결과 이번 태스크(159) 변경분은 이 절을 추가/수정하지 않았다 — 기존 레거시 절이다.",
+      "impact": "git으로 관리되는 문서에 수기 누적 이력 절을 두면 opal-doc-standard.md §5(이력은 git·태스크 기록이 소유, git 관리 문서에 변경이력/Changelog/history/revisions 절 금지)를 위반한다. 방치 시 향후 변경마다 이 절에 행을 계속 추가하는 관행이 고착된다.",
+      "remediation": {
+        "guidance": "'## 변경이력' 절 전체를 제거하고, 각 항목이 인용한 태스크 번호(T039/056/069/111/131 등)의 DONE.md·git log로 이력 조회를 대체한다. 별도 정리 태스크로 처리 권장(이번 태스크 범위 밖 레거시 부채).",
+        "reference": "opal/core/references/opal-doc-standard.md §5",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/test-tool/README.md에서 '## 변경이력' 헤더가 제거되고 git log가 이력 조회 경로임을 확인",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "docs/CONVENTIONS.md 전문 Read (§언어 규칙·§네이밍 규칙·§파일 구조·§구현 규칙 §@header 규칙·§배포 경계·§플랫폼 분기 격리·§도구 우선 원칙)",
+    "opal/core/references/opal-doc-standard.md §5 Read",
+    "opal/core/references/harness/tool-output-contract.md Read",
+    "opal/core/references/harness/gc-finding-schema.md Read",
+    "opal/core/references/conventions-hub-model.md Read (단일 허브 모델 확인, scope=all 적용)",
+    ".opal/code-scan.json Read — headerSource: inline (인라인 @header 필요 확정)",
+    "target_files 32개 전건에 대해 head -8로 @header 존재 확인 (.py 22개 전건 @header 블록 보유)",
+    "grep -InE '변경이력|Changelog|## History|revisions' 전체 target_files 실행 — README.md 1건 검출",
+    "grep -InE 'platform\\.system|sys\\.platform|os\\.name ==|win32|darwin|linux' 전체 .py 대상(process.py 제외) — 0건, 플랫폼 분기는 process.py 단일 지점 유지 확인",
+    "test_tool.py 내 print(json.dumps(...)) 전건과 'ok' 필드 사용 grep — 단일 라인 JSON, ok/command/error 필드 관례 준수 확인",
+    "git diff main -- opal/tools/test-tool/README.md 로 변경이력 절이 이번 태스크 신규 추가분이 아님을 확인"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/tool-output-contract.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "opal/core/references/conventions-hub-model.md",
+    ".opal/code-scan.json"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/159-260926-opds-E2E-테스트환경-설정체계/GC-CONVENTION-2026-09-26T20-37-00.md"
+}

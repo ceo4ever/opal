@@ -3,7 +3,7 @@
   "module": "runtime",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "설정 기반 SUT 기동 — start_service가 lib/e2e/environment.render_service로 확정된 서비스 1건(argv·cwd·env·health)을 호출자가 넘긴 포트로 프로세스 그룹 기동하고, health 선언에 따라 wait_http_health(경로·기대 상태·json_field) 또는 포트 오픈 대기로 기동 완료를 판정한다. 실패하면 그 그룹을 회수한 뒤 SutStartupError(reason 3종)를 올린다. stop_all은 그룹 단위 회수 결과(CleanupReport)를 집계한다. 상태·exit 문자열·포트 확보는 다루지 않는다.",
+  "description": "설정 기반 SUT 기동 — start_service가 lib/e2e/environment.render_service로 확정된 서비스 1건(argv·cwd·env·health)을 호출자가 넘긴 포트로 프로세스 그룹 기동하고, health 선언에 따라 wait_http_health(경로·기대 상태·json_field) 또는 포트 오픈 대기로 기동 완료를 판정한다. 실패하면 그 그룹을 회수한 뒤 SutStartupError(reason 3종)를 올리고, 그 밖의 예외도 그룹을 회수한 뒤 다시 올린다. 비HTTP 응답은 health_bad_response다. stop_all은 그룹 단위 회수 결과(CleanupReport)를 집계한다. 상태·exit 문자열·포트 확보는 다루지 않는다.",
   "exports": ["SutHandle", "CleanupReport", "SutStartupError", "start_service", "wait_http_health", "stop_all"],
   "depends": ["process"]
 }
@@ -15,6 +15,7 @@ lib.e2e.runtime — 포트는 이 모듈이 확보하지 않는다(호출자가 
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import socket
@@ -82,7 +83,8 @@ def start_service(rendered: dict, *, role: str, port: int, artifact_dir: str) ->
     - port는 호출자가 임대해 넘긴다. 명령이 그 포트로 strict 바인딩하는지는 설정이 책임진다.
     - health `http`: `url + path`가 expect_status를 돌려주고(json_field가 있으면 그 키가
       JSON 본문에 있어야) 통과. `port`: host:port가 열리면 통과. 제한 시간은 startup_timeout_s.
-    - 실패하면 이 함수가 띄운 그룹을 회수한 뒤 SutStartupError를 올린다(누수 방지).
+    - 실패하면 이 함수가 띄운 그룹을 회수한 뒤 SutStartupError를 올린다(누수 방지). 그 밖의
+      예외도 예외 종류와 관계없이 그룹을 회수한 뒤 그대로 올린다.
     """
     env = dict(os.environ)
     env.update(rendered.get("env") or {})
@@ -124,6 +126,10 @@ def start_service(rendered: dict, *, role: str, port: int, artifact_dir: str) ->
     except SutStartupError as exc:
         e2e_process.terminate_process_group(spawned.pgid, popen=spawned.popen)
         raise SutStartupError(exc.reason, f"{role}: {exc.detail}; log={log_paths['stderr']}") from exc
+    except BaseException:
+        # 예상 밖 예외(KeyboardInterrupt 포함)도 띄운 그룹을 회수한 뒤 그대로 올린다.
+        e2e_process.terminate_process_group(spawned.pgid, popen=spawned.popen)
+        raise
     return handle
 
 
@@ -172,6 +178,7 @@ def wait_http_health(
     - 연결이 한 번도 성립하지 않고 시간이 다 되면 `health_timeout`.
     - 응답은 오지만 상태가 끝까지 다르면 `health_bad_response`.
     - 기대 상태의 응답에 json_field가 없거나 본문이 JSON이 아니면 즉시 `health_bad_response`.
+    - 응답이 HTTP가 아니면(http.client.HTTPException) 즉시 `health_bad_response`.
     - `spawned`가 주어지면 대기 중 프로세스 종료를 `process_exited_early`로 올린다.
     반환: json_field 검사를 했으면 파싱된 본문, 아니면 `{}`.
     """
@@ -199,6 +206,12 @@ def wait_http_health(
                 raw = b""
         except (urllib.error.URLError, ConnectionError, OSError) as exc:
             last_error = str(exc)
+        except http.client.HTTPException as exc:
+            # 포트가 HTTP가 아닌 바이트를 돌려준다(BadStatusLine·IncompleteRead·LineTooLong 등).
+            raise SutStartupError(
+                _REASON_HEALTH_BAD_RESPONSE,
+                f"health response from {target} is not valid HTTP ({type(exc).__name__})",
+            ) from exc
         if status is not None:
             last_status = status
             if status == expect_status:

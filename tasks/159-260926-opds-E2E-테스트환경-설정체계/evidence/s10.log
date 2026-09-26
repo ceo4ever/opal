@@ -1,0 +1,48 @@
+............................................................................................................................................................... [ 29%]
+.............................................................. [ 40%]
+................................................ [ 49%]
+................................................................................F..... [ 64%]
+........................................................ [ 75%]
+........................... [ 80%]
+................................................................... [ 92%]
+........................... [ 97%]
+...............                                             [100%]
+=================================== FAILURES ===================================
+_______ TestBrowserRealUsage.test_browser_dashboard_call_reaches_backend _______
+
+self = <test_e2e_skeleton.TestBrowserRealUsage testMethod=test_browser_dashboard_call_reaches_backend>
+
+    def tearDown(self):
+        if self.handles:
+            report = e2e_runtime.stop_all(self.handles)
+            # D-10/A-4: leaked는 그룹 리더 1건이 아니라 SIGKILL 이후
+            # process_group_members로 재열거한 잔존 구성원 pid 전건이다.
+            assert report.leaked == [], f"leaked process group members: {report.leaked}"
+    
+        after = _console_7823_baseline()
+        assert after == self._console_baseline, "7823 Console health baseline changed"
+    
+        git_status_after = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=_SOURCE_ROOT,
+            capture_output=True,
+            text=True,
+        ).stdout
+>       assert git_status_after == self._git_status_before, "repo dirty state changed by test run"
+E       AssertionError: repo dirty state changed by test run
+E       assert ' M tasks/159...9_part1.log\n' == ' M tasks/159...9_part1.log\n'
+E         
+E         Skipping 537 identical leading characters in diff, use -v to show
+E         - /evidence/s1.log
+E         + /evidence/external-project/
+E         + ?? tasks/159-260926-opds-E2E-테스트환경-설정체계/evidence/s1.log
+E           ?? tasks/159-260926-opds-E2E-테스트환경-설정체계/evidence/s10.log
+E           ?? tasks/159-260926-opds-E2E-테스트환경-설정체계/evidence/s11_validate.log...
+E         
+E         ...Full output truncated (9 lines hidden), use '-vv' to show
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:113: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestBrowserRealUsage::test_browser_dashboard_call_reaches_backend
+1 failed, 546 passed, 345 subtests passed in 174.84s (0:02:54)
+S10 exit=1

@@ -3,7 +3,7 @@
   "module": "inspect",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "`test-tool e2e env-inspect`의 읽기 전용 환경 검토. 프로젝트 트리를 제한된 깊이로 훑어 표면 후보(package.json scripts·의존성의 vite/next/electron/tauri, Python 코드의 FastAPI/Flask 앱 선언과 `/health` 문자열, *.xcodeproj·Package.swift·*.csproj·*.desktop)와 `.env.example`의 변수 이름, 설정 파일 존재·유효성, driver 설치 여부(drivers.discover_installed)를 모은다. 파일·캐시를 쓰지 않고 프로젝트 코드를 import하거나 실행하지 않으며 `.env.example`의 값은 결과에 싣지 않는다.",
+  "description": "`test-tool e2e env-inspect`의 읽기 전용 환경 검토. 프로젝트 트리를 제한된 깊이로 훑어 표면 후보(package.json scripts·의존성의 vite/next/electron/tauri, Python 코드의 FastAPI/Flask 앱 선언과 `/health` 문자열, *.xcodeproj·Package.swift·*.csproj·*.desktop)와 `.env.example`의 변수 이름, 설정 파일 존재·유효성, driver 설치 여부(drivers.discover_installed: binary 경로 해석만)를 모은다. 파일·캐시를 쓰지 않고 프로젝트 코드를 import하지 않으며 외부 명령(프로젝트 선언 driver 명령·`--version` 포함)을 실행하지 않고 `.env.example`의 값은 결과에 싣지 않는다.",
   "exports": ["inspect_project"],
   "depends": ["environment", "drivers", "process"]
 }
@@ -45,7 +45,7 @@ _DESKTOP_JS_FRAMEWORKS = ("electron", "@tauri-apps/cli", "@tauri-apps/api")
 
 
 def inspect_project(project_root: str) -> Dict[str, Any]:
-    """D-7 검토 결과를 돌려준다. 쓰기 연산을 하지 않는다."""
+    """D-7 검토 결과를 돌려준다. 쓰기 연산과 외부 명령 실행을 하지 않는다."""
     from lib.e2e import drivers as e2e_drivers
 
     root = Path(project_root).resolve()

@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0 -- /Users/iskang/.opal/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_159
+plugins: asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+opal/tools/test-tool/tests/test_red_s159_env.py::TestRunEnvironmentBlocked::test_invalid_config_is_blocked_with_config_invalid_detail PASSED [ 50%]
+opal/tools/test-tool/tests/test_red_s159_env.py::TestRunEnvironmentBlocked::test_missing_config_is_blocked_with_config_missing_detail PASSED [100%]
+
+============================== 2 passed in 0.34s ===============================

@@ -3,7 +3,7 @@
   "module": "environment",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "프로젝트 E2E 환경 설정(`.opal/e2e/environment.json`)의 스키마 원본. 파일 적재(load)·순수 검증(validate, 위반 {path,code,detail} 11종)·서비스 의존 순서(service_order)·서비스 기동 값 확정(render_service: 치환 토큰 6종과 from_env 해석)·표면 선택(select_surface)을 제공한다. 비밀 원문 판정은 lib/e2e/redaction.redact_text를 재사용한다. 파일을 쓰지 않고 프로세스를 띄우지 않으며 OS 분기를 두지 않는다.",
+  "description": "프로젝트 E2E 환경 설정(`.opal/e2e/environment.json`)의 스키마 원본. 파일 적재(load)·순수 검증(validate, 위반 {path,code,detail} 11종)·서비스 의존 순서(service_order)·서비스 기동 값 확정(render_service: 치환 토큰 6종과 from_env 해석, cwd 실제 경로의 루트 내부 확인)·표면 선택(select_surface)을 제공한다. 비밀 원문 판정은 lib/e2e/redaction.redact_text를 재사용한다. 파일을 쓰지 않고 프로세스를 띄우지 않으며 OS 분기를 두지 않는다.",
   "exports": ["SCHEMA_VERSION", "CONFIG_RELPATH", "SURFACE_KINDS", "DESKTOP_KINDS", "VIOLATION_CODES", "load", "validate", "normalize", "service_order", "render_service", "select_surface"],
   "depends": ["redaction"]
 }
@@ -127,7 +127,8 @@ def _v(path: str, code: str, detail: str) -> Dict[str, str]:
 def validate(config: Any) -> List[Dict[str, str]]:
     """설정 dict를 검증해 위반 목록을 돌려준다. 빈 목록이면 유효하다.
 
-    파일 시스템을 보지 않는다. `path_escape`는 cwd 문자열의 어휘 정규화로만 판정한다.
+    파일 시스템을 보지 않는다. `path_escape`는 cwd 문자열로만 판정한다 — `{project_root}` 외
+    치환 토큰이 있거나 어휘 정규화 결과가 루트 밖이면 위반이다.
     """
     out: List[Dict[str, str]] = []
     if not isinstance(config, dict):
@@ -334,6 +335,16 @@ def _check_placeholders(text: str, path: str, service_ids: List[str], out) -> No
 
 
 def _cwd_escapes(cwd: str) -> bool:
+    """cwd 문자열이 프로젝트 루트를 벗어날 수 있으면 True.
+
+    `{project_root}` 외 치환 토큰(`{python}`·`{host}`·`{port}`·`{service.*}`)은 치환 값이
+    루트 밖 절대경로일 수 있으므로 cwd에서는 path_escape로 본다. symlink 해석을 포함한
+    최종 판정은 render_service가 치환 뒤 realpath로 다시 한다.
+    """
+    for match in _PLACEHOLDER_PATTERN.finditer(cwd):
+        token = match.group(1)
+        if token is not None and token != "project_root":
+            return True
     text = cwd.replace("\\", "/")
     if text.startswith("{project_root}"):
         text = "." + text[len("{project_root}"):]
@@ -574,6 +585,13 @@ def service_order(config: Mapping[str, Any]) -> List[str]:
     return ordered
 
 
+def _is_within(path: str, root: str) -> bool:
+    try:
+        return os.path.commonpath([path, root]) == root
+    except ValueError:  # 드라이브가 다른 경로
+        return False
+
+
 def _service_url(host: str, port: int) -> str:
     return f"http://{host}:{port}"
 
@@ -608,6 +626,8 @@ def render_service(
     - env의 `{"from_env": NAME}`은 현재 프로세스 환경에서 읽는다. 없으면 설정하지 않고
       `missing_env`에 이름을 남긴다.
     - argv[0]가 경로가 아니면 PATH에서 실행 파일을 찾아 절대경로로 바꾼다(찾지 못하면 그대로).
+    - 치환한 cwd의 실제 경로(symlink 해석)가 project_root 밖이면 `path_escape`로 시작하는
+      ValueError를 올린다.
     반환 env는 덮어쓸 항목만 담는다 — 부모 환경 병합은 기동하는 쪽이 한다.
     """
     svc = _normalize_service(service)
@@ -649,6 +669,8 @@ def render_service(
     if not cwd_path.is_absolute():
         cwd_path = Path(root) / cwd_path
     cwd = os.path.normpath(str(cwd_path))
+    if not _is_within(os.path.realpath(cwd), root):
+        raise ValueError("path_escape: cwd resolves outside the project root")
 
     health = dict(svc["health"])
     if health.get("type") == "http":

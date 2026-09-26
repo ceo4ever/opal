@@ -3,7 +3,7 @@
   "module": "test_e2e_env_commands",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "`test-tool e2e env-inspect`·`env-validate`·`env-check`와 drivers.discover_installed 검증. CLI는 subprocess stdout JSON·exit으로, 브라우저 후보가 필요한 web 표면 판정은 readiness.check_readiness에 대역 driver 레지스트리를 넘겨 확인한다. 검토 무변경(트리 해시 동일), 검증 exit·오류 코드, 준비 검증의 ready·not_ready·skipped 순서·데스크톱 desktop_executor_absent·비밀 누락·의존 실패·URL 도달 실패·판정 뒤 프로세스와 임대 회수를 다룬다.",
+  "description": "`test-tool e2e env-inspect`·`env-validate`·`env-check`와 drivers.discover_installed 검증. CLI는 subprocess stdout JSON·exit으로, 브라우저 후보가 필요한 web 표면 판정은 readiness.check_readiness에 대역 driver 레지스트리를 넘겨 확인한다. 검토 무변경(트리 해시 동일)·driver 미생성과 선언 driver 명령 미실행(표식 파일 부재), 검증 exit·오류 코드, 준비 검증의 ready·not_ready·skipped 순서·데스크톱 desktop_executor_absent·비밀 누락·의존 실패·URL 도달 실패·판정 뒤 프로세스와 임대 회수·readiness 로그의 from_env 비밀값 마스킹을 다룬다.",
   "scenarios": ["S-1", "S-2", "S-3", "S-4"],
   "exports": [
     "TestEnvValidateCli", "TestEnvInspectCli", "TestDiscoverInstalled",
@@ -223,6 +223,7 @@ class TestDiscoverInstalled(unittest.TestCase):
         e2e_drivers._REGISTRY.update(self._original)
 
     def test_reports_binary_without_probe(self):
+        """driver를 생성하지 않고 환경 변수 override 경로 존재만으로 binary를 해석한다."""
         calls = []
         with tempfile.TemporaryDirectory() as tmp:
             binary = pathlib.Path(tmp) / "fake-driver"
@@ -231,7 +232,8 @@ class TestDiscoverInstalled(unittest.TestCase):
 
             class _Stub(e2e_drivers.BrowserDriver):
                 def __init__(self, **_kwargs):
-                    self.binary_path = str(binary)
+                    calls.append("__init__")
+                    raise AssertionError("driver must not be constructed")
 
                 def dispatch(self, operation, payload=None):
                     calls.append(operation)
@@ -239,7 +241,15 @@ class TestDiscoverInstalled(unittest.TestCase):
 
             e2e_drivers._REGISTRY.clear()
             e2e_drivers.register_driver("cmux", "owned-surface", _Stub)
-            result = e2e_drivers.discover_installed(tmp)
+            saved = os.environ.get("OPAL_CMUX_TOOL_CMD")
+            os.environ["OPAL_CMUX_TOOL_CMD"] = str(binary)
+            try:
+                result = e2e_drivers.discover_installed(tmp)
+            finally:
+                if saved is None:
+                    os.environ.pop("OPAL_CMUX_TOOL_CMD", None)
+                else:
+                    os.environ["OPAL_CMUX_TOOL_CMD"] = saved
 
         order = [(entry["driver"], entry["session_mode"]) for entry in e2e_drivers.CANDIDATE_ORDER]
         self.assertEqual([(r["driver"], r["session_mode"]) for r in result], order)
@@ -249,6 +259,36 @@ class TestDiscoverInstalled(unittest.TestCase):
         others = [r for r in result if r["driver"] != "cmux"]
         self.assertTrue(all(r["installed"] is False and r["binary"] is None for r in others))
         self.assertEqual(calls, [])
+
+    def test_env_inspect_never_runs_declared_driver_commands(self):
+        """GC-003 — 선언 driver의 version·연산 명령을 실행하지 않고 binary 존재만 본다."""
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as outside:
+            root = pathlib.Path(tmp)
+            marker = pathlib.Path(outside) / "executed.marker"
+            touch = ["-c", f"touch {marker}"]
+            manifest = {
+                "driver": "fake-drv",
+                "session_mode": "standalone",
+                "binary": {"discover": ["/bin/sh"]},
+                "version": {"argv": touch},
+                "ops": {op: {"argv": touch} for op in e2e_drivers.DRIVER_OPERATIONS},
+            }
+            drivers_dir = root / ".opal" / "e2e" / "drivers"
+            drivers_dir.mkdir(parents=True)
+            (drivers_dir / "fake.json").write_text(json.dumps(manifest), encoding="utf-8")
+            (root / ".opal" / "e2e" / "order.json").write_text(
+                json.dumps(["fake-drv/standalone"]), encoding="utf-8")
+
+            before = _tree_hash(root)
+            code, out, err, parsed = _run_cli(["e2e", "env-inspect", "--project-root", str(root)])
+            after = _tree_hash(root)
+
+            self.assertEqual(code, 0, out + err)
+            self.assertFalse(marker.exists(), "env-inspect executed a declared driver command")
+            self.assertEqual(before, after)
+            self.assertEqual(parsed["drivers"], [{
+                "driver": "fake-drv", "session_mode": "standalone",
+                "installed": True, "binary": "/bin/sh"}])
 
 
 class TestEnvCheckCli(unittest.TestCase):
@@ -288,6 +328,47 @@ class TestEnvCheckCli(unittest.TestCase):
             logs = list(log_dir.glob("*/api-svc.log"))
             self.assertEqual(len(logs), 1)
             self.assertEqual(list((pathlib.Path(artifacts) / ".leases").glob("*.json")), [])
+
+    def test_readiness_log_masks_from_env_secret(self):
+        """GC-006 — 서비스가 찍은 from_env 비밀값은 readiness 로그에 마스킹본으로만 남는다."""
+        name = "E2E_ENV_CMD_LOG_SECRET"
+        secret = "s3cr3t-log-value-7f2a91"
+        env = dict(os.environ)
+        env[name] = secret
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as artifacts:
+            root = pathlib.Path(tmp)
+            script = root / "leaky.py"
+            script.write_text(
+                "import os, sys\n"
+                "print('booting with token', os.environ['APP_TOKEN'], flush=True)\n"
+                "print('stderr token', os.environ['APP_TOKEN'], file=sys.stderr, flush=True)\n"
+                + _SERVER_SCRIPT,
+                encoding="utf-8",
+            )
+            _write_config(root, {
+                "schema_version": "1.0",
+                "services": [{
+                    "id": "leaky",
+                    "command": ["{python}", str(script), "{host}", "{port}"],
+                    "env": {"APP_TOKEN": {"from_env": name}},
+                    "health": {"type": "http", "path": "/health"},
+                    "startup_timeout_s": 20,
+                }],
+                "surfaces": [{"id": "api1", "kind": "api", "service": "leaky"}],
+            })
+            code, out, err, parsed = _run_cli(
+                ["e2e", "env-check", "--project-root", str(root), "--artifact-root", artifacts], env=env)
+            self.assertEqual(code, 0, out + err)
+            logs = list((pathlib.Path(artifacts) / "readiness").glob("*/leaky.log"))
+            self.assertEqual(len(logs), 1)
+            text = logs[0].read_text(encoding="utf-8")
+            self.assertIn("booting with token", text)
+            self.assertIn("[REDACTED]", text)
+            self.assertNotIn(secret, text)
+            for path in pathlib.Path(artifacts).rglob("*"):
+                if path.is_file():
+                    self.assertNotIn(secret, path.read_text(encoding="utf-8", errors="replace"), str(path))
+            self.assertNotIn(secret, out + err)
 
     def test_desktop_secret_and_service_failure(self):
         name = "E2E_ENV_CMD_TEST_TOKEN"

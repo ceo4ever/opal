@@ -3,14 +3,14 @@
   "module": "readiness",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "`test-tool e2e env-check`의 준비 검증 판정. 유효한 환경 설정을 받아 표면별 check를 정해진 순서로 실제 수행하고(서비스 기동·health·실행기 / URL 도달·응답·실행기 / human 실행기 / 데스크톱 플랫폼·앱 존재·실행기), 처음 실패한 check의 cause(닫힌 11종)와 조치 문장을 남긴다. 최상위 secrets는 환경 변수 존재만 보고 값을 싣지 않는다. 포트 임대·서비스 기동·회수는 ports·runtime·environment를, 실행기 확인은 drivers.resolve_candidates와 executors 레지스트리를 재사용하며, 여러 표면이 공유하는 서비스는 1회만 띄우고 판정 뒤 모든 서비스와 임대를 회수한다.",
+  "description": "`test-tool e2e env-check`의 준비 검증 판정. 유효한 환경 설정을 받아 표면별 check를 정해진 순서로 실제 수행하고(서비스 기동·health·실행기 / URL 도달·응답·실행기 / human 실행기 / 데스크톱 플랫폼·앱 존재·실행기), 처음 실패한 check의 cause(닫힌 11종)와 조치 문장을 남긴다. 최상위 secrets는 환경 변수 존재만 보고 값을 싣지 않는다. 포트 임대·서비스 기동·회수는 ports·runtime·environment를, 실행기 확인은 drivers.resolve_candidates와 executors 레지스트리를 재사용하며, 여러 표면이 공유하는 서비스는 1회만 띄우고 판정 뒤 모든 서비스와 임대를 회수한다. 기동 로그는 redaction.redact_text 패턴과 from_env·최상위 secrets 값 마스킹을 거친 사본만 남기고 원문은 지운다.",
   "exports": ["CAUSE_CODES", "check_readiness"],
-  "depends": ["environment", "ports", "runtime", "process", "drivers", "executors"]
+  "depends": ["environment", "ports", "runtime", "process", "redaction", "drivers", "executors"]
 }
 
 lib.e2e.readiness — 설정 파일 존재나 진술만으로 ready를 주지 않는다. 각 check는 실제
 프로세스·실제 HTTP·실제 후보 해석 결과로만 통과한다. 기동 로그는
-`<artifact-root>/readiness/<run>/<service-id>.log`에 모으고 check detail에 그 경로를 쓴다.
+`<artifact-root>/readiness/<run>/<service-id>.log`에 마스킹 사본으로 모으고 check detail에 그 경로를 쓴다.
 OS 판정은 process.host_platform()만 사용한다.
 """
 
@@ -29,6 +29,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 from lib.e2e import environment as e2e_environment
 from lib.e2e import ports as e2e_ports
 from lib.e2e import process as e2e_process
+from lib.e2e import redaction as e2e_redaction
 from lib.e2e import runtime as e2e_runtime
 
 CAUSE_CODES = (
@@ -136,6 +137,12 @@ class _ServiceRunner:
         self.handles: List[e2e_runtime.SutHandle] = []
         self.leases: List[e2e_ports.LeaseRecord] = []
         self.started_ids: List[str] = []
+        # 로그에서 가릴 비밀 원문 — 최상위 secrets와 서비스 env의 from_env 해석값.
+        self.secret_values: set = {
+            os.environ[str(item.get("name"))]
+            for item in config.get("secrets", [])
+            if isinstance(item, dict) and os.environ.get(str(item.get("name")))
+        }
 
     def log_path(self, service_id: str) -> str:
         return str(self.run_dir / f"{service_id}.log")
@@ -181,6 +188,9 @@ class _ServiceRunner:
             )
         except ValueError as exc:
             return _failed("service_start", "service_start_failed", f"{exc}; log={log}")
+        for name, value in (service.get("env") or {}).items():
+            if isinstance(value, dict) and rendered["env"].get(name):
+                self.secret_values.add(rendered["env"][name])
         self.started_ids.append(ident)
         try:
             handle = e2e_runtime.start_service(rendered, role=ident, port=port, artifact_dir=str(self.run_dir))
@@ -217,15 +227,19 @@ class _ServiceRunner:
         finally:
             e2e_ports.release_leases(self.artifact_root, self.leases)
             for ident in self.started_ids:
-                _merge_logs(self.run_dir, ident)
+                _merge_logs(self.run_dir, ident, self.secret_values)
 
 
 def _failed(check: str, cause: str, detail: str) -> Dict[str, Any]:
     return {"ok": False, "failed_check": check, "cause": cause, "detail": detail}
 
 
-def _merge_logs(run_dir: Path, ident: str) -> None:
-    """runtime이 남긴 `server/<id>.log`·`.err.log`를 `<run>/<id>.log` 하나로 모은다."""
+def _merge_logs(run_dir: Path, ident: str, secret_values=()) -> None:
+    """runtime이 남긴 `server/<id>.log`·`.err.log`를 마스킹해 `<run>/<id>.log` 하나로 모은다.
+
+    e2e run의 서버 로그 봉인과 같게 redaction.redact_text 패턴을 적용하고, 그 패턴이 모르는
+    비밀 원문(from_env·최상위 secrets 값)은 값 자체를 MASK로 바꾼다. 원문 파일은 지운다.
+    """
     server_dir = run_dir / "server"
     target = run_dir / f"{ident}.log"
     parts = []
@@ -234,11 +248,18 @@ def _merge_logs(run_dir: Path, ident: str) -> None:
         if source.is_file():
             parts.append(f"--- {label} ---\n" + source.read_text(encoding="utf-8", errors="replace"))
             source.unlink()
-    target.write_text("\n".join(parts) if parts else "", encoding="utf-8")
+    target.write_text(_redact_log("\n".join(parts) if parts else "", secret_values), encoding="utf-8")
     try:
         server_dir.rmdir()
     except OSError:
         pass
+
+
+def _redact_log(text: str, secret_values=()) -> str:
+    # 긴 값부터 바꿔 한 비밀이 다른 비밀의 일부일 때 조각이 남지 않게 한다.
+    for value in sorted({v for v in secret_values if v}, key=len, reverse=True):
+        text = text.replace(value, e2e_redaction.MASK)
+    return e2e_redaction.redact_text(text, path="readiness_log")[0]
 
 
 # ── 표면 판정 ────────────────────────────────────────────────────────────────

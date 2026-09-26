@@ -1,0 +1,1 @@
+{"ok": true, "command": "e2e env-validate", "path": "/private/tmp/w6-manual-9427/.opal/e2e/environment.json", "summary": {"services": 1, "surfaces": 2}}
