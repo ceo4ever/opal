@@ -3,7 +3,7 @@
   "module": "test_tool",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tool CLI — resolve/check/unit/integration · e2e · scenario-* argparse 라우터 + ERROR_CODES 카탈로그 + JSON 출력 헬퍼. integration은 Ego Lite → cmux → Playwright 우선순위 후보 체인을 돈다.",
+  "description": "test-tool CLI — resolve/check/unit/integration · e2e(run/resume/status/clean/driver-verify/promote-check/env-inspect/env-validate/env-check) · scenario-* argparse 라우터 + ERROR_CODES 카탈로그 + JSON 출력 헬퍼. integration은 Ego Lite → cmux → Playwright 우선순위 후보 체인을 돈다.",
   "exports": [
     "main",
     "ERROR_CODES"
@@ -80,6 +80,12 @@ ERROR_CODES: Dict[str, str] = {
     "run_not_found":                 "지정한 run_id·artifact-dir에 해당하는 run 산출물 없음",
     "e2e_resume_state_not_found":    "재개 대상 run의 handoff 색인 없음 — awaiting_human 정지 이력 부재",
     "e2e_resume_token_expired":      "resume token 만료 — timeout은 fail이 아니라 blocked (C-HUM-2)",
+    # 환경 설정(.opal/e2e/environment.json). env-validate·env-check는 `error`로, e2e run은
+    # run.json의 `detail_code`로 싣는다. run의 최종 status·exit는 e2e_contract가 소유한다.
+    "e2e_env_config_missing":        ".opal/e2e/environment.json 없음 — env-inspect로 검토 후 설정을 작성",
+    "e2e_env_config_invalid":        "환경 설정이 스키마 검증을 통과하지 못함 — violations 참조",
+    "e2e_env_surface_missing":       "시나리오 profile에 맞는 종류의 표면이 설정에 없음",
+    "e2e_env_surface_ambiguous":     "같은 종류의 표면이 여럿이고 surface_ref로 하나를 고를 수 없음",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -214,13 +220,113 @@ def cmd_integration(args: argparse.Namespace) -> None:
     sys.exit(status_to_exit(status or ("pass" if result.get("ok") else "fail")))
 
 
+def _default_project_root() -> str:
+    """cwd의 git toplevel, 없으면 cwd."""
+    import subprocess
+
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=10
+        )
+    except (OSError, subprocess.SubprocessError):
+        completed = None
+    if completed is not None and completed.returncode == 0 and completed.stdout.strip():
+        return completed.stdout.strip()
+    return str(pathlib.Path.cwd())
+
+
+def _env_config_error(command: str, loaded: Dict[str, Any]) -> None:
+    """environment.load 결과가 missing·invalid이면 D-6 오류 응답으로 exit 1 한다."""
+    if loaded["status"] == "missing":
+        _respond(
+            {
+                "ok": False,
+                "command": command,
+                "error": "e2e_env_config_missing",
+                "path": loaded["path"],
+                "detail": "environment config not found; run `test-tool e2e env-inspect` and write .opal/e2e/environment.json",
+            },
+            1,
+        )
+    if loaded["status"] == "invalid":
+        _respond(
+            {
+                "ok": False,
+                "command": command,
+                "error": "e2e_env_config_invalid",
+                "path": loaded["path"],
+                "violations": loaded["violations"],
+            },
+            1,
+        )
+
+
+def cmd_e2e_env(args: argparse.Namespace) -> None:
+    """env-inspect/env-validate/env-check — 환경 설정 검토·검증·준비 검증 (PLAN D-6~D-8)."""
+    from lib.e2e import environment as e2e_environment
+
+    project_root = str(pathlib.Path(args.project_root or _default_project_root()).resolve())
+    command = f"e2e {args.e2e_command}"
+
+    if args.e2e_command == "env-inspect":
+        # 검토는 쓰기 0이다 — 이후 import가 바이트코드 캐시를 남기지 않게 한다.
+        sys.dont_write_bytecode = True
+        from lib.e2e.inspect import inspect_project
+
+        _respond({"ok": True, "command": command, "project_root": project_root, **inspect_project(project_root)}, 0)
+        return
+
+    loaded = e2e_environment.load(project_root, getattr(args, "file", None))
+    _env_config_error(command, loaded)
+    config = loaded["config"]
+
+    if args.e2e_command == "env-validate":
+        _respond(
+            {
+                "ok": True,
+                "command": command,
+                "path": loaded["path"],
+                "summary": {
+                    "services": len(config.get("services", [])),
+                    "surfaces": len(config.get("surfaces", [])),
+                },
+            },
+            0,
+        )
+        return
+
+    from lib.e2e.readiness import check_readiness
+
+    result = check_readiness(
+        config,
+        project_root=project_root,
+        artifact_root=getattr(args, "artifact_root", None),
+    )
+    _respond(
+        {
+            "ok": True,
+            "command": command,
+            "path": loaded["path"],
+            "ready": result["ready"],
+            "secrets": result["secrets"],
+            "surfaces": result["surfaces"],
+            "run_dir": result["run_dir"],
+        },
+        0 if result["ready"] else 1,
+    )
+
+
 def cmd_e2e(args: argparse.Namespace) -> None:
-    """e2e 서브명령군 라우터 — run/resume/status/clean/driver-verify/promote-check.
+    """e2e 서브명령군 라우터 — run/resume/status/clean/driver-verify/promote-check/env-*.
 
     `run`·`resume`의 exit은 `status_to_exit()` 결과로만 결정한다. 재시도 루프를 내장하지
     않는다. `status`·`clean`은 조회·정리 명령이므로 exit `0`이며(§B.1.3·§B.1.4) 새 exit
     값을 배정하지 않는다 — `clean`의 `infra_error` 승격도 payload로만 알린다.
     """
+    if args.e2e_command in ("env-inspect", "env-validate", "env-check"):
+        cmd_e2e_env(args)
+        return
+
     from lib.e2e.orchestrator import run_e2e
 
     if args.e2e_command == "promote-check":
@@ -407,6 +513,22 @@ def _build_parser() -> argparse.ArgumentParser:
     promotion_source.add_argument("--artifact-dir", metavar="PATH", help="검증할 run 산출물 디렉터리")
     promotion_source.add_argument("--run-json", metavar="PATH", help="검증할 run.json 직접 경로")
     p_e2e_promote.add_argument("--artifact-root", metavar="PATH", help="--run-id 탐색용 산출물 루트")
+
+    # 환경 설정 3종 (PLAN D-6~D-8). --project-root 생략 시 cwd의 git toplevel(없으면 cwd).
+    p_env_inspect = e2e_sub.add_parser(
+        "env-inspect", help="프로젝트를 읽기 전용으로 훑어 표면 후보·driver 설치·비밀 이름을 보고한다 (쓰기 0)"
+    )
+    p_env_inspect.add_argument("--project-root", metavar="PATH", help="프로젝트 루트 (기본 git toplevel 또는 cwd)")
+    p_env_validate = e2e_sub.add_parser(
+        "env-validate", help=".opal/e2e/environment.json을 스키마 검증한다 (유효 exit 0, 부재·무효 exit 1)"
+    )
+    p_env_validate.add_argument("--project-root", metavar="PATH", help="프로젝트 루트 (기본 git toplevel 또는 cwd)")
+    p_env_validate.add_argument("--file", metavar="PATH", help="검증할 설정 파일 (기본 <project>/.opal/e2e/environment.json)")
+    p_env_check = e2e_sub.add_parser(
+        "env-check", help="설정의 표면별 준비 상태를 실제 기동·HTTP·실행기 확인으로 판정한다 (ready exit 0)"
+    )
+    p_env_check.add_argument("--project-root", metavar="PATH", help="프로젝트 루트 (기본 git toplevel 또는 cwd)")
+    p_env_check.add_argument("--artifact-root", metavar="PATH", help="산출물 루트 (기본 <project>/.e2e/artifacts)")
 
     # scenario-init / scenario-lock / scenario-mark / scenario-status (lib/scenario.py로 격리)
     add_scenario_subparsers(subparsers)

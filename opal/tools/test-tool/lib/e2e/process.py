@@ -3,8 +3,8 @@
   "module": "process",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T01 lib/e2e OS 분기 유일 지점(TRD.md TD-16). 프로세스 그룹 기동(spawn_process_group)·생존 판정(pid_alive)·그룹 구성원 재열거(process_group_members)·그룹 단위 회수(terminate_process_group)·임시 디렉터리 해석(temp_root)을 제공한다. 이름 패턴 매칭이 아니라 pgid 범위로만 열거·회수한다(CONTRACT.md §C.1·§C.3).",
-  "exports": ["SpawnedProcess", "TerminationResult", "spawn_process_group", "pid_alive", "process_group_members", "terminate_process_group", "temp_root"]
+  "description": "T01 lib/e2e OS 분기 유일 지점(TRD.md TD-16). 프로세스 그룹 기동(spawn_process_group)·생존 판정(pid_alive)·그룹 구성원 재열거(process_group_members)·그룹 단위 회수(terminate_process_group)·임시 디렉터리 해석(temp_root)·호스트 플랫폼 판정(host_platform: macos·windows·linux)을 제공한다. 이름 패턴 매칭이 아니라 pgid 범위로만 열거·회수한다(CONTRACT.md §C.1·§C.3).",
+  "exports": ["SpawnedProcess", "TerminationResult", "spawn_process_group", "pid_alive", "process_group_members", "terminate_process_group", "temp_root", "host_platform"]
 }
 
 lib.e2e.process — OS·실행기 분기의 단일 어댑터 모듈(TRD.md TD-16, CONTRACT.md §C.2 [MUST]).
@@ -20,6 +20,7 @@ from __future__ import annotations
 import os
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 from dataclasses import dataclass
@@ -185,3 +186,16 @@ def terminate_process_group(
 def temp_root() -> Path:
     """TMPDIR(또는 플랫폼 기본 임시 루트)를 해석한다."""
     return Path(tempfile.gettempdir())
+
+
+def host_platform() -> str:
+    """호스트 플랫폼을 `macos`·`windows`·`linux` 중 하나로 돌려준다.
+
+    데스크톱 표면(macos-app·windows-app·linux-app)의 플랫폼 일치 판정이 이 값을 쓴다.
+    darwin·win32/cygwin 외의 POSIX 계열은 linux로 묶는다.
+    """
+    if sys.platform == "darwin":
+        return "macos"
+    if sys.platform.startswith(("win32", "cygwin")):
+        return "windows"
+    return "linux"

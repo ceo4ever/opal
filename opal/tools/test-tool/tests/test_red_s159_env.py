@@ -254,19 +254,27 @@ class TestEnvCheckReady(unittest.TestCase):
             root = pathlib.Path(tmp)
             server_script = root / "server.py"
             server_script.write_text(
-                "import http.server, json\n"
+                "import argparse, http.server, json\n"
                 "class H(http.server.BaseHTTPRequestHandler):\n"
                 "    def do_GET(self):\n"
                 "        self.send_response(200)\n"
                 "        self.send_header('Content-Type', 'application/json')\n"
                 "        self.end_headers()\n"
                 "        self.wfile.write(json.dumps({'status': 'ok'}).encode())\n"
-                "http.server.HTTPServer(('127.0.0.1', 0), H)\n",
+                "parser = argparse.ArgumentParser()\n"
+                "parser.add_argument('--port', type=int, required=True)\n"
+                "args = parser.parse_args()\n"
+                "http.server.HTTPServer(('127.0.0.1', args.port), H).serve_forever()\n",
                 encoding="utf-8",
             )
             config = {
                 "schema_version": "1.0",
-                "services": [{"id": "api-svc", "command": [_PYTHON, str(server_script)]}],
+                "services": [
+                    {
+                        "id": "api-svc",
+                        "command": [_PYTHON, str(server_script), "--port", "{port}"],
+                    }
+                ],
                 "surfaces": [
                     {"id": "api1", "kind": "api", "service": "api-svc", "health_path": "/health"},
                     {"id": "mac1", "kind": "macos-app", "app": {"path": "/System/Applications/Calculator.app"}},

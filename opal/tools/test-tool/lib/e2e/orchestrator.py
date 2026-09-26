@@ -3,8 +3,9 @@
   "module": "orchestrator",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T03 run 수명주기 — created→context_resolved→ports_leased→(sut_starting→sut_ready)→최종 상태→cleanup_* 상태 머신을 돌리고 run.json(§A.1)·journal.json(§A.2)·owned.json(§A.3)을 프로젝트 로컬 기본 경로 또는 명시적 격리 경로에 기록한다. 상태·exit·error 문자열은 전부 lib.e2e_contract의 상수·함수에서 끌어오며 리터럴로 만들지 않는다(CONTRACT.md 계약 규칙 C-125-1, TRD.md RK-8).",
-  "exports": ["RUN_ID_PATTERN", "run_e2e"]
+  "description": "T03 run 수명주기 — created→context_resolved→ports_leased→(sut_starting→sut_ready)→최종 상태→cleanup_* 상태 머신을 돌리고 run.json(§A.1)·journal.json(§A.2)·owned.json(§A.3)을 프로젝트 로컬 기본 경로 또는 명시적 격리 경로에 기록한다. SUT는 프로젝트 설정(`.opal/e2e/environment.json`, lib.e2e.environment)의 서비스를 의존 순서로 기동하며, 포트 임대 역할은 설정 서비스 id(설정 부재·무효면 backend·frontend 호환 역할)다. 설정 부재·무효·표면 선택 실패는 SUT 기동 시점에 서비스를 띄우지 않고 blocked로 끝낸다. 브라우저 진입 URL은 선택된 web 표면, api executor 문맥은 선택된 api 표면에서 온다. 상태·exit·error 문자열은 전부 lib.e2e_contract의 상수·함수에서 끌어오며 리터럴로 만들지 않는다(CONTRACT.md 계약 규칙 C-125-1, TRD.md RK-8).",
+  "exports": ["RUN_ID_PATTERN", "run_e2e"],
+  "depends": ["e2e_contract", "environment", "ports", "runtime", "drivers", "executors", "evidence", "freshness", "target"]
 }
 
 lib.e2e.orchestrator — 1회 실행이며 재시도 루프를 내장하지 않는다(CONTRACT.md §B.1.1
@@ -26,6 +27,7 @@ from typing import Any, Dict, List, Optional
 
 from lib import e2e_contract
 from lib.e2e import drivers as e2e_drivers
+from lib.e2e import environment as e2e_environment
 from lib.e2e import evidence as e2e_evidence
 from lib.e2e import executors as e2e_executors
 from lib.e2e import freshness as e2e_freshness
@@ -82,8 +84,23 @@ _EXECUTOR_HUMAN = "human"
 # 분기 근거이며, 두 경로가 섞이지 않게 여기 한 곳에서만 결정한다.
 _SUT_DEPENDENT_EXECUTOR_TYPES = ("api",)
 
-_ROLE_BACKEND = "backend"
-_ROLE_FRONTEND = "frontend"
+# 설정 파일이 없거나 무효일 때의 호환 임대 역할(D-10). 설정이 유효하면 임대 역할은
+# 설정 서비스 id(의존 순서)이며 이 튜플을 쓰지 않는다.
+_FALLBACK_ROLES = ("backend", "frontend")
+
+# 설정 부재·무효·표면 선택 실패의 run.json `detail_code`(D-9·D-10). 최종 status는
+# e2e_contract의 `blocked`이며 이 모듈은 새 status·exit 값을 만들지 않는다(C-1).
+DETAIL_ENV_CONFIG_MISSING = "e2e_env_config_missing"
+DETAIL_ENV_CONFIG_INVALID = "e2e_env_config_invalid"
+_ENV_SETUP_HINT = (
+    "inspect the project with `test-tool e2e env-inspect` and write the config with `//e2e setup`"
+)
+
+# executor 종류 → 그 executor가 쓰는 표면 종류(D-9). browser는 web 표면의 진입 URL을,
+# api는 api 표면의 base URL·health 경로를 소비한다.
+_SURFACE_KIND_OF_EXECUTOR = {"browser": "web", "api": "api"}
+_SURFACE_WEB = "web"
+_SURFACE_API = "api"
 _DEFAULT_ARTIFACT_RELATIVE = Path(".e2e") / "artifacts"
 DEFAULT_ARTIFACT_RETENTION = 20
 _SCENARIO_FILENAME = "test-scenario.json"
@@ -431,7 +448,7 @@ def _evidence_failure_payload(state: Dict[str, Any], *, scenario_id: Optional[st
         "run_json_path": None,
         "artifact_dir": state.get("artifact_dir") or "",
         "executed": False,
-        "urls": {"frontend": None, "backend": None},
+        "urls": {role: None for role in _FALLBACK_ROLES},
         "project_root": None,
         "lease_reclaimed": [],
         "candidates": [],
@@ -504,6 +521,12 @@ def _run_e2e(
 
     journal.to(STATE_CONTEXT_RESOLVED, {"target": context.target, "commit": context.commit})
 
+    # 프로젝트 E2E 환경 설정(D-9·D-10). 부재·무효여도 SUT 기동 전 단계는 그대로 진행하고,
+    # 기동 시점에 도달해서야 blocked로 끝낸다.
+    environment = e2e_environment.load(context.project_root)
+    config = environment["config"] if environment["status"] == "ok" else None
+    roles = tuple(e2e_environment.service_order(config)) if config is not None else _FALLBACK_ROLES
+
     # ── ports_leased ─────────────────────────────────────────────────────────
     leases: List[e2e_ports.LeaseRecord] = []
     reclaimed: List[str] = []
@@ -511,7 +534,7 @@ def _run_e2e(
         leases, reclaimed = e2e_ports.lease_ports(
             artifact_root=resolved_root,
             run_id=resolved_run_id,
-            roles=(_ROLE_BACKEND, _ROLE_FRONTEND),
+            roles=roles,
         )
     except e2e_ports.PortLeaseError as exc:
         journal.to(STATUS_INFRA_ERROR, {"detail_code": exc.detail_code})
@@ -657,6 +680,33 @@ def _run_e2e(
         if reused is not None:
             return reused
 
+    # ── sut_starting 직전: 설정·표면 판정(D-9·D-10) ─────────────────────────
+    # 설정이 없거나 무효이거나 시나리오가 요구하는 표면을 고를 수 없으면 서비스를 하나도
+    # 띄우지 않고 blocked로 끝낸다. status·exit은 e2e_contract 값 그대로다(C-1).
+    surfaces, env_detail_code, env_detail = _resolve_run_surfaces(
+        environment, scenario, leases=leases
+    )
+    if env_detail_code is not None:
+        journal.to(STATUS_BLOCKED, {"detail_code": env_detail_code})
+        return _finalize(
+            status=STATUS_BLOCKED,
+            journal=journal,
+            writer=writer,
+            context=context,
+            leases=leases,
+            reclaimed=reclaimed,
+            handles=[],
+            candidates=candidates,
+            artifact_root=resolved_root,
+            artifact_dir=artifact_dir,
+            run_id=resolved_run_id,
+            scenario_id=scenario_id,
+            scenario=scenario,
+            started_at=started_at,
+            detail_code=env_detail_code,
+            detail=env_detail,
+        )
+
     # ── sut_starting → sut_ready ─────────────────────────────────────────────
     journal.to(STATE_SUT_STARTING)
     try:
@@ -665,6 +715,7 @@ def _run_e2e(
             leases=leases,
             artifact_dir=artifact_dir,
             artifact_root=resolved_root,
+            config=config,
         )
     except e2e_runtime.SutStartupError as exc:
         journal.to(STATUS_INFRA_ERROR, {"reason": exc.reason})
@@ -675,7 +726,8 @@ def _run_e2e(
             context=context,
             leases=leases,
             reclaimed=reclaimed,
-            handles=handles,
+            # 실패 전에 health까지 통과한 서비스는 _finalize가 회수·대장 기록한다.
+            handles=list(getattr(exc, "started_handles", None) or []),
             candidates=candidates,
             artifact_root=resolved_root,
             artifact_dir=artifact_dir,
@@ -697,7 +749,7 @@ def _run_e2e(
             runtime_context=_executor_runtime_context(
                 artifact_dir, task_path, writer,
                 project_root=context.project_root,
-                backend_url=_urls(leases)[_ROLE_BACKEND],
+                surfaces=surfaces,
                 action_log=action_log, run_id=resolved_run_id,
             ),
             driver_cache=driver_cache,
@@ -766,7 +818,7 @@ def _run_e2e(
         run_id=resolved_run_id,
         runtime_context=_executor_runtime_context(
             artifact_dir, task_path, writer,
-            backend_url=_urls(leases)[_ROLE_BACKEND],
+            surfaces=surfaces,
             action_log=action_log, run_id=resolved_run_id,
         ),
         action_log=action_log,
@@ -854,7 +906,7 @@ def _reuse_fresh_evidence(
         "run_json_path": entry.get("run_json_path"),
         "artifact_dir": previous.get("artifact_dir") or str(Path(str(entry["run_json_path"])).parent),
         "executed": False,
-        "urls": previous.get("urls") or {"frontend": None, "backend": None},
+        "urls": previous.get("urls") or _urls(leases),
         "project_root": previous.get("project_root") or context.project_root,
         "lease_reclaimed": list(reclaimed),
         "candidates": list(candidates),
@@ -1178,10 +1230,11 @@ def _open_browser(
                 "e2e_no_executor_registered", f"browser driver {key} is no longer registered"
             )
         driver = factory(runtime_context=dict(context))
-    url = (context.get("urls") or {}).get(_ROLE_FRONTEND)
+    # 진입 URL은 선택된 web 표면(서비스 임대 URL 또는 선언 url)+path다(D-9).
+    url = context.get("entry_url")
     if not url:
         raise e2e_drivers.DriverError(
-            "driver_open_url_required", "browser step execution requires a leased frontend url"
+            "driver_open_url_required", "browser step execution requires a web surface url"
         )
     # `isolation_key`가 driver가 대장에 올리는 page handle이 된다(§A.3 `browser_pages`).
     # run_id로 이름을 잡아야 정리가 **이 run이 연 page**만 겨냥한다(C-2) — 기본값인
@@ -1354,22 +1407,26 @@ def _executor_runtime_context(
     writer: e2e_evidence.EvidenceWriter,
     *,
     project_root: Optional[str] = None,
-    backend_url: Optional[str] = None,
+    surfaces: Optional[Dict[str, Dict[str, Any]]] = None,
     action_log: Optional[e2e_executors.ActionLog] = None,
     run_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """executor·driver가 소비하는 runtime context(§B.3 `probe` 입력, §B.2 동일).
 
-    `backend_url`은 SUT가 실제로 기동된 뒤에만 채운다 — 값이 있다는 것 자체가
-    "health를 물어볼 대상이 존재한다"는 뜻이어야 하기 때문이다(§A.8, NR-7).
+    `surfaces`는 `_resolve_run_surfaces`가 고른 표면 종류별 접속 값이며 SUT가 실제로
+    기동된 뒤에만 넘긴다 — `backend_url`이 있다는 것 자체가 "health를 물어볼 대상이
+    존재한다"는 뜻이어야 하기 때문이다(§A.8, NR-7). api 표면은 `backend_url`·
+    `health_path`(executors/api.py가 읽는 키)로, web 표면은 브라우저 진입 `entry_url`로 싣는다.
 
     `writer`·`action_log`는 **후보 해석 시점부터** 실린다. driver는 이 둘을 생성자가 받은
     `runtime_context`에서 lazy하게 읽고(§A.4 행 적재·§A.12 증적 관문), 후보 해석이 만든
     인스턴스를 step 실행이 그대로 이어받기 때문이다 — 나중에 끼워 넣으면 그 사이에 적힌
     행동 기록이 갈 곳을 잃는다.
     """
-    return {
-        "backend_url": backend_url,
+    api_surface = (surfaces or {}).get(_SURFACE_API) or {}
+    web_surface = (surfaces or {}).get(_SURFACE_WEB) or {}
+    context: Dict[str, Any] = {
+        "backend_url": api_surface.get("url"),
         "artifact_dir": artifact_dir,
         "project_root": project_root,
         "task_path": task_path,
@@ -1377,6 +1434,11 @@ def _executor_runtime_context(
         "action_log": action_log,
         "run_id": run_id,
     }
+    if api_surface:
+        context["health_path"] = api_surface.get("health_path")
+    if web_surface:
+        context["entry_url"] = web_surface.get("entry_url")
+    return context
 
 
 def _register_executors() -> None:
@@ -1492,38 +1554,118 @@ def _resolve_executor_candidates(
     return (candidates, probes)
 
 
+def _required_surface_kinds(scenario: dict) -> tuple:
+    """profile이 요구하는 표면 종류와 있으면 쓰는 표면 종류 `(required, optional)`(D-9).
+
+    browser→web, api→api, hybrid→web+api. 요구 executor에 browser·api가 없는 profile
+    (collaborative·manual)은 설정에 있는 web·api 표면만 선택적으로 쓴다.
+    """
+    required: List[str] = []
+    for executor_type in _required_executor_types(scenario):
+        kind = _SURFACE_KIND_OF_EXECUTOR.get(executor_type)
+        if kind is not None and kind not in required:
+            required.append(kind)
+    if required:
+        return tuple(required), ()
+    if scenario.get("profile") in e2e_contract.PROFILES:
+        return (), (_SURFACE_WEB, _SURFACE_API)
+    return (), ()
+
+
+def _surface_access(surface: Dict[str, Any], port_of: Dict[str, int]) -> Dict[str, Any]:
+    """표면 1건의 접속 값. `service` 표면은 그 서비스의 임대 URL, `url` 표면은 선언 URL이다."""
+    if surface.get("service"):
+        base = f"http://{e2e_environment.DEFAULT_HOST}:{port_of[surface['service']]}"
+    else:
+        base = str(surface.get("url") or "")
+    access: Dict[str, Any] = {"id": surface.get("id"), "kind": surface.get("kind"), "url": base.rstrip("/")}
+    if surface.get("kind") == _SURFACE_WEB:
+        access["entry_url"] = access["url"] + str(surface.get("path") or e2e_environment.DEFAULT_WEB_PATH)
+    elif surface.get("kind") == _SURFACE_API:
+        access["health_path"] = str(surface.get("health_path") or e2e_environment.DEFAULT_API_HEALTH_PATH)
+    return access
+
+
+def _resolve_run_surfaces(
+    environment: Dict[str, Any],
+    scenario: dict,
+    *,
+    leases: List[e2e_ports.LeaseRecord],
+) -> tuple:
+    """SUT 기동 직전 설정·표면 판정. `(surfaces, detail_code, detail)`을 돌려준다.
+
+    detail_code가 None이 아니면 run은 서비스를 띄우지 않고 blocked로 끝난다(D-9·D-10).
+    surfaces는 `{"web": access, "api": access}` 중 고른 종류만 담는다.
+    """
+    status = environment.get("status")
+    if status == "missing":
+        return {}, DETAIL_ENV_CONFIG_MISSING, (
+            f"E2E environment config not found at {environment.get('path')}; {_ENV_SETUP_HINT}"
+        )
+    if status != "ok":
+        codes = sorted({str(item.get("code")) for item in environment.get("violations") or []})
+        return {}, DETAIL_ENV_CONFIG_INVALID, (
+            f"E2E environment config {environment.get('path')} is invalid "
+            f"({', '.join(codes) or 'unknown violation'}); validate with `test-tool e2e env-validate`, "
+            f"{_ENV_SETUP_HINT}"
+        )
+
+    config = environment["config"]
+    port_of = {record.role: record.port for record in leases}
+    required, optional = _required_surface_kinds(scenario)
+    surfaces: Dict[str, Dict[str, Any]] = {}
+    for kind in (*required, *optional):
+        picked = e2e_environment.select_surface(config, kind, scenario.get("surface_ref"))
+        if picked["status"] == "ok":
+            surfaces[kind] = _surface_access(picked["surface"], port_of)
+            continue
+        if picked["status"] == "missing" and kind not in required:
+            continue
+        candidates = ", ".join(str(item) for item in picked.get("candidates") or []) or "none"
+        return {}, picked["detail_code"], (
+            f"profile '{scenario.get('profile')}' needs one '{kind}' surface "
+            f"(status={picked['status']}, candidates: {candidates}, "
+            f"surface_ref={scenario.get('surface_ref')!r}); {_ENV_SETUP_HINT}"
+        )
+    return surfaces, None, None
+
+
 def _start_sut(
     *,
     context: e2e_target.TargetContext,
     leases: List[e2e_ports.LeaseRecord],
     artifact_dir: str,
     artifact_root: str,
+    config: Optional[Dict[str, Any]] = None,
 ) -> List[e2e_runtime.SutHandle]:
-    """임대 포트 위에 backend·frontend를 strict-port로 기동하고 health를 통과시킨다.
+    """설정 서비스를 의존 순서로 임대 포트 위에 기동하고 health를 통과시킨다.
 
-    기동·회수 자체는 T01 lib/e2e/runtime.py가 소유하며(D-11) 이 함수는 순서와 lease
-    confirm만 맡는다. health를 통과한 포트만 §A.7 `confirmed`로 올린다.
+    선언된 서비스는 profile과 무관하게 전부 1회씩 기동한다(여러 표면이 공유해도 1회).
+    기동·health·회수 자체는 lib/e2e/runtime.py가 소유하며 이 함수는 순서와 lease
+    confirm만 맡는다. health를 통과한 포트만 §A.7 `confirmed`로 올린다. 도중에 실패하면
+    그 전에 기동한 handle을 예외의 `started_handles`에 실어 호출자가 회수·기록하게 한다.
     """
+    if config is None:
+        return []
     port_of = {record.role: record.port for record in leases}
+    services = {service["id"]: service for service in config.get("services", [])}
     handles: List[e2e_runtime.SutHandle] = []
-
-    backend = e2e_runtime.start_backend(
-        source_root=context.project_root,
-        artifact_dir=artifact_dir,
-        port=port_of[_ROLE_BACKEND],
-    )
-    handles.append(backend)
-    e2e_runtime.wait_healthy(backend.url)
-    e2e_ports.confirm_lease(artifact_root, _lease_of(leases, _ROLE_BACKEND))
-
-    frontend = e2e_runtime.start_frontend(
-        source_root=context.project_root,
-        artifact_dir=artifact_dir,
-        port=port_of[_ROLE_FRONTEND],
-        backend_url=backend.url,
-    )
-    handles.append(frontend)
-    e2e_ports.confirm_lease(artifact_root, _lease_of(leases, _ROLE_FRONTEND))
+    for service_id in e2e_environment.service_order(config):
+        rendered = e2e_environment.render_service(
+            services[service_id],
+            port=port_of[service_id],
+            ports_by_id=port_of,
+            project_root=context.project_root,
+        )
+        try:
+            handle = e2e_runtime.start_service(
+                rendered, role=service_id, port=port_of[service_id], artifact_dir=artifact_dir
+            )
+        except e2e_runtime.SutStartupError as exc:
+            exc.started_handles = list(handles)
+            raise
+        handles.append(handle)
+        e2e_ports.confirm_lease(artifact_root, _lease_of(leases, service_id))
     return handles
 
 
@@ -1535,11 +1677,12 @@ def _lease_of(leases: List[e2e_ports.LeaseRecord], role: str) -> e2e_ports.Lease
 
 
 def _urls(leases: List[e2e_ports.LeaseRecord]) -> dict:
-    urls: Dict[str, Optional[str]] = {"frontend": None, "backend": None}
-    for record in leases:
-        if record.role in urls:
-            urls[record.role] = f"http://127.0.0.1:{record.port}"
-    return urls
+    """임대 역할(설정 서비스 id)별 URL. 임대가 없으면 호환 역할 키를 null로 둔다."""
+    if not leases:
+        return {role: None for role in _FALLBACK_ROLES}
+    return {
+        record.role: f"http://{e2e_environment.DEFAULT_HOST}:{record.port}" for record in leases
+    }
 
 
 def _achieved_fidelity(

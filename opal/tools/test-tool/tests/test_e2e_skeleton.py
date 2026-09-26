@@ -4,7 +4,7 @@
   "task": "127-260912-oppl-E2E-하네스-구현",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "T01 W-5 관통 검증 — S-5(health/openapi 200) · S-6(CORS 실 HTTP) · S-7(CDP real-usage 관통, 호출 순서 계약 ①~⑤ 준수) · S-8(pgid 회수 전건·7823 비간섭·dist 미생성)를 lib/e2e/ 골격(find_free_port·start_backend·start_frontend·wait_healthy·stop_all)으로 검증한다.",
+  "description": "설정 기반 SUT 관통 검증 — 이 저장소 `.opal/e2e/environment.json`을 environment.load로 읽고 render_service→start_service(health 포함)로 backend·frontend를 기동해 S-5(health/openapi 200) · S-6(CORS 실 HTTP) · S-7(CDP real-usage 관통, 호출 순서 계약 ①~⑤ 준수, frontend→backend URL은 설정 env 치환) · S-8(pgid 회수 전건·7823 비간섭·dist 미생성)를 검증한다.",
   "scenarios": ["S-5", "S-6", "S-7", "S-8"],
   "exports": ["TestBackendHealthAndOpenapi", "TestCorsRealHttp", "TestBrowserRealUsage", "TestCleanupAndNonInterference"]
 }
@@ -25,7 +25,7 @@ _TOOL_DIR = pathlib.Path(__file__).parent.parent
 sys.path.insert(0, str(_TOOL_DIR))
 _SOURCE_ROOT = _TOOL_DIR.parent.parent.parent  # opal/tools/test-tool -> repo root
 
-# RED: 이 import가 지금은 ModuleNotFoundError를 던진다.
+from lib.e2e import environment as e2e_environment  # noqa: E402
 from lib.e2e import ports as e2e_ports  # noqa: E402
 from lib.e2e import runtime as e2e_runtime  # noqa: E402
 from lib.e2e import process as e2e_process  # noqa: E402
@@ -54,12 +54,28 @@ def _console_7823_baseline():
         return None
 
 
+def _repo_environment():
+    """이 저장소 설정을 읽는다. 무효·부재면 테스트 전제가 깨진 것이므로 즉시 실패한다."""
+    loaded = e2e_environment.load(str(_SOURCE_ROOT))
+    assert loaded["status"] == "ok", f"repo environment.json not ok: {loaded!r}"
+    return loaded["config"]
+
+
+def _service(config, service_id):
+    for service in config["services"]:
+        if service["id"] == service_id:
+            return service
+    raise AssertionError(f"service '{service_id}' missing in repo environment.json")
+
+
 class _SutFixtureMixin:
-    """backend·frontend SUT를 임대 포트로 기동/회수하는 공통 fixture."""
+    """이 저장소 설정의 backend·frontend 서비스를 임대 포트로 기동/회수하는 공통 fixture."""
 
     def setUp(self):
         self.artifact_dir = tempfile.mkdtemp(prefix="opal-e2e-skeleton-")
         self.handles = []
+        self.config = _repo_environment()
+        self.ports_by_id = {}
         self._console_baseline = _console_7823_baseline()
         self._git_status_before = subprocess.run(
             ["git", "status", "--porcelain"],
@@ -67,6 +83,16 @@ class _SutFixtureMixin:
             capture_output=True,
             text=True,
         ).stdout
+        # dist 미생성 단언 대상은 설정의 frontend 작업 폴더에서 정한다.
+        frontend = _service(self.config, "frontend")
+        self._frontend_dist = pathlib.Path(
+            e2e_environment.render_service(
+                frontend,
+                port=0,
+                ports_by_id={svc["id"]: 0 for svc in self.config["services"]},
+                project_root=str(_SOURCE_ROOT),
+            )["cwd"]
+        ) / "dist"
 
     def tearDown(self):
         if self.handles:
@@ -86,35 +112,39 @@ class _SutFixtureMixin:
         ).stdout
         assert git_status_after == self._git_status_before, "repo dirty state changed by test run"
 
-        dist_dir = _SOURCE_ROOT / "dashboard" / "frontend" / "dist"
-        assert not dist_dir.exists(), "dashboard/frontend/dist must not be created"
+        assert not self._frontend_dist.exists(), f"{self._frontend_dist} must not be created"
 
         shutil.rmtree(self.artifact_dir, ignore_errors=True)
 
-    def _start_backend(self, *, port: int, cors_origin: str | None = None):
+    def _start(self, service_id: str, *, port: int, env_extra: dict | None = None):
         # D-11/D-13: port는 호출자가 확보해 필수 키워드 인자로 넘긴다.
+        self.ports_by_id[service_id] = port
+        rendered = e2e_environment.render_service(
+            _service(self.config, service_id),
+            port=port,
+            ports_by_id=self.ports_by_id,
+            project_root=str(_SOURCE_ROOT),
+        )
+        rendered["env"].update(env_extra or {})
+        # start_service는 설정 health(backend: http /health + status 필드, frontend: 포트 오픈)를
+        # 통과해야 handle을 돌려준다.
+        handle = e2e_runtime.start_service(
+            rendered, role=service_id, port=port, artifact_dir=self.artifact_dir
+        )
+        self.handles.append(handle)
+        return handle, rendered
+
+    def _start_backend(self, *, port: int, cors_origin: str | None = None):
         env_extra = {}
         if cors_origin:
             env_extra["OPAL_CONSOLE_CORS_ORIGINS"] = cors_origin
-        handle = e2e_runtime.start_backend(
-            source_root=str(_SOURCE_ROOT),
-            artifact_dir=self.artifact_dir,
-            port=port,
-            env_extra=env_extra,
-        )
-        self.handles.append(handle)
-        e2e_runtime.wait_healthy(handle.url, timeout_s=60.0)
+        handle, _ = self._start("backend", port=port, env_extra=env_extra)
         return handle
 
     def _start_frontend(self, *, port: int, backend_url: str):
-        handle = e2e_runtime.start_frontend(
-            source_root=str(_SOURCE_ROOT),
-            artifact_dir=self.artifact_dir,
-            port=port,
-            backend_url=backend_url,
-            env_extra={},
-        )
-        self.handles.append(handle)
+        handle, rendered = self._start("frontend", port=port)
+        # H-2: 설정 env의 {service.backend.url} 치환이 기동된 backend URL과 같아야 한다.
+        assert rendered["env"].get("VITE_API_BASE_URL") == backend_url, rendered["env"]
         return handle
 
 
@@ -180,7 +210,7 @@ class TestBrowserRealUsage(_SutFixtureMixin, unittest.TestCase):
         fe_port = e2e_ports.find_free_port()          # ① frontend 포트 먼저
         be_port = e2e_ports.find_free_port()           # ② backend 포트
         fe_origin = f"http://127.0.0.1:{fe_port}"      # ③ ①의 정수로 origin 조립
-        backend = self._start_backend(port=be_port, cors_origin=fe_origin)  # ④ (start_backend 내부에서 wait_healthy)
+        backend = self._start_backend(port=be_port, cors_origin=fe_origin)  # ④ (start_service 내부에서 http health)
         frontend = self._start_frontend(port=fe_port, backend_url=backend.url)  # ⑤
 
         # [MUST] ③에서 주입한 origin의 포트와 ⑤에서 vite가 실제로 바인딩한

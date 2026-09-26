@@ -42,3 +42,13 @@
 | 22 | 2026-09-26 19:48 | EXECUTE | GATE | RED 결과 확인 — S-1~S-7 15개 테스트 개별 실패, scenario-red 7건·scenario-lock 완료. W-2 디스패치 | Pass(보정 1건 병행) |
 | 23 | 2026-09-26 19:49 | EXECUTE | ERROR | RED S-6·S-7이 동결된 run stdout 14키(test_e2e_runtime.py:375-387)에 없는 `detail_code`·`lease_released`·`owned`를 stdout에서 단언 — TEST-SCENARIO S-6(run.json 기준)과도 불일치 | 보정 지시 |
 | 24 | 2026-09-26 19:49 | EXECUTE | FIX | #23 — RED 작성자(opal-test-agent)에게 run.json·owned 대장에서 읽도록 보정 지시(기대값 약화 금지, 작성자≠구현자 유지) | 진행 |
+| 25 | 2026-09-26 20:08 | EXECUTE | GATE | RED 보정 확인 — S-6·S-7이 run.json·owned 대장에서 읽도록 바뀜, 기대값 불변, 15 failed 유지. 체크포인트 5e87a2c(W-1+RED) | Pass |
+| 26 | 2026-09-26 20:09 | EXECUTE | GATE | W-2 직접 검증 — environment.json이 기존 기동을 그대로 옮김, environment·skeleton 테스트+S-5 41 passed, lib의 `dashboard` 0건, OS 분기 process.py 외 신규 없음. 기존 회귀 32건은 W-3 전까지 의도된 깨짐 | Pass |
+| 27 | 2026-09-26 20:09 | EXECUTE | DECISION | W-2 해석 수용(detail): `{{`·`}}` 리터럴 중괄호, 상태 불일치 지속은 health_bad_response, data/external_integrations 필드 형식, from_env 미설정은 missing_env로 보고. D-3·D-8·D-5와 충돌 없음 | 수용 |
+| 28 | 2026-09-26 20:10 | EXECUTE | DECISION | W-3(orchestrator)·W-4(CLI·inspect·readiness) 병렬 디스패치 — 변경 파일 겹침 없음, 오류 코드 이름은 D-11 고정. env-check check name은 i3 평가자 제안대로 고정 지시 | 진행 |
+| 29 | 2026-09-26 20:00 | EXECUTE | ESCALATION | 캡틴 질문: 탐지로 못 정하는 경우 PROJECT.md로 시스템 환경을 확인하고 인터뷰로 추정하는 폴백 추가 가능 여부. PM 권고: 스킬 setup 흐름에 3단 체인(env-inspect → PROJECT.md 추정 → 인터뷰 확정)으로 W-5에 포함하고, test-tool은 결정론 유지. 설계 게이트 이후 D-12·W-5 변경이므로 포함 여부를 캡틴에게 결정 요청 | W-5 디스패치 전 대기(W-3·W-4 병행) |
+| 30 | 2026-09-26 20:02 | EXECUTE | GATE | W-3 직접 검증 — S-6·S-7·S-5 RED 8 passed, run_environment·runtime·drivers 87 passed, orchestrator `dashboard` 0건. 워커 보고: 회귀 32건 복구, 기준선 여정 동일 판정(blocked/19/fragment_value_ref_missing), 중간 기동 실패 시 선행 handle 회수 누수 경로 보강 | Pass |
+| 31 | 2026-09-26 20:02 | EXECUTE | IMPROVE | 서비스 미기동 run의 안내 로그 경로가 `evidence.py` EVIDENCE_PATHS["server_log"]의 `server/backend.log`로 고정 — 기능 영향 없음(실 서비스 로그는 `server/<id>.log`). 범위 밖이라 후속 후보로 DONE에 기록 | 보류(후속) |
+| 32 | 2026-09-26 20:03 | EXECUTE | GATE | W-4 직접 검증 — 저장소 env-validate exit 0(서비스 2·표면 2), env-inspect 후보·driver 설치 여부 반환, env_commands 14 passed. 워커 보고: 전체 543 passed·2 failed(S-3 fixture 결함, W-5 몫 1건) | Pass(RED 보정 대기) |
+| 33 | 2026-09-26 20:03 | EXECUTE | ERROR | RED S-3 fixture 결함 확인 — server.py가 포트 0 bind 후 serve_forever 미호출로 즉시 종료, command에 {port} 없음. 구현의 service_start_failed 판정이 정상 | 보정 지시 |
+| 34 | 2026-09-26 20:03 | EXECUTE | FIX | #33 — RED 작성자에게 fixture만 보정 지시(단언 기대값 불변). 구현 변경 없음 | 진행 |

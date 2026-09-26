@@ -3,14 +3,14 @@
   "module": "drivers",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T05 Browser driver 계약 — probe·open·snapshot·act·wait·assert·capture·close 8연산 JSON 입출력 계약(CONTRACT.md §B.2), session 후보 순서 resolver, driver manifest(§A.15) semver 게이트, §A.8 probe 결과 정규화와 probe.json 기록. 구체 driver 구현(agent-browser·cmux)은 여기 등록만 되고 별도 모듈이 소유한다.",
+  "description": "T05 Browser driver 계약 — probe·open·snapshot·act·wait·assert·capture·close 8연산 JSON 입출력 계약(CONTRACT.md §B.2), session 후보 순서 resolver, 후보 순서별 설치 탐색(discover_installed: binary 탐색·`--version`까지만, 세션 연산 미호출), driver manifest(§A.15) semver 게이트, §A.8 probe 결과 정규화와 probe.json 기록. 구체 driver 구현(agent-browser·cmux)은 여기 등록만 되고 별도 모듈이 소유한다.",
   "exports": [
     "DRIVER_OPERATIONS", "CAPABILITY_KEYS", "CANDIDATE_ORDER", "SESSION_MODES",
     "DriverError", "BrowserDriver", "default_capabilities", "load_manifest",
     "normalize_probe_result", "parse_semver", "compare_versions",
     "meets_minimum_version", "in_tested_range", "register_driver",
     "registered_drivers", "implemented_operations", "missing_operations",
-    "resolve_candidates", "load_candidate_order", "write_probe_json"
+    "resolve_candidates", "load_candidate_order", "discover_installed", "write_probe_json"
   ]
 }
 
@@ -565,6 +565,54 @@ def resolve_candidates(
         selected_found = True
 
     return candidates, probes
+
+
+def discover_installed(project_root: Optional[str] = None) -> List[Dict[str, Any]]:
+    """후보 순서별 설치 여부 `{driver, session_mode, installed, binary}` 목록을 돌려준다.
+
+    `env-inspect`(읽기 전용 검토)가 쓴다. driver 생성자가 하는 binary 탐색과 `--version`
+    해석까지만 수행하고 `probe`를 포함한 §B.2 세션 연산은 호출하지 않는다. 그래서 이
+    결과는 가용성 판정이 아니다 — 가용성은 `resolve_candidates()`의 probe만 정한다
+    (C-DRV-2). 생성자가 binary를 드러내지 않는 driver(`binary_path` 부재)와 미등록 후보는
+    `installed=false`, `binary=null`이다. 후보 순서는 `load_candidate_order()`가 정하며
+    opt-in 후보도 목록에 포함한다.
+    """
+    factories = registered_drivers()
+    root = _project_root(project_root)
+    if root is not None:
+        from lib.e2e.drivers import declarative
+
+        try:
+            for key, factory in declarative.load_project_manifests(str(root)).items():
+                factories.setdefault(key, factory)
+        except Exception:  # noqa: BLE001 — 검토 명령은 무효 선언 driver를 미설치로 보고한다.
+            pass
+    try:
+        order = load_candidate_order(str(root) if root is not None else None)
+    except DriverError:
+        order = None
+    results: List[Dict[str, Any]] = []
+    for entry in (order if order is not None else CANDIDATE_ORDER):
+        driver_name = entry["driver"]
+        session_mode = entry["session_mode"]
+        binary: Optional[str] = None
+        factory = factories.get((driver_name, session_mode))
+        if factory is not None:
+            try:
+                driver = factory(runtime_context={"project_root": str(root) if root else None})
+                binary = getattr(driver, "binary_path", None)
+            except Exception:  # noqa: BLE001 — 생성 실패는 미설치로 보고한다.
+                binary = None
+        installed = bool(binary) and os.path.isfile(str(binary)) and os.access(str(binary), os.X_OK)
+        results.append(
+            {
+                "driver": driver_name,
+                "session_mode": session_mode,
+                "installed": installed,
+                "binary": str(binary) if installed else None,
+            }
+        )
+    return results
 
 
 def _blank_candidate(order: int, driver: str, session_mode: Optional[str]) -> Dict[str, Any]:

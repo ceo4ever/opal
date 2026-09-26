@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "services": [
+    {
+      "id": "backend",
+      "command": ["{python}", "-m", "uvicorn", "dashboard.backend.main:app", "--host", "{host}", "--port", "{port}"],
+      "cwd": ".",
+      "health": {"type": "http", "path": "/health", "expect_status": 200, "json_field": "status"},
+      "startup_timeout_s": 60
+    },
+    {
+      "id": "frontend",
+      "command": ["npm", "run", "dev", "--", "--host", "{host}", "--port", "{port}", "--strictPort"],
+      "cwd": "dashboard/frontend",
+      "env": {"VITE_API_BASE_URL": "{service.backend.url}"},
+      "depends_on": ["backend"],
+      "health": {"type": "port"},
+      "startup_timeout_s": 90
+    }
+  ],
+  "surfaces": [
+    {"id": "console", "kind": "web", "service": "frontend", "path": "/"},
+    {"id": "console-api", "kind": "api", "service": "backend", "health_path": "/health"}
+  ]
+}

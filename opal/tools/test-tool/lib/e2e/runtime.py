@@ -3,19 +3,20 @@
   "module": "runtime",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T01 최소 SUT 기동 골격 — start_backend/start_frontend(포트는 호출자가 확보해 필수 인자로 전달, D-11)로 소스 트리 backend/frontend를 strict-port로 기동하고, wait_healthy로 backend /health를 폴링하며, stop_all로 그룹 단위 회수 결과(CleanupReport)를 집계한다. 상태·exit 문자열은 다루지 않고 실패는 SutStartupError(reason=...) 예외로만 올린다(D-8) — run 상태 머신·CLI·verdict·OPAL_E2E_* 전량 주입은 T04 소유다.",
-  "exports": ["SutHandle", "CleanupReport", "SutStartupError", "start_backend", "start_frontend", "wait_healthy", "stop_all"]
+  "description": "설정 기반 SUT 기동 — start_service가 lib/e2e/environment.render_service로 확정된 서비스 1건(argv·cwd·env·health)을 호출자가 넘긴 포트로 프로세스 그룹 기동하고, health 선언에 따라 wait_http_health(경로·기대 상태·json_field) 또는 포트 오픈 대기로 기동 완료를 판정한다. 실패하면 그 그룹을 회수한 뒤 SutStartupError(reason 3종)를 올린다. stop_all은 그룹 단위 회수 결과(CleanupReport)를 집계한다. 상태·exit 문자열·포트 확보는 다루지 않는다.",
+  "exports": ["SutHandle", "CleanupReport", "SutStartupError", "start_service", "wait_http_health", "stop_all"],
+  "depends": ["process"]
 }
 
-lib.e2e.runtime — 포트는 이 모듈이 확보하지 않는다(D-11). OS 조건문은 두지 않으며
-(sys.platform·os.name·platform.system() 0건, D-9) 프로세스 기동·회수는 lib.e2e.process에 위임한다.
+lib.e2e.runtime — 포트는 이 모듈이 확보하지 않는다(호출자가 임대해 넘긴다). 무엇을 어떻게
+띄울지는 프로젝트 설정(`.opal/e2e/environment.json`)이 소유하며 이 모듈은 특정 제품의 경로·
+명령을 알지 않는다. OS 조건문은 두지 않으며 프로세스 기동·회수는 lib.e2e.process에 위임한다.
 """
 
 from __future__ import annotations
 
 import json
 import os
-import shutil
 import socket
 import time
 import urllib.error
@@ -47,7 +48,7 @@ class SutStartupError(Exception):
 
 @dataclass
 class SutHandle:
-    role: str  # "backend" | "frontend"
+    role: str  # 설정 서비스 id
     port: int
     url: str
     spawned: e2e_process.SpawnedProcess
@@ -60,21 +61,6 @@ class CleanupReport:
     leaked: list[int]
 
 
-def _resolve_python() -> str:
-    """venv python을 우선 해석하고 없으면 sys.executable로 폴백한다.
-
-    opal/tools/test-tool/run.sh:4가 도구 인터프리터로 선언하는 venv(fastapi·uvicorn 설치본)를
-    하드코딩된 절대경로가 아니라 존재 탐색으로 해석한다 — 다른 머신에서 이 venv가 없는 경우에도
-    sys.executable로 이식성을 유지한다.
-    """
-    import sys
-
-    candidate = Path.home() / ".opal" / ".venv" / "bin" / "python"
-    if candidate.is_file():
-        return str(candidate)
-    return sys.executable
-
-
 def _log_paths(artifact_dir: str, role: str) -> dict:
     server_dir = Path(artifact_dir) / "server"
     server_dir.mkdir(parents=True, exist_ok=True)
@@ -84,158 +70,158 @@ def _log_paths(artifact_dir: str, role: str) -> dict:
     }
 
 
-def start_backend(
-    *,
-    source_root: str,
-    artifact_dir: str,
-    port: int,
-    env_extra: Optional[dict] = None,
-) -> SutHandle:
-    """backend를 strict-port로 기동한다 (D-13).
+# 기동 직후 조기 종료(strict-port 충돌·import 실패 등)를 잡기 위한 짧은 관찰 구간.
+_EARLY_EXIT_GRACE_S = 0.3
 
-    port는 호출자가 find_free_port()로 확보해 넘긴다 — 이 함수는 포트를 자체 확보하지
-    않는다(D-11). uvicorn은 지정 포트가 점유돼 있으면 스스로 기동에 실패하므로, 그것이
-    strict-port 보증의 근거다.
+
+def start_service(rendered: dict, *, role: str, port: int, artifact_dir: str) -> SutHandle:
+    """render_service 결과 1건을 기동하고 health를 통과시킨 handle을 돌려준다.
+
+    - `rendered`: `lib.e2e.environment.render_service` 반환값(argv·cwd·env·health·
+      startup_timeout_s·host·url). env는 부모 환경 위에 덮어쓴다.
+    - port는 호출자가 임대해 넘긴다. 명령이 그 포트로 strict 바인딩하는지는 설정이 책임진다.
+    - health `http`: `url + path`가 expect_status를 돌려주고(json_field가 있으면 그 키가
+      JSON 본문에 있어야) 통과. `port`: host:port가 열리면 통과. 제한 시간은 startup_timeout_s.
+    - 실패하면 이 함수가 띄운 그룹을 회수한 뒤 SutStartupError를 올린다(누수 방지).
     """
-    python_bin = _resolve_python()
-    argv = [
-        python_bin,
-        "-m",
-        "uvicorn",
-        "dashboard.backend.main:app",
-        "--host",
-        "127.0.0.1",
-        "--port",
-        str(port),
-    ]
-
     env = dict(os.environ)
-    env.update(env_extra or {})
+    env.update(rendered.get("env") or {})
+    host = rendered.get("host") or "127.0.0.1"
+    url = rendered.get("url") or f"http://{host}:{port}"
+    timeout_s = float(rendered.get("startup_timeout_s") or 60.0)
+    health = rendered.get("health") or {"type": "port"}
 
-    log_paths = _log_paths(artifact_dir, "backend")
-    spawned = e2e_process.spawn_process_group(
-        argv,
-        cwd=source_root,
-        env=env,
-        stdout_path=log_paths["stdout"],
-        stderr_path=log_paths["stderr"],
-    )
-
-    # strict-port 기동이 즉시 실패하는 경우(EADDRINUSE 등)를 조기 검출한다.
-    time.sleep(0.3)
-    if spawned.popen.poll() is not None:
+    log_paths = _log_paths(artifact_dir, role)
+    try:
+        spawned = e2e_process.spawn_process_group(
+            list(rendered["argv"]),
+            cwd=rendered.get("cwd"),
+            env=env,
+            stdout_path=log_paths["stdout"],
+            stderr_path=log_paths["stderr"],
+        )
+    except OSError as exc:
         raise SutStartupError(
             _REASON_PROCESS_EXITED_EARLY,
-            f"backend process exited early (returncode={spawned.popen.returncode})",
-        )
+            f"{role} process could not be spawned ({type(exc).__name__}: {exc}); log={log_paths['stderr']}",
+        ) from exc
 
-    return SutHandle(
-        role="backend",
-        port=port,
-        url=f"http://127.0.0.1:{port}",
-        spawned=spawned,
-        log_paths=log_paths,
-    )
-
-
-def start_frontend(
-    *,
-    source_root: str,
-    artifact_dir: str,
-    port: int,
-    backend_url: str,
-    env_extra: Optional[dict] = None,
-) -> SutHandle:
-    """frontend(vite dev)를 strict-port로 기동하고 backend_url을 가리키게 한다 (D-12·D-13).
-
-    port는 호출자가 find_free_port()로 확보해 넘긴다 — 이 함수는 포트를 자체 확보하지
-    않는다(D-11). vite는 --strictPort로 기동해 지정 포트가 점유돼 있으면 자동으로 다른
-    포트로 넘어가는 대신 기동에 실패한다.
-    """
-    frontend_root = str(Path(source_root) / "dashboard" / "frontend")
-    npm_bin = shutil.which("npm") or "npm"
-    argv = [
-        npm_bin,
-        "run",
-        "dev",
-        "--",
-        "--host",
-        "127.0.0.1",
-        "--port",
-        str(port),
-        "--strictPort",
-    ]
-
-    env = dict(os.environ)
-    env["VITE_API_BASE_URL"] = backend_url
-    env.update(env_extra or {})
-
-    log_paths = _log_paths(artifact_dir, "frontend")
-    spawned = e2e_process.spawn_process_group(
-        argv,
-        cwd=frontend_root,
-        env=env,
-        stdout_path=log_paths["stdout"],
-        stderr_path=log_paths["stderr"],
-    )
-
-    handle = SutHandle(
-        role="frontend",
-        port=port,
-        url=f"http://127.0.0.1:{port}",
-        spawned=spawned,
-        log_paths=log_paths,
-    )
-
-    # vite dev ready 타임아웃 90s (PLAN.md §Release and recovery 실측 경계) — 조기 프로세스
-    # 종료(strict-port 충돌 등)와 포트 오픈 대기를 함께 다룬다.
-    _wait_port_open(port, spawned=spawned, timeout_s=90.0)
-
+    handle = SutHandle(role=role, port=port, url=url, spawned=spawned, log_paths=log_paths)
+    try:
+        time.sleep(_EARLY_EXIT_GRACE_S)
+        _raise_if_exited(handle)
+        if health.get("type") == "http":
+            wait_http_health(
+                url,
+                health.get("path") or "/",
+                health.get("expect_status") or 200,
+                health.get("json_field"),
+                timeout_s,
+                spawned=spawned,
+            )
+        else:
+            _wait_port_open(host, port, spawned=spawned, timeout_s=timeout_s)
+    except SutStartupError as exc:
+        e2e_process.terminate_process_group(spawned.pgid, popen=spawned.popen)
+        raise SutStartupError(exc.reason, f"{role}: {exc.detail}; log={log_paths['stderr']}") from exc
     return handle
 
 
-def _wait_port_open(port: int, *, spawned: e2e_process.SpawnedProcess, timeout_s: float) -> None:
+def _raise_if_exited(handle: SutHandle) -> None:
+    popen = handle.spawned.popen
+    if popen.poll() is not None:
+        raise SutStartupError(
+            _REASON_PROCESS_EXITED_EARLY,
+            f"process exited early (returncode={popen.returncode})",
+        )
+
+
+def _wait_port_open(
+    host: str, port: int, *, spawned: e2e_process.SpawnedProcess, timeout_s: float
+) -> None:
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
         if spawned.popen.poll() is not None:
             raise SutStartupError(
                 _REASON_PROCESS_EXITED_EARLY,
-                f"frontend process exited early (returncode={spawned.popen.returncode})",
+                f"process exited early (returncode={spawned.popen.returncode})",
             )
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(0.3)
             try:
-                sock.connect(("127.0.0.1", port))
+                sock.connect((host, port))
                 return
             except OSError:
                 pass
         time.sleep(0.3)
-    raise SutStartupError(_REASON_HEALTH_TIMEOUT, f"frontend port {port} did not open in time")
+    raise SutStartupError(_REASON_HEALTH_TIMEOUT, f"port {host}:{port} did not open in {timeout_s:g}s")
 
 
-def wait_healthy(base_url: str, *, timeout_s: float = 60.0, interval_s: float = 0.3) -> dict:
-    """GET {base_url}/health를 폴링해 200 + JSON status 키를 확인한다 (D-14, CONTRACT.md §B.5)."""
+def wait_http_health(
+    url: str,
+    path: str,
+    expect_status: int,
+    json_field: Optional[str],
+    timeout_s: float,
+    *,
+    spawned: Optional[e2e_process.SpawnedProcess] = None,
+    interval_s: float = 0.3,
+) -> dict:
+    """GET {url}{path}를 폴링해 expect_status(+json_field 존재)를 확인한다.
+
+    - 연결이 한 번도 성립하지 않고 시간이 다 되면 `health_timeout`.
+    - 응답은 오지만 상태가 끝까지 다르면 `health_bad_response`.
+    - 기대 상태의 응답에 json_field가 없거나 본문이 JSON이 아니면 즉시 `health_bad_response`.
+    - `spawned`가 주어지면 대기 중 프로세스 종료를 `process_exited_early`로 올린다.
+    반환: json_field 검사를 했으면 파싱된 본문, 아니면 `{}`.
+    """
+    target = f"{url.rstrip('/')}{path}"
     deadline = time.monotonic() + timeout_s
-    last_error: str = ""
+    last_error = ""
+    last_status: Optional[int] = None
     while time.monotonic() < deadline:
+        if spawned is not None and spawned.popen.poll() is not None:
+            raise SutStartupError(
+                _REASON_PROCESS_EXITED_EARLY,
+                f"process exited early (returncode={spawned.popen.returncode})",
+            )
+        status: Optional[int] = None
+        raw = b""
         try:
-            with urllib.request.urlopen(f"{base_url}/health", timeout=2) as resp:
-                if resp.status != 200:
-                    last_error = f"unexpected status {resp.status}"
-                else:
-                    body = json.loads(resp.read())
-                    if "status" not in body:
-                        raise SutStartupError(
-                            _REASON_HEALTH_BAD_RESPONSE,
-                            "health response missing 'status' field",
-                        )
-                    return body
-        except SutStartupError:
-            raise
-        except (urllib.error.URLError, ConnectionError, OSError, json.JSONDecodeError) as exc:
+            with urllib.request.urlopen(target, timeout=2) as resp:
+                status = resp.status
+                raw = resp.read()
+        except urllib.error.HTTPError as exc:
+            status = exc.code
+            try:
+                raw = exc.read()
+            except OSError:
+                raw = b""
+        except (urllib.error.URLError, ConnectionError, OSError) as exc:
             last_error = str(exc)
+        if status is not None:
+            last_status = status
+            if status == expect_status:
+                if not json_field:
+                    return {}
+                try:
+                    body = json.loads(raw)
+                except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+                    raise SutStartupError(_REASON_HEALTH_BAD_RESPONSE, f"health response from {target} is not JSON")
+                if not isinstance(body, dict) or json_field not in body:
+                    raise SutStartupError(
+                        _REASON_HEALTH_BAD_RESPONSE,
+                        f"health response missing '{json_field}' field",
+                    )
+                return body
+            last_error = f"unexpected status {status}"
         time.sleep(interval_s)
-    raise SutStartupError(_REASON_HEALTH_TIMEOUT, f"health check timed out: {last_error}")
+    if last_status is not None:
+        raise SutStartupError(
+            _REASON_HEALTH_BAD_RESPONSE,
+            f"health {target} returned {last_status}, expected {expect_status}",
+        )
+    raise SutStartupError(_REASON_HEALTH_TIMEOUT, f"health check {target} timed out: {last_error}")
 
 
 def stop_all(handles: list[SutHandle]) -> CleanupReport:
