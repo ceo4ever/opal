@@ -17,7 +17,7 @@
 | `state_valid`* | `state-tool validate` 위반 0건 | true |
 | `runlog_pending`* | `state.json` `run_log.pending_events` 수 | 0 |
 | `gate_evidence` | Pilot 프로필(아래 표)의 게이트 증거가 모두 충족 | true |
-| `checkpoint_commits` | 작업 브랜치가 기본 브랜치보다 앞선 커밋 수. 허브 작업본 태스크는 규칙상 커밋하지 않으므로 worktree 태스크에만 요구 | ≥ 1 (worktree) |
+| `checkpoint_commits` / `raw_commits` | 작업 브랜치의 기본 브랜치 대비 커밋 중 허브 registry `execution_ownership.checkpoint_shas`에 있는 것(`worktree-tool checkpoint`로 만든 커밋)과 없는 것(`git commit` 직접 실행한 우회 커밋). 허브 작업본 태스크는 규칙상 커밋하지 않으므로 worktree 태스크에만 요구 | 도구 커밋 ≥ 1 + 우회 커밋 0 (worktree) |
 
 Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프로필이 없는 Pilot은 "판정 프로필 없음"으로 불합격 처리되므로, 새 Pilot을 시험하려면 먼저 프로필을 추가한다.
 

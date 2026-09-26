@@ -200,6 +200,25 @@ def _pt(ts):
     return None
 
 
+def _registry_checkpoint_shas(repo, code):
+    """허브 registry(.opal-worktrees/.meta)에서 코드 작업본과 같은 worktree 행의 checkpoint_shas를 읽는다."""
+    code_real = os.path.realpath(str(code))
+    for mp in glob.glob(str(repo / ".opal-worktrees" / ".meta" / "task_*.json")):
+        try:
+            meta = json.loads(pathlib.Path(mp).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if meta.get("worktree_root") and os.path.realpath(meta["worktree_root"]) == code_real:
+            return list((meta.get("execution_ownership") or {}).get("checkpoint_shas") or [])
+    return []
+
+
+def checkpoint_ok(m):
+    if not m.get("worktree_task"):
+        return True
+    return (m.get("checkpoint_commits") or 0) >= 1 and not m.get("raw_commits")
+
+
 def _find_state(repo):
     c = sorted(glob.glob(str(repo / ".opal-worktrees" / "*" / "tasks" / "*" / "state.json"))) + \
         sorted(glob.glob(str(repo / "tasks" / "*" / "state.json")))
@@ -256,8 +275,12 @@ def collect_run(rd, s):
             sc = json.loads(tsj.read_text(encoding="utf-8")).get("scenarios") or []
             sc_ok = bool(sc) and all((x.get("result") or x.get("status")) == "pass" for x in sc)
     m.update(gate_iterations=iters, gate_evidence=gate_ok and sc_ok and rows_ok, worktree_task=bool(st.get("worktree")))
-    base = st.get("worktree") and _git(code, "rev-list", "--count", "main..HEAD").stdout.strip()
-    m["checkpoint_commits"] = int(base) if base and base.isdigit() else 0
+    branch_shas = _git(code, "rev-list", "main..HEAD").stdout.split() if st.get("worktree") else []
+    tool_shas = set(_registry_checkpoint_shas(rd / "repo", code))
+    # 체크포인트는 worktree-tool checkpoint로만 인정한다(harness/guards.md §커밋 규칙). git commit
+    # 직접 실행은 registry checkpoint_shas에 남지 않으므로 우회 커밋으로 따로 센다.
+    m["checkpoint_commits"] = sum(sha in tool_shas for sha in branch_shas)
+    m["raw_commits"] = len(branch_shas) - m["checkpoint_commits"]
     evs = [json.loads(l) for f in sorted(glob.glob(str(tdir / "run" / "run-log-*.jsonl"))) for l in open(f) if l.strip()] + pend
     m["subagent_runs"] = sum(e.get("event") == "worker.started" for e in evs)
     m["worker_blocked"] = sum(e.get("event") == "worker.blocked" for e in evs)
@@ -355,8 +378,9 @@ def judge_run(m, s):
     mode = s["mode"]
     compliance = {"pipeline_complete": m.get("pipeline_complete"), "state_valid": m.get("state_valid"),
                   "runlog_pending": m.get("runlog_pending") == 0, "gate_evidence": m.get("gate_evidence"),
-                  # 허브 작업본 태스크는 규칙상 커밋하지 않으므로 worktree 태스크에만 요구한다
-                  "checkpoint_commits": (m.get("checkpoint_commits") or 0) >= 1 or not m.get("worktree_task")}
+                  # 허브 작업본 태스크는 규칙상 커밋하지 않으므로 worktree 태스크에만 요구한다.
+                  # 체크포인트 도구를 거친 커밋이 1개 이상이고 우회 커밋(git commit 직접)이 없어야 한다.
+                  "checkpoint_commits": checkpoint_ok(m)}
     if mode == "judgment":
         compliance = {k: compliance[k] for k in ("state_valid", "runlog_pending")}
         text = m.get("_search_text", "")
@@ -538,12 +562,12 @@ def write_report(outdir, s, history=None):
     rep = {"scenario": s["id"], "mode": s["mode"], "runs": runs}
     (outdir / "metrics.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
     L = [f"# opal-skill-tester 보고서 — {s['id']} ({s['mode']})", "", s.get("title", ""), "",
-         "| 실행 | 판정 | 숨은 테스트 | 완료 | 상태검증 | run-log 적체 | 게이트 증거 | 커밋 | 분 | $ | 서브에이전트 | 게이트 반복 |",
+         "| 실행 | 판정 | 숨은 테스트 | 완료 | 상태검증 | run-log 적체 | 게이트 증거 | 체크포인트 커밋 | 분 | $ | 서브에이전트 | 게이트 반복 |",
          "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for m in runs:
         L.append("| {run} | **{verdict}** | {h} | {pc} | {sv} | {rp} | {ge} | {cc} | {w} | {c} | {sa} | {gi} |".format(
             run=m["run"], verdict=m["verdict"], h=m.get("hidden_summary", "-"), pc=m.get("pipeline_complete"),
-            sv=m.get("state_valid"), rp=m.get("runlog_pending"), ge=m.get("gate_evidence"), cc=m.get("checkpoint_commits"),
+            sv=m.get("state_valid"), rp=m.get("runlog_pending"), ge=m.get("gate_evidence"), cc=f'도구 {m.get("checkpoint_commits", 0)}/우회 {m.get("raw_commits", 0)}',
             w=m.get("wall_min"), c=m.get("cost_usd"), sa=m.get("subagent_runs"), gi=m.get("gate_iterations")))
     L += ["", "## 불합격 사유와 경고", ""]
     for m in runs:

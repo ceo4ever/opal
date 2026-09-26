@@ -91,7 +91,7 @@ def compliance(m):
         if k == "runlog_pending":
             ok = m.get(k) == 0
         elif k == "checkpoint_commits":
-            ok = (m.get(k) or 0) >= 1 or not m.get("worktree_task")
+            ok = not m.get("worktree_task") or ((m.get(k) or 0) >= 1 and not m.get("raw_commits"))
         else:
             ok = bool(m.get(k))
         out.append((label, ok))
@@ -159,7 +159,7 @@ def summary_panel(m, hist):
     allm += [(label, "✓" if ok else "✕ 불충족") for label, ok in comp]
     allm += [("벽시계", f'{m.get("wall_min")}분'), ("비용", f'${m.get("cost_usd")}'), ("턴", m.get("turns")), ("출력 토큰", m.get("output_tokens")),
              ("서브에이전트", m.get("subagent_runs") if m.get("subagent_runs") else "측정 안 됨(run-log 워커 사건 없음)"),
-             ("게이트 반복", m.get("gate_iterations")), ("run-log 적체 첫 사건", json.dumps(m.get("runlog_first_pending"), ensure_ascii=False) if m.get("runlog_first_pending") else "없음"),
+             ("게이트 반복", m.get("gate_iterations")), ("체크포인트 커밋(도구/우회)", f'{m.get("checkpoint_commits", 0)} / {m.get("raw_commits", 0)}'), ("run-log 적체 첫 사건", json.dumps(m.get("runlog_first_pending"), ensure_ascii=False) if m.get("runlog_first_pending") else "없음"),
              ("프레임워크 지문", m.get("framework") or "기록 없음(지문 도입 전 실행)")]
     mrow = "".join(f'<tr><td>{e(k)}</td><td class="n">{e(v)}</td></tr>' for k, v in allm)
     total = round(sum(stages.values()), 1)

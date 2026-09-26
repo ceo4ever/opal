@@ -3492,6 +3492,103 @@ class TestCheckpointRed:
         assert payload.get("ok") is True
         assert payload.get("checkpoint_shas")
 
+    def _hub_owned_with_lease(self, project_b, task_id, lease_owner, status="active"):
+        """registry를 `hub_owned`(전용 세션 미기동)로 되돌리고 태스크 lease를 배치한다.
+        스텝 5.5 미기동·기동 실패 경로에서 허브 세션이 lease를 쥐고 워크트리를 수행하는 상태다."""
+        meta_path = project_b.root / ".opal-worktrees" / ".meta" / f"task_{task_id}.json"
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        meta["execution_ownership"].update(
+            state="hub_owned", owner_session_id=None, adapter=None, adapter_handle=None,
+            generation=0, launch_receipt=None, prompt_receipt=None,
+        )
+        write_json(meta_path, meta)
+        if lease_owner is not None:
+            write_json(
+                pathlib.Path(meta["task_path"]) / "run" / ".runtime" / "owner.json",
+                {
+                    "owner_session_id": lease_owner,
+                    "status": status,
+                    "claimed_at": "2026-09-26T09:00:00+09:00",
+                    "heartbeat_at": "2026-09-26T09:00:00+09:00",
+                    "lease_expires_at": "2099-01-01T00:00:00+09:00",
+                    "generation": 1,
+                    "ttl_sec": 14400,
+                    "task_path": meta["task_path"],
+                },
+            )
+        return meta_path
+
+    def test_add10_hub_owned_checkpoint_allowed_for_current_lease_holder(self, project_b, monkeypatch):
+        monkeypatch.setenv("OPAL_SESSION_ID", "sess-hub-lease")
+        wt = self._add_worktree(project_b, "feat/OP-TASK-a10", "task_a10")
+        self._register_v2(project_b, wt, "feat/OP-TASK-a10", "a10", "unused")
+        meta_path = self._hub_owned_with_lease(project_b, "a10", "sess-hub-lease")
+        (wt / "owned_file.txt").write_text("hello", encoding="utf-8")
+        run_git(["add", "owned_file.txt"], cwd=wt)
+
+        result = run_worktree_cli(
+            ["checkpoint", "--worktree-root", str(wt), "--mode", "agentic", "--stage", "plan"]
+        )
+        payload = parse_json_stdout(result, "checkpoint(ADD-10 hub lease)")
+        assert payload.get("ok") is True
+        assert payload.get("ownership_basis") == "hub_lease"
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        assert meta["execution_ownership"]["checkpoint_shas"] == [payload["commit"]]
+        assert meta["execution_ownership"]["state"] == "hub_owned"
+
+    def test_add10_hub_owned_checkpoint_denied_for_foreign_lease(self, project_b, monkeypatch):
+        monkeypatch.setenv("OPAL_SESSION_ID", "sess-other")
+        wt = self._add_worktree(project_b, "feat/OP-TASK-a10f", "task_a10f")
+        self._register_v2(project_b, wt, "feat/OP-TASK-a10f", "a10f", "unused")
+        self._hub_owned_with_lease(project_b, "a10f", "sess-hub-lease")
+        (wt / "owned_file.txt").write_text("hello", encoding="utf-8")
+        run_git(["add", "owned_file.txt"], cwd=wt)
+
+        payload = parse_json_stdout(
+            run_worktree_cli(["checkpoint", "--worktree-root", str(wt), "--mode", "agentic", "--stage", "plan"]),
+            "checkpoint(ADD-10 foreign lease)",
+        )
+        assert payload.get("ok") is False
+        assert payload.get("error") == "checkpoint_ownership_denied"
+        assert payload.get("reason") == "hub_lease_not_held"
+
+    def test_add10_hub_owned_checkpoint_denied_without_live_lease(self, project_b, monkeypatch):
+        monkeypatch.setenv("OPAL_SESSION_ID", "sess-hub-lease")
+        for suffix, owner, status in (("n", None, "active"), ("r", "sess-hub-lease", "released")):
+            task_id = f"a10{suffix}"
+            wt = self._add_worktree(project_b, f"feat/OP-TASK-{task_id}", f"task_{task_id}")
+            self._register_v2(project_b, wt, f"feat/OP-TASK-{task_id}", task_id, "unused")
+            self._hub_owned_with_lease(project_b, task_id, owner, status)
+            (wt / "owned_file.txt").write_text("hello", encoding="utf-8")
+            run_git(["add", "owned_file.txt"], cwd=wt)
+
+            payload = parse_json_stdout(
+                run_worktree_cli(["checkpoint", "--worktree-root", str(wt), "--mode", "agentic", "--stage", "plan"]),
+                f"checkpoint(ADD-10 no live lease {suffix})",
+            )
+            assert payload.get("ok") is False
+            assert payload.get("error") == "checkpoint_ownership_denied"
+            assert payload.get("reason") == "hub_lease_not_held"
+
+    def test_add10_session_launching_checkpoint_still_denied(self, project_b, monkeypatch):
+        monkeypatch.setenv("OPAL_SESSION_ID", "sess-hub-lease")
+        wt = self._add_worktree(project_b, "feat/OP-TASK-a10l", "task_a10l")
+        self._register_v2(project_b, wt, "feat/OP-TASK-a10l", "a10l", "unused")
+        meta_path = self._hub_owned_with_lease(project_b, "a10l", "sess-hub-lease")
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        meta["execution_ownership"]["state"] = "session_launching"
+        write_json(meta_path, meta)
+        (wt / "owned_file.txt").write_text("hello", encoding="utf-8")
+        run_git(["add", "owned_file.txt"], cwd=wt)
+
+        payload = parse_json_stdout(
+            run_worktree_cli(["checkpoint", "--worktree-root", str(wt), "--mode", "agentic", "--stage", "plan"]),
+            "checkpoint(ADD-10 session_launching)",
+        )
+        assert payload.get("ok") is False
+        assert payload.get("error") == "checkpoint_ownership_denied"
+        assert payload.get("reason") == "not_worktree_session_owned"
+
     def test_s19_checkpoint_scope_violation_for_unowned_staged_files(self, project_b, monkeypatch):
         monkeypatch.setenv("OPAL_SESSION_ID", "sess-checkpoint-red")
         wt = self._add_worktree(project_b, "feat/OP-TASK-s19-scope", "task_s19_scope")

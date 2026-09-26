@@ -147,6 +147,7 @@ registry meta의 `execution_ownership`과 `attribution_state` 두 축을 registr
 staged 변경의 **로컬 commit 하나**만 수행한다. 검사 순서는 금지 Git 동작 → 소유권 → branch 일치 → staged scope → 모드 경계이며, 전건을 통과할 때만 커밋한다. 커밋 실행 시점 계약(모드별 허용 경계)은 `opal/core/references/harness/guards.md` §커밋 규칙이 소유한다.
 
 - 거부 코드는 `checkpoint_scope_violation`·`checkpoint_mode_denied`·`checkpoint_ownership_denied`·`checkpoint_branch_mismatch`·`checkpoint_nothing_staged`와 `requires_user_approval` 6종이다.
+- 소유권은 registry `worktree_session_owned` + `owner_session_id == 현재 세션`(`ownership_basis: registry_owner`)이거나, 전용 세션 미기동·기동 실패로 `hub_owned`인 슬롯에서 현재 세션이 태스크 lease(`run/.runtime/owner.json`)를 보유(`ownership_basis: hub_lease`)할 때 인정한다. lease가 없거나 다른 세션 소유·released면 `checkpoint_ownership_denied`(reason `hub_lease_not_held`)이고, `session_launching`·`released`는 `not_worktree_session_owned`로 거부한다. hub_lease 경로는 registry 상태를 바꾸지 않는다.
 - `--git-command` 요청은 예외 없이 `requires_user_approval`이다 — 이 서브명령의 수행 범위가 commit 하나뿐이므로 기본 거부다. `main`·`master` 브랜치 commit과 허브 루트 commit도 같은 코드로 거부한다.
 - `--owned-scope` 미지정이면 worktree 경계 자체가 소유 범위다. 성공 SHA는 `execution_ownership.checkpoint_shas[]`에 append하며, 미등록 worktree는 `registered: false`로 이번 커밋만 보고한다.
 - 커밋은 worktree cwd에서만 수행돼 **허브 working tree에 쓰지 않는다**(공유 objects/refs만 사용).
@@ -266,7 +267,7 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 | `settings_hook_key_forbidden` | 허브 `.claude/settings.json`에 `hooks` 키가 있어 워크트리 설정 provisioning을 중단했습니다 — hook은 워크트리로 복제하지 않습니다. |
 | `checkpoint_scope_violation` | staged 경로가 소유 범위를 벗어납니다 — 체크포인트 커밋을 수행하지 않습니다. |
 | `checkpoint_mode_denied` | 현재 모드·단계 조합에서는 자율 체크포인트 커밋이 허용되지 않습니다. |
-| `checkpoint_ownership_denied` | 현재 세션이 이 worktree의 registry 소유자가 아닙니다. |
+| `checkpoint_ownership_denied` | 현재 세션이 이 worktree의 registry 소유자가 아니거나, `hub_owned` 슬롯의 태스크 lease를 보유하지 않았습니다. |
 | `checkpoint_branch_mismatch` | 현재 branch가 registry에 기록된 branch와 다릅니다. |
 | `checkpoint_nothing_staged` | staged 변경이 없어 체크포인트 커밋할 대상이 없습니다. |
 | `requires_user_approval` | 사용자 승인 경계의 동작입니다 — 이 서브명령은 수행하지 않습니다. |

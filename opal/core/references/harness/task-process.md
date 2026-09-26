@@ -112,12 +112,12 @@
 
 #### `--wt` 체크포인트 커밋과 merge 경계
 
-`--wt` 태스크의 전용 세션은 `harness/guards.md` §커밋 규칙의 폐쇄된 예외만 소비한다. worktree 여부, canonical task, 현재 branch와 세션 소유권을 registry로 확인하지 못하면 일반 사용자 승인 규칙으로 돌아간다.
+`--wt` 태스크를 수행하는 세션은 `harness/guards.md` §커밋 규칙의 폐쇄된 예외만 소비한다. 수행 세션은 전용 워크트리 세션이거나, 스텝 5.5를 수행하지 않았거나 실패해 워크트리를 이어 작업하는 허브 세션이다(이때 소유 근거는 태스크 lease). worktree 여부, canonical task, 현재 branch와 세션 소유권을 확인하지 못하면 일반 사용자 승인 규칙으로 돌아간다. 판정은 `worktree-tool checkpoint`가 결정론으로 수행한다.
 
 1. 단계 작업과 필수 Gate·검증을 먼저 완료한다. 검증 중 발견한 이슈가 권한 범위 안에서 보정되고 재검증을 통과하면 해결된 이슈로 기록만 남기고 파이프라인을 중단하지 않는다.
 2. `agentic`은 사용자 판단이 필요한 미해결 사항이 없는 안정 경계에서 PM이 소유 worktree 브랜치에 체크포인트 커밋하고 즉시 다음 단계로 진입한다.
 3. `interactive`는 기존 각 단계 사용자 승인 뒤 그 단계 산출물을 체크포인트 커밋하고 다음 단계로 진입한다. `semi-agentic`은 PLAN-equivalent 승인 뒤 명세 체크포인트를 만들고, EXECUTE·TEST 변경은 커밋하지 않고 누적하며, 기존 CLOSE 진입 승인 뒤 누적 구현·테스트 체크포인트를 만든다. 같은 CLOSE 승인은 승인된 CLOSE/finalize 범위의 최종 체크포인트까지 허용하되 merge·push 승인으로 확장되지 않는다. 새 사용자 Gate를 추가하지 않는다.
-4. 체크포인트 직전 staged 경로가 canonical task와 해당 worktree의 소유 변경으로 폐쇄되는지 검사한다. staged 변경이 0건이면 체크포인트를 만들지 않고 다음 단계로 진행한다. 성공 SHA는 lifecycle record에 기록하며 자동 amend·rebase·reset은 하지 않는다.
+4. 체크포인트는 소유 변경을 stage한 뒤 `~/.opal/tools/worktree-tool/run.sh checkpoint --worktree-root <worktree> --mode <agentic|interactive|semi-agentic> --stage <단계> [--approved] --message "<type>(<NNN>): <요약>"`로 만든다. `git commit`을 직접 실행하지 않는다. `checkpoint_ownership_denied`이면 커밋하지 않고 일반 사용자 승인 규칙으로 돌아가며 그 사실을 AGENTIC-LOG에 DECISION으로 남긴다. 체크포인트 직전 staged 경로가 canonical task와 해당 worktree의 소유 변경으로 폐쇄되는지 검사한다. staged 변경이 0건이면 체크포인트를 만들지 않고 다음 단계로 진행한다. 성공 SHA는 lifecycle record에 기록하며 자동 amend·rebase·reset은 하지 않는다.
 5. `main`·기본 브랜치 commit, worktree branch의 merge·push, 배포와 worktree 제거는 체크포인트 예외 밖이다. 특히 `main`·기본 브랜치 merge는 모드와 무관하게 사용자 승인 뒤 허브에서만 수행한다.
 6. 회수(`worktree-tool remove`)는 3중 가드를 통과한 뒤 `git worktree remove` 직전에 워크트리 터미널을 1회 스윕한다. registry에 `execution_ownership.adapter`가 기록돼 있을 때만 동작하며, 스윕 실패는 회수를 차단하지 않고 경고로만 보고한다. 허브 세션은 `worktree-tool status`의 `completed_unmerged`로 워크트리 세션의 종료를 판정해 merge 안내의 입력으로 쓴다.
 

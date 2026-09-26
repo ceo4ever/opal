@@ -118,7 +118,7 @@ load: pilot.start
 |---|---|---|
 | 워크트리·브랜치 생성, 발급값 배달 | 허브 세션 | `worktree-tool`이 단일 소유자다. 터미널 도구가 대체하지 않는다 |
 | 전용 터미널 기동 | 허브 세션 | `state init` 완료 후 terminal context의 현재 `host`와 같은 어댑터만 명시 주입하며 실패는 비차단이다 — 작업본은 이미 있으므로 허브 세션이 그 작업본에서 이어 수행하고 허브 `tasks/`로 옮기지 않는다 |
-| 단계 실행·체크포인트 커밋·CLOSE | 워크트리 세션 | `completed_unmerged`까지 진행한다 |
+| 단계 실행·체크포인트 커밋·CLOSE | 워크트리 세션 (전용 세션 미기동·기동 실패 시 lease를 보유한 허브 세션) | `completed_unmerged`까지 진행한다. 체크포인트는 `worktree-tool checkpoint`로만 만든다 |
 | `main` merge·push | 허브 세션 | 승인 경계는 `harness/guards.md` §커밋 규칙이, 허용 merge 경로는 위 §merge 경로가 소유한다 |
 | 터미널 회수·worktree 제거 | 허브 세션 | 회수는 3중 가드 통과 뒤 터미널 스윕을 선행한다 |
 

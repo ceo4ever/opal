@@ -64,7 +64,8 @@ legacy TASK는 기존 `## 명확화 결과` 기반 검증을 재개 호환으로
 
 등록된 전용 worktree에서는 다음의 폐쇄된 체크포인트 예외만 허용한다.
 
-- 현재 세션이 registry의 canonical task와 worktree를 1:1로 소유하고, 현재 브랜치가 registry에 기록된 worktree branch와 일치해야 한다.
+- 현재 세션이 registry의 canonical task와 worktree를 1:1로 소유하고, 현재 브랜치가 registry에 기록된 worktree branch와 일치해야 한다. 소유 근거는 둘 중 하나다 — (a) registry `execution_ownership`이 `worktree_session_owned`이고 `owner_session_id`가 현재 세션, (b) 전용 세션을 기동하지 않았거나 기동에 실패해(`harness/task-process.md` 스텝 5.5) registry가 `hub_owned`이고 현재 세션이 그 태스크의 살아 있는 lease를 보유. `session_launching`·`released`는 어느 쪽에도 해당하지 않는다.
+- 체크포인트 커밋은 `worktree-tool checkpoint`로만 만든다. 이 도구가 위 소유권·브랜치·staged 범위·모드 경계를 검사하고 성공 SHA를 registry `checkpoint_shas[]`에 남긴다. `git commit`을 직접 실행하면 이 검사와 기록을 모두 건너뛰므로 체크포인트로 인정하지 않는다.
 - `agentic` 모드는 사용자 판단이 필요한 미해결 사항이 없고 해당 단계의 필수 Gate·검증이 통과한 안정 경계에서 PM이 worktree 브랜치 커밋을 자율 수행할 수 있다.
 - `interactive` 모드는 기존 각 단계 사용자 승인이 그 단계 산출물의 worktree 체크포인트 커밋 승인도 겸한다. `semi-agentic`은 PLAN-equivalent 사용자 승인 뒤 명세 체크포인트를 만들고, EXECUTE·TEST에서는 자율 커밋하지 않으며, 자동 CLOSE 진입은 누적 구현·테스트 체크포인트를 커밋할 별도 권한을 부여하지 않는다. 어느 모드에도 새 사용자 Gate를 추가하지 않는다.
 - 일시적 오류나 검증 실패는 권한 범위 안에서 보정하고 재검증한다. 보정 뒤 필수 검증이 통과하면 사용자에게 중간 결정을 요구하지 않고 커밋 후 다음 단계로 진행한다.
