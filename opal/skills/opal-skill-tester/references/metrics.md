@@ -1,6 +1,6 @@
 # Pilot 측정 지표 기준
 
-실행기(`scripts/skill_tester.py`)가 실행마다 아래 지표를 수집하고 판정한다. 결과·준수 범주는 합격 조건, 효율·재작업 범주는 기준 결과 대비 추세 경고다. 실행마다 편차가 있으므로 효율 수치 하나로 결론을 내리지 않는다.
+실행기(`scripts/skill_tester.py`)가 실행마다 아래 지표를 수집하고 판정한다. 결과·준수 범주는 합격 조건, 효율·재작업 범주는 과거 이력(같은 변형·시나리오 최근 3회 중앙값) 대비 추세 경고다. 실행마다 편차가 있으므로 효율 수치 하나로 결론을 내리지 않는다.
 
 ## 1. 결과 (합격 조건 — function)
 
@@ -28,7 +28,7 @@ Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프�
 
 `runlog_pending`이 0이 아니면 기록 코어가 어떤 사건을 거부해 drain이 멈춘 상태다. 첫 pending 사건을 보고서에 함께 싣는다.
 
-## 3. 효율 (기준 대비 경고)
+## 3. 효율 (이력 대비 경고)
 
 | 지표 | 수집 방법 |
 |---|---|
@@ -37,9 +37,17 @@ Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프�
 | `subagent_runs` | run-log `worker.started` 사건 수 |
 | `phase_min` | run-log `state.changed` 이정표로 계산한 설계(시작~`execute.implement` 시작)·구현·테스트(~`test.pm_gate` 완료)·CLOSE(~`close.final`) 구간 |
 
-기준 결과가 있으면 `wall_min`·`cost_usd`·`subagent_runs`가 기준 대비 ±20% 밖일 때 경고한다.
+과거 기록이 있으면 `wall_min`·`cost_usd`·`subagent_runs`가 최근 3회 중앙값 대비 ±20% 밖일 때 경고한다.
 
-## 4. 재작업 (기준 대비 경고)
+| 보조 지표 | 수집 방법 |
+|---|---|
+| `stage_min` | run-log `state.changed`로 계산한 단계별(TASK·SPEC·…·CLOSE) 소요 분 |
+| `stage_log` | `AGENTIC-LOG.md` 단계 열 기준 GATE·ERROR·FIX·DECISION 행 수 |
+| `corrections` | `AGENTIC-LOG.md` ERROR(발견)·FIX(교정) 행 내용 |
+| `decision_requests` | run-log `pm.report`의 `decision_request` 수 |
+| `framework` | 실행 시작 시점의 설치 VERSION + state-tool·Pilot SKILL.md sha256 앞 6자리 |
+
+## 4. 재작업 (이력 대비 경고)
 
 | 지표 | 수집 방법 |
 |---|---|
@@ -47,7 +55,7 @@ Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프�
 | `log_error`, `log_fix` | `AGENTIC-LOG.md`의 `ERROR`·`FIX` 행 수 |
 | `worker_blocked` | run-log `worker.blocked` 사건 수 |
 
-기준 결과보다 늘어나면 경고한다.
+최근 3회 중앙값보다 늘어나면 경고한다.
 
 ## 5. 판단 지점 (합격 조건 — judgment)
 

@@ -10,8 +10,7 @@ scenarios/<id>/
 ├── request.md          세션에 줄 요구서(필수)
 ├── hidden/             숨은 인수 테스트(function 필수, 그 외 선택)
 │   └── test_hidden.py
-├── overlay/            기반 저장소 위에 덮어쓸 파일(선택)
-└── baseline.json       기준 결과(선택, --save-baseline이 생성)
+└── overlay/            기반 저장소 위에 덮어쓸 파일(선택)
 ```
 
 기반 저장소는 `scenarios/_bases/<name>/`에 두고 여러 시나리오가 공유한다. 기반 저장소는 OPAL 프로젝트 자산을 모두 가져야 세션이 설정 누락으로 멈추지 않는다: `.opal/AGENT.md`, `.opal/code-scan.json`, `.opal/MEMORY.json`(`memory-tool init`), `.opal/worktree.json`(worktree 기본 Pilot용), `docs/PROJECT.md`, `.gitignore`(`.opal-worktrees/` 포함).
@@ -72,6 +71,6 @@ scenarios/<id>/
 - 결정 지점은 외부 영향 결정(사용자·계약·저장 방식에 보이는 것)이어야 한다. 구현 세부는 세션이 스스로 정해도 정상이다.
 - `keywords`는 결정을 요청하는 문장에 자연스럽게 나올 단어 2~4개로 둔다.
 
-## 기준 결과
+## 비교 기준
 
-`run --save-baseline`은 이번 실행 변형별 효율·재작업 지표를 `baseline.json`에 저장한다. 스킬을 의도적으로 바꿔 기준이 달라졌다면 다시 저장한다. 기준 결과는 git으로 관리한다.
+별도 기준 파일은 두지 않는다. 추세 비교는 `tasks/`·`tasks/backup/`에 쌓인 같은 변형·시나리오 기록(`record.json`+`metrics.json`)의 최근 3회 중앙값을 쓴다. 스킬을 의도적으로 바꿨는지는 이력 표의 프레임워크 지문(설치 VERSION+state-tool·Pilot SKILL.md 해시)으로 구분한다.

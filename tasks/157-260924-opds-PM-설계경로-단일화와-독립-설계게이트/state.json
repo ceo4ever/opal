@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-24 22:58:26",
-  "updated_at": "2026-09-26 13:07:28",
+  "updated_at": "2026-09-26 13:38:48",
   "current_status": "additional_work",
   "rows": [
     {
@@ -313,6 +313,18 @@
       "timestamp": "2026-09-26 13:07:28",
       "owner": "PM",
       "note": "ADD-8 완료 — tasks/ 기록·opst 약어",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 25,
+      "stage": "CLOSE",
+      "item": "ADD-9 opal-skill-tester HTML 대시보드 보고서와 스킬별 이력 탭",
+      "key": "close.add_9",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 13:38:48",
+      "owner": "PM",
+      "note": "ADD-9 완료 — HTML 대시보드·이력 탭·refresh",
       "worker_duration_unknown": true
     }
   ],

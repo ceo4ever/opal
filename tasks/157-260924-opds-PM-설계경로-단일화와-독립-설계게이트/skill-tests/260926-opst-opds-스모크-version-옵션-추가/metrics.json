@@ -35,8 +35,51 @@
    },
    "log_error": 1,
    "log_fix": 1,
+   "stage_log": {
+    "TASK": {
+     "DECISION": 2,
+     "IMPROVE": 1
+    },
+    "PLAN": {
+     "DECISION": 1,
+     "GATE": 2,
+     "ERROR": 1,
+     "FIX": 1
+    },
+    "EXECUTE": {
+     "GATE": 2,
+     "IMPROVE": 1
+    },
+    "TEST": {
+     "GATE": 1
+    },
+    "CLOSE": {
+     "DECISION": 2
+    }
+   },
+   "corrections": [
+    {
+     "stage": "PLAN",
+     "kind": "발견",
+     "text": "i1 지적 외 PM 자체 발견: W-1(c)는 cwd=tmp_path라 PYTHONPATH 없이는 원본 stockctl import 불가"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "교정",
+     "text": "(#5, #6 참조) W-1(b) cwd·PYTHONPATH=tmp_path/pkg + __pycache__ 제외, W-1(c) PYTHONPATH=코드 루트·빈 work 디렉토리, Decisions 1행 추가, TEST-SCENARIO S-2·S-3 조건 동기화"
+    }
+   ],
+   "stage_min": {
+    "TASK": 1.6,
+    "PLAN": 13.7,
+    "EXECUTE": 0.0,
+    "TEST": 0.1,
+    "CLOSE": 0.8
+   },
+   "decision_requests": 0,
+   "framework": null,
    "existing_tests_ok": true,
-   "hidden_summary": "2 passed in 0.67s",
+   "hidden_summary": "2 passed in 0.61s",
    "hidden_pass_rate": 1.0,
    "hidden_failed": [],
    "verdict": "PASS",

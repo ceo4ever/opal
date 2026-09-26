@@ -4,8 +4,8 @@
   "module": "skill_tester",
   "layer": "util",
   "domain": "opal-skill-tester",
-  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report, --save-baseline 지원)·tasks/ 기록(record)을 수행한다. run은 끝나면 보고서·지표·실행별 핵심 산출물을 진행 중 태스크의 skill-tests/ 또는 tasks/ 아래 YYMMDD-opst-{대상}-{모드}-{제목} 폴더에 기록하며(모의 저장소는 복사하지 않음), 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, 체크포인트 커밋은 worktree 태스크에만 요구한다.",
-  "exports": ["main", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report", "record_results"]
+  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report)·tasks/ 기록(record)·대시보드 링크 재생성(refresh)을 수행한다. 기록 폴더에는 record.json과 report.html(요약/비교+스킬별 이력 탭)이 생기고, 이력은 tasks/와 tasks/backup/의 모든 record.json에서 모은다. run은 끝나면 보고서·지표·실행별 핵심 산출물을 진행 중 태스크의 skill-tests/ 또는 tasks/ 아래 YYMMDD-opst-{대상}-{모드}-{제목} 폴더에 기록하며(모의 저장소는 복사하지 않음), 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, 체크포인트 커밋은 worktree 태스크에만 요구한다.",
+  "exports": ["main", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report", "record_results", "collect_history"]
 }
 """
 import argparse
@@ -21,6 +21,9 @@ import subprocess
 import sys
 import time
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import report_html  # noqa: E402
+
 SKILL_DIR = pathlib.Path(__file__).resolve().parent.parent
 SCENARIOS = SKILL_DIR / "scenarios"
 MODES = ("smoke", "function", "judgment")
@@ -34,6 +37,8 @@ PROFILES = {
     "opsdd": {"exec": "execute.act_run", "test_done": "verify.pm_gate",
               "gate_rows": ["review.scenario_gate", "verify.ts_green"], "scenario_json": False},
 }
+PILOT_SKILL_DIRS = {"opd": "opal-pilot-dev", "opds": "opal-pilot-dev", "opsdd": "opal-pilot-sdd", "opp": "opal-pilot-project",
+                    "oppd": "opal-pilot-project-dev", "oppl": "opal-pilot-project-loop", "opwt": "opal-pilot-write-tech"}
 REQUIRED_BASE = ["_opal/AGENT.md", "_opal/code-scan.json", "_opal/MEMORY.json", "docs/PROJECT.md", "_gitignore"]
 
 
@@ -130,7 +135,7 @@ def _install_drift():
     return warns
 
 
-def run_scenario(sid, variants, repeat, outdir, save_baseline=False, task_dir=None, project_root=None, no_record=False):
+def run_scenario(sid, variants, repeat, outdir, task_dir=None, project_root=None, no_record=False):
     errs = validate_scenario(sid)
     if errs:
         out({"ok": False, "command": "run", "error": "scenario_invalid", "detail": errs}, 1)
@@ -160,7 +165,8 @@ def run_scenario(sid, variants, repeat, outdir, save_baseline=False, task_dir=No
             _git(repo, "-c", "user.name=skill-tester", "-c", "user.email=skill-tester@local", "commit", "-q", "-m", f"init: {sid}")
             shutil.copy(SCENARIOS / sid / "request.md", rd / "REQUEST.md")
             utt = s["utterance"].format(variant=v, request=str(rd / "REQUEST.md"))
-            meta = {"scenario": sid, "mode": s["mode"], "variant": v, "rep": k, "utterance": utt, "start": time.time()}
+            meta = {"scenario": sid, "mode": s["mode"], "variant": v, "rep": k, "utterance": utt, "start": time.time(),
+                    "framework": _framework_fingerprint(v.split()[0].lstrip("/"))}
             rf = open(rd / "result.json", "w")
             ef = open(rd / "stderr.txt", "w")
             p = subprocess.Popen(["claude", "-p", utt, "--permission-mode", "auto", "--output-format", "json"],
@@ -177,9 +183,8 @@ def run_scenario(sid, variants, repeat, outdir, save_baseline=False, task_dir=No
         meta["end"] = time.time()
         rf.close(); ef.close()
         (rd / "run.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
-    report = write_report(outdir, s)
-    if save_baseline:
-        _save_baseline(s, report)
+    root = _resolve_root(task_dir, project_root)
+    report = write_report(outdir, s, collect_history(root) if root else [])
     rec, rec_warn = (None, None) if no_record else record_results(outdir, s, task_dir, project_root)
     out({"ok": True, "command": "run", "out": str(outdir), "report": str(outdir / "REPORT.md"),
          "record": str(rec) if rec else None, "record_warning": rec_warn,
@@ -262,6 +267,10 @@ def collect_run(rd, s):
     txt = al.read_text(encoding="utf-8") if al.exists() else ""
     m["log_error"] = len(re.findall(r"\|\s*`?ERROR`?\s*\|", txt))
     m["log_fix"] = len(re.findall(r"\|\s*`?FIX`?\s*\|", txt))
+    m["stage_log"], m["corrections"] = _agentic_log_by_stage(txt)
+    m["stage_min"] = _stage_minutes(evs, [r.get("stage") for r in st.get("rows", [])])
+    m["decision_requests"] = sum(e.get("event") == "pm.report" and (e.get("data") or {}).get("report_type") == "decision_request" for e in evs)
+    m["framework"] = meta.get("framework")  # 실행 시점 지문. 이 필드 도입 전 실행은 None
     m["_search_text"] = m.get("result_text", "") + txt + ((tdir / "STATE.md").read_text(encoding="utf-8") if (tdir / "STATE.md").exists() else "")
     if s.get("existing_test_cmd"):
         e = subprocess.run(s["existing_test_cmd"], cwd=code, capture_output=True, text=True)
@@ -277,6 +286,50 @@ def collect_run(rd, s):
         m["hidden_pass_rate"] = round(passed / (passed + failed), 3) if passed + failed else 0.0
         m["hidden_failed"] = [l.split("::")[-1].split(" ")[0] for l in h.stdout.splitlines() if l.startswith("FAILED")]
     return m
+
+
+def _agentic_log_by_stage(txt):
+    """AGENTIC-LOG 표 행을 단계별 카테고리 수와 자기 교정 기록(ERROR·FIX 본문)으로 요약한다."""
+    counts, corr = {}, []
+    for line in txt.splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 5 or not cells[0].isdigit():
+            continue
+        stage, cat = cells[2], cells[3].strip("`")
+        counts.setdefault(stage, {}).setdefault(cat, 0)
+        counts[stage][cat] += 1
+        if cat in ("ERROR", "FIX"):
+            corr.append({"stage": stage, "kind": "발견" if cat == "ERROR" else "교정", "text": cells[4][:240]})
+    return counts, corr
+
+
+def _stage_minutes(evs, stage_order):
+    """run-log state.changed로 단계별 소요(분)를 계산한다: 각 단계 마지막 전이 - 직전 단계 마지막 전이."""
+    ts_all = [_pt(e.get("timestamp")) for e in evs if _pt(e.get("timestamp"))]
+    if not ts_all:
+        return {}
+    last = {}
+    for e in evs:
+        if e.get("event") == "state.changed" and e.get("stage") and _pt(e.get("timestamp")):
+            t = _pt(e["timestamp"])
+            last[e["stage"]] = max(last.get(e["stage"], t), t)
+    out, prev = {}, min(ts_all)
+    for st in dict.fromkeys(s for s in stage_order if s):
+        if st in last:
+            out[st] = round(max((last[st] - prev).total_seconds(), 0) / 60, 1)
+            prev = max(prev, last[st])
+    return out
+
+
+def _framework_fingerprint(skill):
+    import hashlib
+    h = hashlib.sha256()
+    for rel in ("tools/state-tool/state_tool.py", f"skills/{PILOT_SKILL_DIRS.get(skill, '')}/SKILL.md"):
+        p = OPAL / rel
+        if p.is_file():
+            h.update(p.read_bytes())
+    ver = (OPAL / "VERSION").read_text(encoding="utf-8").strip() if (OPAL / "VERSION").exists() else "?"
+    return f"{ver}+{h.hexdigest()[:6]}"
 
 
 def _phases(evs, prof):
@@ -326,10 +379,16 @@ TREND_KEYS = ("wall_min", "cost_usd", "subagent_runs")
 REWORK_KEYS = ("gate_iterations", "log_error", "log_fix", "worker_blocked")
 
 
-def _trend(m, base):
+def _trend(m, hist):
     warns = []
-    if not base:
+    if not hist:
         return warns
+    import statistics
+    base = {}
+    for k in TREND_KEYS + REWORK_KEYS:
+        vals = [h.get(k) for h in hist[-3:] if isinstance(h.get(k), (int, float))]
+        if vals:
+            base[k] = statistics.median(vals)
     for k in TREND_KEYS:
         b, c = base.get(k), m.get(k)
         if b and c is not None and abs(c - b) / b > 0.2:
@@ -379,6 +438,47 @@ def _active_task(root):
     return hits[0] if len(hits) == 1 else None
 
 
+def _resolve_root(task_dir=None, project_root=None):
+    if project_root:
+        return pathlib.Path(project_root).resolve()
+    if task_dir:
+        return _project_root(pathlib.Path(task_dir))
+    return _project_root(pathlib.Path.cwd())
+
+
+def collect_history(root, exclude=None):
+    """tasks/와 tasks/backup/ 아래 모든 기록(record.json)을 실행 단위 레코드로 모은다."""
+    out_ = []
+    exclude = pathlib.Path(exclude).resolve() if exclude else None
+    for rj in glob.glob(str(root / "tasks" / "**" / "record.json"), recursive=True):
+        rdir = pathlib.Path(rj).parent.resolve()
+        if exclude and rdir == exclude:
+            continue
+        try:
+            meta = json.loads(pathlib.Path(rj).read_text(encoding="utf-8"))
+            mets = json.loads((rdir / "metrics.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        rp = rdir / "report.html"
+        parts = rp.relative_to(root).parts
+        alt = (root / pathlib.Path(*parts[:1], *parts[2:])) if len(parts) > 1 and parts[1] == "backup" else (root / parts[0] / "backup" / pathlib.Path(*parts[1:]))
+        seen = set()
+        for m in mets.get("runs", []):
+            if m.get("variant") in seen:
+                continue  # 반복 실행은 첫 회차만 이력에 올린다
+            seen.add(m.get("variant"))
+            out_.append(dict(m, scenario=meta.get("scenario"), mode=meta.get("mode"), created_at=meta.get("created_at", ""),
+                             report_path=str(rp), report_alt_path=str(alt)))
+    return out_
+
+
+def _render_html(dest, s, root):
+    mets = json.loads((dest / "metrics.json").read_text(encoding="utf-8"))
+    meta = json.loads((dest / "record.json").read_text(encoding="utf-8"))
+    hist = [h for h in (collect_history(root, exclude=dest) if root else []) if h["created_at"] < meta["created_at"]]
+    (dest / "report.html").write_text(report_html.render_report(s, mets["runs"], hist, str(dest), meta["created_at"]), encoding="utf-8")
+
+
 def record_results(outdir, s, task_dir=None, project_root=None):
     """결과 폴더의 보고서·지표·실행별 핵심 산출물을 tasks/ 아래 기록 폴더로 복사한다.
     모의 저장소 자체는 복사하지 않는다(중첩 git·가짜 .opal 프로젝트 방지)."""
@@ -415,21 +515,24 @@ def record_results(outdir, s, task_dir=None, project_root=None):
             for f in RECORD_TASK_FILES:
                 if (sp.parent / f).exists():
                     shutil.copy(sp.parent / f, tdst / f)
+    created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    (dest / "record.json").write_text(json.dumps({"scenario": s["id"], "mode": s["mode"], "created_at": created,
+                                                  "variants": targets, "source": str(outdir)}, ensure_ascii=False, indent=1), encoding="utf-8")
+    _render_html(dest, s, _resolve_root(task_dir, project_root))
     (dest / "SOURCE.md").write_text(
         f"# 기록 출처\n\n- 시나리오: `{s['id']}` ({s['mode']})\n- 실행 결과 폴더(모의 저장소 포함): `{outdir}`\n"
         f"- 모의 저장소는 중첩 git·가짜 OPAL 프로젝트 인식을 막기 위해 이 기록에 복사하지 않았다.\n", encoding="utf-8")
     return dest, None
 
 
-def write_report(outdir, s):
+def write_report(outdir, s, history=None):
     outdir = pathlib.Path(outdir)
-    bl = SCENARIOS / s["id"] / "baseline.json"
-    baseline = json.loads(bl.read_text(encoding="utf-8")) if bl.exists() else {}
+    history = history or []
     runs = []
     for rd in sorted(p for p in outdir.iterdir() if (p / "run.json").exists()):
         m = collect_run(rd, s)
         m["verdict"], m["fail_reasons"] = judge_run(m, s)
-        m["trend_warnings"] = _trend(m, baseline.get(m["variant"]))
+        m["trend_warnings"] = _trend(m, sorted([h for h in history if h["variant"] == m["variant"] and h["scenario"] == s["id"]], key=lambda h: h["created_at"]))
         m.pop("_search_text", None)
         runs.append(m)
     rep = {"scenario": s["id"], "mode": s["mode"], "runs": runs}
@@ -459,19 +562,12 @@ def write_report(outdir, s):
             L.append(f"| {k} | " + " | ".join(row) + " |")
         L.append("| 합격 | " + " | ".join(f"{sum(m['verdict'] == 'PASS' for m in runs if m['variant'] == v)}/{sum(m['variant'] == v for m in runs)}" for v in variants) + " |")
     L += ["", "## 단계별 소요(분)", ""] + [f"- {m['run']}: {m.get('phase_min')}" for m in runs]
-    if not baseline:
-        L += ["", "> 기준 결과 없음 — 추세 판정 생략. `--save-baseline`으로 저장할 수 있다."]
+    if not history:
+        L += ["", "> 같은 시나리오 이력 없음 — 추세 판정 생략(첫 기록)."]
     (outdir / "REPORT.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     return rep
 
 
-def _save_baseline(s, rep):
-    base = {}
-    for v in sorted({m["variant"] for m in rep["runs"]}):
-        ms = [m for m in rep["runs"] if m["variant"] == v and m["verdict"] == "PASS"]
-        if ms:
-            base[v] = {k: round(sum(m.get(k) or 0 for m in ms) / len(ms), 2) for k in TREND_KEYS + REWORK_KEYS}
-    (SCENARIOS / s["id"] / "baseline.json").write_text(json.dumps(base, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def main(argv=None):
@@ -480,10 +576,11 @@ def main(argv=None):
     l = sub.add_parser("list"); l.add_argument("--mode", choices=MODES)
     v = sub.add_parser("validate"); v.add_argument("id", nargs="?"); v.add_argument("--all", action="store_true")
     r = sub.add_parser("run"); r.add_argument("id"); r.add_argument("--variant", action="append")
-    r.add_argument("--repeat", type=int, default=1); r.add_argument("--out"); r.add_argument("--save-baseline", action="store_true")
+    r.add_argument("--repeat", type=int, default=1); r.add_argument("--out")
     r.add_argument("--task-dir"); r.add_argument("--project-root"); r.add_argument("--no-record", action="store_true")
     c = sub.add_parser("record"); c.add_argument("out"); c.add_argument("--task-dir"); c.add_argument("--project-root")
-    p = sub.add_parser("report"); p.add_argument("out"); p.add_argument("--save-baseline", action="store_true")
+    p = sub.add_parser("report"); p.add_argument("out"); p.add_argument("--project-root")
+    f = sub.add_parser("refresh"); f.add_argument("--project-root")
     a = ap.parse_args(argv)
     if a.cmd == "list":
         items = [{k: x.get(k) for k in ("id", "mode", "title", "default_variant", "estimate", "_error") if x.get(k) is not None}
@@ -496,15 +593,15 @@ def main(argv=None):
     if a.cmd == "run":
         if a.repeat < 1:
             out({"ok": False, "command": "run", "error": "repeat_invalid"}, 1)
-        run_scenario(a.id, a.variant, a.repeat, a.out, a.save_baseline, a.task_dir, a.project_root, a.no_record)
+        run_scenario(a.id, a.variant, a.repeat, a.out, a.task_dir, a.project_root, a.no_record)
     if a.cmd == "record":
         rd = pathlib.Path(a.out)
         first = next((json.loads((p / "run.json").read_text(encoding="utf-8")) for p in rd.iterdir() if (p / "run.json").exists()), None)
         if not first:
             out({"ok": False, "command": "record", "error": "no_runs"}, 1)
         s = json.loads((SCENARIOS / first["scenario"] / "scenario.json").read_text(encoding="utf-8"))
-        if not (rd / "REPORT.md").exists():
-            write_report(rd, s)
+        root = _resolve_root(a.task_dir, a.project_root)
+        write_report(rd, s, collect_history(root) if root else [])
         rec, warn = record_results(rd, s, a.task_dir, a.project_root)
         out({"ok": rec is not None, "command": "record", "record": str(rec) if rec else None, "warning": warn}, 0 if rec else 1)
     if a.cmd == "report":
@@ -513,11 +610,23 @@ def main(argv=None):
         if not first:
             out({"ok": False, "command": "report", "error": "no_runs"}, 1)
         s = json.loads((SCENARIOS / first["scenario"] / "scenario.json").read_text(encoding="utf-8"))
-        rep = write_report(rd, s)
-        if a.save_baseline:
-            _save_baseline(s, rep)
-        out({"ok": True, "command": "report", "report": str(rd / "REPORT.md"), "baseline_saved": a.save_baseline,
-             "verdicts": {m["run"]: m["verdict"] for m in rep["runs"]}})
+        root = _resolve_root(None, a.project_root)
+        rep = write_report(rd, s, collect_history(root) if root else [])
+        out({"ok": True, "command": "report", "report": str(rd / "REPORT.md"), "verdicts": {m["run"]: m["verdict"] for m in rep["runs"]}})
+    if a.cmd == "refresh":
+        root = _resolve_root(None, a.project_root)
+        if root is None:
+            out({"ok": False, "command": "refresh", "error": "project_root_not_found"}, 1)
+        done, skipped = [], []
+        for rj in glob.glob(str(root / "tasks" / "**" / "record.json"), recursive=True):
+            dest = pathlib.Path(rj).parent
+            sid = json.loads(pathlib.Path(rj).read_text(encoding="utf-8")).get("scenario")
+            sj = SCENARIOS / str(sid) / "scenario.json"
+            if not sj.exists():
+                skipped.append(str(dest)); continue
+            _render_html(dest, json.loads(sj.read_text(encoding="utf-8")), root)
+            done.append(str(dest))
+        out({"ok": True, "command": "refresh", "refreshed": len(done), "skipped": skipped})
 
 
 if __name__ == "__main__":

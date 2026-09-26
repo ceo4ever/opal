@@ -1,0 +1,9 @@
+{
+ "scenario": "smoke-opsdd-low-stock",
+ "mode": "smoke",
+ "created_at": "2026-09-26 10:31",
+ "variants": [
+  "opsdd"
+ ],
+ "source": "/private/tmp/claude-501/-Volumes-Data-AIStudio-workspace-ai-framework--opal-worktrees-task-157/d8764f45-027c-4fad-96d6-4c0fadbebe62/scratchpad/ost-opsdd-1"
+}

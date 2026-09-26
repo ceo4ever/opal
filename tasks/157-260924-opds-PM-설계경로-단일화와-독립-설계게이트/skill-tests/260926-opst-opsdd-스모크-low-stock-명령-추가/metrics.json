@@ -35,8 +35,66 @@
    },
    "log_error": 2,
    "log_fix": 1,
+   "stage_log": {
+    "TASK": {
+     "DECISION": 2
+    },
+    "SPEC": {
+     "GATE": 2,
+     "ERROR": 1,
+     "FIX": 1,
+     "DECISION": 1
+    },
+    "REVIEW": {
+     "GATE": 3
+    },
+    "DESIGN": {
+     "GATE": 1,
+     "DECISION": 3
+    },
+    "EXECUTE": {
+     "DECISION": 2,
+     "GATE": 3
+    },
+    "VERIFY": {
+     "ERROR": 1,
+     "GATE": 1
+    },
+    "CLOSE": {
+     "IMPROVE": 1,
+     "GATE": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "SPEC",
+     "kind": "발견",
+     "text": "OQ-01(--below 누락 동작), OQ-02(+3/ 3 /03 표기) 미해소; NFR-03은 요구서 범위 외 정량 기준"
+    },
+    {
+     "stage": "SPEC",
+     "kind": "교정",
+     "text": "(→ #4) 워커 재지시: OQ-01=(a) argparse exit 2, OQ-02=int() 변환 성공 시 유효, NFR-03 삭제"
+    },
+    {
+     "stage": "VERIFY",
+     "kind": "발견",
+     "text": "test-tool unit(be)이 mypy 미설치로 typecheck 레이어 exit 127 — 도구 체인 환경 문제, 프로젝트 요구 아님"
+    }
+   ],
+   "stage_min": {
+    "TASK": 0.7,
+    "SPEC": 3.8,
+    "REVIEW": 2.3,
+    "DESIGN": 5.4,
+    "EXECUTE": 10.9,
+    "VERIFY": 0.6,
+    "CLOSE": 0.3
+   },
+   "decision_requests": 0,
+   "framework": null,
    "existing_tests_ok": true,
-   "hidden_summary": "3 passed in 2.16s",
+   "hidden_summary": "3 passed in 2.20s",
    "hidden_pass_rate": 1.0,
    "hidden_failed": [],
    "verdict": "PASS",

@@ -26,9 +26,12 @@ python3 $T run function-stockctl-multiloc \
   --variant "//opd --no-pm" --variant "//opd" --repeat 2   # 비교 실행
 python3 $T report /tmp/opal-skill-tester/<실행폴더>        # 보고서 재생성
 python3 $T record /tmp/opal-skill-tester/<실행폴더>        # tasks/에 기록(run은 자동 기록)
+python3 $T refresh                                        # 아카이브(tasks/backup/) 후 모든 대시보드 이력·링크 재생성
 ```
 
 실행이 끝나면 결과를 프로젝트 `tasks/`에 `YYMMDD-opst-{대상 스킬}-{모드}-{시나리오 제목}` 폴더로 기록합니다. 진행 중인 태스크가 있으면 그 태스크의 `skill-tests/` 아래에 둡니다. 보고서, 지표, 실행별 세션 결과와 모의 태스크 산출물 사본이 들어가며, 모의 저장소 자체는 임시 폴더에 남깁니다.
+
+결과는 기록 폴더의 `report.html`을 브라우저로 열어 봅니다. 단일 실행은 요약 탭(완성도·속도·비용·자기 교정력·자율성, 단계별 소요와 이력 중앙값 대비 개선 여부)과 이력 탭, 비교 실행은 비교·변형별 상세·변형별 이력 탭으로 구성됩니다. 이력 탭은 `tasks/`와 `tasks/backup/`의 같은 스킬 과거 기록을 모으고, 과거 대시보드를 새 탭으로 여는 링크를 답니다. 오래된 태스크를 `tasks/backup/`으로 옮긴 뒤에는 `refresh`로 링크를 갱신합니다. `#hist0`처럼 탭 id를 URL 끝에 붙이면 해당 탭이 바로 열립니다.
 
 실행 1회가 실제 Pilot 세션이라 시간과 비용이 듭니다. 기능 시나리오 기준 약 20~35분, $10~15입니다.
 
