@@ -1,0 +1,167 @@
+{
+  "check": "security",
+  "status": "pass",
+  "checked_files": [
+    "docs/proposals/opal-oppb-project-build-pilot.md",
+    "opal/core/references/harness/worktree.md",
+    "opal/skills/op-oppb-knowledge-finalize/README.md",
+    "opal/skills/op-oppb-knowledge-finalize/SKILL.md",
+    "opal/skills/op-scenario-gate/SKILL.md",
+    "opal/skills/opal-pilot-project-build/SKILL.md",
+    "opal/tools/oppb-runtime-tool/README.md",
+    "opal/tools/oppb-runtime-tool/oppb_runtime_tool.py",
+    "opal/tools/oppb-runtime-tool/schema/api-freeze.md",
+    "opal/tools/oppb-runtime-tool/schema/oppb-state.schema.json",
+    "opal/tools/oppb-runtime-tool/tests/test_cache.py",
+    "opal/tools/oppb-runtime-tool/tests/test_checkpoint.py",
+    "opal/tools/oppb-runtime-tool/tests/test_controller.py",
+    "opal/tools/oppb-runtime-tool/tests/test_evidence.py",
+    "opal/tools/oppb-runtime-tool/tests/test_lease.py",
+    "opal/tools/oppb-runtime-tool/tests/test_oppb_init.py",
+    "opal/tools/oppb-runtime-tool/tests/test_probe.py",
+    "opal/tools/oppb-runtime-tool/tests/test_product_flow.py",
+    "opal/tools/oppb-runtime-tool/tests/test_recovery.py",
+    "opal/tools/oppb-runtime-tool/tests/test_revalidation.py",
+    "opal/tools/oppb-runtime-tool/tests/test_supervisor.py",
+    "opal/tools/oppb-runtime-tool/tests/test_verifier_adapter.py",
+    "opal/tools/oppb-runtime-tool/verifier_adapter.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "863055a9e59deeb5",
+      "category": "CWE-22 Path Traversal",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-22",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/oppb-runtime-tool/oppb_runtime_tool.py",
+        "line": 670,
+        "symbol": "cmd_finalize_run"
+      },
+      "evidence": "destination_task만 realpath로 검사하며 destination_task/.oppb-run 자체의 symlink 여부를 검사하지 않은 채 그 아래에서 tmp 생성과 os.replace를 수행한다.",
+      "impact": "기존 .oppb-run 링크가 allocator 밖을 가리키면 프로세스 권한 범위의 외부 디렉토리에 archive를 쓸 수 있다.",
+      "remediation": {
+        "guidance": "destination의 모든 기존 구성요소를 lstat/dirfd no-follow로 검증하고 안전하게 연 directory fd 기준으로 생성·rename한다.",
+        "reference": "docs/SECURITY.md §1, Base CWE-22",
+        "auto_fixable": false
+      },
+      "verification": "외부 및 다른 task를 가리키는 .oppb-run symlink fixture에서 finalize가 쓰기 전에 실패하고 링크 대상이 변하지 않아야 한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "067b04f3dfd05f56",
+      "category": "CWE-22 Path Traversal",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-22",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/oppb-runtime-tool/oppb_runtime_tool.py",
+        "line": 513,
+        "symbol": "guarded_run_root"
+      },
+      "evidence": "run_root.is_dir와 manifest/read operations는 링크를 따르지만 run root 자체는 lstat하지 않는다. lexical .oppb-run/.opal-runs parent 검사는 링크 target을 경계에 묶지 않는다.",
+      "impact": "외부 디렉토리를 run root로 읽고 archive에 복사하거나 Supervisor가 run 경계 밖에서 동작해 민감 자료가 노출될 수 있다.",
+      "remediation": {
+        "guidance": "run root와 manifest/workgraph/events를 읽기 전에 모든 path component와 파일을 no-follow로 검증하고 실제 canonical target의 containment를 확인한다.",
+        "reference": "docs/SECURITY.md §1, Base CWE-22",
+        "auto_fixable": false
+      },
+      "verification": "신규/legacy root symlink 및 핵심 JSON symlink fixture가 외부 파일을 읽거나 복사하지 않고 거부되어야 한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "ee3eed86bcbb818a",
+      "category": "CWE-20 Improper Input Validation",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-20",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/oppb-runtime-tool/oppb_runtime_tool.py",
+        "line": 520,
+        "symbol": "guarded_run_root"
+      },
+      "evidence": "task-local run manifest의 allocator_root는 absolute 여부만 검사되며 finalize의 canonical_tasks 쓰기 경계를 결정한다. legacy branch와 달리 allocator repository/top-level 결속 검증이 없다.",
+      "impact": "run.json 변조로 보존 대상 허용 경계를 다른 위치로 재지정할 수 있다.",
+      "remediation": {
+        "guidance": "init receipt/allocator registry와 run identity를 결속하고 finalize 때 allocator repository, canonical task mapping, cache root를 대조한다.",
+        "reference": "Base CWE-20",
+        "auto_fixable": false
+      },
+      "verification": "allocator_root를 다른 repository 또는 일반 디렉토리로 변조한 run이 archive 생성 전에 거부되어야 한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "bf5c855e1501c1dc",
+      "category": "CWE-362 Race Condition",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-362",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/oppb-runtime-tool/oppb_runtime_tool.py",
+        "line": 635,
+        "symbol": "cmd_finalize_run"
+      },
+      "evidence": "성공 판정, symlink 검사, copytree, prune, hash 사이에 supervisor.lock/workgraph.lock을 획득하지 않는다. Supervisor는 run_completed 기록 뒤 lock을 해제한다.",
+      "impact": "동시 mutation과 겹치면 서로 다른 시점의 파일이 한 archive에 섞이거나 검사 후 추가된 파일/link가 복사될 수 있다.",
+      "remediation": {
+        "guidance": "Supervisor 종료를 확인하고 공통 배타 lock 또는 finalize freeze lock 아래 판정·copy·hash를 수행하며 source generation을 재대조한다.",
+        "reference": "Base CWE-362",
+        "auto_fixable": false
+      },
+      "verification": "활성 supervisor lock, 동시 workgraph/events 변경, 검사 직후 symlink 삽입 race에서 finalize가 archive를 만들지 않아야 한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-005",
+      "fingerprint": "45f86f86aa81e2ed",
+      "category": "OWASP-A08 Software and Data Integrity Failures",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "OWASP-A08",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/oppb-runtime-tool/oppb_runtime_tool.py",
+        "line": 655,
+        "symbol": "cmd_finalize_run"
+      },
+      "evidence": "run.closed.json이 존재하면 실제 retained tree를 다시 hash하지 않고 저장된 content_sha256을 그대로 idempotent 성공 응답으로 반환하며 status도 검증하지 않는다.",
+      "impact": "archive 변조 또는 위조 marker 선점 뒤에도 DONE/hash 소비자가 정상 보존본으로 오판할 수 있다.",
+      "remediation": {
+        "guidance": "idempotent/status 경로에서 tree hash와 run identity를 재검증하고 불일치를 integrity 오류로 거부한다.",
+        "reference": "Base OWASP-A08",
+        "auto_fixable": false
+      },
+      "verification": "archive 파일 변경·추가·삭제와 forged marker 각각에 대해 반복 finalize와 status가 실패해야 한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git diff 및 line-numbered source review로 23개 target_files를 순회했다.",
+    "git diff --check: 오류 없음.",
+    "$HOME/.opal/.venv/bin/python -m pytest opal/tools/oppb-runtime-tool/tests/test_oppb_init.py -q: 23 passed in 5.14s.",
+    "supervisor.py의 run_completed 기록과 supervisor.lock 해제 순서를 대조했다.",
+    "민감 키워드/private-key 패턴 검사에서 자격증명 원문은 발견되지 않았다.",
+    "비활성 영역: 웹 인증/인가, SQL/command injection, XSS, CSRF, SSRF — 대상은 신규 의존성 없는 Python 로컬 filesystem CLI와 문서/테스트다.",
+    "비활성 영역: dependency vulnerability audit — 대상 변경에 신규 package/lockfile가 없다."
+  ],
+  "references": [
+    "docs/SECURITY.md",
+    "opal/skills/op-gc-security/references/security-baseline.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/tasks/158-260926-oppm-OPPB-run-root-태스크귀속/evidence/GC-SECURITY-20260926T091900Z.md"
+}

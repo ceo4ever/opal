@@ -3,7 +3,7 @@
   "module": "test_oppb_init",
   "layer": "test",
   "domain": "oppb-runtime",
-  "description": "oppb-runtime-tool init 공개 CLI 계약 RED 테스트. 132 TEST-SCENARIO.md S-7(AC-1, C-4, C-5, H-2)을 검증한다 — 깨끗한 허브 저장소에서 init이 run root(.opal-runs/<run_id>/)와 cache root(.opal-cache/oppb/)를 생성하고, allocator Git repository의 .git/info/exclude에 두 경로를 멱등 등록한 뒤 실제 ignore 판정(git check-ignore)을 확인하며, 판정 확인에 실패하면 run 시작을 거부하고, --allocator-root 미지정·상대경로를 cwd 추론 없이 거부하며, 소스에 플랫폼 분기 문자열이 없는지 확인한다. PLAN H-6에 따라 내부 함수·클래스를 import하지 않고 공개 CLI(run.sh)와 run root 파일 계약으로만 검증한다. mock/patch 금지 — 실제 git 저장소와 실제 파일만 사용한다(PLAN W-10).",
+  "description": "oppb-runtime-tool init/finalize-run 공개 CLI 계약 테스트. 신규 run root를 OPPB 태스크의 .oppb-run/<run_id>에 만들고 공유 cache만 allocator에 유지하며, 기존 .opal-runs는 조회·재개 호환으로만 수용하고, 성공 종료 보존 묶음에서 로그·결과·증거는 유지하되 lock·sandbox·임시 index를 제거하는 계약을 실제 Git 저장소와 파일로 검증한다. 내부 함수 import와 mock/patch는 사용하지 않는다.",
   "exports": [],
   "depends": ["opal/tools/oppb-runtime-tool/run.sh", "git CLI 2.x", "opal/tools/worktree-tool/tests/conftest.py(패턴 원천)"]
 }
@@ -11,9 +11,11 @@
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import pathlib
+import shutil
 import stat
 import subprocess
 
@@ -23,7 +25,8 @@ import pytest
 TOOL_DIR = pathlib.Path(__file__).resolve().parents[1]
 RUN_SH = TOOL_DIR / "run.sh"
 
-RUN_ROOT_ENTRY = ".opal-runs/"
+RUN_ROOT_ENTRY = ".oppb-run/"
+LEGACY_RUN_ROOT_ENTRY = ".opal-runs/"
 CACHE_ROOT_ENTRY = ".opal-cache/oppb/"
 
 GIT_AUTHOR_ARGS = [
@@ -90,16 +93,34 @@ def parse_json_stdout(result: subprocess.CompletedProcess, label: str = "") -> d
         )
 
 
-def init_hub(repo: pathlib.Path, cwd: pathlib.Path | None = None) -> dict:
+def make_task_root(repo: pathlib.Path, parent: str = "tasks") -> pathlib.Path:
+    task_root = repo / parent / "200-260926-oppb-sample"
+    task_root.mkdir(parents=True, exist_ok=True)
+    (task_root / "TASK.md").write_text("# TASK\n", encoding="utf-8")
+    return task_root
+
+
+def init_hub(
+    repo: pathlib.Path,
+    cwd: pathlib.Path | None = None,
+    task_root: pathlib.Path | None = None,
+) -> dict:
     """정상 init 1회. run_id·run_root·cache_root를 담은 JSON 응답을 돌려준다."""
+    task_root = task_root or make_task_root(repo)
     result = run_oppb(
-        ["init", "--allocator-root", str(repo), "--project-root", str(repo)], cwd=cwd
+        [
+            "init",
+            "--allocator-root", str(repo),
+            "--project-root", str(repo),
+            "--task-root", str(task_root),
+        ],
+        cwd=cwd,
     )
     assert result.returncode == 0, (
         f"init 실패: exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"
     )
     payload = parse_json_stdout(result, "init")
-    for key in ("run_id", "run_root", "cache_root"):
+    for key in ("run_id", "run_root", "cache_root", "task_root"):
         assert key in payload, f"init 응답에 {key} 없음: {payload}"
     return payload
 
@@ -125,23 +146,25 @@ def is_ignored(repo: pathlib.Path, relpath: str) -> bool:
 
 
 def test_init_creates_run_root_and_cache_root(tmp_path):
-    """S-7 ① 정상 호출에서 `.opal-runs/<run_id>/`와 `.opal-cache/oppb/`가 생성된다."""
+    """신규 실행은 OPPB 태스크 안에, 공유 cache만 allocator에 생성된다."""
     repo = make_hub_repo(tmp_path)
-    payload = init_hub(repo)
+    task_root = make_task_root(repo)
+    payload = init_hub(repo, task_root=task_root)
 
     run_root = pathlib.Path(payload["run_root"])
     cache_root = pathlib.Path(payload["cache_root"])
 
     assert run_root.is_absolute(), f"run_root가 절대경로가 아님: {run_root}"
     assert cache_root.is_absolute(), f"cache_root가 절대경로가 아님: {cache_root}"
-    assert run_root == repo / ".opal-runs" / payload["run_id"], (
-        f"run root 위치 계약 위반(§4.5): {run_root}"
+    assert run_root == task_root / ".oppb-run" / payload["run_id"], (
+        f"run root 태스크 귀속 계약 위반: {run_root}"
     )
     assert cache_root == repo / ".opal-cache" / "oppb", (
         f"cache root 위치 계약 위반(§4.5): {cache_root}"
     )
     assert run_root.is_dir(), f"run root 디렉토리 미생성: {run_root}"
     assert cache_root.is_dir(), f"cache root 디렉토리 미생성: {cache_root}"
+    assert not (repo / ".opal-runs").exists(), "신규 init이 legacy 허브 run root를 생성함"
 
 
 def test_init_registers_git_info_exclude_idempotently(tmp_path):
@@ -180,7 +203,7 @@ def test_init_verifies_actual_ignore_decision(tmp_path):
     )
 
     status = run_git(["status", "--porcelain"], cwd=repo).stdout
-    assert ".opal-runs" not in status, f"run root가 Git 추적 대상으로 노출됨:\n{status}"
+    assert ".oppb-run" not in status, f"run root가 Git 추적 대상으로 노출됨:\n{status}"
     assert ".opal-cache" not in status, f"cache root가 Git 추적 대상으로 노출됨:\n{status}"
 
 
@@ -192,14 +215,17 @@ def test_init_rejects_missing_allocator_root(tmp_path):
     (harness/worktree.md §task root와 allocator root 계약 [MUST])."""
     repo = make_hub_repo(tmp_path)
 
-    result = run_oppb(["init", "--project-root", str(repo)], cwd=repo)
+    task_root = make_task_root(repo)
+    result = run_oppb(
+        ["init", "--project-root", str(repo), "--task-root", str(task_root)], cwd=repo
+    )
 
     assert result.returncode != 0, (
         f"allocator_root 미지정이 수용됨 — cwd 추론 금지 위반. stdout={result.stdout}"
     )
     combined = f"{result.stdout}\n{result.stderr}"
     assert "allocator" in combined.lower(), f"거부 사유에 allocator_root 언급 없음:\n{combined}"
-    assert not (repo / ".opal-runs").exists(), "거부됐는데 run root가 생성됨(cwd 추론 부작용)"
+    assert not (task_root / ".oppb-run").exists(), "거부됐는데 run root가 생성됨"
     assert not (repo / ".opal-cache").exists(), "거부됐는데 cache root가 생성됨(cwd 추론 부작용)"
 
 
@@ -208,14 +234,16 @@ def test_init_rejects_relative_allocator_root(tmp_path, relative):
     """S-7 ⑤ 상대경로 allocator_root는 거부된다 — cwd 기준 해석을 하지 않는다."""
     repo = make_hub_repo(tmp_path)
 
-    result = run_oppb(
-        ["init", "--allocator-root", relative, "--project-root", str(repo)], cwd=repo
-    )
+    task_root = make_task_root(repo)
+    result = run_oppb([
+        "init", "--allocator-root", relative, "--project-root", str(repo),
+        "--task-root", str(task_root),
+    ], cwd=repo)
 
     assert result.returncode != 0, (
         f"상대경로 allocator_root({relative!r})가 수용됨. stdout={result.stdout}"
     )
-    assert not (repo / ".opal-runs").exists(), (
+    assert not (task_root / ".oppb-run").exists(), (
         f"상대경로({relative!r}) 거부 후에도 run root가 생성됨"
     )
 
@@ -226,12 +254,34 @@ def test_init_rejects_allocator_root_that_is_not_a_git_repository(tmp_path):
     plain = tmp_path / "not-a-repo"
     plain.mkdir()
 
-    result = run_oppb(["init", "--allocator-root", str(plain), "--project-root", str(plain)])
+    task_root = make_task_root(plain)
+    result = run_oppb([
+        "init", "--allocator-root", str(plain), "--project-root", str(plain),
+        "--task-root", str(task_root),
+    ])
 
     assert result.returncode != 0, (
         f"비-git allocator_root가 수용됨. stdout={result.stdout}"
     )
-    assert not (plain / ".opal-runs").exists(), "거부됐는데 run root가 생성됨"
+    assert not (task_root / ".oppb-run").exists(), "거부됐는데 run root가 생성됨"
+
+
+def test_init_rejects_missing_or_relative_task_root(tmp_path):
+    """task_root는 명시 절대경로만 허용하고 project_root에서 추론하지 않는다."""
+    repo = make_hub_repo(tmp_path)
+
+    missing = run_oppb([
+        "init", "--allocator-root", str(repo), "--project-root", str(repo),
+    ], cwd=repo)
+    relative = run_oppb([
+        "init", "--allocator-root", str(repo), "--project-root", str(repo),
+        "--task-root", "tasks/200-260926-oppb-sample",
+    ], cwd=repo)
+
+    for result in (missing, relative):
+        assert result.returncode != 0, result.stdout
+        assert "task_root" in f"{result.stdout}\n{result.stderr}", result.stdout
+    assert not (repo / ".oppb-run").exists()
 
 
 # ------------------------------------------- S-7 ignore 판정 확인 실패 시 run 거부
@@ -249,10 +299,14 @@ def test_start_refused_when_exclude_entry_removed_and_not_restorable(tmp_path):
     path.write_text("# stripped by test\n", encoding="utf-8")
     os.chmod(path, stat.S_IRUSR)
     try:
-        assert not is_ignored(repo, ".opal-runs/probe"), "fixture 전제 위반 — 여전히 ignore 상태"
+        assert not is_ignored(repo, ".oppb-run/probe"), "fixture 전제 위반 — 여전히 ignore 상태"
 
+        task_root = make_task_root(repo, parent="tasks-second")
         reinit = run_oppb(
-            ["init", "--allocator-root", str(repo), "--project-root", str(repo)]
+            [
+                "init", "--allocator-root", str(repo), "--project-root", str(repo),
+                "--task-root", str(task_root),
+            ]
         )
         assert reinit.returncode != 0, (
             f"ignore 재등록 불가 상태에서 init이 성공함. stdout={reinit.stdout}"
@@ -277,12 +331,12 @@ def test_start_refused_when_gitignore_negation_overrides_exclude(tmp_path):
     run_root = payload["run_root"]
 
     # .gitignore(작업 디렉토리)는 .git/info/exclude보다 우선순위가 높다.
-    (repo / ".gitignore").write_text("!.opal-runs/\n!.opal-cache/\n", encoding="utf-8")
+    (repo / ".gitignore").write_text("!.oppb-run/\n!.opal-cache/\n", encoding="utf-8")
     run_git(["add", ".gitignore"], cwd=repo)
     run_git(["commit", "-m", "negate oppb excludes"], cwd=repo)
 
     assert RUN_ROOT_ENTRY in exclude_lines(repo), "fixture 전제 위반 — exclude 등록이 사라짐"
-    assert not is_ignored(repo, ".opal-runs/probe"), (
+    assert not is_ignored(repo, ".oppb-run/probe"), (
         "fixture 전제 위반 — 부정 패턴이 우선하지 않음"
     )
 
@@ -291,6 +345,339 @@ def test_start_refused_when_gitignore_negation_overrides_exclude(tmp_path):
         f"실제 ignore 판정 실패 상태에서 run이 시작됨 — 등록 문자열만 확인한 것으로 보인다. "
         f"stdout={start.stdout}"
     )
+
+
+def _write_minimal_workgraph(run_root: pathlib.Path, run_id: str) -> None:
+    (run_root / "workgraph.json").write_text(
+        json.dumps({
+            "schema_version": "1.0",
+            "revision": 1,
+            "run_id": run_id,
+            "budget": {"limits": {}, "debited": {}},
+            "mini_tasks": [],
+        }) + "\n",
+        encoding="utf-8",
+    )
+
+
+def test_legacy_hub_run_root_remains_readable_and_resumable(tmp_path):
+    """신규 생성은 금지해도 기존 `.opal-runs/<run_id>` status·resume 호환은 유지한다."""
+    repo = make_hub_repo(tmp_path)
+    path = exclude_path(repo)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(f"{LEGACY_RUN_ROOT_ENTRY}\n")
+        handle.write(f"{CACHE_ROOT_ENTRY}\n")
+    run_id = "20260920T000000Z-legacy01"
+    run_root = repo / ".opal-runs" / run_id
+    run_root.mkdir(parents=True)
+    (run_root / "run.json").write_text(json.dumps({
+        "schema_version": "1.0",
+        "run_id": run_id,
+        "allocator_root": str(repo),
+        "project_root": str(repo),
+        "cache_root": str(repo / ".opal-cache" / "oppb"),
+        "created_at": "2026-09-20T00:00:00Z",
+    }) + "\n", encoding="utf-8")
+    _write_minimal_workgraph(run_root, run_id)
+
+    result = run_oppb(["status", "--run-root", str(run_root)])
+    payload = parse_json_stdout(result, "legacy status")
+
+    assert result.returncode == 0, payload
+    assert payload["run_root"] == str(run_root)
+
+    resumed = run_oppb(["resume", "--run-root", str(run_root)])
+    resumed_payload = parse_json_stdout(resumed, "legacy resume")
+    assert resumed.returncode == 0, resumed_payload
+    assert resumed_payload["run_root"] == str(run_root)
+
+
+def test_finalize_run_preserves_records_and_removes_transient_files(tmp_path):
+    """P5 보존 묶음은 기록·증거를 유지하고 runtime-only 파일만 제거한다."""
+    repo = make_hub_repo(tmp_path)
+    source_task = make_task_root(repo, parent="workspace/tasks")
+    payload = init_hub(repo, task_root=source_task)
+    run_root = pathlib.Path(payload["run_root"])
+    _write_minimal_workgraph(run_root, payload["run_id"])
+    (run_root / "acceptance.json").write_text("{}\n", encoding="utf-8")
+    (run_root / "events.jsonl").write_text('{"event":"run_completed"}\n', encoding="utf-8")
+    (run_root / "supervisor.log").write_text("finished\n", encoding="utf-8")
+    (run_root / "supervisor.lock").write_text("", encoding="utf-8")
+    (run_root / "workgraph.lock").write_text("", encoding="utf-8")
+    (run_root / "supervisor.json").write_text(
+        '{"schema_version":"1.0","supervisor_pid":123,"started_at":1}\n',
+        encoding="utf-8",
+    )
+    (run_root / "checkpoint" / "tmp-index").mkdir(parents=True)
+    (run_root / "checkpoint" / "tmp-index" / "index").write_text("tmp", encoding="utf-8")
+    (run_root / "verify-sandboxes" / "candidate").mkdir(parents=True)
+    (run_root / "verify-sandboxes" / "candidate" / "tmp").write_text("tmp", encoding="utf-8")
+    (run_root / "attempts" / "T01" / "a1").mkdir(parents=True)
+    (run_root / "attempts" / "T01" / "a1" / "result.json").write_text(
+        '{"status":"succeeded"}\n', encoding="utf-8"
+    )
+    (run_root / "evidence").mkdir()
+    (run_root / "evidence" / "accepted.json").write_text("{}\n", encoding="utf-8")
+
+    destination_task = repo / "tasks" / source_task.name
+    destination_task.mkdir(parents=True)
+    result = run_oppb([
+        "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+        "--task-path", str(destination_task),
+    ])
+    archived = destination_task / ".oppb-run" / payload["run_id"]
+    response = parse_json_stdout(result, "finalize-run")
+
+    assert result.returncode == 0, response
+    for relpath in (
+        "workgraph.json", "acceptance.json", "events.jsonl", "supervisor.log",
+        "attempts/T01/a1/result.json", "evidence/accepted.json", "run.closed.json",
+    ):
+        assert (archived / relpath).is_file(), relpath
+    for relpath in (
+        "supervisor.lock", "workgraph.lock", "supervisor.json",
+        "checkpoint/tmp-index", "verify-sandboxes",
+    ):
+        assert not (archived / relpath).exists(), relpath
+    assert response["archived_run_root"] == str(archived)
+    assert response["content_sha256"]
+
+    repeated = run_oppb([
+        "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+        "--task-path", str(destination_task),
+    ])
+    repeated_payload = parse_json_stdout(repeated, "idempotent finalize-run")
+    assert repeated.returncode == 0, repeated_payload
+    assert repeated_payload["idempotent"] is True
+    assert repeated_payload["content_sha256"] == response["content_sha256"]
+
+    status = run_oppb(["status", "--run-root", str(archived)])
+    status_payload = parse_json_stdout(status, "archived status")
+    assert status.returncode == 0, status_payload
+    assert status_payload["archived"] is True
+    assert status_payload["supervisor_pid"] is None
+
+    resume = run_oppb(["resume", "--run-root", str(archived)])
+    resume_payload = parse_json_stdout(resume, "archived resume")
+    assert resume.returncode != 0
+    assert resume_payload["error"] == "run_closed"
+
+
+def test_finalize_run_rejects_incomplete_run_without_archive(tmp_path):
+    """실패·중단 run은 종료 보존으로 닫지 않고 원본 전체를 재개 가능하게 둔다."""
+    repo = make_hub_repo(tmp_path)
+    source_task = make_task_root(repo, parent="workspace/tasks")
+    payload = init_hub(repo, task_root=source_task)
+    run_root = pathlib.Path(payload["run_root"])
+    _write_minimal_workgraph(run_root, payload["run_id"])
+    (run_root / "supervisor.lock").write_text("runtime\n", encoding="utf-8")
+    destination_task = repo / "tasks" / source_task.name
+    destination_task.mkdir(parents=True)
+
+    result = run_oppb([
+        "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+        "--task-path", str(destination_task),
+    ])
+    response = parse_json_stdout(result, "incomplete finalize-run")
+
+    assert result.returncode != 0
+    assert response["error"] == "run_not_finalizable"
+    assert (run_root / "supervisor.lock").is_file(), "중단 run의 runtime 상태가 제거됨"
+    assert not (destination_task / ".oppb-run" / payload["run_id"]).exists()
+
+
+def test_finalize_run_rejects_symlink_without_reading_external_target(tmp_path):
+    """보존 복사가 run root 밖 symlink target을 따라가 기록 묶음에 유입시키지 않는다."""
+    repo = make_hub_repo(tmp_path)
+    source_task = make_task_root(repo, parent="workspace/tasks")
+    payload = init_hub(repo, task_root=source_task)
+    run_root = pathlib.Path(payload["run_root"])
+    _write_minimal_workgraph(run_root, payload["run_id"])
+    (run_root / "events.jsonl").write_text('{"event":"run_completed"}\n', encoding="utf-8")
+    external = tmp_path / "external-secret.txt"
+    external.write_text("must-not-copy\n", encoding="utf-8")
+    (run_root / "evidence-link").symlink_to(external)
+    destination_task = repo / "tasks" / source_task.name
+    destination_task.mkdir(parents=True)
+
+    result = run_oppb([
+        "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+        "--task-path", str(destination_task),
+    ])
+    response = parse_json_stdout(result, "symlink finalize-run")
+
+    assert result.returncode != 0
+    assert response["error"] == "archive_symlink_forbidden"
+    assert not (destination_task / ".oppb-run" / payload["run_id"]).exists()
+
+
+def test_finalize_run_rejects_symlinked_archive_parent(tmp_path):
+    """canonical 태스크 안의 `.oppb-run` symlink로 보존 위치를 밖으로 우회할 수 없다."""
+    repo = make_hub_repo(tmp_path)
+    source_task = make_task_root(repo, parent="workspace/tasks")
+    payload = init_hub(repo, task_root=source_task)
+    run_root = pathlib.Path(payload["run_root"])
+    _write_minimal_workgraph(run_root, payload["run_id"])
+    (run_root / "events.jsonl").write_text('{"event":"run_completed"}\n', encoding="utf-8")
+    destination_task = repo / "tasks" / source_task.name
+    destination_task.mkdir(parents=True)
+    external = tmp_path / "outside-archive"
+    external.mkdir()
+    (destination_task / ".oppb-run").symlink_to(external, target_is_directory=True)
+
+    result = run_oppb([
+        "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+        "--task-path", str(destination_task),
+    ])
+    response = parse_json_stdout(result, "archive parent symlink")
+
+    assert result.returncode != 0
+    assert response["error"] == "archive_symlink_forbidden"
+    assert list(external.iterdir()) == []
+
+
+def test_run_root_symlink_is_rejected_before_manifest_read(tmp_path):
+    """run root alias로 외부 또는 다른 실행 tree를 읽는 경로 우회를 허용하지 않는다."""
+    repo = make_hub_repo(tmp_path)
+    payload = init_hub(repo)
+    run_root = pathlib.Path(payload["run_root"])
+    alias = run_root.parent / "alias-run"
+    alias.symlink_to(run_root, target_is_directory=True)
+
+    result = run_oppb(["status", "--run-root", str(alias)])
+    response = parse_json_stdout(result, "symlink run root")
+
+    assert result.returncode != 0
+    assert response["error"] == "run_root_invalid"
+
+
+def test_finalize_run_refuses_when_workgraph_lock_is_held(tmp_path):
+    """완료 판정과 copy 사이 snapshot을 workgraph lock 없이 만들지 않는다."""
+    repo = make_hub_repo(tmp_path)
+    source_task = make_task_root(repo, parent="workspace/tasks")
+    payload = init_hub(repo, task_root=source_task)
+    run_root = pathlib.Path(payload["run_root"])
+    _write_minimal_workgraph(run_root, payload["run_id"])
+    (run_root / "events.jsonl").write_text('{"event":"run_completed"}\n', encoding="utf-8")
+    destination_task = repo / "tasks" / source_task.name
+    destination_task.mkdir(parents=True)
+
+    with (run_root / "workgraph.lock").open("a+") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        result = run_oppb([
+            "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+            "--task-path", str(destination_task),
+        ])
+    response = parse_json_stdout(result, "locked finalize-run")
+
+    assert result.returncode != 0
+    assert response["error"] == "run_not_finalizable"
+    assert not (destination_task / ".oppb-run" / payload["run_id"]).exists()
+
+
+def test_finalize_run_revalidates_existing_archive_hash(tmp_path):
+    """idempotent 재호출은 marker를 맹신하지 않고 보존본의 현재 hash를 다시 계산한다."""
+    repo = make_hub_repo(tmp_path)
+    source_task = make_task_root(repo, parent="workspace/tasks")
+    payload = init_hub(repo, task_root=source_task)
+    run_root = pathlib.Path(payload["run_root"])
+    _write_minimal_workgraph(run_root, payload["run_id"])
+    (run_root / "events.jsonl").write_text('{"event":"run_completed"}\n', encoding="utf-8")
+    destination_task = repo / "tasks" / source_task.name
+    destination_task.mkdir(parents=True)
+    command = [
+        "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+        "--task-path", str(destination_task),
+    ]
+    first = run_oppb(command)
+    assert first.returncode == 0, first.stdout
+    archived = destination_task / ".oppb-run" / payload["run_id"]
+    (archived / "events.jsonl").write_text('{"event":"tampered"}\n', encoding="utf-8")
+
+    repeated = run_oppb(command)
+    response = parse_json_stdout(repeated, "tampered archive")
+
+    assert repeated.returncode != 0
+    assert response["error"] == "archive_integrity_failed"
+    status = run_oppb(["status", "--run-root", str(archived)])
+    status_response = parse_json_stdout(status, "tampered archive status")
+    assert status.returncode != 0
+    assert status_response["error"] == "archive_integrity_failed"
+
+
+def test_finalize_run_rejects_lock_symlink_without_external_side_effect(tmp_path):
+    """lock 획득 전에 symlink를 거부해 외부 target을 생성하거나 열지 않는다."""
+    repo = make_hub_repo(tmp_path)
+    source_task = make_task_root(repo, parent="workspace/tasks")
+    payload = init_hub(repo, task_root=source_task)
+    run_root = pathlib.Path(payload["run_root"])
+    _write_minimal_workgraph(run_root, payload["run_id"])
+    (run_root / "events.jsonl").write_text('{"event":"run_completed"}\n', encoding="utf-8")
+    external = tmp_path / "must-not-create.lock"
+    (run_root / "supervisor.lock").symlink_to(external)
+    destination_task = repo / "tasks" / source_task.name
+    destination_task.mkdir(parents=True)
+
+    result = run_oppb([
+        "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+        "--task-path", str(destination_task),
+    ])
+    response = parse_json_stdout(result, "lock symlink")
+
+    assert result.returncode != 0
+    assert response["error"] == "archive_symlink_forbidden"
+    assert not external.exists()
+
+
+def test_finalize_run_rejects_symlinked_tasks_ancestor(tmp_path):
+    """allocator `tasks` 조상이 symlink면 openat/no-follow 게시가 외부 쓰기 없이 거부한다."""
+    repo = make_hub_repo(tmp_path)
+    source_task = make_task_root(repo, parent="workspace/tasks")
+    payload = init_hub(repo, task_root=source_task)
+    run_root = pathlib.Path(payload["run_root"])
+    _write_minimal_workgraph(run_root, payload["run_id"])
+    (run_root / "events.jsonl").write_text('{"event":"run_completed"}\n', encoding="utf-8")
+    external = tmp_path / "outside-tasks"
+    destination_task = external / source_task.name
+    destination_task.mkdir(parents=True)
+    (repo / "tasks").symlink_to(external, target_is_directory=True)
+
+    result = run_oppb([
+        "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+        "--task-path", str(repo / "tasks" / source_task.name),
+    ])
+    response = parse_json_stdout(result, "tasks ancestor symlink")
+
+    assert result.returncode != 0
+    assert response["error"] == "archive_task_path_invalid"
+    assert not (destination_task / ".oppb-run").exists()
+
+
+def test_finalize_run_hash_frames_file_boundaries(tmp_path):
+    """파일 경계가 다른 tree가 SHA 충돌 없이 같은 보존 hash를 만들 수 없다."""
+    repo = make_hub_repo(tmp_path)
+    source_task = make_task_root(repo, parent="workspace/tasks")
+    payload = init_hub(repo, task_root=source_task)
+    run_root = pathlib.Path(payload["run_root"])
+    _write_minimal_workgraph(run_root, payload["run_id"])
+    (run_root / "events.jsonl").write_text('{"event":"run_completed"}\n', encoding="utf-8")
+    destination_task = repo / "tasks" / source_task.name
+    destination_task.mkdir(parents=True)
+    command = [
+        "finalize-run", "--run-root", str(run_root), "--allocator-root", str(repo),
+        "--task-path", str(destination_task),
+    ]
+    (run_root / "a").write_bytes(b"xb\0")
+    (run_root / "c").write_bytes(b"Y")
+    first = parse_json_stdout(run_oppb(command), "framed hash A")
+
+    shutil.rmtree(destination_task / ".oppb-run" / payload["run_id"])
+    (run_root / "a").write_bytes(b"x")
+    (run_root / "c").unlink()
+    (run_root / "b").write_bytes(b"c\0Y")
+    second = parse_json_stdout(run_oppb(command), "framed hash B")
+
+    assert first["content_sha256"] != second["content_sha256"]
 
 
 # --------------------------------------------------------- S-7 C-5 플랫폼 분기 금지

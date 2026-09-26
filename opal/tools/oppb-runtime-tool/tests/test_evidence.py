@@ -120,8 +120,13 @@ MINI_TASKS = [
 def run_fixture(tmp_path):
     """허브 저장소 + init + workgraph load까지 공개 CLI로만 구성한 run fixture."""
     repo = make_hub_repo(tmp_path)
+    task_root = repo / "tasks" / "999-260926-oppb-fixture"
+    task_root.mkdir(parents=True)
     init = ok(
-        run_oppb(["init", "--allocator-root", str(repo), "--project-root", str(repo)]),
+        run_oppb([
+            "init", "--allocator-root", str(repo), "--project-root", str(repo),
+            "--task-root", str(task_root),
+        ]),
         "init",
     )
     spec = tmp_path / "spec.json"

@@ -355,8 +355,13 @@ def _seed_workgraph(repo: pathlib.Path) -> dict:
 
 def _prepare(tmp_root: pathlib.Path, direct_consumer_passes: bool = True) -> dict:
     repo = _build_repo(tmp_root, direct_consumer_passes)
+    task_root = repo / "tasks" / "999-260926-oppb-fixture"
+    task_root.mkdir(parents=True)
     init_res = run_oppb_cli(
-        ["init", "--allocator-root", str(repo), "--project-root", str(repo)]
+        [
+            "init", "--allocator-root", str(repo), "--project-root", str(repo),
+            "--task-root", str(task_root),
+        ]
     )
     assert init_res.get("ok") is True, f"init 실패: {init_res}"
     run_root = pathlib.Path(init_res["run_root"])

@@ -202,6 +202,25 @@ This skill has an unverified license. Are you sure you want to install? (y/N)
 
 ---
 
-## §8 취약점 보고
+## §8 태스크 실행 기록 보존 경계
+
+태스크 실행 tree를 canonical 저장 위치에 게시하는 도구는 source·destination 경로 문자열의
+사전 검사만으로 신뢰 경계를 확정하지 않는다.
+
+- source root와 lock 파일은 검증된 directory fd 기준 `O_NOFOLLOW`로 열고, 실행 writer의 lock을
+  획득한 동일 구간에서 완료 판정과 snapshot을 수행한다.
+- destination은 allocator root부터 `openat`/directory fd와 `O_NOFOLLOW`로 각 조상을 고정하고,
+  임시 디렉터리 생성·copy·최종 rename을 같은 fd 기준으로 수행한다.
+- 보존 hash는 파일 순서뿐 아니라 type·path byte length·path·content byte length·content 경계를
+  canonical framing으로 봉인한다. 기존 보존본의 멱등 조회·재호출도 marker를 맹신하지 않고 현재
+  tree hash를 재계산한다.
+- symbol link와 socket/device 같은 특수 파일은 보존 묶음에서 거부한다.
+
+현재 적용 표면은 `oppb-runtime-tool finalize-run`이다. 이 규칙은 CWE-22·CWE-362와
+OWASP A08 기준을 함께 적용한다.
+
+---
+
+## §9 취약점 보고
 
 보안 취약점 발견 시 GitHub Issues를 통해 보고하거나 `ceo4ever/opal` 저장소 관리자에게 직접 연락한다.

@@ -19,7 +19,7 @@ OPPB에서 MEMORY와 brain은 이 단계 전까지 읽기 전용입니다. 미�
 
 | 이름 | 내용 |
 |---|---|
-| `run_root` | `<allocator_root>/.opal-runs/<run_id>/` |
+| `run_root` | `<oppb_task_path>/.oppb-run/<run_id>/` |
 | `allocator_root` | 허브 저장소 최상위 절대경로(`run.json`의 값을 그대로 사용, 추론 금지) |
 | `task_folder` | MEMORY history 행의 `--path`에 쓸 프로젝트 태스크 캡슐 경로 |
 | `project_docs` | PM이 주입한 문서 목록 |

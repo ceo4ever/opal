@@ -116,8 +116,14 @@ MINI_TASKS = [
 @pytest.fixture
 def run_fixture(tmp_path):
     repo = make_hub_repo(tmp_path)
+    task_root = repo / "tasks" / "999-260926-oppb-fixture"
+    task_root.mkdir(parents=True)
     init = ok(
-        run_oppb(["init", "--allocator-root", str(repo), "--project-root", str(repo)]), "init"
+        run_oppb([
+            "init", "--allocator-root", str(repo), "--project-root", str(repo),
+            "--task-root", str(task_root),
+        ]),
+        "init",
     )
     spec = tmp_path / "spec.json"
     spec.write_text(

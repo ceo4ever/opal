@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-24 14:31
+> 갱신: 2026-09-26 18:50
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -41,7 +41,7 @@
 - [[absence-assertion-is-enforcement-not-residue]] — 부재 단언은 잔재가 아니라 집행 장치다 — 제거 전수 검사의 명시 예외 #removal #verification #test-design #lesson
 - [[ac-infeasible-from-start-requires-preexisting-baseline-diff]] — AC가 착수 시점부터 실현 불가일 수 있다 #verification #ac #task-114
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
-- [[actor-axis-orthogonal-to-mode]] — 실행 주체(actor) 축은 모드 축과 직교한다 #actor #mode #orthogonal-axis #task-122 #pattern
+- [[actor-axis-orthogonal-to-mode]] — 실행 주체(actor) 축은 모드 축과 직교한다 #actor #mode #orthogonal-axis #task-122 #task-156 #pattern
 - [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
 - [[additive-field-extension-over-schema-replacement]] — 레지스트리 확장은 스키마 교체보다 additive 필드 추가가 기능 후퇴를 막는다 #registry #schema-evolution #skill-registry #task-105
 - [[agent-md-digest-pattern]] — AGENT.md 다이제스트 패턴 — 비서 코어 lean 분리 #bootstrap #digest #lean-core #assistant-tier #pm-tier #architecture
@@ -236,6 +236,7 @@
 - [[opds-testscenario-producer-establishment]] — opds 시나리오 producer 확립 — 공용 스킬 미접촉 SSOT 상충 해소 #opds #ssot-conflict #producer #shared-skill #task-075
 - [[opi-impl-injectable-depth-standard]] — opi 문서 깊이 기준 — "구현 시 주입 가능 수준" #opi #opal-project-init #docs-quality #architecture-decision
 - [[opi-v42-architecture-decisions]] — opi v4.2 아키텍처 결정 — 심층 분석·멀티서비스·워커 디스패치 #opi #opal-project-init #architecture-decision #multi-service #worker-dispatch
+- [[oppb-run-records-follow-task-lifecycle]] — OPPB run records follow task lifecycle #oppb #run-root #lifecycle #cache
 - [[oppd-prd-trd-task-folder-promote]] — oppd PRD/TRD 태스크폴더 작성 → docs 승격 프로세스 #oppd #prd #trd #wbs #promote #docs-ssot
 - [[oppl-3-ssot-tool-gated-separation]] — 3-SSOT tool-gated 축 분리 — backlog/state/test-scenario #ssot #tool-gated #oppl #architecture
 - [[oppl-coverage-conformance-axis-split]] — 커버리지·conformance 판정의 축별 분리 — backlog-tool/test-tool 외부 집계 #oppl #coverage #conformance #ssot #tool-gated

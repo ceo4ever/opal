@@ -1,0 +1,82 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "docs/proposals/opal-oppb-project-build-pilot.md",
+    "opal/core/references/harness/worktree.md",
+    "opal/skills/op-oppb-knowledge-finalize/README.md",
+    "opal/skills/op-oppb-knowledge-finalize/SKILL.md",
+    "opal/skills/op-scenario-gate/SKILL.md",
+    "opal/skills/opal-pilot-project-build/SKILL.md",
+    "opal/tools/oppb-runtime-tool/README.md",
+    "opal/tools/oppb-runtime-tool/oppb_runtime_tool.py",
+    "opal/tools/oppb-runtime-tool/schema/api-freeze.md",
+    "opal/tools/oppb-runtime-tool/schema/oppb-state.schema.json",
+    "opal/tools/oppb-runtime-tool/tests/test_cache.py",
+    "opal/tools/oppb-runtime-tool/tests/test_checkpoint.py",
+    "opal/tools/oppb-runtime-tool/tests/test_controller.py",
+    "opal/tools/oppb-runtime-tool/tests/test_evidence.py",
+    "opal/tools/oppb-runtime-tool/tests/test_lease.py",
+    "opal/tools/oppb-runtime-tool/tests/test_oppb_init.py",
+    "opal/tools/oppb-runtime-tool/tests/test_probe.py",
+    "opal/tools/oppb-runtime-tool/tests/test_product_flow.py",
+    "opal/tools/oppb-runtime-tool/tests/test_recovery.py",
+    "opal/tools/oppb-runtime-tool/tests/test_revalidation.py",
+    "opal/tools/oppb-runtime-tool/tests/test_supervisor.py",
+    "opal/tools/oppb-runtime-tool/tests/test_verifier_adapter.py",
+    "opal/tools/oppb-runtime-tool/verifier_adapter.py",
+    "tasks/158-260926-oppm-OPPB-run-root-태스크귀속/TASK.md",
+    "tasks/158-260926-oppm-OPPB-run-root-태스크귀속/evidence/RED.md",
+    "tasks/158-260926-oppm-OPPB-run-root-태스크귀속/evidence/GREEN.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-011",
+      "fingerprint": "19e31ece5ff21503",
+      "category": "documentation",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §제안서 생명주기",
+      "source_tier": "T0",
+      "location": {"file": "docs/proposals/opal-oppb-project-build-pilot.md", "line": 3},
+      "evidence": "상단 상태가 허용 어휘 4종에 없는 '초안'이며 이번 diff 이전부터 존재했다.",
+      "impact": "proposal lifecycle 판정이 표준 상태 어휘로 문서를 해석하지 못한다.",
+      "remediation": {"guidance": "현재 단계에 맞는 허용 상태 어휘로 갱신한다.", "reference": "docs/CONVENTIONS.md §제안서 생명주기", "auto_fixable": true},
+      "verification": "문서 상단 상태가 제안/검토/적용완료/폐기 중 하나다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-012",
+      "fingerprint": "4aa9fd1a24debe93",
+      "category": "documentation",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CONVENTIONS.md §@header 규칙",
+      "source_tier": "T0",
+      "location": {"file": "opal/tools/oppb-runtime-tool/tests/test_product_flow.py", "line": 7, "symbol": "@header.migration_note"},
+      "evidence": "code-scan validate가 header_history/undeclared_field/migration_note 경고 1건을 반환했다. 이번 변경 이전부터 존재한 비차단 경고다.",
+      "impact": "현재 역할과 과거 작업 이력이 헤더에 함께 누적된다.",
+      "remediation": {"guidance": "이력은 git/task 기록으로 옮기고 헤더에는 현재 사실만 남긴다.", "reference": "docs/CONVENTIONS.md §@header 규칙", "auto_fixable": true},
+      "verification": "code-scan validate 결과 counts.header_history가 0이다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "evidence/GREEN.md lines 15-28 preserve commands and results: 27 passed; 151 passed + 13 subtests; 18 passed",
+    "TASK.md lines 131-133 reference evidence/GREEN.md and run-log sequence 11",
+    "run-log sequence 11 summary and refs match GREEN.md",
+    "git diff --check => exit 0",
+    "ruff check on 14 Python target files => exit 0, All checks passed",
+    "python3 -m py_compile on 14 Python target files => exit 0",
+    "python3 -m json.tool opal/tools/oppb-runtime-tool/schema/oppb-state.schema.json => exit 0",
+    "code-scan validate => exit 0; newly_uncovered=0; pre_existing=8; header_history=1"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    ".opal/code-scan.json"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/158-260926-oppm-OPPB-run-root-태스크귀속/evidence/GC-CONVENTION-20260926T091900Z-final-recheck.md"
+}

@@ -447,8 +447,13 @@ def _completed_run(tmp_root: pathlib.Path, kind: str) -> dict:
     hub = fixture["hub"]
 
     # 1) init
+    task_root = hub / "tasks" / "999-260926-oppb-fixture"
+    task_root.mkdir(parents=True)
     init_res = run_oppb_cli(
-        ["init", "--allocator-root", str(hub), "--project-root", str(hub)]
+        [
+            "init", "--allocator-root", str(hub), "--project-root", str(hub),
+            "--task-root", str(task_root),
+        ]
     )
     assert init_res.get("ok") is True, f"init 실패: {init_res}"
     run_root = pathlib.Path(init_res["run_root"])

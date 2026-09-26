@@ -178,7 +178,10 @@ def bootstrap_run(tmp_path: pathlib.Path, mini_tasks: list[dict]) -> dict:
     capsule = make_project_capsule(repo)
     init = ok(
         run_oppb(
-            ["init", "--allocator-root", str(repo), "--project-root", str(capsule)]
+            [
+                "init", "--allocator-root", str(repo), "--project-root", str(repo),
+                "--task-root", str(capsule),
+            ]
         ),
         "init",
     )
@@ -405,6 +408,6 @@ def test_run_root_owns_operational_artifacts_and_capsule_owns_user_artifacts(tmp
     assert results, "RED: result.json 미생성"
 
     tracked = run_git(["status", "--porcelain"], cwd=repo).stdout
-    assert ".opal-runs" not in tracked, (
+    assert ".oppb-run" not in tracked, (
         f"run root가 Git 추적 상태에 노출됨 — 미추적 계약 위반:\n{tracked}"
     )

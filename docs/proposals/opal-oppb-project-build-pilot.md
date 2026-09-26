@@ -250,7 +250,7 @@ OPPB는 현행 OPPD를 교체하지 않는다. 두 구현을 **런타임에서 �
 | `.opal/oppb-environment.json` | 프로젝트 root | 추적 | Environment Probe Tool | 관측된 미추적 쓰기·cache adapter·runtime resource·입력 hash를 봉인한 프로젝트 실행 profile |
 | `state.json`·`STATE.md` | 프로젝트 태스크 캡슐 | 추적 | state-tool | P0~P5 프로젝트 파이프라인 상태·결정 저널 |
 | OPPB `pipeline.json` | `opal-pilot-project-build/references/` | 추적 | 프레임워크 소스 | P0~P5 행과 게이트 정의 |
-| run root | `<allocator_root>/.opal-runs/<run_id>/` | 미추적·ignore | `oppb-runtime-tool init` | 재시작 가능한 실행 운영 자료 |
+| run root | `<oppb_task_path>/.oppb-run/<run_id>/` | 미추적·ignore | `oppb-runtime-tool init` | 태스크에 귀속된 재시작 가능한 실행 운영 자료 |
 | cache root | `<allocator_root>/.opal-cache/oppb/` | 미추적·ignore | `oppb-runtime-tool cache` | run 간 재사용하는 immutable source·dependency·build CAS object와 generation receipt |
 | `workgraph.json` | run root | 미추적 | Controller Tool | P3 내부 DAG·미니 태스크·계약·예산·상태 SSOT |
 | `acceptance.json` | run root | 미추적 | Controller Tool | 프로젝트 완료조건·기여 태스크·증거 역인덱스 |
@@ -266,10 +266,16 @@ OPPB는 현행 OPPD를 교체하지 않는다. 두 구현을 **런타임에서 �
 `state.json`을 직접 쓰지 않는다. P0~P5 전이는 Product Flow가 `state-tool`을 호출하고, 세부 태스크
 전이는 Controller가 revision lock 아래 `workgraph.json`만 갱신한다.
 
-미추적 run root는 worktree 회수와 함께 삭제하지 않으며 DONE의 manifest가 경로·content hash를
-가리킨다. `oppb-runtime-tool init`이 allocator Git repository의 `.git/info/exclude`에 `.opal-runs/`와
-`.opal-cache/oppb/`를 멱등 등록하고 실제 ignore 판정을 확인하지 못하면 run 시작을 거부한다. 별도 보존 정책이 만료시키기
-전까지 재시작과 사후 감사에 사용한다. PM Agent는 DONE을 직접 쓰지 않고 최종 사용자 보고만 작성한다.
+활성 run root는 프로젝트 worktree의 OPPB 태스크 폴더에 둔다. 성공 종료 시
+`oppb-runtime-tool finalize-run`이 로그·결과·증거·최종 상태를 허브 canonical 태스크 폴더의 동일한
+`.oppb-run/<run_id>/`에 게시하고, lock·Supervisor identity·임시 index·검증 sandbox만 제거한다.
+allocator root는 registry가 발급한 절대경로를 명시 전달하고 run manifest와 대조한다. 게시 snapshot은
+Supervisor·workgraph lock을 함께 획득한 구간에서 만들며, 멱등 재호출도 보존본 hash를 재검증한다.
+DONE의 manifest는 게시 경로·content hash를 가리킨다. 실패·중단 run은 전체를 유지해 재개하며, 기존
+`<allocator_root>/.opal-runs/<run_id>/`는 새로 만들지 않고 조회·재개 호환으로만 수용한다.
+`init`은 project repository의 `.git/info/exclude`에 `.oppb-run/`, allocator repository에는
+`.opal-cache/oppb/`를 멱등 등록하고 실제 ignore 판정을 확인하지 못하면 run 시작을 거부한다.
+PM Agent는 DONE을 직접 쓰지 않고 최종 사용자 보고만 작성한다.
 
 프로젝트 worktree 안의 Git writer는 Checkpoint Tool 하나다. Runner는 같은 작업본에서 서로 다른 lease를
 수정하지만 commit·index·HEAD를 건드리지 않는다. Checkpoint Tool은 lease 경로만 후보 tree에 넣는다. P5의 기존

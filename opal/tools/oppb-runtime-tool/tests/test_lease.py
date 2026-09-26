@@ -95,10 +95,15 @@ def make_hub_repo(base: pathlib.Path, name: str = "hub") -> pathlib.Path:
 
 
 def init_run(repo: pathlib.Path) -> dict:
-    """`init --allocator-root <abs> --project-root <abs>` 1회.
+    """명시 allocator/project/task root로 `init` 1회.
     test_oppb_init.py(W-10)가 고정한 응답 계약을 재사용한다."""
+    task_root = repo / "tasks" / "999-260926-oppb-fixture"
+    task_root.mkdir(parents=True, exist_ok=True)
     result = run_oppb(
-        ["init", "--allocator-root", str(repo), "--project-root", str(repo)]
+        [
+            "init", "--allocator-root", str(repo), "--project-root", str(repo),
+            "--task-root", str(task_root),
+        ]
     )
     assert result.returncode == 0, (
         f"init 실패: exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"

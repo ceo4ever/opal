@@ -292,7 +292,7 @@ def _output_dir(opts, run_root, task_id):
     raw = opts.get("output_dir")
     path = pathlib.Path(raw) if raw else run_root / "verify" / task_id
     # Verifier 보고서 산출 위치는 run root 안이며 Git 추적 대상이 아니다(init이
-    # `.opal-runs/`를 exclude에 등록한다). 워커가 바로 쓸 수 있게 미리 만든다.
+    # `.oppb-run/`을 project exclude에 등록한다). 워커가 바로 쓸 수 있게 미리 만든다.
     path.mkdir(parents=True, exist_ok=True)
     return str(path)
 

@@ -110,8 +110,13 @@ def make_project_repo(base: pathlib.Path, name: str = "project") -> pathlib.Path
 
 
 def init_run(repo: pathlib.Path, project: pathlib.Path) -> dict:
+    task_root = project / "tasks" / "999-260926-oppb-fixture"
+    task_root.mkdir(parents=True, exist_ok=True)
     result = run_oppb(
-        ["init", "--allocator-root", str(repo), "--project-root", str(project)]
+        [
+            "init", "--allocator-root", str(repo), "--project-root", str(project),
+            "--task-root", str(task_root),
+        ]
     )
     assert result.returncode == 0, (
         f"init 실패: exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"

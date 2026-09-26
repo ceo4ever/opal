@@ -8,8 +8,8 @@
 
 | 항목 | 값 |
 |---|---|
-| 동결 시각 (UTC) | `2026-09-15T12:06:50Z` (재동결 #4 — additive 확장 #2 + `profile` enum 정정) |
-| 동결 기준 commit | `0862d1a14b4de867934d55c1d57e2e30aabb0d86` (`0862d1a`) — 확장 자체는 이 시점 미커밋이며 W-44 커밋에 들어간다 |
+| 동결 시각 (UTC) | `2026-09-26T09:18:32Z` (재동결 #5 — run root 경로 설명 정정) |
+| 동결 기준 commit | `6bc7b1ae678aff257213e9572023a1027673aade` (`6bc7b1a`) — 설명 정정 자체는 이 시점 미커밋 |
 | 브랜치 / worktree | `.opal-worktrees/task_132` |
 | 상류 main 대조 | `git log --oneline main ^HEAD` 결과 **7건** — 재동결 #3 이후 main이 앞서갔다. 7건 모두 `oppb-runtime-tool` 밖의 상류 작업이고, 이번 재동결은 병합하지 않은 이 브랜치 상태를 기준으로 한다. 병합 시 §2의 sha256을 재확인한다 |
 | 동결 대상 구현 | `controller.py` · `supervisor.py` · `evidence.py` · `oppb_runtime_tool.py` (동결 시점 기준 아직 미커밋 — G2 체크포인트 커밋에 함께 들어간다) |
@@ -18,7 +18,7 @@
 
 | 파일 | sha256 | bytes |
 |---|---|---|
-| `oppb-state.schema.json` | `c0532009e4261a3101ce8ebef63271789ee03d2585018f337952169d6eab1b38` | 24319 |
+| `oppb-state.schema.json` | `36172871f2012b5bb1b83ebf5e004a7ba8d509509ee3405018478cf051cbd2d7` | 24318 |
 | `oppb-event.schema.json` | `8a78a0c70f04dcea7334d42a20005f9e3ab547a8a4787ecc4c621af91e66fd98` | 5321 |
 | `oppb-command.schema.json` | `f3fab919b75d3c8c57f474195433a340de13d03abee2874e00d4f5edad42b79e` | 12791 |
 | `oppb-evidence.schema.json` | `2bc84ff52e1860fd917204538bf2243ae2c4ac76f0316eb7f965cfe671a91c22` | 5135 |
@@ -153,6 +153,7 @@ G2 명령 7종의 인자·응답·오류 계약이 바뀔 때다.
 | 2 | 2026-09-15T01:38:25Z | `9d7dbc6` | **범위 한정 재동결** — W-11 재진입 / PLAN H-3. G3 워커 5명(W-12~W-16)이 동결된 `command_name` enum이 확장된 CLI 표면을 기술하지 못한다고 보고. enum 값을 늘리지 않고 `command_name`·`flag_name`·`error_code`·run root 문서 목록의 description을 **"G2가 소유하는 집합"**으로 한정했다. 최초 동결이 G2 시점 실측을 전체 표면으로 일반화한 오류를 정정한 것이다. 변경은 description 전용 — enum 값·필수 필드·구조 변경 0. |
 | 3 | 2026-09-15T07:31:12Z | `0862d1a` | **additive 확장 재동결** — W-41 / H-3 예외. **소유자 명시 승인**으로 동결 이후 최초로 `oppb-state.schema.json`에 필드를 추가했다. 추가 2개뿐: `properties.execution_contract`(문자열, run root 상대 경로, 기본 `"INTENT.md"`) · `$defs.mini_task.properties.profile`(enum `fast`·`full`). 근거는 §8. 삭제·수정 0 — 기계 증명으로 확인했다. `oppb-event`·`oppb-command`·`oppb-evidence` 3종은 무변경이라 sha256이 그대로다. |
 | 4 | 2026-09-15T12:06:50Z | `0862d1a` | **additive 확장 #2 + enum 정정 재동결** — W-44 / H-3 예외. **소유자 명시 승인**으로 재검증 그래프(제안서 §9.1)를 동결 스키마에 흡수했다. 추가 7개: 루트 `properties.contracts` · `$defs.mini_task.properties`의 `consumes_contracts`·`produces_contract`·`acceptance_scenarios`·`contract_tests` · `$defs.task_state` enum에 `needs_revalidation`·`repair`. 지원 `$defs` 4종(`contract_declaration`·`contract_ref`·`check_command`·`check_entry`) 신설. **정정 1건**: `profile` enum `["fast","full"]` → `["fast","standard","critical"]`(제안서 §8 실측). 근거는 §9. `oppb-event`·`oppb-command`·`oppb-evidence` 3종은 무변경이라 sha256이 그대로다. |
+| 5 | 2026-09-26T09:18:32Z | `6bc7b1a` | **description-only 경로 정정** — OPPB run root를 허브 `.opal-runs`에서 태스크 귀속 `.oppb-run`으로 바꾼 승인 계약을 반영했다. 필드·enum·required·불변식 변경 0이며 나머지 스키마 3종은 무변경이다. |
 
 ## 8. 재동결 #3 — additive 확장 근거 (H-3 예외)
 

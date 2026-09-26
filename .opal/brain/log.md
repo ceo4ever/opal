@@ -463,3 +463,7 @@
 - 신규: [[concept/lease-handoff-before-terminal-launch]], [[concept/contract-absent-from-harness-docs-passes-review]]
 - 출처: task:150
 
+## [2026-09-26] ingest | Task 158 OPPB run root 태스크 귀속 결정 기록
+- 신규: [[oppb-run-records-follow-task-lifecycle]]
+- 출처: tasks/158-260926-oppm-OPPB-run-root-태스크귀속/TASK.md
+

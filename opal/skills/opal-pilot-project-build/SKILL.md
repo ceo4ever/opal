@@ -196,7 +196,7 @@ tasks/{NNN}-oppb-{프로젝트명}/          (추적 — 프로젝트 태스크 
 
 .opal/oppb-environment.json            (추적 — P2 봉인된 실행 profile)
 
-<allocator_root>/.opal-runs/<run_id>/   (미추적 — run root, worktree 회수와 함께 삭제하지 않는다)
+tasks/{NNN}-oppb-{프로젝트명}/.oppb-run/<run_id>/ (미추적 — OPPB 태스크 귀속 run root)
 ├── workgraph.json · acceptance.json
 ├── attempts/<task_id>/<attempt_id>/{execution-packet.json, result.json}
 ├── evidence/<scope>/<evidence_id>.json
@@ -256,9 +256,10 @@ worktree **하나**를 만든다.
 1. OPAL 프로젝트 여부·프로젝트 태스크 번호·단일 worktree·기존 문서·사용자 입력 충분성을 판정한다
    (`p0.context_probe`). 기존 OPAL 프로젝트에서는 §문서 라우팅의 레지스트리 경로만 읽는다.
 2. 프로젝트 태스크 캡슐과 P0~P5 `state.json`을 만든다 (`p0.task_capsule`) — 위 `state-tool init` 호출.
-3. `oppb-runtime-tool init --allocator-root <허브 최상위 절대경로> --project-root <프로젝트 절대경로>`로
-   run root·cache root를 연다. 이 명령은 `.git/info/exclude` 등록과 실제 ignore 판정 확인에 실패하면
-   run 시작을 거부한다. 거부는 우회하지 않고 blocker로 보고한다.
+3. `oppb-runtime-tool init --allocator-root <허브 최상위 절대경로> --project-root <프로젝트 절대경로>
+   --task-root <프로젝트 worktree의 OPPB 태스크 캡슐 절대경로>`로 태스크 귀속 run root와 허브 공유
+   cache root를 연다. 이 명령은 각 Git repository의 `.git/info/exclude` 등록과 실제 ignore 판정 확인에
+   실패하면 run 시작을 거부한다. 거부는 우회하지 않고 blocker로 보고한다.
 
 ---
 
@@ -381,8 +382,13 @@ worktree **하나**를 만든다.
 3. `p5.knowledge_batch` — **MEMORY·brain 반영은 여기서 정확히 1회다.**
 4. `p5.done_md` — 프로젝트 `DONE.md`·evidence manifest를 acceptance 결과에서 결정론적으로 렌더한다. PM은 DONE을
    직접 쓰지 않고 최종 사용자 보고만 작성한다.
-5. `p5.worktree_finalize` — `worktree-tool finalize`·귀속 확정·worktree 회수. 미추적 run root는 함께 삭제하지 않으며
-   DONE의 manifest가 경로·content hash를 가리킨다.
+5. `p5.worktree_finalize` — `worktree-tool finalize`로 귀속을 확정한 뒤, worktree 회수 전에
+   `oppb-runtime-tool finalize-run --run-root <worktree task의 run_root> --allocator-root <허브 최상위 절대경로>
+   --task-path <허브 canonical task path>`를
+   호출한다. 이 명령은 성공 완료를 확인하고 로그·결과·증거·최종 상태를 허브 태스크의
+   `.oppb-run/<run_id>/`에 게시하며 lock·Supervisor identity·임시 index·검증 sandbox만 제거한다.
+   DONE의 manifest는 반환된 경로·content hash를 가리킨다. 게시 성공 후에만 worktree를 회수한다.
+   실패·중단 run은 `finalize-run`을 호출하지 않고 worktree 안에 그대로 두어 재개한다.
 
 > **[MUST] 지식 반영 1회 계약**: MEMORY·brain은 P5 이전까지 **읽기 전용**이다(수용기준 11). 미니 태스크마다
 > `op-brain-ingest`·`opal-improve` hook을 호출하지 않는다. 실패·폐기된 미니 태스크 후보를 제거한 뒤, 최종 허브

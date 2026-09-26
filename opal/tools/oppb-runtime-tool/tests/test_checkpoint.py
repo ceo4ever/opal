@@ -190,8 +190,14 @@ def make_project_worktree(base: pathlib.Path, name: str = "project") -> pathlib.
 
 
 def init_run(repo: pathlib.Path, project: pathlib.Path, env: dict | None = None) -> dict:
+    task_root = project / "tasks" / "999-260926-oppb-fixture"
+    task_root.mkdir(parents=True, exist_ok=True)
     result = run_oppb(
-        ["init", "--allocator-root", str(repo), "--project-root", str(project)], env=env
+        [
+            "init", "--allocator-root", str(repo), "--project-root", str(project),
+            "--task-root", str(task_root),
+        ],
+        env=env,
     )
     assert result.returncode == 0, (
         f"init 실패: exit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}"

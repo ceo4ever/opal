@@ -122,8 +122,13 @@ def write_spec(path: pathlib.Path, budget: dict, mini_tasks: list[dict]) -> path
 
 def bootstrap_run(tmp_path: pathlib.Path, budget: dict, mini_tasks: list[dict]) -> dict:
     repo = make_hub_repo(tmp_path)
+    task_root = repo / "tasks" / "999-260926-oppb-fixture"
+    task_root.mkdir(parents=True)
     init = ok(
-        run_oppb(["init", "--allocator-root", str(repo), "--project-root", str(repo)]),
+        run_oppb([
+            "init", "--allocator-root", str(repo), "--project-root", str(repo),
+            "--task-root", str(task_root),
+        ]),
         "init",
     )
     spec = write_spec(tmp_path / "spec.json", budget, mini_tasks)

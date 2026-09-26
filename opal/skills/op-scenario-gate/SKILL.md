@@ -88,7 +88,7 @@ evaluator는 `scores`, `gaps`, `verdict`만 반환한다. 반복별 Markdown 보
 
 입력이 둘 늘어난다.
 
-- `run_root`: `<allocator_root>/.opal-runs/<run_id>` 절대경로
+- `run_root`: `<oppb_task_path>/.oppb-run/<run_id>` 절대경로
 - `scope`: 검증 대상 미니 태스크 id (`workgraph.json`의 `mini_tasks[].id`)
 
 경로 규율은 §1과 같다 — coverage 입력과 gate 이력은 `task_folder` 안에 쓰고, run root
