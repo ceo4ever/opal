@@ -66,3 +66,4 @@
 | 46 | 2026-09-26 09:14 | CLOSE | `GATE` | ADD-4 검토: 기존 행 원문 복원, oppb 13·design_gate 20 pass, 설치 반영 | Pass |
 | 47 | 2026-09-26 09:14 | CLOSE | `DECISION` | ADD-5: 캡틴 지시(//opal-skill-creator, 태스크 없이 알투가 직접, 157 작업본에 두어 함께 merge)로 opal-skill-tester를 PM이 직접 작성. opal-skill-creator 레지스트리 단계의 설치본 직접 등록은 프로젝트 규칙(소스 수정 후 install)에 따라 소스 레지스트리 등록으로 대체. 이름은 opal-pilot-* 접두어가 Pilot 공유 계약 스캔 대상이라 opal-skill-tester로 확정(캡틴 승인) | ADD-5 |
 | 48 | 2026-09-26 09:33 | CLOSE | `GATE` | ADD-5 검증: validate 통과, 재생 보고서 결함 자동 검출, 설치본 스모크 실측 PASS(19분·$9.72) → 예상치를 실측 기반으로 갱신 | Pass |
+| 49 | 2026-09-26 09:40 | CLOSE | `DECISION` | ADD-6(캡틴 지시): ost 실행 조건을 인터뷰로 정하도록 절차 재구성. 최종 비용 확인은 '바로 돌려'여도 생략하지 않음 — 실행 1회가 실제 비용을 쓰기 때문 | ADD-6 |

@@ -4,7 +4,7 @@
   "module": "skill_tester",
   "layer": "util",
   "domain": "opal-skill-tester",
-  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report)을 수행한다. 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다.",
+  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report, --save-baseline 지원)을 수행한다. 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다.",
   "exports": ["main", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report"]
 }
 """
@@ -378,7 +378,7 @@ def main(argv=None):
     v = sub.add_parser("validate"); v.add_argument("id", nargs="?"); v.add_argument("--all", action="store_true")
     r = sub.add_parser("run"); r.add_argument("id"); r.add_argument("--variant", action="append")
     r.add_argument("--repeat", type=int, default=1); r.add_argument("--out"); r.add_argument("--save-baseline", action="store_true")
-    p = sub.add_parser("report"); p.add_argument("out")
+    p = sub.add_parser("report"); p.add_argument("out"); p.add_argument("--save-baseline", action="store_true")
     a = ap.parse_args(argv)
     if a.cmd == "list":
         items = [{k: x.get(k) for k in ("id", "mode", "title", "default_variant", "estimate", "_error") if x.get(k) is not None}
@@ -399,7 +399,10 @@ def main(argv=None):
             out({"ok": False, "command": "report", "error": "no_runs"}, 1)
         s = json.loads((SCENARIOS / first["scenario"] / "scenario.json").read_text(encoding="utf-8"))
         rep = write_report(rd, s)
-        out({"ok": True, "command": "report", "report": str(rd / "REPORT.md"), "verdicts": {m["run"]: m["verdict"] for m in rep["runs"]}})
+        if a.save_baseline:
+            _save_baseline(s, rep)
+        out({"ok": True, "command": "report", "report": str(rd / "REPORT.md"), "baseline_saved": a.save_baseline,
+             "verdicts": {m["run"]: m["verdict"] for m in rep["runs"]}})
 
 
 if __name__ == "__main__":

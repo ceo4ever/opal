@@ -1,6 +1,6 @@
 # STATE: PM 설계 경로 단일화와 독립 설계 게이트
 
-> 최종 갱신: 2026-09-26 09:33:35
+> 최종 갱신: 2026-09-26 09:40:24
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
@@ -13,6 +13,7 @@
 | 4 | 2026-09-26 08:45:01 | current_status changed: additional_work → additional_work_done | 캡틴 확인: ADD-1~3 완료 승인(모의 테스트 체계 새 태스크 진행 승인과 함께) |
 | 5 | 2026-09-26 09:09:58 | additional row inserted after row 19: stage=CLOSE, item=ADD-4 evaluator AGENT.md 기존 입력 행 원문 복원(oppb 공유 계약 회귀), key=close.add_4, new_row_id=20 | additional work entry |
 | 6 | 2026-09-26 09:14:12 | additional row inserted after row 20: stage=CLOSE, item=ADD-5 opal-skill-tester 신설(캡틴 지시 //opal-skill-creator, PM 직접 작성), key=close.add_5, new_row_id=21 | additional work entry |
+| 7 | 2026-09-26 09:40:23 | additional row inserted after row 21: stage=CLOSE, item=ADD-6 opal-skill-tester 인터뷰 절차(모드·시나리오·변형·반복 질문 후 최종 확인), key=close.add_6, new_row_id=22 | additional work entry |
 
 ## 블로커
 없음
