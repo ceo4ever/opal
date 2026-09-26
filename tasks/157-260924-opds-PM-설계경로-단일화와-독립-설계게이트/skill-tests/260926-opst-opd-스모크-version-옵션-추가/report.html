@@ -25,7 +25,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}th{color:var(--text
 .tabs button{font:inherit;font-size:13px;background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;color:var(--text-secondary);cursor:pointer}
 .tabs button[aria-selected=true]{color:var(--text-primary);border-bottom-color:var(--s1);font-weight:600}
 .panel{display:none}.panel.on{display:block}
-a{color:var(--s1)}button.cp{font:inherit;font-size:11px;padding:1px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-secondary);cursor:pointer}code{font-size:12px}
+a{color:var(--s1)}td.lk{white-space:nowrap}tr.detail>td{background:var(--page);padding:12px}button.dt,button.cp{font:inherit;font-size:11px;padding:1px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-secondary);cursor:pointer}code{font-size:12px}
 .overflow{overflow-x:auto}
 </style></head><body><div class="viz-root">
 <h1>스킬 테스트 보고서 — --version 옵션 추가</h1><div class="sub"><code>smoke-version-flag</code> · 스모크 · 변형 1개 · 반복 1회 · 2026-09-26 14:11</div>
@@ -40,7 +40,7 @@ a{color:var(--s1)}button.cp{font:inherit;font-size:11px;padding:1px 6px;border:1
 <div class="card"><h2>전체 지표</h2><table><tr><td>판정</td><td class="n">FAIL</td></tr><tr><td>불합격 사유</td><td class="n">준수 불충족: checkpoint_commits</td></tr><tr><td>숨은 테스트</td><td class="n">2 passed in 0.68s</td></tr><tr><td>파이프라인 완료</td><td class="n">✓</td></tr><tr><td>상태 검증 위반 0</td><td class="n">✓</td></tr><tr><td>run-log 적체 0</td><td class="n">✓</td></tr><tr><td>게이트 증거</td><td class="n">✓</td></tr><tr><td>체크포인트 커밋</td><td class="n">✕ 불충족</td></tr><tr><td>최종 수행 시간</td><td class="n">20.6분</td></tr><tr><td>비용</td><td class="n">$8.8</td></tr><tr><td>턴</td><td class="n">102</td></tr><tr><td>출력 토큰</td><td class="n">54290</td></tr><tr><td>서브에이전트</td><td class="n">5</td></tr><tr><td>게이트 반복</td><td class="n">1</td></tr><tr><td>체크포인트 커밋(도구/우회)</td><td class="n">0 / 0</td></tr><tr><td>run-log 적체 첫 사건</td><td class="n">없음</td></tr><tr><td>프레임워크 지문</td><td class="n">main+85c0a5</td></tr></table></div></div></section><section id="hist0" class="panel">
 <div class="card" style="margin-bottom:16px"><b>//opd</b> · 이번 시나리오 <code>smoke-version-flag</code> 이력 0회 + 이번 실행</div>
 <div class="grid g4"><div class="card"><div class="tag">최종 수행 시간: 이력 1회 — 추세 없음</div></div><div class="card"><div class="tag">비용: 이력 1회 — 추세 없음</div></div><div class="card"><div class="tag">게이트 반복: 이력 1회 — 추세 없음</div></div><div class="card"><div class="tag">세션이 발견한 문제: 이력 1회 — 추세 없음</div></div></div>
-<div class="card"><h2>//opd 스킬 테스트 이력 (전체 시나리오)</h2><div class="tag" style="margin-bottom:8px">'열기'는 같은 탭에서 열립니다(뒤로 가기로 복귀). 일반 브라우저는 Cmd/Ctrl+클릭으로 새 탭에 열 수 있고, 새 탭을 지원하지 않는 뷰어(예: Orca 내장 브라우저)에서는 '링크 복사' 후 새 탭 주소창에 붙여 넣어 나란히 비교하세요. 태스크가 backup/으로 아카이브됐으면 'backup 위치'를 쓰거나 <code>refresh</code>로 링크를 다시 만드세요.</div>
+<div class="card"><h2>//opd 스킬 테스트 이력 (전체 시나리오)</h2><div class="tag" style="margin-bottom:8px">'상세 펼치기'는 과거 실행 상세를 이 페이지 안에서 보여줍니다(모든 뷰어). '새 탭 열기'는 과거 대시보드 전체를 새 탭으로 엽니다 — 로컬 파일 간 이동을 막는 뷰어(예: Orca 내장 브라우저)에서는 동작하지 않으니 '상세 펼치기'나 '링크 복사' 후 새 탭 주소창에 붙여 넣기를 쓰세요. 태스크가 backup/으로 아카이브됐으면 'backup 위치'를 쓰거나 <code>refresh</code>로 링크를 다시 만드세요.</div>
 <div class="overflow"><table><tr><th>일시</th><th>시나리오</th><th>모드</th><th>판정</th><th class="n">최종 수행 시간(분)</th><th class="n">비용($)</th><th class="n">게이트 반복</th><th>프레임워크</th><th>보고서</th></tr><tr><td colspan="9" class="tag">과거 기록 없음 — 이번 실행이 첫 기록입니다</td></tr></table></div></div></section>
 <div class="tag" style="margin-top:16px">opal-skill-tester · 반복 실행은 첫 회차 기준으로 표시하며 전체 수치는 metrics.json에 있습니다.</div>
 </div><script>
@@ -50,6 +50,9 @@ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
 b.setAttribute('aria-selected','true');document.getElementById(id).classList.add('on');}
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.t);history.replaceState(null,'','#'+b.dataset.t);}));
 if(location.hash)show(decodeURIComponent(location.hash.slice(1)));
+document.querySelectorAll('button.dt').forEach(b=>b.addEventListener('click',()=>{
+const r=document.getElementById(b.dataset.row);const open=r.hidden;r.hidden=!open;
+b.setAttribute('aria-expanded',String(open));b.textContent=open?'상세 접기':'상세 펼치기';}));
 document.querySelectorAll('button.cp').forEach(b=>b.addEventListener('click',async()=>{
 const url=new URL(b.dataset.href,location.href).href;let ok=false;
 try{await navigator.clipboard.writeText(url);ok=true;}catch(_){const t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();try{ok=document.execCommand('copy');}catch(__){}t.remove();}

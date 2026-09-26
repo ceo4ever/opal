@@ -41,7 +41,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}th{color:var(--text
 .tabs button{font:inherit;font-size:13px;background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;color:var(--text-secondary);cursor:pointer}
 .tabs button[aria-selected=true]{color:var(--text-primary);border-bottom-color:var(--s1);font-weight:600}
 .panel{display:none}.panel.on{display:block}
-a{color:var(--s1)}button.cp{font:inherit;font-size:11px;padding:1px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-secondary);cursor:pointer}code{font-size:12px}
+a{color:var(--s1)}td.lk{white-space:nowrap}tr.detail>td{background:var(--page);padding:12px}button.dt,button.cp{font:inherit;font-size:11px;padding:1px 6px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-secondary);cursor:pointer}code{font-size:12px}
 .overflow{overflow-x:auto}
 """
 
@@ -52,6 +52,9 @@ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
 b.setAttribute('aria-selected','true');document.getElementById(id).classList.add('on');}
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.t);history.replaceState(null,'','#'+b.dataset.t);}));
 if(location.hash)show(decodeURIComponent(location.hash.slice(1)));
+document.querySelectorAll('button.dt').forEach(b=>b.addEventListener('click',()=>{
+const r=document.getElementById(b.dataset.row);const open=r.hidden;r.hidden=!open;
+b.setAttribute('aria-expanded',String(open));b.textContent=open?'상세 접기':'상세 펼치기';}));
 document.querySelectorAll('button.cp').forEach(b=>b.addEventListener('click',async()=>{
 const url=new URL(b.dataset.href,location.href).href;let ok=false;
 try{await navigator.clipboard.writeText(url);ok=true;}catch(_){const t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();try{ok=document.execCommand('copy');}catch(__){}t.remove();}
@@ -61,6 +64,9 @@ const o=b.textContent;b.textContent=ok?'복사됨 ✓':'복사 실패';setTimeou
 
 def _r1(v, nd=1):
     return round(v, nd) if isinstance(v, (int, float)) else (v if v is not None else "-")
+
+
+_DETAIL_IDS = __import__('itertools').count(1)
 
 
 def e(x):
@@ -272,17 +278,20 @@ def history_panel(variant, current, scenario_id, hist_same, hist_skill, here_dir
         if h.get("report_path"):
             rel = os.path.relpath(h["report_path"], here_dir)
             alt = h.get("report_alt_path")
-            links = f'<a class="hl" href="{e(rel)}">열기</a> <button class="cp" data-href="{e(rel)}" type="button">링크 복사</button>'
+            links = f'<a href="{e(rel)}" target="_blank" rel="noopener">새 탭 열기 ↗</a> <button class="cp" data-href="{e(rel)}" type="button">링크 복사</button>'
             if alt:
-                links += f' <a class="tag hl" href="{e(os.path.relpath(alt, here_dir))}">{"backup 위치" if "/backup/" in alt else "원래 위치"}</a>'
+                links += f' <a class="tag" href="{e(os.path.relpath(alt, here_dir))}" target="_blank" rel="noopener">{"backup 위치" if "/backup/" in alt else "원래 위치"}</a>'
+        did = f"d{next(_DETAIL_IDS)}"
+        links = f'<button class="dt" data-row="{did}" type="button" aria-expanded="false">상세 펼치기</button> ' + links
         rows.append(f'<tr><td>{e(h["created_at"][:16])}</td><td><code>{e(h["scenario"])}</code></td><td>{e(MODE_KO.get(h.get("mode"), h.get("mode")))}</td>'
                     f'<td>{chip(h.get("verdict") == "PASS")}</td><td class="n">{e(_r1(h.get("wall_min")))}</td><td class="n">{e(_r1(h.get("cost_usd"), 2))}</td>'
-                    f'<td class="n">{e(h.get("gate_iterations"))}</td><td class="tag">{e(h.get("framework") or "-")}</td><td>{links}</td></tr>')
+                    f'<td class="n">{e(h.get("gate_iterations"))}</td><td class="tag">{e(h.get("framework") or "-")}</td><td class="lk">{links}</td></tr>'
+                    f'<tr id="{did}" class="detail" hidden><td colspan="9"><div class="tag" style="margin:4px 0 8px">{e(h["created_at"][:16])} · <code>{e(h["scenario"])}</code> 실행 상세</div>{summary_panel(h, [])}</td></tr>')
     table = ("".join(rows) or '<tr><td colspan="9" class="tag">과거 기록 없음 — 이번 실행이 첫 기록입니다</td></tr>')
     return f"""
 <div class="card" style="margin-bottom:16px"><b>{e(variant)}</b> · 이번 시나리오 <code>{e(scenario_id)}</code> 이력 {len(hist_same)}회 + 이번 실행</div>
 <div class="grid g4">{charts}</div>
-<div class="card"><h2>{e(variant)} 스킬 테스트 이력 (전체 시나리오)</h2><div class="tag" style="margin-bottom:8px">'열기'는 같은 탭에서 열립니다(뒤로 가기로 복귀). 일반 브라우저는 Cmd/Ctrl+클릭으로 새 탭에 열 수 있고, 새 탭을 지원하지 않는 뷰어(예: Orca 내장 브라우저)에서는 '링크 복사' 후 새 탭 주소창에 붙여 넣어 나란히 비교하세요. 태스크가 backup/으로 아카이브됐으면 'backup 위치'를 쓰거나 <code>refresh</code>로 링크를 다시 만드세요.</div>
+<div class="card"><h2>{e(variant)} 스킬 테스트 이력 (전체 시나리오)</h2><div class="tag" style="margin-bottom:8px">'상세 펼치기'는 과거 실행 상세를 이 페이지 안에서 보여줍니다(모든 뷰어). '새 탭 열기'는 과거 대시보드 전체를 새 탭으로 엽니다 — 로컬 파일 간 이동을 막는 뷰어(예: Orca 내장 브라우저)에서는 동작하지 않으니 '상세 펼치기'나 '링크 복사' 후 새 탭 주소창에 붙여 넣기를 쓰세요. 태스크가 backup/으로 아카이브됐으면 'backup 위치'를 쓰거나 <code>refresh</code>로 링크를 다시 만드세요.</div>
 <div class="overflow"><table><tr><th>일시</th><th>시나리오</th><th>모드</th><th>판정</th><th class="n">최종 수행 시간(분)</th><th class="n">비용($)</th><th class="n">게이트 반복</th><th>프레임워크</th><th>보고서</th></tr>{table}</table></div></div>"""
 
 
