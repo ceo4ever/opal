@@ -52,6 +52,10 @@ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
 b.setAttribute('aria-selected','true');document.getElementById(id).classList.add('on');}
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.t);history.replaceState(null,'','#'+b.dataset.t);}));
 if(location.hash)show(decodeURIComponent(location.hash.slice(1)));
+document.querySelectorAll('a.hl').forEach(a=>a.addEventListener('click',ev=>{
+if(ev.button!==0||ev.metaKey||ev.ctrlKey||ev.shiftKey)return;
+ev.preventDefault();let w=null;try{w=window.open(a.href,'_blank');}catch(_){}
+if(w){try{w.opener=null;}catch(_){}}else{location.href=a.href;}}));
 """
 
 
@@ -268,9 +272,9 @@ def history_panel(variant, current, scenario_id, hist_same, hist_skill, here_dir
         if h.get("report_path"):
             rel = os.path.relpath(h["report_path"], here_dir)
             alt = h.get("report_alt_path")
-            links = f'<a href="{e(rel)}" target="_blank" rel="noopener">열기 ↗</a>'
+            links = f'<a class="hl" href="{e(rel)}" target="_blank" rel="noopener">열기 ↗</a>'
             if alt:
-                links += f' <a class="tag" href="{e(os.path.relpath(alt, here_dir))}" target="_blank" rel="noopener">{"backup 위치" if "/backup/" in alt else "원래 위치"}</a>'
+                links += f' <a class="tag hl" href="{e(os.path.relpath(alt, here_dir))}" target="_blank" rel="noopener">{"backup 위치" if "/backup/" in alt else "원래 위치"}</a>'
         rows.append(f'<tr><td>{e(h["created_at"][:16])}</td><td><code>{e(h["scenario"])}</code></td><td>{e(MODE_KO.get(h.get("mode"), h.get("mode")))}</td>'
                     f'<td>{chip(h.get("verdict") == "PASS")}</td><td class="n">{e(_r1(h.get("wall_min")))}</td><td class="n">{e(_r1(h.get("cost_usd"), 2))}</td>'
                     f'<td class="n">{e(h.get("gate_iterations"))}</td><td class="tag">{e(h.get("framework") or "-")}</td><td>{links}</td></tr>')
@@ -278,7 +282,7 @@ def history_panel(variant, current, scenario_id, hist_same, hist_skill, here_dir
     return f"""
 <div class="card" style="margin-bottom:16px"><b>{e(variant)}</b> · 이번 시나리오 <code>{e(scenario_id)}</code> 이력 {len(hist_same)}회 + 이번 실행</div>
 <div class="grid g4">{charts}</div>
-<div class="card"><h2>{e(variant)} 스킬 테스트 이력 (전체 시나리오)</h2><div class="tag" style="margin-bottom:8px">링크는 새 탭으로 열립니다. 태스크가 backup/으로 아카이브됐으면 'backup 위치'를 쓰거나 <code>refresh</code>로 링크를 다시 만드세요.</div>
+<div class="card"><h2>{e(variant)} 스킬 테스트 이력 (전체 시나리오)</h2><div class="tag" style="margin-bottom:8px">링크는 새 탭으로 열리고, 새 탭을 지원하지 않는 뷰어(예: Orca 내장 브라우저)에서는 같은 탭에서 열립니다(뒤로 가기로 복귀). 태스크가 backup/으로 아카이브됐으면 'backup 위치'를 쓰거나 <code>refresh</code>로 링크를 다시 만드세요.</div>
 <div class="overflow"><table><tr><th>일시</th><th>시나리오</th><th>모드</th><th>판정</th><th class="n">최종 수행 시간(분)</th><th class="n">비용($)</th><th class="n">게이트 반복</th><th>프레임워크</th><th>보고서</th></tr>{table}</table></div></div>"""
 
 
