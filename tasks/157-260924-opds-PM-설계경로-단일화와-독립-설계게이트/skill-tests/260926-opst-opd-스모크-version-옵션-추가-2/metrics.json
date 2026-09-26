@@ -1,0 +1,133 @@
+{
+ "scenario": "smoke-version-flag",
+ "mode": "smoke",
+ "runs": [
+  {
+   "run": "opd-r1",
+   "variant": "//opd",
+   "rep": 1,
+   "timeout": false,
+   "wall_min": 21.5,
+   "cost_usd": 10.26,
+   "turns": 111,
+   "output_tokens": 67242,
+   "result_text": "[부트스트랩] ✅ session.project ⏳ PM\n\n캡틴, 요구서의 `stockctl --version` 옵션을 구현했습니다. 테스트 7개 시나리오가 모두 통과했고, 브랜치 `feat/OP-TASK-001`에 커밋되어 main 병합을 기다리고 있습니다.\n\n## 🎯 결론\n1) **요구사항 4개 모두 충족** — `python3 -m stockctl --version`을 실행하면 `stockctl 0.1.0` 한 줄이 나오고 exit 0으로 끝납니다.\n   - 버전은 `__version__`에서만 읽습니다. 서브커맨드 없이 단독으로 실행되고, 저장소 파일이 없거나 손상돼 있어도 만들거나 읽지 않습니다. `docs/CLI.md`에도 옵션을 추가했습니다.\n2) **기존 동작 회귀 없음** — 전체 pytest 6건이 통과했습니다(기존 2건, 신규 4건).\n   - `store.py`, `__init__.py`, `__main__.py`, `test_basic.py`는 바뀌지 않았습니다. 인자 없이 실행하면 예전처럼 서브커맨드 필수 오류(exit 2)가 납니다.\n3) **검증 과정** — 실패 테스트를 먼저 작성해 구현 전 실패(RED)를 확인한 뒤 구현했습니다. 설계 검토는 3회차에 통과했습니다.\n   - 1회차 검토에서 \"임시 폴더에서 실행하는 테스트가 패키지를 찾지 못한다\"는 지적이 나와, 테스트 환경에 import 경로를 고정하도록 보완했습니다.\n   - 컨벤션 진단은 통과했습니다(치명·높음 0건).\n   - 브랜치 커밋은 `0ea07c0`(명세), `2b1c359`(구현·테스트), `7ac0c96`(마감 문서) 3개입니다.\n\n## 📌 추가 확인 사항\n1) [리스크] 이 프로젝트용 개선 메모 2건이 조용히 유실됐습니다: code-scan 설정 보강, 테스트 import 경로 패턴.\n   - 마감 처리 도구가 두 메모를 \"반영됨\"으로 표시했지만, 허브 `.opal/MEMORY.json`에는 실제로 추가되지 않았습니다. MEMORY.json은 직접 수정할 수 없게 되어 있어 손대지 않았고, OPAL 개선함(fw-inbox)에 결함으로 기록했습니다. OPAL 쪽 결함은 이것까지 3건을 기록했습니다.\n2) [미확인] 워크트리 생성 시 `.opal/code-scan.json` 제외 목록에 `.opal-worktrees`가 없다는 경고가 나왔습니다.\n   - 이번 범위 밖이라 수정하지 않았습니다.\n3) [이월] 전용 터미널 세션은 띄우지 않았습니다.\n   - 이 세션이 비대화형이고 캡틴께서 이 세션에 직접 수행을 지시하셔서, 이 세션이 워크트리에서 끝까지 작업했습니다.\n- 그 외 1건 — 마지막 커밋 뒤 실행 로그 1줄이 추가되어 워크트리에 미커밋 변경이 남아 있고, 허브 `MEMORY.json`에는 태스크 번호 증가(0→1) 변경이 남아 있습니다. 둘 다 도구가 만든 정상 변경입니다.\n\n---\n▶️ 사용자 결정 필요: 권고는 허브에서 `git merge --ff-only feat/OP-TASK-001`로 main에 반영하는 것입니다. main에는 이후 커밋이 없어 이력이 그대로 이어지고, 모든 검증이 끝났습니다. 반영하면 main에 코드·문서·태스크 기록이 함께 들어가고, 이어서 `state-tool finalize-attribution` → `status --set done` → `worktree-tool remove`로 워크트리를 정리할 수 있습니다. 병합을 진행할까요?",
+   "task_found": true,
+   "task": "001-260926-opd-버전-확인-옵션",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opd",
+   "gate_iterations": 3,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_commits": 3,
+   "raw_commits": 0,
+   "subagent_runs": 6,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 9.1,
+    "execute": 2.8,
+    "test": 3.2,
+    "close": 3.4
+   },
+   "log_error": 5,
+   "log_fix": 4,
+   "stage_log": {
+    "TASK": {
+     "DECISION": 2,
+     "GATE": 1
+    },
+    "PLAN": {
+     "DECISION": 2,
+     "ERROR": 2,
+     "FIX": 3,
+     "GATE": 2
+    },
+    "EXECUTE": {
+     "GATE": 2
+    },
+    "TEST": {
+     "GATE": 2,
+     "DECISION": 1
+    },
+    "CLOSE": {
+     "ERROR": 3,
+     "FIX": 1,
+     "IMPROVE": 1,
+     "GATE": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "PLAN",
+     "kind": "발견",
+     "text": "PLAN 초안 인용 줄번호 불일치(`cli.py` build_parser 52-66→실제 50-66, `store.py` 14-22→실제 15-23)"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "교정",
+     "text": "#5 참조 — PLAN 인용 줄번호를 실제 소스 기준으로 정정 후 plan-contract/code-scan-citation check pass"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "교정",
+     "text": "#7 참조 — PLAN Decisions에 테스트 subprocess PYTHONPATH 고정 행 추가, W-1 구체적 변경에 env 명시, TEST-SCENARIO Setup에 import 경로 항목 추가, Decisions 2행 부적합 인용을 TASK C-1/AC-3로 교체"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "발견",
+     "text": "#8의 RED 실패 사유 문구(`unrecognized arguments`)가 실측(`the following arguments are required: command`, exit 2)과 불일치"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "교정",
+     "text": "#9 참조 — 실측값으로 정정. 이 수정으로 i2 시도는 record 전 superseded(회차 소비)"
+    },
+    {
+     "stage": "CLOSE",
+     "kind": "발견",
+     "text": "close.done_md mark가 `worker_duration_undeclared`로 차단(row 3/7/8 워커 소요 미기록)"
+    },
+    {
+     "stage": "CLOSE",
+     "kind": "교정",
+     "text": "#18 참조 — row 3은 PM 직접 작성이라 `--worker-duration-unknown`, row 7은 W-1 54s+W-2 59s로 2분, row 8은 병렬 최장 113s로 2분 기록 후 재mark 성공"
+    },
+    {
+     "stage": "CLOSE",
+     "kind": "발견",
+     "text": "improve-tool `record --scope local`이 worktree에서 `memory-tool delegation failed: invalid_args`(memory-tool이 --task-path 요구, improve-tool 미전달)"
+    },
+    {
+     "stage": "CLOSE",
+     "kind": "발견",
+     "text": "worktree-tool finalize(허브 경로) ok·attribution closed. 단 local 개선 후보 2건이 `applied`로 전이됐으나 허브 MEMORY.json memories 미추가(본문 .md 부재, body_sha256=빈 파일 해시) — 조용한 유실. MEMORY 직접 편집 금지로 수동 보정하지 않고 fw-inbox에 결함 기록, 사용자 보고"
+    }
+   ],
+   "stage_min": {
+    "TASK": 1.2,
+    "PLAN": 14.8,
+    "EXECUTE": 0.0,
+    "TEST": 0.0,
+    "CLOSE": 2.5
+   },
+   "decision_requests": 0,
+   "framework": "main+85c0a5",
+   "existing_tests_ok": true,
+   "hidden_summary": "2 passed in 1.04s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "PASS",
+   "fail_reasons": [],
+   "trend_warnings": [
+    "gate_iterations 기준 1 → 3 (증가)",
+    "log_error 기준 3 → 5 (증가)",
+    "log_fix 기준 0 → 4 (증가)"
+   ]
+  }
+ ]
+}
