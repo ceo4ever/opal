@@ -1,0 +1,25 @@
+{
+  "id": "smoke-version-flag",
+  "mode": "smoke",
+  "title": "--version 옵션 추가",
+  "base": "_bases/stockctl",
+  "target_pilots": [
+    "opd",
+    "opds"
+  ],
+  "default_variant": "//opds",
+  "utterance": "{variant} 요구서 {request} 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다.",
+  "existing_test_cmd": [
+    "python3",
+    "-m",
+    "pytest",
+    "-q",
+    "tests"
+  ],
+  "timeout_min": 45,
+  "estimate": {
+    "minutes": 20,
+    "usd": 10
+  },
+  "decision_points": []
+}

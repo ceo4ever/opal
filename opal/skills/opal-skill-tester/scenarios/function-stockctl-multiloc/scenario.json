@@ -1,0 +1,25 @@
+{
+  "id": "function-stockctl-multiloc",
+  "mode": "function",
+  "title": "다중 위치 재고·이동·감사·가져오기·충돌 감지",
+  "base": "_bases/stockctl",
+  "target_pilots": [
+    "opd",
+    "opds"
+  ],
+  "default_variant": "//opd",
+  "utterance": "{variant} 요구서 {request} 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다.",
+  "existing_test_cmd": [
+    "python3",
+    "-m",
+    "pytest",
+    "-q",
+    "tests"
+  ],
+  "timeout_min": 90,
+  "estimate": {
+    "minutes": 30,
+    "usd": 12
+  },
+  "decision_points": []
+}

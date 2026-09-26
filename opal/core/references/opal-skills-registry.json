@@ -1,7 +1,7 @@
 {
   "$schema": "opal-skills-registry-v1",
-  "version": "3.20.0",
-  "updated_at": "2026-09-20",
+  "version": "3.21.0",
+  "updated_at": "2026-09-26",
   "groups": {
     "opal-pilot": [
       {
@@ -681,6 +681,19 @@
         ]
       },
       {
+        "name": "opal-skill-tester",
+        "alias": "ost",
+        "description": "OPAL 스킬 모의 테스트(시나리오 선택·단일/비교 실행·지표 판정)",
+        "triggers": [
+          "^opal-skill-tester$",
+          "^ost$",
+          "(?i)(스킬\\s*테스트|모의\\s*(태스크|테스트)|파일럿\\s*테스트|시나리오\\s*추가)"
+        ],
+        "paths": [
+          "~/.opal/skills/opal-skill-tester/SKILL.md"
+        ]
+      },
+      {
         "name": "opal-agent-creator",
         "alias": "oac",
         "description": "OPAL 프레임워크 에이전트 생성/개선",
@@ -1041,6 +1054,14 @@
       "task": "114",
       "changes": [
         "opal-skill-wizard(osw) 신규 등재 — 프로젝트 적합 커뮤니티 스킬 제안 + 프로젝트 스코프 설치. groups.opal 말미 append, 기존 항목 무변경"
+      ]
+    },
+    {
+      "version": "3.21.0",
+      "date": "2026-09-26",
+      "task": "157",
+      "changes": [
+        "opal-skill-tester(ost) 신규 등재 — scenarios/ 카탈로그 기반 OPAL 스킬 모의 테스트(스모크·기능·판단 모드, 단일/비교 실행, Pilot 지표 판정). groups.opal의 opal-skill-creator 다음에 삽입, 기존 항목 무변경"
       ]
     }
   ]

@@ -62,3 +62,7 @@
 | 42 | 2026-09-26 00:02 | CLOSE | `DECISION` | ADD-3 진입(캡틴 권고 승인). 비교 실험 PM 경로 설계 게이트 i1이 Findings의 ``os.replace``를 경로로 인식해 결정론 실패(오탐, 반복 상한 1회 소모). 결정: 백틱 토큰은 '/' 포함 또는 알려진 파일 확장자일 때만 경로로 판정 | ADD-3 |
 | 43 | 2026-09-26 00:12 | CLOSE | `GATE` | ADD-3 검토: RED (a) fail→GREEN 20 pass, 실제 실험 PLAN 재파싱으로 오탐 해소 확인, 설치 반영 | Pass |
 | 44 | 2026-09-26 08:45 | CLOSE | `GATE` | 추가작업 ADD-1~3 캡틴 확인 → additional_work_done. 모의 테스트 체계(opal-skill-tester)는 허브 신규 태스크로 분리 | Pass |
+| 45 | 2026-09-26 09:09 | CLOSE | `ERROR` | opal-skill-tester 등록 회귀 확인 중 `oppb-runtime-tool/tests/test_pilot_isolation.py::test_evaluator_agent_existing_four_phases_survive` 실패 발견 — W-4가 evaluator AGENT.md 기존 `iteration`·`scenario_source` 행 문구를 수정해 baseline 원문 보존 계약 위반. TEST S-11 회귀 범위에 oppb-runtime-tool을 넣지 않아 누락. 같은 조사에서 run-log-tool 2·tool-scan 5 실패는 허브 main에서도 동일 재현(기존 결함) | 발견 |
+| 46 | 2026-09-26 09:14 | CLOSE | `GATE` | ADD-4 검토: 기존 행 원문 복원, oppb 13·design_gate 20 pass, 설치 반영 | Pass |
+| 47 | 2026-09-26 09:14 | CLOSE | `DECISION` | ADD-5: 캡틴 지시(//opal-skill-creator, 태스크 없이 알투가 직접, 157 작업본에 두어 함께 merge)로 opal-skill-tester를 PM이 직접 작성. opal-skill-creator 레지스트리 단계의 설치본 직접 등록은 프로젝트 규칙(소스 수정 후 install)에 따라 소스 레지스트리 등록으로 대체. 이름은 opal-pilot-* 접두어가 Pilot 공유 계약 스캔 대상이라 opal-skill-tester로 확정(캡틴 승인) | ADD-5 |
+| 48 | 2026-09-26 09:33 | CLOSE | `GATE` | ADD-5 검증: validate 통과, 재생 보고서 결함 자동 검출, 설치본 스모크 실측 PASS(19분·$9.72) → 예상치를 실측 기반으로 갱신 | Pass |

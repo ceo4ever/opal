@@ -34,7 +34,7 @@
 | `docs/` | 프로젝트 문서 | 아키텍처, 컨벤션 등 프로젝트 레벨 문서 |
 | `tasks/` | 태스크 산출물 | `{NNN}-{YYMMDD}-{스킬약어}-{태스크명}/` 형식의 작업 단위 폴더 |
 | `skills/` | 독립 스킬 소스 | 파이프라인 없이 단독 사용하는 스킬 (8종) |
-| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (44종) |
+| `opal/skills/` | OPAL 스킬 소스 | 오케스트레이터, 단계 스킬 등 OPAL 전용 (49종) |
 | `opal/agents/` | 워커 에이전트 소스 | 모든 서브에이전트 정의 (16종) |
 | `opal/tools/` | OPAL 도구 소스 | 결정론 집행 CLI (28종, `event-loader`·`ego-browser-tool`·`terminal-context` 포함) |
 | `opal/core/` | 프레임워크 코어 | 레퍼런스, MCP 설정, 도구 |
@@ -220,6 +220,16 @@ PM이 직접 조회·작성·수정·검증을 수행하는 대화형 operator �
 | `self-pm-tool` | - | 도구 | `opal-self-pm` 현재 실행 기록(8필드 JSON) 전담 CLI. 사건 이력은 같은 태스크·실행 ID의 `run-log-tool`이 소유한다. `state.json`·`test-scenario.json`·`backlog.json` 3-SSOT는 읽지도 쓰지도 않는다 |
 
 > 독립 검증 경계(생성자≠평가자 예외)와 GC 3종(`op-gc-security`·`op-gc-convention`·`op-gc-report`) 호출 지점의 공유 계약은 `opal/core/references/harness/actor.md` §독립 검증 경계와 GC 호출 지점이 소유한다.
+
+## 주요 컴포넌트 (스킬 모의 테스트)
+
+단위 테스트로는 드러나지 않는 스킬 결함을 실제 헤드리스 실행으로 검증하는 operator 스킬이다. 같은 모의 과업을 격리된 저장소에서 끝까지 돌리고 숨은 인수 테스트와 표준 지표로 채점한다 (2026-09 신설, 태스크 157).
+
+| 컴포넌트 | 약어 | 유형 | 설명 |
+|----------|------|------|------|
+| `opal-skill-tester` | ost | operator (실행기 스크립트 포함) | 스킬 내부 `scenarios/` 카탈로그(스모크·기능·판단 모드)에서 시나리오를 골라 `claude -p` 세션으로 실행한다. 기본은 단일 변형, `--variant` 복수 지정 시 비교, `--repeat`로 반복. 결과(숨은 테스트)·준수(완료·상태 검증·run-log 적체·게이트 증거·체크포인트 커밋)는 합격 조건, 효율·재작업은 `baseline.json` 대비 경고. 지표 SSOT `references/metrics.md`, 시나리오 규격 `references/scenario-spec.md` |
+
+> 기반 저장소는 `scenarios/_bases/`에 `_opal`·`_gitignore` 이름으로 보관하고 실행기가 복사 시 `.opal`·`.gitignore`로 복원한다 — 프레임워크 저장소·설치본 안에서 모의 프로젝트가 실제 OPAL 프로젝트로 인식되지 않게 하기 위함이다. 실행 1회가 실제 Pilot 세션이므로 스킬 변경의 merge 전 검증용으로 쓴다.
 
 ## 주요 컴포넌트 (TEST-SCENARIO 목표-커버 게이트)
 

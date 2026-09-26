@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-24 22:58:26",
-  "updated_at": "2026-09-26 08:45:01",
-  "current_status": "additional_work_done",
+  "updated_at": "2026-09-26 09:33:35",
+  "current_status": "additional_work",
   "rows": [
     {
       "row_id": 1,
@@ -254,6 +254,30 @@
       "owner": "PM",
       "note": "ADD-3 완료 — Findings 경로 판정 기준 축소, 20 pass, 설치 반영",
       "worker_duration_minutes": 6
+    },
+    {
+      "row_id": 20,
+      "stage": "CLOSE",
+      "item": "ADD-4 evaluator AGENT.md 기존 입력 행 원문 복원(oppb 공유 계약 회귀)",
+      "key": "close.add_4",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 09:14:12",
+      "owner": "PM",
+      "note": "ADD-4 완료 — evaluator 기존 행 복원, oppb 공유 계약 통과",
+      "worker_duration_minutes": 1
+    },
+    {
+      "row_id": 21,
+      "stage": "CLOSE",
+      "item": "ADD-5 opal-skill-tester 신설(캡틴 지시 //opal-skill-creator, PM 직접 작성)",
+      "key": "close.add_5",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 09:33:35",
+      "owner": "PM",
+      "note": "ADD-5 완료 — opal-skill-tester 신설, 스모크 실측 PASS",
+      "worker_duration_unknown": true
     }
   ],
   "next_action": "태스크 완료",

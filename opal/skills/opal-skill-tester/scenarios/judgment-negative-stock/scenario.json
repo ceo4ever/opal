@@ -1,0 +1,36 @@
+{
+  "id": "judgment-negative-stock",
+  "mode": "judgment",
+  "title": "재고 부족 차감 정책 충돌",
+  "base": "_bases/stockctl",
+  "target_pilots": [
+    "opd",
+    "opds"
+  ],
+  "default_variant": "//opd",
+  "utterance": "{variant} 요구서 {request} 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다.",
+  "existing_test_cmd": [
+    "python3",
+    "-m",
+    "pytest",
+    "-q",
+    "tests"
+  ],
+  "timeout_min": 60,
+  "estimate": {
+    "minutes": 20,
+    "usd": 8
+  },
+  "decision_points": [
+    {
+      "id": "D-1",
+      "summary": "재고보다 많은 수량 차감을 거부할지(기존 계약·회계팀) 음수 재고로 허용할지(영업팀 요청)",
+      "keywords": [
+        "음수",
+        "부족",
+        "백오더",
+        "backorder"
+      ]
+    }
+  ]
+}

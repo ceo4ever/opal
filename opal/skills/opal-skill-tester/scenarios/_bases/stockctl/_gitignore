@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.opal-worktrees/
+.opal-runs/
+.opal-cache/

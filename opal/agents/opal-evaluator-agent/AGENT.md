@@ -35,8 +35,10 @@ tools: [Read, Grep, Glob, Bash]
 | contract_path | O | `CONTRACT.md` 경로 — 루브릭절 기준 원천 (convention-checker가 `docs/CONVENTIONS.md`를 읽듯, 본 에이전트는 `CONTRACT.md` 루브릭절을 읽는다) |
 | timestamp | O | 보고서 파일명용 타임스탬프 (예: `2026-07-10T16-33-00`) |
 | project_root | O | 프로젝트 루트 경로 |
-| iteration | `phase==scenario-rubric` 또는 `phase==design-rubric`일 때 O | op-scenario-gate/설계 게이트 루프 회차(N) — 이력 레코드 식별에 사용 |
-| scenario_source | `phase==scenario-rubric` 또는 `phase==design-rubric`일 때 O | 정규화 커버리지 페이로드 또는 `TEST-SCENARIO.md` 경로 |
+| iteration | `phase==scenario-rubric`일 때 O | op-scenario-gate 루프 회차(N) — 이력 레코드 식별에 사용 |
+| scenario_source | `phase==scenario-rubric`일 때 O | 정규화 커버리지 페이로드 또는 `TEST-SCENARIO.md` 경로 |
+| iteration (design-rubric) | `phase==design-rubric`일 때 O | 설계 게이트 회차(N) — `design-gate start`의 `--iteration`과 같다 |
+| scenario_source (design-rubric) | `phase==design-rubric`일 때 O | 정규화 커버리지 페이로드 또는 `TEST-SCENARIO.md` 경로 — Phase 1-S 3축 채점 대상 |
 | acceptance_path | `phase==acceptance`일 때 O | OPPB run root의 `acceptance.json` 경로 — 완료조건(`criteria[]`: `id`·`description`·`contributing_tasks`·`satisfied`·`evidence[]`)과 증거 역인덱스(`evidence_index`)의 원천 |
 | workgraph_path | `phase==acceptance`일 때 O | `workgraph.json` 경로 — 기여 미니 태스크의 상태와 `runner_attempt_id` 대조용(증거 독립성 판정) |
 | evidence_root | `phase==acceptance`일 때 O | 색인된 evidence 루트 경로 — `{run_root}/evidence/{scope}/{evidence_id}.json` (Evidence Tool이 schema·code head·scope hash 검증 후 불변 색인한 문서) |
