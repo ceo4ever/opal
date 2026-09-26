@@ -1,0 +1,66 @@
+
+[0;36m╔══════════════════════════════════════════════════════╗[0m
+[0;36m║[0m  [1mOPAL AI Framework Installer[0m  (macOS)               [0;36m║[0m
+[0;36m║[0m  통합 배포: ~/.opal/ (skills + agents)                [0;36m║[0m
+[0;36m╚══════════════════════════════════════════════════════╝[0m
+
+
+
+
+[0;34m▸[0m OPAL 자산 배포 중...
+
+info: setting.json에 ['models', 'shardPolicy', 'quietHours'] 모두 존재 — 무변 (멱등)
+
+  [0;36m보존된 브라우저:[0m b chromium_headless_shell-1208 chromium_headless_shell-1217 chromium_headless_shell-1234 chromium-1208 chromium-1217 chromium-1234 ffmpeg-1011 firefox-1509 mcp-chrome-372280a mcp-chrome-6e5933e mcp-chrome-ba3851e webkit-2248 
+
+
+
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+vite v8.0.16 building client environment for production...
+[2Ktransforming...✓ 2760 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                0.46 kB │ gzip:   0.30 kB
+dist/assets/geist-cyrillic-ext-wght-normal-DjL33-gN.woff2      7.42 kB
+dist/assets/geist-vietnamese-wght-normal-6IgcOCM7.woff2        8.00 kB
+dist/assets/geist-cyrillic-wght-normal-BEAKL7Jp.woff2         15.08 kB
+dist/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2        16.51 kB
+dist/assets/geist-latin-wght-normal-BgDaEnEv.woff2            29.40 kB
+dist/assets/index-HrfNAZYK.css                                96.19 kB │ gzip:  15.67 kB
+dist/assets/index-gCpLtpWG.js                              1,224.50 kB │ gzip: 364.79 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 488ms
+
+
+[0;34m▸[0m OPAL Console 자동 재시작 중...
+[0;34m[INFO][0m OPAL Console 기동 중 (127.0.0.1:7823)...
+[0;32m  ✓[0m OPAL Console 기동됨 (PID: 59492, 로그: /tmp/opal-console.log)
+[0;34m[INFO][0m pid_record_path=/Users/iskang/.opal/run/console.pid
+[0;34m[INFO][0m pid=59492 host=127.0.0.1 port=7823 log_file=/tmp/opal-console.log
+[0;34m[INFO][0m 상태 확인: opal-cli console status
+[0;34m[INFO][0m 로그 팔로우: opal-cli console log
+[0;34m[INFO][0m 브라우저 열기: opal-cli console open
+
+[0;32m✓[0m OPAL Console 기동 완료
+  [0;36m접속:[0m http://127.0.0.1:7823
+  [0;36m/health:[0m {"status":"ok","version":"0.1.0"}
+
+[0;34m▸[0m MCP 서버 설정 중...
+
+[0;32m✓[0m OPAL 설치 완료 (main)
+
+  • ~/.opal/                  스킬·에이전트·도구
+  • ~/.opal/bin/opal-cli      CLI 진입점 (PATH 등록됨)
+
+다음 단계:
+  새 터미널 열기 또는  source ~/.zshrc
+  opal-cli doctor      # 환경 진단
+
