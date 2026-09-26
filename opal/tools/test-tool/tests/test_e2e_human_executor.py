@@ -41,9 +41,7 @@ from lib.e2e.executors import human as e2e_human  # noqa: E402
 
 _PYTHON = sys.executable
 _TEST_TOOL_PY = _TOOL_DIR / "test_tool.py"
-_TASK_PATH = (
-    _TOOL_DIR.parent.parent.parent / "tasks" / "127-260912-oppl-E2E-하네스-구현"
-)
+_TASK_PATH = _TOOL_DIR / "tests" / "fixtures" / "e2e-harness"
 _RUN_ID = "e2e-20260914-100"
 
 

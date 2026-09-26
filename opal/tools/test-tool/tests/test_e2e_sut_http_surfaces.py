@@ -73,7 +73,7 @@ from lib.e2e import evidence as e2e_evidence  # noqa: E402
 from lib.e2e import orchestrator as e2e_orchestrator  # noqa: E402
 
 # ── surfaces.json — 분모. 읽기 전용이다(C-8). ────────────────────────────────
-_TASK_DIRS = sorted(_SOURCE_ROOT.glob("tasks/127-*"))
+_TASK_DIRS = [_TOOL_DIR / "tests" / "fixtures" / "e2e-harness"]
 _SURFACES_PATH = (_TASK_DIRS[0] / "surfaces.json") if _TASK_DIRS else None
 _SPEC_PATH = (_TASK_DIRS[0] / "test-scenario.json") if _TASK_DIRS else None
 

@@ -35,7 +35,7 @@ import unittest
 _TOOL_DIR = pathlib.Path(__file__).parent.parent
 _TEST_TOOL_PY = _TOOL_DIR / "test_tool.py"
 _SOURCE_ROOT = _TOOL_DIR.parent.parent.parent
-_TASK_PATH = _SOURCE_ROOT / "tasks" / "127-260912-oppl-E2E-하네스-구현"
+_TASK_PATH = _TOOL_DIR / "tests" / "fixtures" / "e2e-harness"
 _SCENARIO_ID = "S-7"
 _PYTHON = sys.executable
 sys.path.insert(0, str(_TOOL_DIR))

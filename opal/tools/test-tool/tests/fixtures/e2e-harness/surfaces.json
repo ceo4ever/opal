@@ -1,0 +1,333 @@
+{
+  "schema_version": "1.0",
+  "origins": {
+    "dev": [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:${OPAL_E2E_FRONTEND_PORT}"
+    ],
+    "prod": []
+  },
+  "surfaces": [
+    {
+      "id": "e2e-run",
+      "resource": "test-tool e2e run",
+      "auth": "none",
+      "request_shape": "{--scenario,--task-path,--target,--worktree-root?,--opal-home?,--artifact-root?,--run-id?}",
+      "response_shape": "{run_id,scenario_id,profile,status,error,run_json_path,artifact_dir,exit}",
+      "kind": "cli"
+    },
+    {
+      "id": "e2e-resume",
+      "resource": "test-tool e2e resume",
+      "auth": "none",
+      "request_shape": "{--run-id,--token,--submission,--artifact-root?}",
+      "response_shape": "{run_id,scenario_id,profile,status,error,run_json_path,artifact_dir,exit}",
+      "kind": "cli"
+    },
+    {
+      "id": "e2e-status",
+      "resource": "test-tool e2e status",
+      "auth": "none",
+      "request_shape": "{--run-id|--artifact-dir,--artifact-root?}",
+      "response_shape": "{run_id,scenario_id,profile,target,state,status,urls,artifact_dir,journal_tail}",
+      "kind": "cli"
+    },
+    {
+      "id": "e2e-clean",
+      "resource": "test-tool e2e clean",
+      "auth": "none",
+      "request_shape": "{--run-id|--stale,--artifact-root?,--dry-run?}",
+      "response_shape": "{reclaimed_leases,terminated_process_groups,removed_artifact_dirs,skipped}",
+      "kind": "cli"
+    },
+    {
+      "id": "console-start",
+      "resource": "opal-cli console start",
+      "auth": "none",
+      "request_shape": "{}",
+      "response_shape": "{pid_record_path,pid,host,port,log_file}",
+      "kind": "cli"
+    },
+    {
+      "id": "console-stop",
+      "resource": "opal-cli console stop",
+      "auth": "none",
+      "request_shape": "{}",
+      "response_shape": "{stopped,pid,reason}",
+      "kind": "cli"
+    },
+    {
+      "id": "console-status",
+      "resource": "opal-cli console status",
+      "auth": "none",
+      "request_shape": "{}",
+      "response_shape": "{health,pid,opal_home,app_dir,host,port,started_at}",
+      "kind": "cli"
+    },
+    {
+      "id": "driver-probe",
+      "resource": "browser-driver probe",
+      "auth": "none",
+      "request_shape": "{runtime_context,required_capabilities[]}",
+      "response_shape": "{driver,session_mode,available,version,capabilities{name:{available,route,probed}}}",
+      "kind": "driver-op"
+    },
+    {
+      "id": "driver-open",
+      "resource": "browser-driver open",
+      "auth": "none",
+      "request_shape": "{url,isolation_key}",
+      "response_shape": "{handle,owned,current_url}",
+      "kind": "driver-op"
+    },
+    {
+      "id": "driver-snapshot",
+      "resource": "browser-driver snapshot",
+      "auth": "none",
+      "request_shape": "{handle,label}",
+      "response_shape": "{snapshot,current_url,artifact_path}",
+      "kind": "driver-op"
+    },
+    {
+      "id": "driver-act",
+      "resource": "browser-driver act",
+      "auth": "none",
+      "request_shape": "{handle,action{kind,target,value?}}",
+      "response_shape": "{ok,action_result,current_url}",
+      "kind": "driver-op"
+    },
+    {
+      "id": "driver-wait",
+      "resource": "browser-driver wait",
+      "auth": "none",
+      "request_shape": "{handle,condition,wait_kind,timeout_ms}",
+      "response_shape": "{satisfied,wait_kind,elapsed_ms}",
+      "kind": "driver-op"
+    },
+    {
+      "id": "driver-assert",
+      "resource": "browser-driver assert",
+      "auth": "none",
+      "request_shape": "{handle,assertion{id,verifier,expected}}",
+      "response_shape": "{id,expected,actual,passed}",
+      "kind": "driver-op"
+    },
+    {
+      "id": "driver-capture",
+      "resource": "browser-driver capture",
+      "auth": "none",
+      "request_shape": "{handle,evidence_spec[]}",
+      "response_shape": "{artifacts{name:path},redacted,redaction_failed}",
+      "kind": "driver-op"
+    },
+    {
+      "id": "driver-close",
+      "resource": "browser-driver close",
+      "auth": "none",
+      "request_shape": "{handle}",
+      "response_shape": "{closed,released[],leaked[]}",
+      "kind": "driver-op"
+    },
+    {
+      "id": "api-executor-probe",
+      "resource": "api-executor probe",
+      "auth": "none",
+      "request_shape": "{runtime_context,required_capabilities[]}",
+      "response_shape": "{executor,available,version,capabilities{name:{available,route,probed}}}",
+      "kind": "executor-op"
+    },
+    {
+      "id": "api-executor-prepare",
+      "resource": "api-executor prepare",
+      "auth": "none",
+      "request_shape": "{run_id,target,isolation_key}",
+      "response_shape": "{handle,owned[],setup_evidence[]}",
+      "kind": "executor-op"
+    },
+    {
+      "id": "api-executor-act",
+      "resource": "api-executor act",
+      "auth": "none",
+      "request_shape": "{handle,action{method,url,headers?,body?,timeout_ms,step_role}}",
+      "response_shape": "{ok,status,response_ref,observed_state}",
+      "kind": "executor-op"
+    },
+    {
+      "id": "api-executor-assert",
+      "resource": "api-executor assert",
+      "auth": "none",
+      "request_shape": "{handle,assertion{id,verifier,expected}}",
+      "response_shape": "{id,expected,actual,passed}",
+      "kind": "executor-op"
+    },
+    {
+      "id": "api-executor-capture",
+      "resource": "api-executor capture",
+      "auth": "none",
+      "request_shape": "{handle,evidence_spec[]}",
+      "response_shape": "{artifacts{name:path},redacted,redaction_failed}",
+      "kind": "executor-op"
+    },
+    {
+      "id": "api-executor-cleanup",
+      "resource": "api-executor cleanup",
+      "auth": "none",
+      "request_shape": "{handle}",
+      "response_shape": "{released[],leaked[],skipped_user_owned[]}",
+      "kind": "executor-op"
+    },
+    {
+      "id": "human-executor-handoff",
+      "resource": "human-executor handoff",
+      "auth": "none",
+      "request_shape": "{run_id,scenario_id,step_id,handoff_spec}",
+      "response_shape": "{handoff_id,instruction,expected_observation,required_evidence[],timeout_seconds,resume_token,server_policy,submission_path}",
+      "kind": "executor-op"
+    },
+    {
+      "id": "human-executor-resume",
+      "resource": "human-executor resume",
+      "auth": "none",
+      "request_shape": "{run_id,resume_token,submission_path}",
+      "response_shape": "{accepted,status,error,verifier_results[]}",
+      "kind": "executor-op"
+    },
+    {
+      "id": "sut-health",
+      "resource": "GET /health",
+      "auth": "none",
+      "request_shape": "{}",
+      "response_shape": "{status,version}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-dashboard",
+      "resource": "GET /api/dashboard",
+      "auth": "none",
+      "request_shape": "{project?}",
+      "response_shape": "{total_projects,running_tasks,blockers,additional_work,status_distribution,activity_trend[],alerts[],recent_activities[],completed_tasks,total_tasks,artifact_total,artifact_by_type,workflow_stats[],quiet_hours_applied,quiet_hours_label,owner_term}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-projects-list",
+      "resource": "GET /api/projects",
+      "auth": "none",
+      "request_shape": "{}",
+      "response_shape": "[{name,path,is_opal,task_count,last_updated}]",
+      "kind": "http"
+    },
+    {
+      "id": "sut-projects-detail",
+      "resource": "GET /api/projects/detail",
+      "auth": "none",
+      "request_shape": "{path}",
+      "response_shape": "{name,path,is_opal,pm_profile,agent_md,project_md,tech_stack[],docs[],warning}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-projects-doc",
+      "resource": "GET /api/projects/doc",
+      "auth": "none",
+      "request_shape": "{path,name?}",
+      "response_shape": "{name,content,path}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-tasks-list",
+      "resource": "GET /api/tasks",
+      "auth": "none",
+      "request_shape": "{project?}",
+      "response_shape": "[{task_id,title,...}]",
+      "kind": "http"
+    },
+    {
+      "id": "sut-tasks-detail",
+      "resource": "GET /api/tasks/detail",
+      "auth": "none",
+      "request_shape": "{project,task_id}",
+      "response_shape": "{task_id,title,skill,mode,current_status,current_stage,progress,pipeline[],artifacts[],updated_at,stats,artifact_items[],owner_term}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-tasks-artifact",
+      "resource": "GET /api/tasks/artifact",
+      "auth": "none",
+      "request_shape": "{project,task_id,name?}",
+      "response_shape": "{name,content,task_id}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-memory",
+      "resource": "GET /api/memory",
+      "auth": "none",
+      "request_shape": "{project?}",
+      "response_shape": "{memories[],history[],...}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-doctor",
+      "resource": "GET /api/doctor",
+      "auth": "none",
+      "request_shape": "{project?}",
+      "response_shape": "{sections[],counts{ok,warn,fail,total},verdict,skills[],warning}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-brain-auth",
+      "resource": "GET /api/brain/auth",
+      "auth": "none",
+      "request_shape": "{}",
+      "response_shape": "{authenticated,cli_available,message}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-brain-status",
+      "resource": "GET /api/brain/status",
+      "auth": "none",
+      "request_shape": "{project,session_id}",
+      "response_shape": "{state,session_active,message,session_id}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-brain-prime",
+      "resource": "POST /api/brain/prime",
+      "auth": "none",
+      "request_shape": "{project?,session_id?}",
+      "response_shape": "{priming}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-brain-query",
+      "resource": "POST /api/brain/query",
+      "auth": "none",
+      "request_shape": "{question,project,session_id}",
+      "response_shape": "{job_id}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-brain-job",
+      "resource": "GET /api/brain/job/{job_id}",
+      "auth": "none",
+      "request_shape": "{job_id,project,session_id}",
+      "response_shape": "{job_id,status,answer,citations[],error_msg}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-config-get",
+      "resource": "GET /api/config",
+      "auth": "none",
+      "request_shape": "{}",
+      "response_shape": "{scan_roots[],scan_depth,exclude[],prewarm_projects[]}",
+      "kind": "http"
+    },
+    {
+      "id": "sut-config-prewarm",
+      "resource": "POST /api/config/prewarm",
+      "auth": "none",
+      "request_shape": "{project,enabled}",
+      "response_shape": "{ok,config}",
+      "kind": "http"
+    }
+  ]
+}

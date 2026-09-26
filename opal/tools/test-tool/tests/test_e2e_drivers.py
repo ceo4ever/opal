@@ -508,7 +508,7 @@ class TestJournalTransitionOrder(unittest.TestCase):
 
         self.orchestrator = e2e_orchestrator
         self.source_root = _TOOL_DIR.parent.parent.parent
-        self.task_path = self.source_root / "tasks" / "127-260912-oppl-E2E-하네스-구현"
+        self.task_path = _TOOL_DIR / "tests" / "fixtures" / "e2e-harness"
         self._saved = (e2e_orchestrator._resolve_executor_candidates, e2e_orchestrator._start_sut)
 
     def tearDown(self):
@@ -618,7 +618,7 @@ class TestSutDependentProbeOrdering(unittest.TestCase):
         self.executors = e2e_executors
         self.orchestrator = e2e_orchestrator
         self.source_root = _TOOL_DIR.parent.parent.parent
-        self.task_path = self.source_root / "tasks" / "127-260912-oppl-E2E-하네스-구현"
+        self.task_path = _TOOL_DIR / "tests" / "fixtures" / "e2e-harness"
         self._saved_start = e2e_orchestrator._start_sut
         self._saved_registry = e2e_executors.registered_executors
         self.probe_contexts = []

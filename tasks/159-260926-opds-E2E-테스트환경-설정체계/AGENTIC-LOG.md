@@ -32,3 +32,13 @@
 | 12 | 2026-09-26 19:25 | PLAN | IMPROVE | 설계 게이트 결정론 검사가 `.opal/...` 경로를 W 변경 대상에서는 `opal/...`로 정규화하고 Findings에서는 원문으로 비교함 — FW 개선 후보(회고에서 기록) | 보류(회고) |
 | 13 | 2026-09-26 19:30 | PLAN | GATE | 설계 게이트 i2 evaluator 판정 fail(rewrite plan) — 설계 decision_clarity 4건(비밀 누락 결과 위치·cause 우선순위, web/api/url/human cause 어휘, health 기본값, url ready 기준). 시나리오 3축 2/2/2 | Fail |
 | 14 | 2026-09-26 19:33 | PLAN | FIX | #13 보완 — D-3 health 선택·기본 port, D-8 최상위 `secrets` 분리·표면별 check 순서·닫힌 cause 11종·url 기준, Release에 RED 단계 주체 명시, S-3·S-12 기대 결과 정합(url 표면 추가) | i3 평가 요청 |
+| 15 | 2026-09-26 19:36 | PLAN | GATE | 설계 게이트 i3 evaluator pass(설계 4축 PASS, 시나리오 2/2/2). 비차단 제안 3건(check name 고정, W-6 web url 표면 명시, 공유 서비스 1회 기동)은 계약 변경 없이 워커 지시로 반영 | Pass |
+| 16 | 2026-09-26 19:37 | EXECUTE | DECISION | `plan.user_confirm` agentic 자동 승인 후 명세 체크포인트 5f865ed. test-scenario.json init(RED S-1~S-7) → opal-test-agent red mode 디스패치 | 진행 |
+| 17 | 2026-09-26 19:39 | EXECUTE | DECISION | W-1(fixture 고정)은 RED 대상 GREEN 구현이 아니고 RED 파일과 겹치지 않으므로 RED 잠금과 병렬로 디스패치 | 진행 |
+| 18 | 2026-09-26 19:43 | EXECUTE | GATE | W-1 결과 직접 확인 — fixture 2종 바이트 동일, 9개 테스트 파일 경로 상수만 변경, 156 passed(기준치 일치) | Pass |
+| 19 | 2026-09-26 19:43 | EXECUTE | ERROR | W-1 워커가 `execute.implement`(EXECUTE 전체 행)를 `--as-worker`로 done 처리 — W-2~W-6 미완 상태 | 보정 필요 |
+| 20 | 2026-09-26 19:44 | EXECUTE | FIX | #19 보정 — done 행은 되돌릴 수 없어 `add-row`로 EXECUTE 행 8(W-2~W-6) 추가·진행 중 전환. 이후 워커에는 행 mark 금지를 지시하고 PM이 mark | 반영 |
+| 21 | 2026-09-26 19:44 | EXECUTE | IMPROVE | 워커가 단일 W 완료만으로 EXECUTE 전체 행을 mark할 수 있음 — 디스패치 프롬프트에 행 mark 권한 범위를 명시하는 FW 개선 후보(회고) | 보류(회고) |
+| 22 | 2026-09-26 19:48 | EXECUTE | GATE | RED 결과 확인 — S-1~S-7 15개 테스트 개별 실패, scenario-red 7건·scenario-lock 완료. W-2 디스패치 | Pass(보정 1건 병행) |
+| 23 | 2026-09-26 19:49 | EXECUTE | ERROR | RED S-6·S-7이 동결된 run stdout 14키(test_e2e_runtime.py:375-387)에 없는 `detail_code`·`lease_released`·`owned`를 stdout에서 단언 — TEST-SCENARIO S-6(run.json 기준)과도 불일치 | 보정 지시 |
+| 24 | 2026-09-26 19:49 | EXECUTE | FIX | #23 — RED 작성자(opal-test-agent)에게 run.json·owned 대장에서 읽도록 보정 지시(기대값 약화 금지, 작성자≠구현자 유지) | 진행 |
