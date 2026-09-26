@@ -16,8 +16,15 @@
 | `pipeline_complete` | 태스크 `state.json` `current_status`가 `completed_unmerged` 또는 `done` | true |
 | `state_valid`* | `state-tool validate` 위반 0건 | true |
 | `runlog_pending`* | `state.json` `run_log.pending_events` 수 | 0 |
-| `gate_evidence` | 설계 게이트 `design_gate.status=pass`(PM 경로) 또는 `.scenario-gate-history.json` 마지막 verdict pass, 그리고 `test-scenario.json` 전 시나리오 pass | true |
-| `checkpoint_commits` | 작업 브랜치가 기본 브랜치보다 앞선 커밋 수 | ≥ 1 |
+| `gate_evidence` | Pilot 프로필(아래 표)의 게이트 증거가 모두 충족 | true |
+| `checkpoint_commits` | 작업 브랜치가 기본 브랜치보다 앞선 커밋 수. 허브 작업본 태스크는 규칙상 커밋하지 않으므로 worktree 태스크에만 요구 | ≥ 1 (worktree) |
+
+Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프로필이 없는 Pilot은 "판정 프로필 없음"으로 불합격 처리되므로, 새 Pilot을 시험하려면 먼저 프로필을 추가한다.
+
+| Pilot | 게이트 증거 | 단계 이정표(구현 시작·완료 / 테스트 완료) |
+|---|---|---|
+| opd·opds | 설계 게이트 `design_gate.status=pass` 또는 `.scenario-gate-history.json` 마지막 pass, 그리고 `test-scenario.json` 전 시나리오 pass | `execute.implement` / `test.pm_gate` |
+| opsdd | `.scenario-gate-history.json` 마지막 pass, 그리고 `review.scenario_gate`·`verify.ts_green` 행 done | `execute.act_run` / `verify.pm_gate` |
 
 `runlog_pending`이 0이 아니면 기록 코어가 어떤 사건을 거부해 drain이 멈춘 상태다. 첫 pending 사건을 보고서에 함께 싣는다.
 

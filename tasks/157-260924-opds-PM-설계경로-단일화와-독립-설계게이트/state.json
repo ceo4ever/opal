@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-24 22:58:26",
-  "updated_at": "2026-09-26 09:40:24",
+  "updated_at": "2026-09-26 10:01:42",
   "current_status": "additional_work",
   "rows": [
     {
@@ -289,6 +289,18 @@
       "timestamp": "2026-09-26 09:40:24",
       "owner": "PM",
       "note": "ADD-6 완료 — 인터뷰 절차·최종 확인·report --save-baseline",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 23,
+      "stage": "CLOSE",
+      "item": "ADD-7 opal-skill-tester Pilot별 판정 프로필과 opsdd 스모크 시나리오",
+      "key": "close.add_7",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 10:01:42",
+      "owner": "PM",
+      "note": "ADD-7 완료 — Pilot 프로필·opsdd 스모크 시나리오",
       "worker_duration_unknown": true
     }
   ],

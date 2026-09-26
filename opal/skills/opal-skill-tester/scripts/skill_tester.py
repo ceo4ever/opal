@@ -4,7 +4,7 @@
   "module": "skill_tester",
   "layer": "util",
   "domain": "opal-skill-tester",
-  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report, --save-baseline 지원)을 수행한다. 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다.",
+  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report, --save-baseline 지원)을 수행한다. 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, 체크포인트 커밋은 worktree 태스크에만 요구한다.",
   "exports": ["main", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report"]
 }
 """
@@ -27,6 +27,13 @@ MODES = ("smoke", "function", "judgment")
 OPAL = pathlib.Path.home() / ".opal"
 STATE_TOOL = OPAL / "tools" / "state-tool" / "run.sh"
 RENAMES = {"_opal": ".opal", "_gitignore": ".gitignore"}
+# Pilot별 판정 프로필 — 단계 이정표와 게이트 증거 행이 Pilot마다 다르다.
+PROFILES = {
+    "opd":   {"exec": "execute.implement", "test_done": "test.pm_gate", "gate_rows": [], "scenario_json": True},
+    "opds":  {"exec": "execute.implement", "test_done": "test.pm_gate", "gate_rows": [], "scenario_json": True},
+    "opsdd": {"exec": "execute.act_run", "test_done": "verify.pm_gate",
+              "gate_rows": ["review.scenario_gate", "verify.ts_green"], "scenario_json": False},
+}
 REQUIRED_BASE = ["_opal/AGENT.md", "_opal/code-scan.json", "_opal/MEMORY.json", "docs/PROJECT.md", "_gitignore"]
 
 
@@ -57,7 +64,7 @@ def validate_scenario(sid):
         s = json.loads(sj.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         return [f"{sid}: scenario.json JSON 오류 {e}"]
-    for k in ("id", "mode", "base", "default_variant", "utterance", "timeout_min", "estimate"):
+    for k in ("id", "mode", "base", "target_pilots", "default_variant", "utterance", "timeout_min", "estimate"):
         if k not in s:
             errs.append(f"필드 누락: {k}")
     if s.get("id") != sid:
@@ -129,6 +136,11 @@ def run_scenario(sid, variants, repeat, outdir, save_baseline=False):
         out({"ok": False, "command": "run", "error": "scenario_invalid", "detail": errs}, 1)
     s = json.loads((SCENARIOS / sid / "scenario.json").read_text(encoding="utf-8"))
     variants = variants or [s["default_variant"]]
+    targets = set(s.get("target_pilots") or [])
+    off = [v for v in variants if targets and v.split()[0].lstrip("/") not in targets]
+    if off:
+        out({"ok": False, "command": "run", "error": "variant_not_targeted", "variants": off,
+             "target_pilots": sorted(targets)}, 1)
     if shutil.which("claude") is None:
         out({"ok": False, "command": "run", "error": "claude_cli_missing"}, 1)
     outdir = pathlib.Path(outdir or f"/tmp/opal-skill-tester/{sid}-{datetime.datetime.now():%Y%m%d-%H%M%S}")
@@ -219,25 +231,31 @@ def collect_run(rd, s):
         m["runlog_first_pending"] = {k: pend[0].get(k) for k in ("event", "task_step", "summary", "data")}
     dg = st.get("design_gate")
     gh = tdir / ".scenario-gate-history.json"
+    prof = PROFILES.get(st.get("skill"))
+    m["profile"] = st.get("skill") if prof else None
     gate_ok, iters = False, 0
     if dg:
         gate_ok, iters = dg.get("status") == "pass", len(dg.get("history") or [])
     elif gh.exists():
         h = json.loads(gh.read_text(encoding="utf-8"))
         gate_ok, iters = bool(h) and h[-1].get("verdict") == "pass", len(h)
-    tsj = tdir / "test-scenario.json"
-    sc_ok = False
-    if tsj.exists():
-        sc = json.loads(tsj.read_text(encoding="utf-8")).get("scenarios") or []
-        sc_ok = bool(sc) and all((x.get("result") or x.get("status")) == "pass" for x in sc)
-    m.update(gate_iterations=iters, gate_evidence=gate_ok and sc_ok)
+    rows = {r.get("key"): r.get("status") for r in st.get("rows", [])}
+    rows_ok = all(rows.get(k) == "done" for k in (prof or {}).get("gate_rows", []))
+    sc_ok = True
+    if not prof or prof["scenario_json"]:
+        tsj = tdir / "test-scenario.json"
+        sc_ok = False
+        if tsj.exists():
+            sc = json.loads(tsj.read_text(encoding="utf-8")).get("scenarios") or []
+            sc_ok = bool(sc) and all((x.get("result") or x.get("status")) == "pass" for x in sc)
+    m.update(gate_iterations=iters, gate_evidence=gate_ok and sc_ok and rows_ok, worktree_task=bool(st.get("worktree")))
     base = st.get("worktree") and _git(code, "rev-list", "--count", "main..HEAD").stdout.strip()
     m["checkpoint_commits"] = int(base) if base and base.isdigit() else 0
     evs = [json.loads(l) for f in sorted(glob.glob(str(tdir / "run" / "run-log-*.jsonl"))) for l in open(f) if l.strip()] + pend
     m["subagent_runs"] = sum(e.get("event") == "worker.started" for e in evs)
     m["worker_blocked"] = sum(e.get("event") == "worker.blocked" for e in evs)
     m["pm_decision_request"] = any(e.get("event") == "pm.report" and (e.get("data") or {}).get("report_type") == "decision_request" for e in evs)
-    m["phase_min"] = _phases(evs)
+    m["phase_min"] = _phases(evs, prof or PROFILES["opd"])
     al = tdir / "AGENTIC-LOG.md"
     txt = al.read_text(encoding="utf-8") if al.exists() else ""
     m["log_error"] = len(re.findall(r"\|\s*`?ERROR`?\s*\|", txt))
@@ -259,7 +277,7 @@ def collect_run(rd, s):
     return m
 
 
-def _phases(evs):
+def _phases(evs, prof):
     sc = [e for e in evs if e.get("event") == "state.changed"]
     ts = [_pt(e.get("timestamp")) for e in evs if _pt(e.get("timestamp"))]
     if not ts:
@@ -267,8 +285,8 @@ def _phases(evs):
     def at(step, to):
         xs = [_pt(e["timestamp"]) for e in sc if e.get("task_step") == step and (e.get("data") or {}).get("to") == to]
         return min(xs) if xs else None
-    marks = [min(ts), at("execute.implement", "in_progress"), at("execute.implement", "done"),
-             at("test.pm_gate", "done"), at("close.final", "done")]
+    marks = [min(ts), at(prof["exec"], "in_progress"), at(prof["exec"], "done"),
+             at(prof["test_done"], "done"), at("close.final", "done")]
     names = ["design", "execute", "test", "close"]
     return {n: round((b - a).total_seconds() / 60, 1) for n, a, b in zip(names, marks, marks[1:]) if a and b}
 
@@ -282,7 +300,8 @@ def judge_run(m, s):
     mode = s["mode"]
     compliance = {"pipeline_complete": m.get("pipeline_complete"), "state_valid": m.get("state_valid"),
                   "runlog_pending": m.get("runlog_pending") == 0, "gate_evidence": m.get("gate_evidence"),
-                  "checkpoint_commits": (m.get("checkpoint_commits") or 0) >= 1}
+                  # 허브 작업본 태스크는 규칙상 커밋하지 않으므로 worktree 태스크에만 요구한다
+                  "checkpoint_commits": (m.get("checkpoint_commits") or 0) >= 1 or not m.get("worktree_task")}
     if mode == "judgment":
         compliance = {k: compliance[k] for k in ("state_valid", "runlog_pending")}
         text = m.get("_search_text", "")
@@ -291,6 +310,8 @@ def judge_run(m, s):
             if not (stopped and any(k in text for k in dp["keywords"])):
                 fails.append(f"결정 지점 미적중: {dp['id']} {dp.get('summary', '')}")
     fails += [f"준수 불충족: {k}" for k, ok in compliance.items() if not ok]
+    if m.get("profile") is None:
+        fails.append("판정 프로필 없음 — 이 Pilot의 게이트 증거·단계 이정표를 PROFILES에 추가해야 한다")
     if mode == "function":
         if m.get("hidden_pass_rate") != 1.0:
             fails.append(f"숨은 테스트 {m.get('hidden_summary')} 실패: {m.get('hidden_failed')}")
