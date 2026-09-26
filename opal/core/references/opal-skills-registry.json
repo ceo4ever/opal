@@ -682,11 +682,11 @@
       },
       {
         "name": "opal-skill-tester",
-        "alias": "ost",
+        "alias": "opst",
         "description": "OPAL 스킬 모의 테스트(시나리오 선택·단일/비교 실행·지표 판정)",
         "triggers": [
           "^opal-skill-tester$",
-          "^ost$",
+          "^opst$",
           "(?i)(스킬\\s*테스트|모의\\s*(태스크|테스트)|파일럿\\s*테스트|시나리오\\s*추가)"
         ],
         "paths": [
@@ -1061,7 +1061,7 @@
       "date": "2026-09-26",
       "task": "157",
       "changes": [
-        "opal-skill-tester(ost) 신규 등재 — scenarios/ 카탈로그 기반 OPAL 스킬 모의 테스트(스모크·기능·판단 모드, 단일/비교 실행, Pilot 지표 판정). groups.opal의 opal-skill-creator 다음에 삽입, 기존 항목 무변경"
+        "opal-skill-tester(opst) 신규 등재 — scenarios/ 카탈로그 기반 OPAL 스킬 모의 테스트(스모크·기능·판단 모드, 단일/비교 실행, Pilot 지표 판정). groups.opal의 opal-skill-creator 다음에 삽입, 기존 항목 무변경"
       ]
     }
   ]

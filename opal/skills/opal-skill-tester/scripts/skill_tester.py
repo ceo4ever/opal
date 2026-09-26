@@ -4,8 +4,8 @@
   "module": "skill_tester",
   "layer": "util",
   "domain": "opal-skill-tester",
-  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report, --save-baseline 지원)을 수행한다. 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, 체크포인트 커밋은 worktree 태스크에만 요구한다.",
-  "exports": ["main", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report"]
+  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report, --save-baseline 지원)·tasks/ 기록(record)을 수행한다. run은 끝나면 보고서·지표·실행별 핵심 산출물을 진행 중 태스크의 skill-tests/ 또는 tasks/ 아래 YYMMDD-opst-{대상}-{모드}-{제목} 폴더에 기록하며(모의 저장소는 복사하지 않음), 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, 체크포인트 커밋은 worktree 태스크에만 요구한다.",
+  "exports": ["main", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report", "record_results"]
 }
 """
 import argparse
@@ -130,7 +130,7 @@ def _install_drift():
     return warns
 
 
-def run_scenario(sid, variants, repeat, outdir, save_baseline=False):
+def run_scenario(sid, variants, repeat, outdir, save_baseline=False, task_dir=None, project_root=None, no_record=False):
     errs = validate_scenario(sid)
     if errs:
         out({"ok": False, "command": "run", "error": "scenario_invalid", "detail": errs}, 1)
@@ -180,7 +180,9 @@ def run_scenario(sid, variants, repeat, outdir, save_baseline=False):
     report = write_report(outdir, s)
     if save_baseline:
         _save_baseline(s, report)
+    rec, rec_warn = (None, None) if no_record else record_results(outdir, s, task_dir, project_root)
     out({"ok": True, "command": "run", "out": str(outdir), "report": str(outdir / "REPORT.md"),
+         "record": str(rec) if rec else None, "record_warning": rec_warn,
          "verdicts": {r["run"]: r["verdict"] for r in report["runs"]}, "warnings": _install_drift()})
 
 
@@ -339,6 +341,86 @@ def _trend(m, base):
     return warns
 
 
+MODE_KO = {"smoke": "스모크", "function": "기능", "judgment": "판단"}
+RECORD_TASK_FILES = ("TASK.md", "SPEC.md", "PLAN.md", "SPEC-PLAN.md", "TEST-SCENARIO.md", "TEST-SCENARIOS.md",
+                     "DONE.md", "AGENTIC-LOG.md", "state.json")
+
+
+def _yymmdd():
+    try:
+        r = subprocess.run(["node", str(OPAL / "tools" / "date" / "date.js"), "yymmdd"], capture_output=True, text=True, timeout=10)
+        if r.returncode == 0 and re.fullmatch(r"\d{6}", r.stdout.strip()):
+            return r.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return datetime.datetime.now().strftime("%y%m%d")
+
+
+def _name_slug(text):
+    return re.sub(r"-{2,}", "-", re.sub(r"[\s/\\()\[\]{}:;,.'\"`]+", "-", text)).strip("-")
+
+
+def _project_root(start):
+    r = subprocess.run(["git", "-C", str(start), "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    root = pathlib.Path(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip() else None
+    return root if root and (root / "tasks").is_dir() else None
+
+
+def _active_task(root):
+    """진행 중(in_progress·additional_work) 태스크가 정확히 하나일 때만 그 폴더를 돌려준다."""
+    hits = []
+    for sp in glob.glob(str(root / "tasks" / "*" / "state.json")):
+        try:
+            st = json.loads(pathlib.Path(sp).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if st.get("current_status") in ("in_progress", "additional_work"):
+            hits.append(pathlib.Path(sp).parent)
+    return hits[0] if len(hits) == 1 else None
+
+
+def record_results(outdir, s, task_dir=None, project_root=None):
+    """결과 폴더의 보고서·지표·실행별 핵심 산출물을 tasks/ 아래 기록 폴더로 복사한다.
+    모의 저장소 자체는 복사하지 않는다(중첩 git·가짜 .opal 프로젝트 방지)."""
+    outdir = pathlib.Path(outdir)
+    runs = sorted(p for p in outdir.iterdir() if (p / "run.json").exists())
+    targets = sorted({json.loads((p / "run.json").read_text(encoding="utf-8"))["variant"].split()[0].lstrip("/") for p in runs})
+    name = _name_slug(f"{_yymmdd()}-opst-{'-'.join(targets)}-{MODE_KO.get(s['mode'], s['mode'])}-{s.get('title') or s['id']}")
+    if task_dir:
+        base = pathlib.Path(task_dir).resolve() / "skill-tests"
+    else:
+        root = pathlib.Path(project_root).resolve() if project_root else _project_root(pathlib.Path.cwd())
+        if root is None:
+            return None, "tasks/ 폴더가 있는 프로젝트 루트를 찾지 못해 기록을 건너뜀(--project-root 또는 --task-dir 지정)"
+        active = _active_task(root)
+        base = (active / "skill-tests") if active else (root / "tasks")
+    dest = base / name
+    k = 2
+    while dest.exists():
+        dest = base / f"{name}-{k}"; k += 1
+    dest.mkdir(parents=True)
+    for f in ("REPORT.md", "metrics.json"):
+        if (outdir / f).exists():
+            shutil.copy(outdir / f, dest / f)
+    for rd in runs:
+        rdst = dest / "runs" / rd.name
+        rdst.mkdir(parents=True)
+        for f in ("run.json", "result.json", "REQUEST.md", "stderr.txt"):
+            if (rd / f).exists() and (rd / f).stat().st_size:
+                shutil.copy(rd / f, rdst / f)
+        sp = _find_state(rd / "repo")
+        if sp:
+            tdst = rdst / "task"
+            tdst.mkdir()
+            for f in RECORD_TASK_FILES:
+                if (sp.parent / f).exists():
+                    shutil.copy(sp.parent / f, tdst / f)
+    (dest / "SOURCE.md").write_text(
+        f"# 기록 출처\n\n- 시나리오: `{s['id']}` ({s['mode']})\n- 실행 결과 폴더(모의 저장소 포함): `{outdir}`\n"
+        f"- 모의 저장소는 중첩 git·가짜 OPAL 프로젝트 인식을 막기 위해 이 기록에 복사하지 않았다.\n", encoding="utf-8")
+    return dest, None
+
+
 def write_report(outdir, s):
     outdir = pathlib.Path(outdir)
     bl = SCENARIOS / s["id"] / "baseline.json"
@@ -399,6 +481,8 @@ def main(argv=None):
     v = sub.add_parser("validate"); v.add_argument("id", nargs="?"); v.add_argument("--all", action="store_true")
     r = sub.add_parser("run"); r.add_argument("id"); r.add_argument("--variant", action="append")
     r.add_argument("--repeat", type=int, default=1); r.add_argument("--out"); r.add_argument("--save-baseline", action="store_true")
+    r.add_argument("--task-dir"); r.add_argument("--project-root"); r.add_argument("--no-record", action="store_true")
+    c = sub.add_parser("record"); c.add_argument("out"); c.add_argument("--task-dir"); c.add_argument("--project-root")
     p = sub.add_parser("report"); p.add_argument("out"); p.add_argument("--save-baseline", action="store_true")
     a = ap.parse_args(argv)
     if a.cmd == "list":
@@ -412,7 +496,17 @@ def main(argv=None):
     if a.cmd == "run":
         if a.repeat < 1:
             out({"ok": False, "command": "run", "error": "repeat_invalid"}, 1)
-        run_scenario(a.id, a.variant, a.repeat, a.out, a.save_baseline)
+        run_scenario(a.id, a.variant, a.repeat, a.out, a.save_baseline, a.task_dir, a.project_root, a.no_record)
+    if a.cmd == "record":
+        rd = pathlib.Path(a.out)
+        first = next((json.loads((p / "run.json").read_text(encoding="utf-8")) for p in rd.iterdir() if (p / "run.json").exists()), None)
+        if not first:
+            out({"ok": False, "command": "record", "error": "no_runs"}, 1)
+        s = json.loads((SCENARIOS / first["scenario"] / "scenario.json").read_text(encoding="utf-8"))
+        if not (rd / "REPORT.md").exists():
+            write_report(rd, s)
+        rec, warn = record_results(rd, s, a.task_dir, a.project_root)
+        out({"ok": rec is not None, "command": "record", "record": str(rec) if rec else None, "warning": warn}, 0 if rec else 1)
     if a.cmd == "report":
         rd = pathlib.Path(a.out)
         first = next((json.loads((p / "run.json").read_text(encoding="utf-8")) for p in rd.iterdir() if (p / "run.json").exists()), None)

@@ -1,7 +1,7 @@
 {
   "id": "smoke-opsdd-low-stock",
   "mode": "smoke",
-  "title": "low-stock 명령 추가 (opsdd)",
+  "title": "low-stock 명령 추가",
   "base": "_bases/stockctl",
   "target_pilots": [
     "opsdd"

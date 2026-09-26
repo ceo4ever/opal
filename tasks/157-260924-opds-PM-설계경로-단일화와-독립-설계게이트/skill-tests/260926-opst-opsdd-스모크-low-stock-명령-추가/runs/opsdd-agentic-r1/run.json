@@ -1,0 +1,11 @@
+{
+ "scenario": "smoke-opsdd-low-stock",
+ "mode": "smoke",
+ "variant": "//opsdd --agentic",
+ "rep": 1,
+ "utterance": "//opsdd --agentic 요구서 /private/tmp/claude-501/-Volumes-Data-AIStudio-workspace-ai-framework--opal-worktrees-task-157/d8764f45-027c-4fad-96d6-4c0fadbebe62/scratchpad/ost-opsdd-1/opsdd-agentic-r1/REQUEST.md 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다.",
+ "start": 1790384731.6199,
+ "exit": 0,
+ "timeout": false,
+ "end": 1790386303.61051
+}

@@ -15,7 +15,7 @@ OPAL 스킬(주로 Pilot)을 모의 프로젝트로 실제 실행해 보고, 표
 
 ## 사용법
 
-대화로 요청하면(예: `//ost opds 스킬 테스트 해줘`) 요청에 없는 조건만 선택지형 질문으로 묻습니다. 대상 스킬, 단일·비교, 모드, 시나리오, 반복이 대상입니다. 그다음 시나리오·세션 수·예상 시간과 비용을 요약해 한 번 확인받고 실행합니다. 스크립트를 직접 실행할 수도 있습니다.
+대화로 요청하면(예: `//opst opds 스킬 테스트 해줘`) 요청에 없는 조건만 선택지형 질문으로 묻습니다. 대상 스킬, 단일·비교, 모드, 시나리오, 반복이 대상입니다. 그다음 시나리오·세션 수·예상 시간과 비용을 요약해 한 번 확인받고 실행합니다. 스크립트를 직접 실행할 수도 있습니다.
 
 ```bash
 T=~/.opal/skills/opal-skill-tester/scripts/skill_tester.py
@@ -25,7 +25,10 @@ python3 $T run smoke-version-flag                 # 단일 실행(기본 변형)
 python3 $T run function-stockctl-multiloc \
   --variant "//opd --no-pm" --variant "//opd" --repeat 2   # 비교 실행
 python3 $T report /tmp/opal-skill-tester/<실행폴더>        # 보고서 재생성
+python3 $T record /tmp/opal-skill-tester/<실행폴더>        # tasks/에 기록(run은 자동 기록)
 ```
+
+실행이 끝나면 결과를 프로젝트 `tasks/`에 `YYMMDD-opst-{대상 스킬}-{모드}-{시나리오 제목}` 폴더로 기록합니다. 진행 중인 태스크가 있으면 그 태스크의 `skill-tests/` 아래에 둡니다. 보고서, 지표, 실행별 세션 결과와 모의 태스크 산출물 사본이 들어가며, 모의 저장소 자체는 임시 폴더에 남깁니다.
 
 실행 1회가 실제 Pilot 세션이라 시간과 비용이 듭니다. 기능 시나리오 기준 약 20~35분, $10~15입니다.
 

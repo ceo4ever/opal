@@ -1,0 +1,47 @@
+{
+ "scenario": "smoke-version-flag",
+ "mode": "smoke",
+ "runs": [
+  {
+   "run": "opds-r1",
+   "variant": "//opds",
+   "rep": 1,
+   "timeout": false,
+   "wall_min": 19.0,
+   "cost_usd": 9.72,
+   "turns": 16,
+   "output_tokens": 8662,
+   "result_text": "[부트스트랩] ✅ session.project ⏳ PM\n\n📋 알투[PM]: 001 stockctl 버전 확인 옵션 | CLOSE ✅ (actor=coordinator, agentic, worktree)\n\n캡틴, 요구서대로 `stockctl --version`을 구현했고 파이프라인을 `close.final`까지 끝냈습니다. main에는 아직 머지하지 않았습니다.\n\n## 🎯 결론\n1) **요구서 4개 항목 충족** — `stockctl --version`은 서브커맨드 없이 stdout에 `stockctl 0.1.0` 한 줄을 출력하고 exit 0으로 끝납니다.\n   - 버전은 `stockctl/__init__.py`의 `__version__`에서 가져옵니다. 저장소 파일은 만들지도 읽지도 않고, `docs/CLI.md`에 옵션을 추가했습니다.\n   - 기존 add/remove/list와 기존 테스트는 그대로 통과합니다.\n2) **검증: 테스트 에이전트 실행 결과 7/7 PASS**\n   - 구현 전에 새 테스트 3개가 모두 실패(exit 2)하는 것을 먼저 확인했습니다. 구현 후 전체 pytest 5개가 통과했습니다.\n   - 컨벤션 진단에서 Critical·High는 0건입니다.\n3) **설계 게이트 1회 재작성 후 통과** — 1차 검토에서 테스트 설계 결함이 나와 PLAN을 고친 뒤 2차에서 통과했습니다.\n   - 결함은 복사본 패키지 테스트가 실행 위치 때문에 원본 패키지를 불러오는 문제였습니다. 이를 고치면서 같은 원인의 문제 1건도 함께 보정했습니다.\n\n변경 파일은 `stockctl/cli.py`, `docs/CLI.md`, 신규 `tests/test_version.py` 세 개입니다. 커밋 4개(`0e51abc` 명세 → `c3d2e4f` 구현 → `ada29e5` 마감 → `e78e0ff` 상태 기록)는 `feat/OP-TASK-001` 브랜치에만 있습니다. 전체 과정은 `.opal-worktrees/task_001/tasks/001-260926-opds-버전확인-옵션/AGENTIC-LOG.md`에 기록했습니다.\n\n## 📌 추가 확인 사항\n1) [이월] OPAL 절차에 있는 워크트리 전용 터미널 기동을 하지 않았습니다.\n   - 이 세션에서 직접 수행하라는 지시였고, 기동하면 작업이 별도 자율 세션으로 넘어가 여기서 완료 증거를 확보할 수 없기 때문입니다. 대신 이 세션이 워크트리에서 끝까지 작업했습니다.\n2) [리스크] 허브(main 작업본)의 `.opal/MEMORY.json`이 커밋되지 않은 채 바뀌어 있습니다.\n   - 회고 단계 절차대로 개선 후보 1건(`code-scan.json` 제외 목록에 `.opal-worktrees` 누락)을 기록하면서 생긴 변경입니다. 태스크 번호 발급도 같은 파일을 갱신했습니다.\n3) [미확인] 이 환경에는 `python` 명령이 없고 `python3`만 있어서, 모든 검증을 `python3`로 실행했습니다.\n\nmain 머지는 캡틴 승인이 필요해서 진행하지 않았습니다. 승인하시면 허브에서 아래 순서로 마감합니다.\n1. `git merge --ff-only feat/OP-TASK-001`\n2. `state-tool finalize-attribution <task-path> --allocator-root <허브>`\n3. `state-tool status <task-path> --set done`\n4. `worktree-tool remove --project-root <허브> --task 001`\n\n---\n▶️ 사용자 결정 필요: `feat/OP-TASK-001`을 main에 fast-forward 머지하고 위 마감 절차까지 진행할까요?\n- 권고: 진행. 7/7 PASS에 컨벤션 문제도 없고, fast-forward라 main 이력을 다시 쓰지 않습니다.\n- 영향: main에 커밋 4개가 추가됩니다. 이후 워크트리를 정리하면 태스크 기록이 허브 `tasks/`로 옮겨집니다.\n- 보류하시면 브랜치만 남고 main과 허브 작업본은 지금 상태 그대로입니다.",
+   "task_found": true,
+   "task": "001-260926-opds-버전확인-옵션",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opds",
+   "gate_iterations": 2,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_commits": 4,
+   "subagent_runs": 6,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 7.7,
+    "execute": 3.8,
+    "test": 3.1,
+    "close": 1.6
+   },
+   "log_error": 1,
+   "log_fix": 1,
+   "existing_tests_ok": true,
+   "hidden_summary": "2 passed in 0.67s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "PASS",
+   "fail_reasons": [],
+   "trend_warnings": []
+  }
+ ]
+}

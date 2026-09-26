@@ -227,7 +227,7 @@ PM이 직접 조회·작성·수정·검증을 수행하는 대화형 operator �
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
 |----------|------|------|------|
-| `opal-skill-tester` | ost | operator (실행기 스크립트 포함) | 스킬 내부 `scenarios/` 카탈로그(스모크·기능·판단 모드)에서 시나리오를 골라 `claude -p` 세션으로 실행한다. 기본은 단일 변형, `--variant` 복수 지정 시 비교, `--repeat`로 반복. 결과(숨은 테스트)·준수(완료·상태 검증·run-log 적체·게이트 증거·체크포인트 커밋)는 합격 조건, 효율·재작업은 `baseline.json` 대비 경고. 지표 SSOT `references/metrics.md`, 시나리오 규격 `references/scenario-spec.md` |
+| `opal-skill-tester` | opst | operator (실행기 스크립트 포함) | 스킬 내부 `scenarios/` 카탈로그(스모크·기능·판단 모드)에서 시나리오를 골라 `claude -p` 세션으로 실행한다. 기본은 단일 변형, `--variant` 복수 지정 시 비교, `--repeat`로 반복. 결과(숨은 테스트)·준수(완료·상태 검증·run-log 적체·게이트 증거·체크포인트 커밋)는 합격 조건, 효율·재작업은 `baseline.json` 대비 경고. 실행 결과는 진행 중 태스크의 `skill-tests/` 또는 `tasks/` 아래 `YYMMDD-opst-{대상}-{모드}-{제목}` 폴더에 기록(모의 저장소 제외). 지표 SSOT `references/metrics.md`, 시나리오 규격 `references/scenario-spec.md` |
 
 > 기반 저장소는 `scenarios/_bases/`에 `_opal`·`_gitignore` 이름으로 보관하고 실행기가 복사 시 `.opal`·`.gitignore`로 복원한다 — 프레임워크 저장소·설치본 안에서 모의 프로젝트가 실제 OPAL 프로젝트로 인식되지 않게 하기 위함이다. 실행 1회가 실제 Pilot 세션이므로 스킬 변경의 merge 전 검증용으로 쓴다.
 
