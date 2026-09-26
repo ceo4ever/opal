@@ -3,7 +3,7 @@
   "module": "report_html",
   "layer": "util",
   "domain": "opal-skill-tester",
-  "description": "opal-skill-tester 대시보드 보고서(report.html) 렌더러. 단일 실행은 요약(평가축 5종·단계 상세·자기 교정·전체 지표)+스킬별 이력 탭, 비교 실행은 비교(핵심 지표·준수 매트릭스·단계 묶음 막대·변화율)+변형별 상세+이력 탭을 한 파일로 만든다. 이력 탭은 같은 시나리오 추세(최근 실행 중앙값 대비)와 같은 스킬의 과거 실행 표를 보여 주며 각 행은 현재 위치와 backup 위치 링크를 새 탭으로 연다. 인라인 SVG·외부 의존 없음, 라이트/다크 모드.",
+  "description": "opal-skill-tester 대시보드 보고서(report.html) 렌더러. 단일 실행은 요약(평가축 5종·단계 상세·자기 교정·전체 지표)+스킬별 이력 탭, 비교 실행은 비교(핵심 지표·준수 매트릭스·단계 묶음 막대·변화율)+변형별 상세+이력 탭을 한 파일로 만든다. 이력 탭은 같은 시나리오 추세(최근 실행 중앙값 대비)와 같은 스킬의 과거 실행 표를 보여 주며 각 행은 과거 실행 상세를 페이지 안에서 펼치거나 과거 대시보드를 새 탭으로 연다. 인라인 SVG·외부 의존 없음, 라이트/다크 모드.",
   "exports": ["render_report", "axes_for"]
 }
 """
@@ -277,10 +277,7 @@ def history_panel(variant, current, scenario_id, hist_same, hist_skill, here_dir
         links = ""
         if h.get("report_path"):
             rel = os.path.relpath(h["report_path"], here_dir)
-            alt = h.get("report_alt_path")
             links = f'<a href="{e(rel)}" target="_blank" rel="noopener">새 탭 열기 ↗</a> <button class="cp" data-href="{e(rel)}" type="button">링크 복사</button>'
-            if alt:
-                links += f' <a class="tag" href="{e(os.path.relpath(alt, here_dir))}" target="_blank" rel="noopener">{"backup 위치" if "/backup/" in alt else "원래 위치"}</a>'
         did = f"d{next(_DETAIL_IDS)}"
         links = f'<button class="dt" data-row="{did}" type="button" aria-expanded="false">상세 펼치기</button> ' + links
         rows.append(f'<tr><td>{e(h["created_at"][:16])}</td><td><code>{e(h["scenario"])}</code></td><td>{e(MODE_KO.get(h.get("mode"), h.get("mode")))}</td>'
@@ -291,7 +288,7 @@ def history_panel(variant, current, scenario_id, hist_same, hist_skill, here_dir
     return f"""
 <div class="card" style="margin-bottom:16px"><b>{e(variant)}</b> · 이번 시나리오 <code>{e(scenario_id)}</code> 이력 {len(hist_same)}회 + 이번 실행</div>
 <div class="grid g4">{charts}</div>
-<div class="card"><h2>{e(variant)} 스킬 테스트 이력 (전체 시나리오)</h2><div class="tag" style="margin-bottom:8px">'상세 펼치기'는 과거 실행 상세를 이 페이지 안에서 보여줍니다(모든 뷰어). '새 탭 열기'는 과거 대시보드 전체를 새 탭으로 엽니다 — 로컬 파일 간 이동을 막는 뷰어(예: Orca 내장 브라우저)에서는 동작하지 않으니 '상세 펼치기'나 '링크 복사' 후 새 탭 주소창에 붙여 넣기를 쓰세요. 태스크가 backup/으로 아카이브됐으면 'backup 위치'를 쓰거나 <code>refresh</code>로 링크를 다시 만드세요.</div>
+<div class="card"><h2>{e(variant)} 스킬 테스트 이력 (전체 시나리오)</h2><div class="tag" style="margin-bottom:8px">'상세 펼치기'는 과거 실행 상세를 이 페이지 안에서 보여줍니다(모든 뷰어). '새 탭 열기'는 과거 대시보드 전체를 새 탭으로 엽니다 — 로컬 파일 간 이동을 막는 뷰어(예: Orca 내장 브라우저)에서는 동작하지 않으니 '상세 펼치기'나 '링크 복사' 후 새 탭 주소창에 붙여 넣기를 쓰세요. 태스크가 <code>tasks/backup/</code>으로 아카이브돼도 다음 테스트 기록 때 모든 대시보드의 링크가 새 위치로 다시 만들어지고, 바로 고치려면 <code>refresh</code>를 실행하세요.</div>
 <div class="overflow"><table><tr><th>일시</th><th>시나리오</th><th>모드</th><th>판정</th><th class="n">최종 수행 시간(분)</th><th class="n">비용($)</th><th class="n">게이트 반복</th><th>프레임워크</th><th>보고서</th></tr>{table}</table></div></div>"""
 
 

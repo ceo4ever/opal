@@ -486,15 +486,13 @@ def collect_history(root, exclude=None):
         except (OSError, json.JSONDecodeError):
             continue
         rp = rdir / "report.html"
-        parts = rp.relative_to(root).parts
-        alt = (root / pathlib.Path(*parts[:1], *parts[2:])) if len(parts) > 1 and parts[1] == "backup" else (root / parts[0] / "backup" / pathlib.Path(*parts[1:]))
         seen = set()
         for m in mets.get("runs", []):
             if m.get("variant") in seen:
                 continue  # 반복 실행은 첫 회차만 이력에 올린다
             seen.add(m.get("variant"))
             out_.append(dict(m, scenario=meta.get("scenario"), mode=meta.get("mode"), created_at=meta.get("created_at", ""), source=meta.get("source"),
-                             report_path=str(rp), report_alt_path=str(alt)))
+                             report_path=str(rp)))
     return out_
 
 
@@ -503,6 +501,21 @@ def _render_html(dest, s, root):
     meta = json.loads((dest / "record.json").read_text(encoding="utf-8"))
     hist = [h for h in (collect_history(root, exclude=dest) if root else []) if h["created_at"] < meta["created_at"]]
     (dest / "report.html").write_text(report_html.render_report(s, mets["runs"], hist, str(dest), meta["created_at"]), encoding="utf-8")
+
+
+def refresh_all(root):
+    """tasks/·tasks/backup/의 모든 기록 report.html을 다시 만든다. 아카이브로 폴더가 옮겨져도
+    이력은 매번 record.json을 다시 찾아 모으므로 링크가 현재 위치로 고쳐진다."""
+    done, skipped = [], []
+    for rj in glob.glob(str(root / "tasks" / "**" / "record.json"), recursive=True):
+        dest = pathlib.Path(rj).parent
+        sid = json.loads(pathlib.Path(rj).read_text(encoding="utf-8")).get("scenario")
+        sj = SCENARIOS / str(sid) / "scenario.json"
+        if not sj.exists():
+            skipped.append(str(dest)); continue
+        _render_html(dest, json.loads(sj.read_text(encoding="utf-8")), root)
+        done.append(str(dest))
+    return done, skipped
 
 
 def record_results(outdir, s, task_dir=None, project_root=None):
@@ -544,7 +557,11 @@ def record_results(outdir, s, task_dir=None, project_root=None):
     created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     (dest / "record.json").write_text(json.dumps({"scenario": s["id"], "mode": s["mode"], "created_at": created,
                                                   "variants": targets, "source": str(outdir)}, ensure_ascii=False, indent=1), encoding="utf-8")
-    _render_html(dest, s, _resolve_root(task_dir, project_root))
+    root = _resolve_root(task_dir, project_root)
+    if root:
+        refresh_all(root)  # 새 기록 포함 전 기록을 다시 만들어 아카이브로 바뀐 링크도 고친다
+    else:
+        _render_html(dest, s, None)
     (dest / "SOURCE.md").write_text(
         f"# 기록 출처\n\n- 시나리오: `{s['id']}` ({s['mode']})\n- 실행 결과 폴더(모의 저장소 포함): `{outdir}`\n"
         f"- 모의 저장소는 중첩 git·가짜 OPAL 프로젝트 인식을 막기 위해 이 기록에 복사하지 않았다.\n", encoding="utf-8")
@@ -648,15 +665,7 @@ def main(argv=None):
         root = _resolve_root(None, a.project_root)
         if root is None:
             out({"ok": False, "command": "refresh", "error": "project_root_not_found"}, 1)
-        done, skipped = [], []
-        for rj in glob.glob(str(root / "tasks" / "**" / "record.json"), recursive=True):
-            dest = pathlib.Path(rj).parent
-            sid = json.loads(pathlib.Path(rj).read_text(encoding="utf-8")).get("scenario")
-            sj = SCENARIOS / str(sid) / "scenario.json"
-            if not sj.exists():
-                skipped.append(str(dest)); continue
-            _render_html(dest, json.loads(sj.read_text(encoding="utf-8")), root)
-            done.append(str(dest))
+        done, skipped = refresh_all(root)
         out({"ok": True, "command": "refresh", "refreshed": len(done), "skipped": skipped})
 
 
