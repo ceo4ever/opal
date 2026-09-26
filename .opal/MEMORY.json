@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 156,
+  "last_task_number": 157,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -157,6 +157,13 @@
   ],
   "history": [
     {
+      "title": "157 PM 설계경로 단일화와 독립 설계게이트",
+      "date": "2026-09-26",
+      "stage": "완료",
+      "path": "tasks/157-260924-opds-PM-설계경로-단일화와-독립-설계게이트/",
+      "result": "opd/opds PM 경로 6행 공용 파이프라인(pipeline-pm.json)·설계 게이트(결정론 검사+evaluator design-rubric 1회)·문서 묶음 해시 고정·반복 상한 사용자 대기 도입, TEST 14/14. 추가작업으로 opal-skill-tester(opst) 신설"
+    },
+    {
       "title": "156 파일럿 기본실행과 PM 역할 재정의",
       "date": "2026-09-24",
       "stage": "완료",
@@ -183,13 +190,6 @@
       "stage": "완료",
       "path": "tasks/142-260918-oppb-E2E-여정조각-라이브러리/",
       "result": "여정·조각 재사용, 신선도 생략, 선언형 driver, //e2e 승격 게이트 구현 및 배포 검증"
-    },
-    {
-      "title": "E2E 여정·조각 라이브러리",
-      "date": "2026-09-20",
-      "stage": "완료",
-      "path": "tasks/142-260918-oppb-E2E-여정조각-라이브러리",
-      "result": "여정·조각 재사용, 신선도 생략, 선언형 driver, //e2e 승격 게이트 구현"
     }
   ]
 }
