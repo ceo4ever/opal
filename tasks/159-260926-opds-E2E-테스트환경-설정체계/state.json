@@ -232,7 +232,14 @@
     "completion_profile_receipt": null,
     "active_run_id": "run_89bca3b7-5f5a-460f-93e1-a138190cf666",
     "status": "active",
-    "pending_events": []
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_cc08189e-0ddf-4c6e-96e5-96df4bf3a297",
+      "report_type": "progress_report",
+      "transition_action": "continue",
+      "user_input_required": false,
+      "at": "2026-09-26T11:18:07.610Z"
+    }
   },
   "design_gate": {
     "status": "pass",

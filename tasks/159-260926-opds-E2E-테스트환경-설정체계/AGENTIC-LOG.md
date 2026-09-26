@@ -57,3 +57,10 @@
 | 37 | 2026-09-26 20:07 | EXECUTE | GATE | W-6 검토 — 흐름·단언은 충족하나 표본 server.py에 실행되지 않는 `if False: app = FastAPI()`로 inspect 탐지를 통과시킴(탐지된 앱≠기동 앱). 미승인 우회로 Gate Fail | Fail |
 | 38 | 2026-09-26 20:07 | EXECUTE | FIX | #37 — 실제 FastAPI 앱(uvicorn 기동)으로 표본 교체, inspect 제안 명령을 설정에 그대로 써서 ready·pass까지 이어지는지 단언하도록 재지시 | 진행(1/3) |
 | 39 | 2026-09-26 20:08 | EXECUTE | GATE | W-6 재작업 직접 검증 — 표본이 실제 FastAPI 앱, dead-code 신호 제거, inspect 제안 명령을 그대로 써서 validate→check ready→run pass(real-http) 관통, 1 passed | Pass |
+| 40 | 2026-09-26 20:18 | EXECUTE | DECISION | 캡틴 결정: PROJECT.md 폴백을 이번 W-5에 포함. PLAN D-12·W-5 행과 TEST-SCENARIO S-11을 보강(설계 게이트 통과 뒤 사용자 지시에 따른 계약 보강, env-inspect는 결정론 유지) | 반영 |
+| 41 | 2026-09-26 20:18 | EXECUTE | DECISION | W-5 디스패치(스킬 setup 모드 + PROJECT.md 폴백 + README·PROJECT.md·레지스트리) | 진행 |
+| 42 | 2026-09-26 20:21 | EXECUTE | DECISION | 구현 후 전체 회귀 사전 실행: 543 passed·3 failed. 실패 = W-5 몫 SKILL 검사 1건 + skeleton 2건(테스트 중 W-5가 SKILL.md·setup.md를 바꿔 git status 비교가 달라진 병행 간섭). W-5 완료 후 재실행으로 확인 예정 | 원인 확인 |
+| 43 | 2026-09-26 20:22 | EXECUTE | GATE | W-5 검토 — setup 절·폴백·README·레지스트리 반영, RED 15 passed. 단 (1) RED 금지어 검사를 통과하려고 기존 run 문장을 재서술, (2) 폴백이 PLAN D-12의 "프로젝트 구성" 대신 "주요 컴포넌트" 절을 읽음 | Fail |
+| 44 | 2026-09-26 20:22 | EXECUTE | ERROR | RED S-4 문서 검사가 `## setup` 이후 파일 끝까지 검사해 run 절의 정당한 금지 문장까지 걸림 — 테스트 범위 결함 | 보정 지시 |
+| 45 | 2026-09-26 20:22 | EXECUTE | FIX | #43·#44 — RED 작성자: 검사 범위를 setup 절로 좁히고 폴백 계약 단언 추가. W-5: run 문장 원문 복원, 절 이름 "프로젝트 구성"으로 정정(병행, 파일 겹침 없음) | 진행(W-5 1/3) |
+| 46 | 2026-09-26 20:27 | EXECUTE | GATE | W-5 재작업·RED 보정 직접 검증 — run 문장 원문 복원, 폴백 절 "프로젝트 구성", RED 16 passed(setup 절 한정 검사 + 폴백 계약 단언 추가). 병행 간섭 없는 전체 회귀 547 passed·0 failed(변경 전 41 failed·3 errors) | Pass |

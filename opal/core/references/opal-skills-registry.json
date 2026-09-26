@@ -753,7 +753,7 @@
       {
         "name": "opal-e2e",
         "alias": "e2e",
-        "description": "프로젝트 E2E 여정·조각 operator — author·run·status 3모드, test-tool 판정 해석 전용",
+        "description": "프로젝트 E2E 여정·조각 operator — setup·author·run·status 4모드, test-tool 판정 해석 전용",
         "triggers": [
           "^e2e$",
           "^opal-e2e$",
@@ -765,7 +765,7 @@
           "~/.opal/skills/opal-e2e/SKILL.md"
         ],
         "domain": "quality",
-        "pipeline": "MODE: author | run | status"
+        "pipeline": "MODE: setup | author | run | status"
       },
       {
         "name": "opal-workspace-sync",

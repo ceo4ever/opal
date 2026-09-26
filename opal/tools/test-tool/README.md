@@ -169,6 +169,15 @@ test-tool e2e run --scenario <id> --task-path <path> --target <source-main|sourc
 실행한다. `--scenario`·`--task-path`·`--target` 3개는 필수다. exit은 `status_to_exit(status)`
 결과이며 값은 `{0,6,7,18,19,20}`을 벗어나지 않는다.
 
+SUT 기동은 대상 트리의 `.opal/e2e/environment.json` 설정을 그대로 따른다. 설정에 선언된
+서비스를 의존 순서로 1회씩 기동하고(`{host}`·`{port}`·`{python}`·`{project_root}`·
+`{service.<id>.url}`·`{service.<id>.port}` 치환, 리터럴 중괄호는 `{{`·`}}`), 선언된 health를
+수행하며 health가 없으면 포트 대기로 대체한다. `run.json.urls`의 키는 서비스 id이고, api
+표면의 base URL·health_path가 api executor에 전달된다. 설정이 없거나 무효하거나 표면
+해석에 실패하면 하네스가 임의로 기동을 시도하지 않고 `blocked`(run.json의 `detail_code`가
+`e2e_env_config_missing`/`e2e_env_config_invalid`/`e2e_env_surface_missing`/
+`e2e_env_surface_ambiguous`)로 안내한다.
+
 `--task-path/test-scenario.json`에 같은 id가 없으면 `<project>/docs/e2e/journeys/<id>.md`를
 직접 읽는다. 여정의 `{fragment: <id>, with: {...}}` step은 `docs/e2e/fragments/<id>.md`의
 실제 연산과 필수 사후 조건으로 전개된다. 조각의 `fill`·`type` 값은 `value_ref`가 가리키는
@@ -189,6 +198,37 @@ test-tool e2e run --scenario <id> --task-path <path> --target <source-main|sourc
 선택 driver가 달라지면 이전 증적은 재사용되지 않는다. 생략은 새 `pass`를 만들지 않고
 원장의 `events[]`에 `kind: evidence_reuse`, `description: 이전 증적 재인용`, 기존 run과
 증적 경로를 기록한다. 따라서 후속 status/DONE 소비자는 생략을 미실행으로 숨기지 않는다.
+
+### `e2e env-inspect` / `e2e env-validate` / `e2e env-check`
+
+```
+test-tool e2e env-inspect --project-root <path>
+test-tool e2e env-validate --project-root <path> [--file <path>]
+test-tool e2e env-check --project-root <path> [--artifact-root <path>]
+```
+
+프로젝트 E2E 환경 설정(`.opal/e2e/environment.json`)을 검토·검증·준비 판정하는 3개
+서브명령이다. `opal-e2e` 스킬의 `setup` 모드가 이 순서로 호출한다.
+
+- `env-inspect`: 프로젝트를 제한된 깊이로 읽기 전용으로 훑어 `config`(설정 존재·유효성
+  요약), `surface_candidates`(web/api/desktop 후보), `drivers`(설치된 browser driver),
+  `secret_hints`(`.env.example` 변수 이름)를 반환한다. 쓰기 연산과 바이트코드 캐시를 남기지
+  않는다. exit `0` 고정.
+- `env-validate`: `--file`(초안) 또는 `.opal/e2e/environment.json`을 `lib/e2e/environment.py`
+  스키마로 검증한다. 유효하면 exit `0`과 `summary`(services/surfaces 개수), 부재·무효면
+  exit `1`과 `error`(`e2e_env_config_missing`/`e2e_env_config_invalid`) + `violations`.
+- `env-check`: 설정의 표면별 준비 상태를 실제 서비스 기동·health·executor 확인으로
+  판정한다. 최상위 `ready`(bool)와 `secrets`, 표면별 `surfaces[{id, kind, status, checks,
+  cause, remediation}]`를 반환한다. `status`는 `ready`/`not_ready`이고 `checks`는
+  `service_start`/`health`/`executor` 등 개별 확인 이름이다. 모든 표면이 준비되면
+  `ready: true`와 exit `0`, 아니면 exit `1`이다. 이 판정은 test-tool만 소유하며, 호출한
+  스킬은 결과를 재계산하지 않고 그대로 보고한다.
+
+3개 서브명령 모두 소스 경로(`~/.opal/.venv/bin/python opal/tools/test-tool/test_tool.py`)
+검증으로 끝낸다. `~/.opal/`(설치본) 재배포는 이 작업의 범위가 아니며 main merge 뒤
+사용자 승인을 받은 `./scripts/install-mac.sh` 실행으로만 이뤄진다. 병합 전에 설치본을
+먼저 바꾸면 설정 파일이 없는 다른 main 체크아웃의 E2E가 `blocked`로 바뀌어 다른 세션에
+영향을 줄 수 있다.
 
 ### `e2e resume` (127)
 
@@ -494,6 +534,10 @@ bash run.sh scenario-coverage-check --coverage-input <PATH>
 | `e2e_blocked` | 19 | 인증·외부 승인·사람 입력 등 자동 진행 불가 | 필요한 외부 조치 후 재개 |
 | `e2e_awaiting_human` | 20 | 사람 handoff 대기 | structured submission으로 같은 run 재개 |
 | `resume_verification_failed` | 6 | human handoff resume token/run/evidence 검증 실패 | 같은 run-id/resume-token과 구조화 submission 확인 |
+| `e2e_env_config_missing` | 1 (env-validate/env-check) · detail_code(e2e run, exit 19) | `.opal/e2e/environment.json` 부재 | `e2e env-inspect`로 검토 후 설정 작성 |
+| `e2e_env_config_invalid` | 1 (env-validate/env-check) · detail_code(e2e run, exit 19) | 환경 설정이 스키마 검증 불통과 | `violations` 참조해 설정 수정 후 재시도 |
+| `e2e_env_surface_missing` | detail_code(e2e run, exit 19) | 시나리오 profile이 요구하는 종류의 표면이 설정에 없음 | 해당 종류의 표면을 설정에 추가 |
+| `e2e_env_surface_ambiguous` | detail_code(e2e run, exit 19) | 같은 종류 표면이 여럿이고 `surface_ref`로 특정할 수 없음 | 시나리오에 `surface_ref` 지정 |
 
 > `scenario-*` 에러코드는 `lib/scenario.py`의 `SCENARIO_ERROR_CODES`(전용 SSOT)에서 관리하며, 5~12는 기존 0~7 계열과 충돌 없이 배정됐고(격리 원칙 — PLAN.md §3.2.2, 056/ADD-1), 069는 13~15, 073/111은 16~17을 이어서 배정한다.
 

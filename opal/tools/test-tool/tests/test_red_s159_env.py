@@ -358,14 +358,47 @@ class TestEnvCheckServiceFailure(unittest.TestCase):
             detail_blob = json.dumps(checks)
             self.assertIn("readiness", detail_blob, f"로그 경로가 detail에 없음: {checks!r}")
 
-    def test_skill_setup_section_does_not_recompute_result(self):
+    def _setup_section(self) -> str:
+        """SKILL.md `## setup` 절 본문만 — 다음 `\\n## ` 헤딩 직전까지로 범위를 좁힌다.
+
+        전체 파일 끝까지 자르면 뒤따르는 `## run` 절의 "재계산하지 않는다"는 올바른
+        금지 문장까지 검사 범위에 들어가, 그 문장을 지우는 우회가 성립한다(PM 보정
+        지시 3). 이 테스트가 검증할 계약은 setup 절 자신이 env-check 결과를 재계산·
+        재판정하지 않고 그대로 보고하는지이므로, 절 경계를 정확히 잘라야 한다.
+        """
         skill_path = _TOOL_DIR.parent.parent / "skills" / "opal-e2e" / "SKILL.md"
         self.assertTrue(skill_path.exists(), f"{skill_path} 없음")
         text = skill_path.read_text(encoding="utf-8")
         self.assertIn("## setup", text)
-        setup_section = text.split("## setup", 1)[1]
-        self.assertIn("env-check", setup_section)
-        self.assertNotIn("재계산", setup_section)
+        after_heading = text.split("## setup", 1)[1]
+        # 다음 `\n## ` 헤딩(예: `\n## author`) 직전까지만 setup 절 본문으로 본다.
+        next_heading = after_heading.find("\n## ")
+        section = after_heading if next_heading == -1 else after_heading[:next_heading]
+        return section
+
+    def test_skill_setup_section_reports_env_check_as_is(self):
+        """setup 절이 env-check 결과를 그대로 보고한다는 서술을 직접 확인한다.
+
+        부정문("...바꾸지 않는다")은 올바른 금지 선언이므로 오탐하지 않도록, 재판정을
+        지시하는 긍정형 문구("...로 바꾼다"/"...재계산한다"/"...재판정한다" — 그 직후에
+        부정 조사가 붙지 않는 형태)만 금지한다.
+        """
+        section = self._setup_section()
+        self.assertIn("env-check", section)
+        self.assertIn("그대로", section, f"setup 절에 '그대로 보고' 서술이 없음: {section!r}")
+        for phrase in ("성공으로 바꾼다", "재계산한다", "재판정한다"):
+            self.assertNotIn(
+                phrase, section,
+                f"setup 절이 결과를 재판정·왜곡하라고 지시함({phrase!r}): {section!r}",
+            )
+
+    def test_skill_setup_section_has_project_md_fallback(self):
+        """PLAN D-12 보강 — env-inspect 후보 부족 시 PROJECT.md 폴백과 확인 전 미기록 규칙."""
+        section = self._setup_section()
+        self.assertIn("docs/PROJECT.md", section, f"PROJECT.md 폴백 서술이 없음: {section!r}")
+        self.assertIn("프로젝트 구성", section, f"'프로젝트 구성' 절 참조가 없음: {section!r}")
+        self.assertIn("추정", section, f"'추정' 표시 서술이 없음: {section!r}")
+        self.assertIn("확인 전", section, f"'확인 전' 미기록 서술이 없음: {section!r}")
 
 
 class TestNoDashboardStringLeft(unittest.TestCase):
