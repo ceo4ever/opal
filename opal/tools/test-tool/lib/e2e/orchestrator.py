@@ -3,7 +3,7 @@
   "module": "orchestrator",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T03 run 수명주기 — created→context_resolved→ports_leased→(sut_starting→sut_ready)→최종 상태→cleanup_* 상태 머신을 돌리고 run.json(§A.1)·journal.json(§A.2)·owned.json(§A.3)을 프로젝트 로컬 기본 경로 또는 명시적 격리 경로에 기록한다. SUT는 프로젝트 설정(`.opal/e2e/environment.json`, lib.e2e.environment)의 서비스를 의존 순서로 기동하며, 포트 임대 역할은 설정 서비스 id(설정 부재·무효면 backend·frontend 호환 역할)다. 설정 부재·무효·표면 선택 실패는 SUT 기동 시점에 서비스를 띄우지 않고 blocked로 끝낸다. 브라우저 진입 URL은 선택된 web 표면, api executor 문맥은 선택된 api 표면에서 온다. 상태·exit·error 문자열은 전부 lib.e2e_contract의 상수·함수에서 끌어오며 리터럴로 만들지 않는다(CONTRACT.md 계약 규칙 C-125-1, TRD.md RK-8).",
+  "description": "T03 run 수명주기 — created→context_resolved→ports_leased→(sut_starting→sut_ready)→최종 상태→cleanup_* 상태 머신을 돌리고 run.json(§A.1)·journal.json(§A.2)·owned.json(§A.3)을 프로젝트 로컬 기본 경로 또는 명시적 격리 경로에 기록한다. SUT는 프로젝트 설정(`.opal/e2e/environment.json`, lib.e2e.environment)의 서비스를 의존 순서로 기동하며, 포트 임대 역할은 설정 서비스 id(설정 부재·무효면 backend·frontend 호환 역할)다. 설정 부재·무효·표면 선택 실패와 서비스 render 단계의 설정 위반(path_escape 등, 첫 기동 전에 전 서비스를 render)은 SUT 기동 시점에 서비스를 띄우지 않고 blocked(render 위반은 e2e_env_config_invalid, detail에는 위반 코드만)로 끝낸다. 브라우저 진입 URL은 선택된 web 표면, api executor 문맥은 선택된 api 표면에서 온다. 상태·exit·error 문자열은 전부 lib.e2e_contract의 상수·함수에서 끌어오며 리터럴로 만들지 않는다(CONTRACT.md 계약 규칙 C-125-1, TRD.md RK-8).",
   "exports": ["RUN_ID_PATTERN", "run_e2e"],
   "depends": ["e2e_contract", "environment", "ports", "runtime", "drivers", "executors", "evidence", "freshness", "target"]
 }
@@ -716,6 +716,30 @@ def _run_e2e(
             artifact_dir=artifact_dir,
             artifact_root=resolved_root,
             config=config,
+        )
+    except SutConfigError as exc:
+        # render 단계 설정 위반 — 서비스를 하나도 띄우지 않았다. 설정 무효와 같은 경로(D-10).
+        journal.to(STATUS_BLOCKED, {"detail_code": DETAIL_ENV_CONFIG_INVALID})
+        return _finalize(
+            status=STATUS_BLOCKED,
+            journal=journal,
+            writer=writer,
+            context=context,
+            leases=leases,
+            reclaimed=reclaimed,
+            handles=[],
+            candidates=candidates,
+            artifact_root=resolved_root,
+            artifact_dir=artifact_dir,
+            run_id=resolved_run_id,
+            scenario_id=scenario_id,
+            scenario=scenario,
+            started_at=started_at,
+            detail_code=DETAIL_ENV_CONFIG_INVALID,
+            detail=(
+                f"E2E environment config is invalid ({exc.code}) at service render; "
+                f"validate with `test-tool e2e env-validate`, {_ENV_SETUP_HINT}"
+            ),
         )
     except e2e_runtime.SutStartupError as exc:
         journal.to(STATUS_INFRA_ERROR, {"reason": exc.reason})
@@ -1630,6 +1654,30 @@ def _resolve_run_surfaces(
     return surfaces, None, None
 
 
+class SutConfigError(ValueError):
+    """서비스 render 단계의 설정 위반. 경로 원문 없이 위반 코드(`code`)만 싣는다."""
+
+    def __init__(self, code: str) -> None:
+        super().__init__(code)
+        self.code = code
+
+
+# render_service·service_order의 ValueError 문구 머리 → 설정 위반 코드.
+_RENDER_VIOLATION_PREFIXES = (
+    ("path_escape", "path_escape"),
+    ("unresolvable placeholder", "invalid_placeholder"),
+    ("dependency cycle", "dependency_cycle"),
+)
+
+
+def _render_violation_code(exc: ValueError) -> str:
+    text = str(exc)
+    for prefix, code in _RENDER_VIOLATION_PREFIXES:
+        if text.startswith(prefix):
+            return code
+    return "render_invalid"
+
+
 def _start_sut(
     *,
     context: e2e_target.TargetContext,
@@ -1644,19 +1692,32 @@ def _start_sut(
     기동·health·회수 자체는 lib/e2e/runtime.py가 소유하며 이 함수는 순서와 lease
     confirm만 맡는다. health를 통과한 포트만 §A.7 `confirmed`로 올린다. 도중에 실패하면
     그 전에 기동한 handle을 예외의 `started_handles`에 실어 호출자가 회수·기록하게 한다.
+    render(치환·cwd 경계 확인)는 첫 기동 전에 전 서비스에 대해 끝내며, 여기서 난 설정
+    문제는 서비스를 하나도 띄우지 않고 SutConfigError(위반 코드만 보유)로 올린다.
     """
     if config is None:
         return []
     port_of = {record.role: record.port for record in leases}
     services = {service["id"]: service for service in config.get("services", [])}
+    # 기동 전에 전 서비스를 먼저 render한다. 설정 문제(ValueError)는 아무 서비스도 띄우지
+    # 않은 상태에서 SutConfigError로 올라가므로 회수할 프로세스가 생기지 않는다.
+    try:
+        rendered_all = [
+            (
+                service_id,
+                e2e_environment.render_service(
+                    services[service_id],
+                    port=port_of[service_id],
+                    ports_by_id=port_of,
+                    project_root=context.project_root,
+                ),
+            )
+            for service_id in e2e_environment.service_order(config)
+        ]
+    except ValueError as exc:
+        raise SutConfigError(_render_violation_code(exc)) from None
     handles: List[e2e_runtime.SutHandle] = []
-    for service_id in e2e_environment.service_order(config):
-        rendered = e2e_environment.render_service(
-            services[service_id],
-            port=port_of[service_id],
-            ports_by_id=port_of,
-            project_root=context.project_root,
-        )
+    for service_id, rendered in rendered_all:
         try:
             handle = e2e_runtime.start_service(
                 rendered, role=service_id, port=port_of[service_id], artifact_dir=artifact_dir

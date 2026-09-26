@@ -74,3 +74,7 @@
 | 54 | 2026-09-26 20:52 | TEST | GATE | 보정 후 전체 회귀 554 passed·0 failed. 독립 보안 재검증(baseline delta) 디스패치 | 진행 |
 | 55 | 2026-09-26 20:56 | TEST | GATE | 보안 재검증 — baseline 4건 resolved(GC-001·003·004·006), 후속 2건 persisting, 신규 1건(low): GC-004 보정 후 run `_start_sut`에서 render_service path_escape ValueError 시 선기동 서비스 누수 | Fail(보정) |
 | 56 | 2026-09-26 20:56 | TEST | FIX | #55 — 기동 전 전 서비스 선렌더링, render 실패 시 무기동 blocked(e2e_env_config_invalid) 보정 지시(fix 2/3) | 진행 |
+| 57 | 2026-09-26 21:03 | TEST | GATE | fix 2/3 직접 검증 — 전 서비스 선렌더링, render 위반 시 무기동 blocked(e2e_env_config_invalid), 신규 테스트가 보정 전 코드에서 누수 재현. 전체 회귀 555 passed·0 failed | Pass |
+| 58 | 2026-09-26 21:03 | TEST | ERROR | 회귀 후 잔존 프로세스 점검에서 이 워크트리의 uvicorn dashboard 22개 발견. 전부 19:10~19:11 시작 = 변경 전 코드로 돌린 최초 기준선(프런트 의존성 미설치 상태에서 프런트 기동 실패 시 선기동 backend 미회수, W-3가 보정한 기존 누수 경로). 이후 실행분 잔존 0 | 원인 확인 |
+| 59 | 2026-09-26 21:03 | TEST | FIX | #58 — 이 세션이 만든 고아 22개만 종료(작업본 cwd·시작 시각으로 한정), 잔존 0 확인. 다른 세션 고아(task_157 워크트리·다른 세션 scratchpad)는 건드리지 않고 보고 | 반영 |
+| 60 | 2026-09-26 21:03 | TEST | GATE | PM Gate 종합 — test-scenario 13/13 pass, 회귀 555 passed, 컨벤션 Critical/High 0, 보안 Critical/High 0·계약 위반 결함 보정 완료(잔여 GC-002·GC-005는 후속), 설계 피드백 미해결 없음 | Pass |

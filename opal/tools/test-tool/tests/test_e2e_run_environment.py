@@ -4,9 +4,9 @@
   "task": "159-260926-opds-E2E-테스트환경-설정체계",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "e2e run의 설정 기반 SUT 기동(PLAN D-9·D-10)을 공개 진입점 orchestrator.run_e2e로 검증한다. 설정 부재·무효는 호환 역할 2건 임대 후 서비스 미기동 blocked(e2e_env_config_missing/invalid, env-inspect·//e2e setup 안내), 표면 없음·모호는 서비스 기동 전 blocked(e2e_env_surface_missing/ambiguous), 임시 프로젝트의 표준 라이브러리 HTTP 서비스는 설정 서비스 id로 임대·1회 기동·회수되고 api 표면의 health_path가 api probe에 전달된다.",
+  "description": "e2e run의 설정 기반 SUT 기동(PLAN D-9·D-10)을 공개 진입점 orchestrator.run_e2e로 검증한다. 설정 부재·무효는 호환 역할 2건 임대 후 서비스 미기동 blocked(e2e_env_config_missing/invalid, env-inspect·//e2e setup 안내), 표면 없음·모호는 서비스 기동 전 blocked(e2e_env_surface_missing/ambiguous), 임시 프로젝트의 표준 라이브러리 HTTP 서비스는 설정 서비스 id로 임대·1회 기동·회수되고 api 표면의 health_path가 api probe에 전달된다. 두 번째 서비스 cwd가 프로젝트 밖을 가리키는 symlink(render path_escape)면 첫 기동 전에 걸려 어떤 서비스도 띄우지 않고 blocked(e2e_env_config_invalid, detail에 경로 원문 없음)·임대 해제로 끝난다.",
   "scenarios": ["S-6", "S-7"],
-  "exports": ["TestRunConfigAbsentOrInvalid", "TestRunSurfaceSelectionFailure", "TestRunStartsConfiguredServices"]
+  "exports": ["TestRunConfigAbsentOrInvalid", "TestRunSurfaceSelectionFailure", "TestRunStartsConfiguredServices", "TestRunRenderViolationStartsNothing"]
 }
 """
 from __future__ import annotations
@@ -245,6 +245,60 @@ class TestRunStartsConfiguredServices(_RunMixin, unittest.TestCase):
         self.assertEqual(api_candidates[0]["outcome"], "selected", api_candidates)
         for pgid in (item["pgid"] for item in owned["process_groups"]):
             self.assertEqual(e2e_process.process_group_members(pgid), [])
+
+
+class TestRunRenderViolationStartsNothing(_RunMixin, unittest.TestCase):
+    """GC-003 — 서비스 render 위반(path_escape)은 첫 기동 전에 걸려 아무 서비스도 띄우지 않는다."""
+
+    def test_second_service_cwd_symlink_escape_blocks_before_any_start(self):
+        with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as outside:
+            root_path = pathlib.Path(root)
+            (root_path / "server.py").write_text(_SERVER_SOURCE, encoding="utf-8")
+            # 프로젝트 안 경로처럼 보이지만 실제로는 프로젝트 밖을 가리키는 symlink.
+            (root_path / "escape").symlink_to(outside, target_is_directory=True)
+            _write_config(
+                root_path,
+                {
+                    "schema_version": "1.0",
+                    "services": [
+                        {
+                            "id": "api",
+                            "command": ["{python}", "server.py", "--port", "{port}"],
+                            "health": {"type": "http", "path": "/ready", "json_field": "status"},
+                            "startup_timeout_s": 20,
+                        },
+                        {
+                            "id": "web",
+                            "command": ["{python}", "server.py", "--port", "{port}"],
+                            "cwd": "escape",
+                            "depends_on": ["api"],
+                            "health": {"type": "http", "path": "/ready", "json_field": "status"},
+                            "startup_timeout_s": 20,
+                        },
+                    ],
+                    "surfaces": [
+                        {"id": "svc-api", "kind": "api", "service": "api", "health_path": "/ready"},
+                        {"id": "svc-web", "kind": "web", "service": "web", "path": "/"},
+                    ],
+                },
+            )
+            payload, run_json, owned, journal, logs = self._run(root, "api")
+
+        self.assertEqual(payload["status"], "blocked", payload)
+        self.assertEqual(payload["exit_code"], e2e_contract.status_to_exit("blocked"))
+        self.assertEqual(run_json["detail_code"], "e2e_env_config_invalid", run_json)
+        # detail에는 위반 코드 이름만 있고 경로 원문은 없다.
+        self.assertIn("path_escape", run_json["detail"])
+        self.assertNotIn(outside, run_json["detail"])
+        self.assertNotIn(root, run_json["detail"])
+        # 첫 번째 서비스(api)도 기동하지 않았다.
+        self.assertEqual(owned["process_groups"], [])
+        self.assertNotIn("api.log", logs)
+        states = [item["to"] for item in journal["transitions"]]
+        self.assertNotIn(e2e_orchestrator.STATE_SUT_READY, states)
+        # 서비스 2건의 임대가 모두 해제됐다.
+        self.assertEqual(sorted(run_json["urls"]), ["api", "web"])
+        self.assertEqual(len(run_json["lease_released"]), 2)
 
 
 if __name__ == "__main__":
