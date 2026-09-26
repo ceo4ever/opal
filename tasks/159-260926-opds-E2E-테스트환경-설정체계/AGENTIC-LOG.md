@@ -52,3 +52,8 @@
 | 32 | 2026-09-26 20:03 | EXECUTE | GATE | W-4 직접 검증 — 저장소 env-validate exit 0(서비스 2·표면 2), env-inspect 후보·driver 설치 여부 반환, env_commands 14 passed. 워커 보고: 전체 543 passed·2 failed(S-3 fixture 결함, W-5 몫 1건) | Pass(RED 보정 대기) |
 | 33 | 2026-09-26 20:03 | EXECUTE | ERROR | RED S-3 fixture 결함 확인 — server.py가 포트 0 bind 후 serve_forever 미호출로 즉시 종료, command에 {port} 없음. 구현의 service_start_failed 판정이 정상 | 보정 지시 |
 | 34 | 2026-09-26 20:03 | EXECUTE | FIX | #33 — RED 작성자에게 fixture만 보정 지시(단언 기대값 불변). 구현 변경 없음 | 진행 |
+| 35 | 2026-09-26 20:03 | EXECUTE | GATE | RED S-3 fixture 보정 확인 — RED 14 passed, 잔여 1건은 W-5 몫(SKILL setup 절). 체크포인트 7ee2ff4(W-2~W-4) | Pass |
+| 36 | 2026-09-26 20:03 | EXECUTE | DECISION | W-6(저장소 밖 관통 테스트)은 PROJECT.md 폴백 결정과 무관하므로 선행 디스패치. W-5는 캡틴 결정 대기 | 진행 |
+| 37 | 2026-09-26 20:07 | EXECUTE | GATE | W-6 검토 — 흐름·단언은 충족하나 표본 server.py에 실행되지 않는 `if False: app = FastAPI()`로 inspect 탐지를 통과시킴(탐지된 앱≠기동 앱). 미승인 우회로 Gate Fail | Fail |
+| 38 | 2026-09-26 20:07 | EXECUTE | FIX | #37 — 실제 FastAPI 앱(uvicorn 기동)으로 표본 교체, inspect 제안 명령을 설정에 그대로 써서 ready·pass까지 이어지는지 단언하도록 재지시 | 진행(1/3) |
+| 39 | 2026-09-26 20:08 | EXECUTE | GATE | W-6 재작업 직접 검증 — 표본이 실제 FastAPI 앱, dead-code 신호 제거, inspect 제안 명령을 그대로 써서 validate→check ready→run pass(real-http) 관통, 1 passed | Pass |
