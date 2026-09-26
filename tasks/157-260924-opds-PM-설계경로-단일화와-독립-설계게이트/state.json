@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-24 22:58:26",
-  "updated_at": "2026-09-26 14:51:13",
+  "updated_at": "2026-09-26 15:32:54",
   "current_status": "additional_work",
   "rows": [
     {
@@ -337,6 +337,18 @@
       "timestamp": "2026-09-26 14:51:13",
       "owner": "PM",
       "note": "ADD-10 완료 — hub_lease 체크포인트 계약·opst 커밋 판정",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 27,
+      "stage": "CLOSE",
+      "item": "ADD-11 opst 보고서 수행 시간 표기를 최종 수행 시간으로 통일",
+      "key": "close.add_11",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-26 15:32:54",
+      "owner": "PM",
+      "note": "ADD-11 완료 — 최종 수행 시간 표기 통일",
       "worker_duration_unknown": true
     }
   ],

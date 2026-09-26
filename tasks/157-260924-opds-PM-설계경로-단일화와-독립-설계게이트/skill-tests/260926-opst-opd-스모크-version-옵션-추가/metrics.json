@@ -86,7 +86,7 @@
    "decision_requests": 0,
    "framework": "main+85c0a5",
    "existing_tests_ok": true,
-   "hidden_summary": "2 passed in 0.77s",
+   "hidden_summary": "2 passed in 0.68s",
    "hidden_pass_rate": 1.0,
    "hidden_failed": [],
    "verdict": "FAIL",

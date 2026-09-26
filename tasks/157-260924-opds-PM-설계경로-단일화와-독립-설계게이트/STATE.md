@@ -1,6 +1,6 @@
 # STATE: PM 설계 경로 단일화와 독립 설계 게이트
 
-> 최종 갱신: 2026-09-26 14:51:13
+> 최종 갱신: 2026-09-26 15:32:54
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
@@ -18,6 +18,7 @@
 | 9 | 2026-09-26 13:07:28 | additional row inserted after row 23: stage=CLOSE, item=ADD-8 opal-skill-tester 결과 tasks/ 기록과 약어 opst 변경, key=close.add_8, new_row_id=24 | additional work entry |
 | 10 | 2026-09-26 13:38:48 | additional row inserted after row 24: stage=CLOSE, item=ADD-9 opal-skill-tester HTML 대시보드 보고서와 스킬별 이력 탭, key=close.add_9, new_row_id=25 | additional work entry |
 | 11 | 2026-09-26 14:45:34 | additional row inserted after row 25: stage=CLOSE, item=ADD-10 허브 세션 워크트리 수행 시 lease 기반 체크포인트 계약과 opst 커밋 판정, key=close.add_10, new_row_id=26 | additional work entry |
+| 12 | 2026-09-26 15:32:54 | additional row inserted after row 26: stage=CLOSE, item=ADD-11 opst 보고서 수행 시간 표기를 최종 수행 시간으로 통일, key=close.add_11, new_row_id=27 | additional work entry |
 
 ## 블로커
 없음

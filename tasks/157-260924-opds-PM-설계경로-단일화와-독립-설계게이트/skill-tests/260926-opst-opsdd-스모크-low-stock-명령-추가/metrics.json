@@ -95,7 +95,7 @@
    "decision_requests": 0,
    "framework": null,
    "existing_tests_ok": true,
-   "hidden_summary": "3 passed in 2.61s",
+   "hidden_summary": "3 passed in 2.33s",
    "hidden_pass_rate": 1.0,
    "hidden_failed": [],
    "verdict": "PASS",

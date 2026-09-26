@@ -32,7 +32,7 @@ Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프�
 
 | 지표 | 수집 방법 |
 |---|---|
-| `wall_min` | 세션 시작~종료 벽시계 |
+| `wall_min` | 최종 수행 시간: 테스트 세션 시작부터 종료까지 실제 경과 시간(TASK~CLOSE 전 과정, 서브에이전트 대기 포함) |
 | `cost_usd`, `turns`, `output_tokens` | 세션 JSON 결과(`--output-format json`) |
 | `subagent_runs` | run-log `worker.started` 사건 수 |
 | `phase_min` | run-log `state.changed` 이정표로 계산한 설계(시작~`execute.implement` 시작)·구현·테스트(~`test.pm_gate` 완료)·CLOSE(~`close.final`) 구간 |

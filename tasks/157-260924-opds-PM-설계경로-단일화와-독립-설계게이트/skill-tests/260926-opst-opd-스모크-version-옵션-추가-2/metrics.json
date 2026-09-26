@@ -118,15 +118,15 @@
    "decision_requests": 0,
    "framework": "main+85c0a5",
    "existing_tests_ok": true,
-   "hidden_summary": "2 passed in 1.04s",
+   "hidden_summary": "2 passed in 0.78s",
    "hidden_pass_rate": 1.0,
    "hidden_failed": [],
    "verdict": "PASS",
    "fail_reasons": [],
    "trend_warnings": [
-    "gate_iterations 기준 1 → 3 (증가)",
-    "log_error 기준 3 → 5 (증가)",
-    "log_fix 기준 0 → 4 (증가)"
+    "게이트 반복 최근 중앙값 1 → 3 (증가)",
+    "오류 기록 최근 중앙값 3 → 5 (증가)",
+    "수정 기록 최근 중앙값 0 → 4 (증가)"
    ]
   }
  ]

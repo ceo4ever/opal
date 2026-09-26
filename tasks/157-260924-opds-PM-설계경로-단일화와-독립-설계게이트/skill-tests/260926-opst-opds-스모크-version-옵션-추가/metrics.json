@@ -80,7 +80,7 @@
    "decision_requests": 0,
    "framework": null,
    "existing_tests_ok": true,
-   "hidden_summary": "2 passed in 0.74s",
+   "hidden_summary": "2 passed in 0.70s",
    "hidden_pass_rate": 1.0,
    "hidden_failed": [],
    "verdict": "FAIL",

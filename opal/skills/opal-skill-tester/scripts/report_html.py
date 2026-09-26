@@ -157,7 +157,7 @@ def summary_panel(m, hist):
     comp = compliance(m)
     allm = [("판정", m.get("verdict")), ("불합격 사유", "; ".join(m.get("fail_reasons") or []) or "없음"), ("숨은 테스트", m.get("hidden_summary") or "-")]
     allm += [(label, "✓" if ok else "✕ 불충족") for label, ok in comp]
-    allm += [("벽시계", f'{m.get("wall_min")}분'), ("비용", f'${m.get("cost_usd")}'), ("턴", m.get("turns")), ("출력 토큰", m.get("output_tokens")),
+    allm += [("최종 수행 시간", f'{m.get("wall_min")}분'), ("비용", f'${m.get("cost_usd")}'), ("턴", m.get("turns")), ("출력 토큰", m.get("output_tokens")),
              ("서브에이전트", m.get("subagent_runs") if m.get("subagent_runs") else "측정 안 됨(run-log 워커 사건 없음)"),
              ("게이트 반복", m.get("gate_iterations")), ("체크포인트 커밋(도구/우회)", f'{m.get("checkpoint_commits", 0)} / {m.get("raw_commits", 0)}'), ("run-log 적체 첫 사건", json.dumps(m.get("runlog_first_pending"), ensure_ascii=False) if m.get("runlog_first_pending") else "없음"),
              ("프레임워크 지문", m.get("framework") or "기록 없음(지문 도입 전 실행)")]
@@ -165,7 +165,7 @@ def summary_panel(m, hist):
     total = round(sum(stages.values()), 1)
     return f"""
 <div class="grid g5">{cards_html}</div>
-<div class="card" style="margin-bottom:16px"><h2>단계별 소요 — run-log {total}분 (세션 전체 {m.get("wall_min")}분)</h2>
+<div class="card" style="margin-bottom:16px"><h2>단계별 소요 — run-log {total}분 (최종 수행 시간 {m.get("wall_min")}분)</h2>
 {stage_bar(stages) if stages else '<div class="tag">단계 소요 없음</div>'}
 <div class="overflow"><table><tr><th>단계</th><th class="n">소요(분)</th><th>이력 중앙값 대비</th><th class="n">게이트</th><th class="n">오류</th><th class="n">수정</th><th class="n">결정</th></tr>{srows}</table></div>
 <div class="tag">소요: run-log 단계별 마지막 상태 전이 기준 · 게이트/오류/수정/결정: AGENTIC-LOG 단계 열 기준</div></div>
@@ -176,7 +176,7 @@ def summary_panel(m, hist):
 def compare_panel(runs):
     variants = [r["variant"] for r in runs]
     krows = [("판정", [chip(r["verdict"] == "PASS") for r in runs]), ("숨은 테스트", [e(r.get("hidden_summary") or "-") for r in runs]),
-             ("전체 소요", [f'{r.get("wall_min")}분' for r in runs]), ("비용", [f'${r.get("cost_usd")}' for r in runs]),
+             ("최종 수행 시간", [f'{r.get("wall_min")}분' for r in runs]), ("비용", [f'${r.get("cost_usd")}' for r in runs]),
              ("턴", [e(r.get("turns")) for r in runs]), ("서브에이전트", [e(r.get("subagent_runs") or "측정 안 됨") for r in runs]), ("게이트 반복", [e(r.get("gate_iterations")) for r in runs])]
     head = "".join(f'<th class="n">{e(v)}</th>' for v in variants)
     ktab = "".join(f'<tr><td>{e(k)}</td>' + "".join(f'<td class="n">{v}</td>' for v in vals) + "</tr>" for k, vals in krows)
@@ -205,7 +205,7 @@ def compare_panel(runs):
     diverging = ""
     if len(runs) == 2:
         a, b = runs
-        mets = [("전체 소요", "wall_min"), ("비용", "cost_usd"), ("턴", "turns"), ("서브에이전트", "subagent_runs"), ("게이트 반복", "gate_iterations")]
+        mets = [("최종 수행 시간", "wall_min"), ("비용", "cost_usd"), ("턴", "turns"), ("서브에이전트", "subagent_runs"), ("게이트 반복", "gate_iterations")]
         mets = [(n, a.get(k), b.get(k)) for n, k in mets if a.get(k) and isinstance(b.get(k), (int, float))]
         if mets:
             DW, lab = 560, 110
@@ -258,7 +258,7 @@ def trend_chart(label, pts, unit="", prefix="", W=360, H=150):
 def history_panel(variant, current, scenario_id, hist_same, hist_skill, here_dir):
     seq = sorted(hist_same, key=lambda h: h["created_at"]) + [dict(current, created_at=current.get("created_at", ""), _current=True)]
     lab = lambda h: (h.get("created_at") or "")[5:10] or "이번"
-    charts = (trend_chart("전체 소요", [(lab(h), h.get("wall_min"), h.get("_current")) for h in seq if h.get("wall_min") is not None], unit="분")
+    charts = (trend_chart("최종 수행 시간", [(lab(h), h.get("wall_min"), h.get("_current")) for h in seq if h.get("wall_min") is not None], unit="분")
               + trend_chart("비용", [(lab(h), h.get("cost_usd"), h.get("_current")) for h in seq if h.get("cost_usd") is not None], prefix="$")
               + trend_chart("게이트 반복", [(lab(h), h.get("gate_iterations"), h.get("_current")) for h in seq if h.get("gate_iterations") is not None], unit="회")
               + trend_chart("세션이 발견한 문제", [(lab(h), h.get("log_error") or 0, h.get("_current")) for h in seq], unit="건"))

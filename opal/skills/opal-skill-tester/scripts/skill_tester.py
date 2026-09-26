@@ -401,6 +401,8 @@ def judge_run(m, s):
 
 TREND_KEYS = ("wall_min", "cost_usd", "subagent_runs")
 REWORK_KEYS = ("gate_iterations", "log_error", "log_fix", "worker_blocked")
+METRIC_LABELS = {"wall_min": "최종 수행 시간(분)", "cost_usd": "비용($)", "subagent_runs": "서브에이전트", "gate_iterations": "게이트 반복",
+                 "log_error": "오류 기록", "log_fix": "수정 기록", "worker_blocked": "워커 차단"}
 
 
 def _trend(m, hist):
@@ -416,11 +418,11 @@ def _trend(m, hist):
     for k in TREND_KEYS:
         b, c = base.get(k), m.get(k)
         if b and c is not None and abs(c - b) / b > 0.2:
-            warns.append(f"{k} 기준 {b} → {c} ({(c - b) / b:+.0%})")
+            warns.append(f"{METRIC_LABELS.get(k, k)} 최근 중앙값 {b} → {c} ({(c - b) / b:+.0%})")
     for k in REWORK_KEYS:
         b, c = base.get(k), m.get(k)
         if b is not None and c is not None and c > b:
-            warns.append(f"{k} 기준 {b} → {c} (증가)")
+            warns.append(f"{METRIC_LABELS.get(k, k)} 최근 중앙값 {b} → {c} (증가)")
     return warns
 
 
@@ -491,7 +493,7 @@ def collect_history(root, exclude=None):
             if m.get("variant") in seen:
                 continue  # 반복 실행은 첫 회차만 이력에 올린다
             seen.add(m.get("variant"))
-            out_.append(dict(m, scenario=meta.get("scenario"), mode=meta.get("mode"), created_at=meta.get("created_at", ""),
+            out_.append(dict(m, scenario=meta.get("scenario"), mode=meta.get("mode"), created_at=meta.get("created_at", ""), source=meta.get("source"),
                              report_path=str(rp), report_alt_path=str(alt)))
     return out_
 
@@ -556,13 +558,18 @@ def write_report(outdir, s, history=None):
     for rd in sorted(p for p in outdir.iterdir() if (p / "run.json").exists()):
         m = collect_run(rd, s)
         m["verdict"], m["fail_reasons"] = judge_run(m, s)
-        m["trend_warnings"] = _trend(m, sorted([h for h in history if h["variant"] == m["variant"] and h["scenario"] == s["id"]], key=lambda h: h["created_at"]))
+        # 이 실행 자신의 기록과 이 실행보다 나중 기록은 비교 기준에서 뺀다(재판정 시 자기 비교 방지)
+        end = json.loads((rd / "run.json").read_text(encoding="utf-8")).get("end") or time.time()
+        cutoff = datetime.datetime.fromtimestamp(end).strftime("%Y-%m-%d %H:%M")
+        same = [h for h in history if h["variant"] == m["variant"] and h["scenario"] == s["id"]
+                and os.path.realpath(str(h.get("source") or "")) != os.path.realpath(str(outdir)) and h["created_at"] < cutoff]
+        m["trend_warnings"] = _trend(m, sorted(same, key=lambda h: h["created_at"]))
         m.pop("_search_text", None)
         runs.append(m)
     rep = {"scenario": s["id"], "mode": s["mode"], "runs": runs}
     (outdir / "metrics.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
     L = [f"# opal-skill-tester 보고서 — {s['id']} ({s['mode']})", "", s.get("title", ""), "",
-         "| 실행 | 판정 | 숨은 테스트 | 완료 | 상태검증 | run-log 적체 | 게이트 증거 | 체크포인트 커밋 | 분 | $ | 서브에이전트 | 게이트 반복 |",
+         "| 실행 | 판정 | 숨은 테스트 | 완료 | 상태검증 | run-log 적체 | 게이트 증거 | 체크포인트 커밋 | 최종 수행 시간(분) | $ | 서브에이전트 | 게이트 반복 |",
          "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for m in runs:
         L.append("| {run} | **{verdict}** | {h} | {pc} | {sv} | {rp} | {ge} | {cc} | {w} | {c} | {sa} | {gi} |".format(
