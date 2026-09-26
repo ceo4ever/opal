@@ -157,6 +157,13 @@
   ],
   "history": [
     {
+      "title": "160 opst OPPB 지원",
+      "date": "2026-09-26",
+      "stage": "완료",
+      "path": "tasks/160-260926-opst-OPPB-지원/",
+      "result": "opst OPPB 판정 프로필·TODO CRUD 시나리오 추가, 실실행에서 OPPB worktree 미회수 검출"
+    },
+    {
       "title": "159 E2E 테스트환경 설정체계",
       "date": "2026-09-26",
       "stage": "완료",
@@ -183,13 +190,6 @@
       "stage": "완료",
       "path": "tasks/155-260924-opds-코덱스-세션-이관-복구/",
       "result": "Codex native 신원·부모 상속 차단·lease handoff/cancel 전달 및 registry 정합성 수정. 독립 시나리오 9/9와 실제 Orca E2E 통과, main 머지 완료."
-    },
-    {
-      "title": "153 훅 세션 식별 분리",
-      "date": "2026-09-24",
-      "stage": "완료",
-      "path": "tasks/153-260923-opds-훅-세션-식별-분리/",
-      "result": "훅 신원을 이벤트 session_id로 분리하여 자식 CLI 종료 시 부모 lease 해제를 방지. 실 CLI 수정 전후 대조 및 ownership 회귀 157건 통과, main 머지 완료."
     }
   ]
 }
