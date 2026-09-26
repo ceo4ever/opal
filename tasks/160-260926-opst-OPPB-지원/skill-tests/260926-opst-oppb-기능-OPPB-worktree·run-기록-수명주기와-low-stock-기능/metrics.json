@@ -1,0 +1,126 @@
+{
+ "scenario": "function-oppb-low-stock",
+ "mode": "function",
+ "runs": [
+  {
+   "run": "oppb-r1",
+   "variant": "//oppb",
+   "rep": 1,
+   "timeout": false,
+   "wall_min": 38.0,
+   "cost_usd": 13.4,
+   "turns": 157,
+   "output_tokens": 98521,
+   "result_text": "캡틴, 요구서대로 `low-stock` 기능을 구현해 검증을 통과시켰고 허브 `main`에 로컬 merge까지 했습니다. 다만 마지막 worktree finalize 한 단계가 도구 간 순서 충돌로 막혀 있어 결정이 필요합니다.\n\n## 🎯 결론\n1) **기능 완료, main에 merge됨** — `stockctl low-stock --below N`이 완료조건 C-1~C-6을 모두 충족하고, 허브 `main`이 `33b2187`로 fast-forward 됐습니다 (push 없음).\n   - 근거: 허브에서 테스트 7 passed, CLI로 직접 확인(경계값, 개행 입력, 저장소 sha256 불변), 독립 Acceptance Evaluator 2회차 6/6 pass, 컨벤션 위반 0, 보안 blocking 0.\n2) **검증 단계가 결함 1건을 잡아서 고쳤습니다** — 1회차 판정에서 C-3이 fail이었습니다. 개행이 섞인 N을 넣으면 stderr가 두 줄이 됐습니다.\n   - 근거: 런타임에 실패 맥락을 담아 Repair를 여는 명령이 없어서, Controller API로 새 attempt `T01.runner.2`를 열었습니다. 오류 메시지에서 입력값을 되풀이하지 않게 고치고 회귀 테스트를 추가했으며, candidate로 검증한 뒤 publish했습니다(예산 runner 2/3 사용).\n3) **worktree finalize가 막혀 있습니다** — `worktree-tool finalize`와 `remove`가 `TASK_PATH_AMBIGUOUS`로 거부합니다.\n   - 근거: OPPB는 지식 반영(20행) 전에 허브 merge를 요구하는데, finalize는 허브에 태스크 사본이 없는 merge 전 상태를 전제합니다. run 게시(`finalize-run`)와 지식 반영 1회는 끝났고, worktree `task_001`과 브랜치는 아직 남아 있습니다.\n\n## 📌 추가 확인 사항\n1) [리스크] 허브 `.opal/MEMORY.json`이 커밋되지 않은 상태이고, 같은 태스크의 히스토리 행이 2개입니다.\n   - 제가 `finalize-attribution`에 worktree 경로를 넘겨서 지식 반영 때 쓴 행과 별개로 한 행이 더 생겼습니다. 도구가 히스토리 삭제를 막아서 경로와 결과만 정정했습니다. `main`에 커밋하는 건 이번 승인 범위 밖이라 하지 않았습니다.\n2) [이월] 런타임 결함 후보 4건을 AGENTIC-LOG에 남겼습니다.\n   - Supervisor가 이 세션에서 provider를 codex로 골랐습니다(Codex 환경변수 상속). evidence에 기록되는 `code_head`가 실제 검증 head와 다릅니다. Repair 명령이 없습니다. P4 검증자를 자동으로 띄우지 않아서 제가 headless로 직접 실행했습니다.\n3) [미확인] 보안 판정은 INCOMPLETE입니다. `docs/SECURITY.md`와 보안 도구가 없기 때문입니다.\n   - low 권고 1건: 저장소 JSON이 깨지면 traceback이 노출됩니다. `add`/`list`에도 있는 기존 동작이라 이번 범위 밖입니다.\n- 그 외 2건:\n  - 로컬 설정 변경: 세션 런타임 파일을 허브 `.git/info/exclude`에 추가했습니다. 추적되는 파일이 아니라 로컬 설정만 바뀝니다.\n  - MCP 인증 필요: Canva, Figma, Gmail, Google Calendar, Google Drive, Helium 10, higgsfield는 claude.ai 커넥터 설정에서 인증하기 전까지 쓸 수 없습니다.\n\n---\n▶️ 사용자 결정 필요:\n- 상황: finalize가 하는 일은 귀속 커밋과 상태를 `closed`로 바꾸는 것입니다. pre-finalize guard에서 worktree의 MEMORY/brain 변경이 0건으로 확인됐으니, 막히지 않았다면 새 커밋 없이 `closed`만 기록됐을 겁니다.\n- 선택지:\n  - A) `worktree-tool ownership-set --attribution-state closed`로 귀속을 닫고 `remove`로 worktree를 회수합니다.\n  - B) 지금 상태로 두고, 이 충돌을 프레임워크 후속 과제로 넘깁니다.\n- 권고: A.\n- 이유와 영향: 실제로 달라지는 결과가 없고 정리가 깔끔하게 끝납니다. 대신 \"`closed`는 finalize 성공 경로에서만 기록한다\"는 계약을 한 번 비껴가게 되고, 그 사실은 기록으로 남깁니다.\n\nA로 귀속을 닫고 worktree를 회수할까요?",
+   "task_found": true,
+   "task": "001-260926-oppb-재고부족-조회",
+   "actor": null,
+   "status": "in_progress",
+   "pipeline_complete": false,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "oppb",
+   "gate_iterations": 0,
+   "gate_evidence": false,
+   "worktree_task": true,
+   "checkpoint_policy": "finalized",
+   "oppb_archive_count": 1,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 0,
+   "raw_commits": 0,
+   "subagent_runs": 1,
+   "worker_blocked": 0,
+   "pm_decision_request": true,
+   "phase_min": {
+    "design": 7.0,
+    "execute": 2.8,
+    "test": 19.2,
+    "close": 4.3
+   },
+   "log_error": 4,
+   "log_fix": 2,
+   "stage_log": {
+    "P0": {
+     "DECISION": 2
+    },
+    "P1": {
+     "GATE": 1
+    },
+    "P2": {
+     "GATE": 2,
+     "DECISION": 2
+    },
+    "P3": {
+     "ERROR": 3,
+     "GATE": 1,
+     "IMPROVE": 1
+    },
+    "P4": {
+     "DECISION": 5,
+     "ERROR": 1,
+     "FIX": 2,
+     "GATE": 3
+    },
+    "P5": {
+     "GATE": 1,
+     "IMPROVE": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "P3",
+     "kind": "발견",
+     "text": "PM이 `oppb-runtime-tool start`를 p3.supervisor_start 행 advance 성공 확인 전에 호출함(advance는 행 10 미완료로 거부). Supervisor 기동 자체는 1회·정상."
+    },
+    {
+     "stage": "P3",
+     "kind": "발견",
+     "text": "Supervisor가 T01을 accepted로 전이했으나 evidence 0건·acceptance criteria satisfied=false·candidate checkpoint 커밋 없음(코드 변경이 worktree에 미커밋 상태)."
+    },
+    {
+     "stage": "P3",
+     "kind": "발견",
+     "text": "pre-finalize 사전 점검에서 OPAL 세션 런타임 파일(.opal/run/, tasks/*/run/, tasks/*/.opal-task.lock)이 미추적·비ignore라 dirty source로 잡힘."
+    },
+    {
+     "stage": "P4",
+     "kind": "발견",
+     "text": "Verifier 3종 1회차 전건 blocked — headless claude 세션이 (1) cwd 밖 `/tmp` receipt 읽기 거부, (2) python·event-loader 실행 승인 불가, (3) 태스크 폴더 쓰기가 lease 훅(foreign_session_owned)에 차단. 코드 결함 아님."
+    },
+    {
+     "stage": "P4",
+     "kind": "교정",
+     "text": "ERROR#16 보정 후 1회 재실행(워커 폴백 상한 1): 새 worker.dispatch receipt 3건과 보고서 경로를 허브 `.opal-cache/oppb/p4-verify-*`(ignore·lease 훅 범위 밖)로, cwd=허브, `--allowed-tools Read,Grep,Glob,Bash,Write` 명시. 3건 모두 완주, worktree 소스 변경 0 확인. 보고서는 run root `verify/T0"
+    },
+    {
+     "stage": "P4",
+     "kind": "교정",
+     "text": "ERROR(#19 C-3) 보정 결과: T01.runner.2가 cli.py 오류 메시지 원문 에코 제거 + test_low_stock.py에 '1\\\\nX'·ESC 회귀 케이스 추가(lease 내 2파일). runtime Checkpoint Tool candidate cand-T01-T01.runner.2-0001 → snapshot verify(T01.verifier.2) 7 passed → publish(fast-forwa"
+    }
+   ],
+   "stage_min": {
+    "P0": 0.7,
+    "P1": 0.7,
+    "P2": 5.4,
+    "P3": 3.0,
+    "P4": 19.2,
+    "P5": 4.3
+   },
+   "decision_requests": 1,
+   "framework": "v0.7.2-229-g6bc7b1a+dcbc9c",
+   "existing_tests_ok": true,
+   "hidden_summary": "4 passed in 1.16s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: pipeline_complete",
+    "준수 불충족: gate_evidence",
+    "준수 불충족: checkpoint_commits"
+   ],
+   "trend_warnings": []
+  }
+ ]
+}

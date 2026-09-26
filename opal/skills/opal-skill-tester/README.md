@@ -22,6 +22,8 @@ T=~/.opal/skills/opal-skill-tester/scripts/skill_tester.py
 python3 $T list                                   # 시나리오 목록
 python3 $T validate --all                         # 시나리오 규격 검사
 python3 $T run smoke-version-flag                 # 단일 실행(기본 변형)
+python3 $T run function-oppb-low-stock            # OPPB worktree·run archive 기능 실행
+python3 $T run function-todo-crud                 # TODO CRUD 웹 앱 기능 실행
 python3 $T run function-stockctl-multiloc \
   --variant "//opd --no-pm" --variant "//opd" --repeat 2   # 비교 실행
 python3 $T report /tmp/opal-skill-tester/<실행폴더>        # 보고서 재생성

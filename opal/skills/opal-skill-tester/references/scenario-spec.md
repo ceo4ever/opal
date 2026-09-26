@@ -46,6 +46,10 @@ scenarios/<id>/
 | `estimate` | O | 실행 1회의 예상 분·달러. 비용 안내에 쓴다 |
 | `decision_points` | judgment O | 아래 절 |
 
+OPPB는 workspace가 항상 project worktree이며 `--no-wt`를 허용하지 않는다. 헤드리스 시나리오가
+P1 INTENT gate와 P5 local merge gate를 끝까지 실행해야 하면 `utterance`에 격리 저장소에
+한정한 명시적 승인을 포함한다. 이 승인은 모의 저장소 밖 merge·push·배포로 확장되지 않는다.
+
 ## 요구서 작성
 
 - 세션은 요구서만 보고 TASK를 쓴다. 채점할 계약(명령·출력·종료 코드·파일 형식)은 요구서에 적는다. 숨은 테스트가 요구서에 없는 세부를 채점하면 시나리오 결함이다.
