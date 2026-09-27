@@ -18,3 +18,5 @@
 | EXECUTE | 관측 | 작업본 dashboard/frontend npm ci 완료(754 packages, eslint·tsc·vitest bin 존재) — S-10 공급 준비. |
 | EXECUTE | GATE | W-2 Pass: execute-guide §4에 --changed-files·status 소비 규칙·README 원문 포인터, test-agent red 절차 2에 run/check 구분 1문장. 상태값 복제 0건(grep), 변경 파일 2개 범위 내. |
 | EXECUTE | GATE | W-1 Pass: 템플릿 unit·api_db 전 도구 run 추가(D-10 값 일치), eslint·ruff run_files·file_globs, a11y run 없음(required:false), check 유지, 예시 블록 갱신. 스키마 run·run_files·file_globs 정의, check 설치 확인 전용, 결과 계약은 README 포인터. S-8a 통과(1 passed). |
+| EXECUTE | GATE | W-3 Pass: RED 14 + test_test_tool 17 = 31 passed(PM 재실행), 워커 보고 전체 회귀 569 passed·0 failed(기준선 23 실패는 npm ci 후 미재현). RED 파일 diff 0줄, run_check 불변. fixture 8종 실측 의도대로(워커 자가확인, 증거 저장은 TEST). |
+| EXECUTE | DECISION | 워커가 PLAN 미명시 fixtures/unit-real/conftest.py(collect_ignore_glob) 추가 — 변경 대상 디렉터리 범위 안이고 상위 스위트 수집 충돌 방지 목적이라 사후 승인. |

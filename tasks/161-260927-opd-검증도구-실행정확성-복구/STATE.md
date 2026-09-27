@@ -1,6 +1,6 @@
 # STATE: 검증도구-실행정확성-복구
 
-> 최종 갱신: 2026-09-27 20:10:34
+> 최종 갱신: 2026-09-27 20:33:04
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 

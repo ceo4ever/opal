@@ -3,7 +3,7 @@
   "module": "resolver",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tools.yaml project→global→inference resolver with a consistent Ego Lite, cmux, Playwright provider chain.",
+  "description": "test-tools.yaml project→global→inference resolver with a consistent Ego Lite, cmux, Playwright provider chain. task 161 D-10: infer/global 명령이 실제 검사(run/run_files/file_globs)를 낸다. 모든 resolve 응답에 source_path(근거 파일 절대경로)를 포함한다.",
   "exports": [
     "resolve_test_tools"
   ],
@@ -76,17 +76,24 @@ def _infer_from_package_json(project_root: pathlib.Path) -> Optional[Dict[str, A
 
     fe_unit = []
     if "vitest" in all_deps:
-        fe_unit.append({"name": "vitest", "check": "npx vitest run"})
+        fe_unit.append({"name": "vitest", "check": "npx vitest --version", "run": "npx vitest run"})
     if "jest" in all_deps:
-        fe_unit.append({"name": "jest", "check": "npx jest --watchAll=false"})
+        fe_unit.append({"name": "jest", "check": "npx jest --version", "run": "npx jest --watchAll=false"})
 
     fe_lint = []
     if "eslint" in all_deps:
-        fe_lint.append({"name": "eslint", "check": "npx eslint .", "required": True})
+        fe_lint.append({
+            "name": "eslint",
+            "check": "npx eslint --version",
+            "run": "npx eslint .",
+            "run_files": "npx eslint {files}",
+            "file_globs": ["*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs"],
+            "required": True,
+        })
 
     fe_typecheck = []
     if "typescript" in all_deps or "tsc" in all_deps:
-        fe_typecheck.append({"name": "tsc", "check": "npx tsc --noEmit", "required": True})
+        fe_typecheck.append({"name": "tsc", "check": "npx tsc --version", "run": "npx tsc --noEmit", "required": True})
 
     tiers: Dict[str, Any] = {
         "unit": {
@@ -139,9 +146,16 @@ def _infer_from_pyproject(project_root: pathlib.Path) -> Optional[Dict[str, Any]
         "unit": {
             "fe": {},
             "be": {
-                "lint": [{"name": "ruff", "check": "ruff .", "required": True}],
-                "typecheck": [{"name": "mypy", "check": "mypy .", "required": True}],
-                "unit": [{"name": "pytest", "check": "pytest", "required": True}],
+                "lint": [{
+                    "name": "ruff",
+                    "check": "ruff --version",
+                    "run": "ruff check .",
+                    "run_files": "ruff check {files}",
+                    "file_globs": ["*.py"],
+                    "required": True,
+                }],
+                "typecheck": [{"name": "mypy", "check": "mypy --version", "run": "mypy .", "required": True}],
+                "unit": [{"name": "pytest", "check": "pytest --version", "run": "pytest", "required": True}],
             },
         },
         "integration": {
@@ -164,7 +178,13 @@ def _infer_from_pyproject(project_root: pathlib.Path) -> Optional[Dict[str, Any]
                 },
             ],
             "be": {
-                "api_db": [{"name": "pytest", "check": "pytest", "real_db": True, "required": True}]
+                "api_db": [{
+                    "name": "pytest",
+                    "check": "pytest --version",
+                    "run": "pytest",
+                    "real_db": True,
+                    "required": True,
+                }]
             },
         },
     }
@@ -222,6 +242,7 @@ def resolve_test_tools(
                 "tiers": tiers,
                 "e2e_profile": _e2e_profile_metadata(),
                 "source": "project",
+                "source_path": str(project_yaml_path),
                 "stack": stack or data.get("stack", {}),
             }
         except ValueError as exc:
@@ -253,6 +274,7 @@ def resolve_test_tools(
                 "tiers": tiers,
                 "e2e_profile": _e2e_profile_metadata(),
                 "source": "global",
+                "source_path": str(global_yaml_path),
                 "stack": stack or data.get("stack", {}),
             }
         except ValueError as exc:
@@ -264,7 +286,11 @@ def resolve_test_tools(
             }
 
     # 3순위: package.json / pyproject.toml 추론 폴백
-    inferred = _infer_from_package_json(project_root) or _infer_from_pyproject(project_root)
+    inferred = _infer_from_package_json(project_root)
+    inferred_path = project_root / "package.json" if inferred else None
+    if not inferred:
+        inferred = _infer_from_pyproject(project_root)
+        inferred_path = project_root / "pyproject.toml" if inferred else None
     if inferred:
         return {
             "ok": True,
@@ -272,6 +298,7 @@ def resolve_test_tools(
             "tiers": inferred.get("tiers", {}),
             "e2e_profile": _e2e_profile_metadata(),
             "source": "infer",
+            "source_path": str(inferred_path) if inferred_path else None,
             "stack": stack or inferred.get("stack", {}),
         }
 
