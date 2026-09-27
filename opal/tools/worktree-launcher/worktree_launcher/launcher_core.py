@@ -34,6 +34,7 @@ import pathlib
 import shlex
 import subprocess
 import sys
+import time
 
 # 상태 쓰기의 유일한 경로 — W-11(worktree_tool.cmd_ownership_set)이 소유하는 CLI 계약.
 WORKTREE_TOOL_PATH = (
@@ -50,15 +51,20 @@ EXEC_STATE_SESSION_LAUNCHING = "session_launching"
 EXEC_STATE_WORKTREE_SESSION_OWNED = "worktree_session_owned"
 ATTRIBUTION_TOKEN_ACTIVE = "active"
 FAILURE_REASON_LAUNCH_FAILED = "launch_failed"
+FAILURE_REASON_SESSION_BOOT_TIMEOUT = "session_boot_timeout"
+EXEC_STATE_RECOVERY_REQUIRED = "recovery_required"
 
 LAUNCH_RECEIPT_FIELDS = ("adapter", "adapter_handle", "reported_cwd", "launched_at")
 PROMPT_RECEIPT_FIELDS = ("prompt_id", "submitted_at")
 
 OWNERSHIP_SET_TIMEOUT_SEC = 60
 LEASE_TIMEOUT_SEC = 60
+# Kept deliberately small: this observes a child claim; it is not a readiness wait.
+LEASE_POLL_INTERVAL_SEC = 0.05
 
 sys.path.insert(0, str(OWNERSHIP_TOOL_DIR))
 from ownership_tool import ownership_core
+from worktree_launcher import settings
 
 
 
@@ -146,6 +152,10 @@ def ownership_set(hub_root, task: str, state: str, **options) -> dict:
         ("--adapter", options.get("adapter")),
         ("--adapter-handle", options.get("adapter_handle")),
         ("--failure-reason", options.get("failure_reason")),
+        ("--expected-owner", options.get("expected_owner")),
+        ("--exclude-owner", options.get("exclude_owner")),
+        ("--terminal-creation", options.get("terminal_creation")),
+        ("--observed-lease-owner", options.get("observed_lease_owner")),
     ):
         if value:
             argv += [flag, str(value)]
@@ -284,6 +294,49 @@ def _close_terminal(adapter, report) -> dict:
     }
 
 
+def _terminal_absent(adapter, handle, worktree_root) -> dict:
+    """Confirm a close without treating an unavailable adapter as absence."""
+    if not handle:
+        return {"status": "unknown", "reason": "handle_missing"}
+    status = getattr(adapter, "status", None)
+    if not callable(status):
+        return {"status": "unknown", "reason": "status_unsupported"}
+    try:
+        observed = status(handle, worktree_root=worktree_root)
+    except Exception as exc:  # adapter observation is evidence, never a guess
+        return {"status": "unknown", "reason": "status_failed", "detail": str(exc)}
+    return observed if isinstance(observed, dict) else {"status": "unknown", "reason": "status_invalid"}
+
+
+def _lease_status(task_path, owner_session_id):
+    if not task_path:
+        return {"classification": "unresolved", "reason": "task_path_missing"}
+    try:
+        return _lease_cli("status", ["--task-path", str(task_path), "--session-id", str(owner_session_id)], "lease_status")
+    except Exception as exc:
+        return {"classification": "unknown", "reason": "lease_status_failed", "detail": str(exc)}
+
+
+def _foreign_lease_owner(status: dict):
+    if status.get("classification") != "foreign_session_owned":
+        return None
+    return status.get("owner_session_id") or status.get("owner") or (status.get("lease") or {}).get("owner_session_id")
+
+
+def _wait_for_child_claim(task_path, owner_session_id, timeout_sec=None):
+    """Bounded polling for a foreign live lease, returning the last observation."""
+    if not task_path:
+        status = _lease_status(task_path, owner_session_id)
+        return status, None
+    timeout_sec = settings.DEFAULT_LEASE_POLL_TIMEOUT_SEC if timeout_sec is None else timeout_sec
+    deadline = time.monotonic() + timeout_sec
+    status = _lease_status(task_path, owner_session_id)
+    while not _foreign_lease_owner(status) and time.monotonic() < deadline:
+        time.sleep(LEASE_POLL_INTERVAL_SEC)
+        status = _lease_status(task_path, owner_session_id)
+    return status, _foreign_lease_owner(status)
+
+
 def _revert(
     hub_root,
     task: str,
@@ -295,6 +348,13 @@ def _revert(
     lease_task_path=None,
     owner_session_id=None,
     cause=None,
+    terminal_creation="unknown",
+    handoff_started=False,
+    failure_reason=FAILURE_REASON_LAUNCH_FAILED,
+    launch_receipt=None,
+    prompt_receipt=None,
+    handoff_result=None,
+    registry_worktree_root=None,
 ) -> dict:
     """원자 복귀 — `failure_reason=launch_failed` + `hub_owned` + attribution 키 부재 +
     generation 증가를 `ownership-set` 한 번의 교체로 담는다(owner·receipt 소거는 그쪽이
@@ -305,14 +365,48 @@ def _revert(
 
     같은 결로 `ownership-set` 복귀 호출 **앞**에서 lease 이관을 1회 취소하고, 그 결과는
     `lease_handoff_cancel` 로그 필드로만 남긴다 — 취소의 거부·예외·미구현은 전부 삼킨다."""
-    terminal_close = _close_terminal(adapter, report)
-    lease_cancel = _cancel_lease_handoff(lease_task_path, owner_session_id)
+    # An unknown creation state must never be converted to hub ownership.
+    terminal_close = {"attempted": False, "reason": "not_created"}
+    terminal_status = {"status": "absent", "reason": "not_created"}
+    if terminal_creation == "created":
+        terminal_close = _close_terminal(adapter, report)
+        handle = report.get("adapter_handle") if isinstance(report, dict) else None
+        terminal_status = _terminal_absent(adapter, handle, registry_worktree_root)
+    elif terminal_creation != "not_created":
+        terminal_status = {"status": "unknown", "reason": "terminal_creation_unknown"}
+
+    lease_before_cancel = _lease_status(lease_task_path, owner_session_id)
+    handoff = lease_before_cancel.get("handoff") or {}
+    lease_record = lease_before_cancel.get("lease") or {}
+    pending_by_this_session = (
+        lease_record.get("status") == "handoff" + "_pending"
+        and owner_session_id in handoff.values()
+    )
+    lease_cancel = {"attempted": False, "reason": "handoff_not_started"}
+    if handoff_started or pending_by_this_session:
+        lease_cancel = _cancel_lease_handoff(lease_task_path, owner_session_id)
+    lease_after = _lease_status(lease_task_path, owner_session_id)
+    safe = (
+        terminal_status.get("status") == "absent"
+        and (terminal_creation != "created" or terminal_close.get("ok") is True)
+        and (not (handoff_started or pending_by_this_session) or lease_cancel.get("ok") is True)
+        and lease_after.get("ok") is True
+        and lease_after.get("classification") in (
+            "current_session_owned", "unowned", "lease_expired"
+        )
+    )
+    target = EXEC_STATE_HUB_OWNED if safe else EXEC_STATE_RECOVERY_REQUIRED
     response = ownership_set(
         hub_root,
         task,
-        EXEC_STATE_HUB_OWNED,
+        target,
         adapter=adapter_name,
-        failure_reason=FAILURE_REASON_LAUNCH_FAILED,
+        adapter_handle=(report or {}).get("adapter_handle") if isinstance(report, dict) else None,
+        launch_receipt=launch_receipt,
+        prompt_receipt=prompt_receipt,
+        failure_reason=failure_reason,
+        terminal_creation=terminal_creation,
+        observed_lease_owner=_foreign_lease_owner(lease_after),
     )
     if not response.get("ok"):
         raise LauncherError(f"ownership_revert_failed: {response}")
@@ -320,7 +414,8 @@ def _revert(
     return {
         "ok": False,
         "status": block.get("state"),
-        "failure_reason": FAILURE_REASON_LAUNCH_FAILED,
+        "failure_reason": failure_reason,
+        "error": None if safe else "launch_recovery_required",
         "detail": detail,
         "cause": cause,
         "adapter": adapter_name,
@@ -329,6 +424,9 @@ def _revert(
         "generation": block.get("generation"),
         "terminal_close": terminal_close,
         "lease_handoff_cancel": lease_cancel,
+        "lease_handoff": handoff_result,
+        "lease_status": lease_after,
+        "terminal_status": terminal_status,
         "meta_path": response.get("meta_path"),
     }
 
@@ -338,7 +436,8 @@ def _revert(
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=None) -> dict:
+def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=None,
+        lease_poll_timeout_sec=None) -> dict:
     """launcher 공통 lifecycle 1회 실행.
 
     `adapter`는 호출자가 명시 선택해 주입한 seam이며 `launch(worktree_root, command)`
@@ -409,7 +508,10 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
         return _revert(
             hub_root, task, "lease_handoff_failed", adapter_name,
             lease_task_path=lease_task_path, owner_session_id=owner_session_id, cause=lease_result,
+            terminal_creation="not_created", handoff_started=False,
+            registry_worktree_root=registered_root,
         )
+    handoff_started = not lease_result.get("noop", False)
 
     launch_command = shlex.join([str(OWNERSHIP_TOOL_DIR / "run.sh"),
                                  "session-launch", "--command", command])
@@ -418,11 +520,15 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
     except Exception as exc:
         return _revert(hub_root, task, "adapter_launch_failed", adapter_name,
                        lease_task_path=lease_task_path, owner_session_id=owner_session_id,
-                       cause={"error": type(exc).__name__, "message": str(exc)})
+                       cause={"error": type(exc).__name__, "message": str(exc)},
+                       terminal_creation="unknown", handoff_started=handoff_started,
+                       registry_worktree_root=registered_root)
     if not isinstance(report, dict):
         return _revert(
             hub_root, task, "adapter_report_invalid", adapter_name,
             adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
+            terminal_creation="unknown", handoff_started=handoff_started,
+            registry_worktree_root=registered_root,
         )
     adapter_name = report.get("adapter") or adapter_name
 
@@ -431,6 +537,8 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
         return _revert(
             hub_root, task, "launch_receipt_missing", adapter_name,
             adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
+            terminal_creation="created" if report.get("adapter_handle") else "unknown", handoff_started=handoff_started,
+            registry_worktree_root=registered_root,
         )
 
     # [MUST] reported_cwd가 registry worktree_root와 일치하지 않으면 전이하지 않는다.
@@ -440,6 +548,8 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
         return _revert(
             hub_root, task, "reported_cwd_mismatch", adapter_name,
             adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
+            terminal_creation="created" if report.get("adapter_handle") else "unknown", handoff_started=handoff_started,
+            registry_worktree_root=registered_root,
         )
 
     prompt_receipt = build_prompt_receipt(report)
@@ -447,6 +557,28 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
         return _revert(
             hub_root, task, "prompt_receipt_missing", adapter_name,
             adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
+            terminal_creation="created" if report.get("adapter_handle") else "unknown", handoff_started=handoff_started,
+            registry_worktree_root=registered_root,
+        )
+
+    lease_status, lease_owner = _wait_for_child_claim(
+        lease_task_path, owner_session_id, lease_poll_timeout_sec
+    )
+    if not lease_owner:
+        # The polling deadline is not a close boundary.  A claim that lands at
+        # that edge is still a live child and must be atomically finalized.
+        lease_status = _lease_status(lease_task_path, owner_session_id)
+        lease_owner = _foreign_lease_owner(lease_status)
+    if not lease_owner:
+        return _revert(
+            hub_root, task, "child_lease_unresolved", adapter_name,
+            adapter=adapter, report=report, lease_task_path=lease_task_path,
+            owner_session_id=owner_session_id, cause=lease_status,
+            terminal_creation="created", handoff_started=handoff_started,
+            failure_reason=FAILURE_REASON_SESSION_BOOT_TIMEOUT,
+            launch_receipt=launch_receipt, prompt_receipt=prompt_receipt,
+            handoff_result=lease_result,
+            registry_worktree_root=registered_root,
         )
 
     response = ownership_set(
@@ -454,6 +586,8 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
         task,
         EXEC_STATE_WORKTREE_SESSION_OWNED,
         owner_from_lease=True,
+        expected_owner=lease_owner,
+        exclude_owner=owner_session_id,
         adapter=adapter_name,
         adapter_handle=launch_receipt["adapter_handle"],
         launch_receipt=launch_receipt,
@@ -463,9 +597,14 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
         return _revert(
             hub_root, task, f"ownership_set_rejected: {response}", adapter_name,
             adapter=adapter, report=report, lease_task_path=lease_task_path, owner_session_id=owner_session_id,
+            terminal_creation="created", handoff_started=handoff_started,
+            launch_receipt=launch_receipt, prompt_receipt=prompt_receipt,
+            registry_worktree_root=registered_root,
         )
 
     owned = response.get("execution_ownership") or {}
+    if not lease_owner or owned.get("owner_session_id") != lease_owner:
+        raise LauncherError("ownership_postcondition_violated")
     return {
         "ok": True,
         "status": owned.get("state"),
@@ -479,3 +618,63 @@ def run(adapter, *, hub_root, task, worktree_root, command, owner_session_id=Non
         "lease_handoff": lease_result,
         "meta_path": response.get("meta_path"),
     }
+
+
+def recover(adapter=None, *, hub_root, task, worktree_root, owner_session_id=None) -> dict:
+    """Return a saved recovery state to the hub only after fresh absence evidence."""
+    meta = read_registry_meta(hub_root, str(task))
+    block = meta.get("execution_ownership") or {}
+    if block.get("state") != EXEC_STATE_RECOVERY_REQUIRED:
+        return {"ok": False, "error": "recovery_not_required", "task": str(task)}
+    registered_root = meta.get("worktree_root")
+    if not registered_root or os.path.realpath(str(worktree_root)) != os.path.realpath(str(registered_root)):
+        return {"ok": False, "error": "worktree_root_mismatch", "task": str(task),
+                "registry_worktree_root": registered_root}
+    handle = block.get("adapter_handle")
+    creation = block.get("terminal_creation", "unknown")
+    if adapter is None:
+        return {"ok": False, "error": "recovery_terminal_unconfirmed", "task": str(task)}
+    if creation == "created":
+        observed = _terminal_absent(adapter, handle, worktree_root)
+    else:
+        sweep = getattr(adapter, "status_worktree", None)
+        if not callable(sweep):
+            observed = {"status": "unknown", "reason": "status_unsupported"}
+        else:
+            try:
+                observed = sweep(worktree_root)
+            except Exception as exc:
+                observed = {"status": "unknown", "reason": "status_failed", "detail": str(exc)}
+    if observed.get("status") != "absent":
+        return {"ok": False, "error": "recovery_terminal_unconfirmed", "terminal_status": observed, "task": str(task)}
+    owner_session_id = owner_session_id or ownership_core.resolve_session_id(os.environ)
+    # Recovery repeats the cancellation check before looking at the lease. A
+    # pending handoff is only safe after it was cancelled, or after a fresh
+    # read proves there was no handoff to cancel.
+    cancel = _cancel_lease_handoff(meta.get("task_path"), owner_session_id)
+    lease_status = _lease_status(meta.get("task_path"), owner_session_id)
+    safe_classifications = {"current_session_owned", "unowned", "lease_expired"}
+    if lease_status.get("ok") is not True or lease_status.get("classification") not in safe_classifications:
+        return {"ok": False, "error": "recovery_lease_unconfirmed", "lease_status": lease_status, "task": str(task)}
+    handoff = lease_status.get("handoff") or {}
+    lease_record = lease_status.get("lease") or {}
+    handoff_remains = any(value is not None for value in handoff.values())
+    pending_handoff = lease_record.get("status") == "handoff" + "_pending"
+    # `not_handoff_owner` is a no-op only after the fresh observation proves
+    # that no handoff state remains.  A different session's pending handoff is
+    # unowned for lease classification purposes, but is not safe to erase.
+    if not cancel.get("ok") and (
+        cancel.get("diagnostic") != "not_handoff_owner"
+        or pending_handoff
+        or handoff_remains
+    ):
+        return {"ok": False, "error": "recovery_handoff_unconfirmed", "lease_handoff_cancel": cancel,
+                "lease_status": lease_status, "task": str(task)}
+    response = ownership_set(hub_root, str(task), EXEC_STATE_HUB_OWNED,
+                             adapter=block.get("adapter"),
+                             failure_reason=block.get("failure_reason") or FAILURE_REASON_LAUNCH_FAILED)
+    if not response.get("ok"):
+        raise LauncherError(f"ownership_recover_failed: {response}")
+    return {"ok": True, "status": EXEC_STATE_HUB_OWNED, "task": str(task),
+            "generation": (response.get("execution_ownership") or {}).get("generation"),
+            "meta_path": response.get("meta_path")}

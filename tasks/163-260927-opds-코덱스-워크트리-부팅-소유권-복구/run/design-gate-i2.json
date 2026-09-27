@@ -1,0 +1,11 @@
+{
+  "input_bundle_hash": "fa2ad361f99edd0fda27a721d3da8e8e5804086c54a3991408cc684ca83a2823",
+  "iteration": 2,
+  "design": {
+    "axes": {"completeness": "PASS", "decision_clarity": "FAIL", "executability": "PASS", "recoverability": "PASS"},
+    "gaps": ["Risks H-3의 설계 대응이 확정된 checkpoint 권한 상승 경로와 불일치한다."]
+  },
+  "scenario": {"scores": {"goal": 2, "adoption": 2, "boundary": 2}, "average": 2.0, "gaps": []},
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

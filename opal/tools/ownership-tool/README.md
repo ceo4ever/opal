@@ -128,9 +128,9 @@ loaded = core.read_json(path)   # error: not_found | invalid_json | read_failed
 (`env_file_not_provided`)·쓰기 실패(`env_file_write_failed:<...>`)는 진단만 남기고 세션 registry 등록은
 유지한다(`:182-190`).
 
-### registry 부트 owner 등록
+### registry 부트 owner 등록과 Codex deferred 처리
 
-lease claim에 성공한 **워크트리** 세션은 이어서 허브 registry의
+일반 SessionStart에서 lease claim에 성공한 **워크트리** 세션은 이어서 허브 registry의
 `execution_ownership.owner_session_id`를 1회 등록한다(`session_start_hook.py:115-171`, 호출 지점
 `:247-250`). registry `execution_ownership`의 쓰기는 `worktree-tool ownership-set` CLI 경유만
 허용되므로(TASK 999 C-9) 이 모듈은 meta를 **읽기만** 하고 전이는 CLI에 맡긴다 — 파일 쓰기·lock·원자 교체는
@@ -150,6 +150,11 @@ lease claim에 성공한 **워크트리** 세션은 이어서 허브 registry의
 `REGISTRY_LOCK_TIMEOUT_MS=30000`으로 이미 상한하므로 정상 경합은 자르지 않으면서, 멈춘 CLI가 세션 부팅을
 막지 않게 한다. 어떤 분기에서도 예외로 새지 않고 구조화 반환하며 전 경로 fail-safe exit 0을 유지한다
 (`:274-278`).
+
+`codex-start`는 lease claim에 성공했고 registry write의 정확한 오류가 `registry_write_denied`인 경우만
+`ok: true`, `diagnostic: registry_owner_deferred_to_hub`로 반환한다. sandbox가 hub meta를 쓰지 못해도
+launcher가 child lease를 관측해 최종 registry 전이를 맡기 때문이다. foreign owner, lease claim 실패,
+다른 registry 오류는 deferred 성공으로 바꾸지 않는다.
 
 ## 실행 루트 해석 (PLAN D-30)
 
@@ -256,7 +261,9 @@ Codex adapter(`CODEX_SESSION_ID`) > payload다. 훅 5종은 계속 payload-only�
   기존 공개 SessionStart와 heartbeat를 실행한다. 부모 OPAL ID와 충돌하면 쓰기 전에 실패한다.
   설치된 Codex AGENTS bootstrap이 설정·worker 마커 게이트 이후 호출한다. 영구 export나
   비공식 Codex env 파일에 의존하지 않는다. native ID가 없으면 추측 없이 실패한다.
-  registry 등록 실패·foreign owner도 성공으로 감추지 않고 nonzero 진단한다.
+  lease claim 뒤 hub registry 쓰기만 `registry_write_denied`이면
+  `registry_owner_deferred_to_hub` 진단으로 성공하고 launcher가 최종 전이를 한다. foreign owner와
+  다른 등록 실패는 성공으로 감추지 않고 nonzero 진단한다.
   state-tool의 상태 전이 claim과 run-log actor 역시 동일 resolver를 소비한다.
 
 공식 `openai/codex` commit `53446f90a56692dede3c8f413e8d486a6adb77b5`의

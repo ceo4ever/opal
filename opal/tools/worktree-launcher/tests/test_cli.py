@@ -175,6 +175,21 @@ def test_launch_without_command_resolves_from_settings(capsys, tmp_path, capture
     assert task_path in captured_run[0]["command"]
 
 
+def test_launch_passes_configured_lease_poll_timeout(capsys, tmp_path, captured_run):
+    """The public launcher setting controls the bounded child-claim wait."""
+    hub, _ = _hub_with_task_path(tmp_path)
+    setting_path = hub.hub / ".opal" / "setting.local.json"
+    setting_path.parent.mkdir(parents=True, exist_ok=True)
+    setting_path.write_text('{"launcher":{"leasePollTimeoutSec":0.25}}', encoding="utf-8")
+
+    code, _ = _invoke(capsys, [
+        "launch", "--adapter", "orca", "--project-root", str(hub.hub),
+        "--task", hub.task, "--worktree-root", str(hub.worktree_root),
+    ])
+    assert code == 0
+    assert captured_run[0]["lease_poll_timeout_sec"] == 0.25
+
+
 def test_launch_agent_selects_argv_template(capsys, tmp_path, captured_run):
     """`--agent`가 설정의 `default`를 이긴다."""
     from worktree_launcher import settings  # RED

@@ -14,11 +14,11 @@ opal/tools/worktree-launcher/
 │   ├── __init__.py
 │   ├── launcher_core.py        # preflight → adapter → receipt 2종 → 상태 전이
 │   ├── settings.py             # launcher 설정 2-레이어 머지 + 명령 결정
-│   ├── cli.py                  # launch/read/close 3서브명령
+│   ├── cli.py                  # launch/read/close/recover 4서브명령
 │   └── adapters/
 │       ├── __init__.py
-│       ├── orca.py             # Orca 터미널 adapter (3동사)
-│       ├── cmux.py             # cmux workspace adapter (3동사)
+│       ├── orca.py             # Orca terminal adapter (launch/read/close/status)
+│       ├── cmux.py             # cmux workspace adapter (launch/read/close; status unsupported)
 │       ├── generic.py          # 템플릿 실행 adapter (launch만)
 │       └── opal_agent_fallback.py  # opal-agent one-shot 폴백 (launch만)
 └── tests/
@@ -48,6 +48,8 @@ import하며 tool-dir `conftest.py`가 경로를 잇는다.
 ~/.opal/tools/worktree-launcher/run.sh read  --adapter orca --terminal <handle> [--cursor N] [--limit N] [--screen]
 ~/.opal/tools/worktree-launcher/run.sh close --adapter orca --terminal <handle>
 ~/.opal/tools/worktree-launcher/run.sh close --adapter orca --worktree-root <root> --all [--json]
+~/.opal/tools/worktree-launcher/run.sh recover --adapter orca \
+  --project-root <hub> --task 145 --worktree-root <root> [--owner-session-id …]
 ~/.opal/tools/worktree-launcher/run.sh launch --adapter cmux \
   --project-root <hub> --task 152 --worktree-root <root> [--command …]
 ```
@@ -59,6 +61,11 @@ OS·터미널 종류를 자동 탐지하는 경로는 없다(설정도 adapter�
 `launch`에서 `--command`를 주지 않으면 `settings.load_launcher_settings()` +
 `settings.resolve_command()`가 명령을 결정하며, 이때 쓰는 `task_path`는 registry meta가 발급한
 canonical 값뿐이다 — 없으면 `--worktree-root`로 대체하지 않고 `task_path_unresolved`로 거부한다.
+
+`launcher.leasePollTimeoutSec`은 child lease claim을 기다리는 bounded polling 상한(초)이다.
+코드 기본값은 **30초**이며, 양의 숫자만 전역 설정과 프로젝트 `setting.local.json`에서 이를
+덮어쓸 수 있다. 이 대기는 child가 bootstrap을 처리해 lease를 claim할 시간을 주는 것이며,
+작업 준비 완료를 뜻하지 않는다.
 
 `close`의 스코프는 `--terminal` 또는 `--worktree-root --all` **정확히 하나**이며, 위반은 어댑터를
 호출하기 전에 거부한다(`--json`은 회수 스윕 호출 형태와의 호환용 no-op — 출력은 항상 JSON이다).
@@ -94,20 +101,28 @@ argparse usage 오류도 exit 2 + 사람용 usage로 새지 않고 구조화 JSO
 3. **launch receipt 수집** — `{adapter, adapter_handle, reported_cwd, launched_at}`.
 4. **cwd 가드** — `reported_cwd`가 registry `worktree_root`와 realpath 동치가 아니면 전이하지 않는다.
 5. **prompt receipt 수집** — `{prompt_id, submitted_at}`.
-6. **상태 전이** — `worktree_session_owned`(receipt 2종 동봉).
+6. **child claim 대기** — 유계 polling과 마감 직전 재조회로 hub가 아닌 live lease owner를 찾는다.
+7. **상태 전이** — 관측 owner를 `--expected-owner`로 지정한 `worktree_session_owned` 전이(receipt 2종 동봉).
 
-복귀 5경로 — `adapter_report_invalid` · `launch_receipt_missing` · `reported_cwd_mismatch` ·
-`prompt_receipt_missing` · `ownership_set_rejected` — 전건이 **원자 복귀**를 호출한다.
-`failure_reason=launch_failed` + `hub_owned` + `attribution_state` 키 부재 + `generation` 증가가
-**한 번의 교체**에 담기므로 dual owner도, owner 없는 `session_launching` 잔존도 남지 않는다.
+claim timeout, receipt 오류, 원자 owner 비교 거부를 포함한 실패는 복구 판정으로 간다. close 전 마지막
+lease 조회에서 child claim이 확인되면 성공 전이로 합류하지만, close 뒤 발견한 claim은 성공으로 확정하지
+않는다. `not_created`는 close를 생략하고, `created`는 close 뒤 `status == absent`를 요구하며, `unknown`은
+자동 복귀하지 않는다. 시작된 handoff 취소와 lease 재조회까지 확인되면 `hub_owned`로 원자 복귀한다.
+하나라도 불명·실패이거나 외부 live lease가 남으면 `recovery_required`와
+`launch_recovery_required`를 반환하고 새 launch를 거부한다.
 
 ### 원자 복귀 시 터미널 정리
 
-복귀는 `ownership-set` **직전에** `adapter.close(handle=…)`를 1회 시도하고 결과를 반환 dict의
-`terminal_close` 필드로만 남긴다. handle은 launch 보고의 `adapter_handle`에서만 취하고 없으면
-시도하지 않으며(대상 추측 금지), 스코프는 정밀 close 하나다(워크스페이스 스윕은 회수 경로 소유라
-사용자의 다른 탭을 건드리지 않는다). close의 예외·미구현(`AttributeError`)·비-0 exit는 전부
-삼키고 `ownership-set` 복귀는 반드시 수행한다 — 복귀가 정리 성공에 종속되면 dual owner가 남는다.
+복귀는 `ownership-set` 전에 `adapter.close(handle=…)`를 1회 시도한다. handle은 launch 보고에서만
+취하고 스코프는 정밀 close 하나다. close 결과 뒤 `status(handle, worktree_root=…) == absent`를
+확인해야 `hub_owned`로 복귀할 수 있다. Orca는 stale show와 worktree list 부재가 함께 있을 때, 또는
+show가 `orphaned:true`·`connected:false`·`exitCause.kind:operator_close`를 함께 보고하고 성공한 목록에
+같은 handle과 `ptyId`가 모두 없을 때만 absent다.
+상태 동사가 없는 adapter와 조회 오류는 `unknown`이며 `recovery_required`로 보존한다.
+
+`recover --adapter … --project-root … --task … --worktree-root …`는 보존된 상태에서만 동작한다.
+created terminal은 handle absence, unknown/not-created terminal은 worktree 단위 absence를 새로 확인하고,
+handoff cancel과 안전한 lease 재조회까지 통과해야 `hub_owned`가 된다.
 
 ## 상태 쓰기는 전부 `ownership-set` 경유
 
@@ -122,7 +137,7 @@ basename·mtime으로 신원을 추론하지 않는다(`harness/worktree.md` §c
 
 ## adapter seam
 
-adapter는 상속 계층 없는 덕타이핑 경계이며 `launch`·`read`·`close` **3동사**를 노출한다.
+adapter는 상속 계층 없는 덕타이핑 경계이며 `launch`·`read`·`close` 3동사를 노출한다.
 세 동사 모두 성공·실패가 **같은 모양의 dict**이며 실패는 예외가 아니라 `exit_code != 0`이다.
 
 공통 키는 `adapter`(str) · `exit_code`(int) · `fallback_attempted`(항상 `False` — 다른 어댑터를
@@ -145,8 +160,10 @@ handoff prompt는 별도 seam 없이 `--command`로 띄운 TUI에 함께 제출�
 
 ### 지원 adapter
 
-3동사를 갖춘 adapter는 `orca`와 `cmux`다. `generic`·`opal_agent_fallback`은 `launch`만 있어
-적합성 스위트 대상이 아니다. cmux는 `new-workspace --cwd --command`의 stdout 한 줄 `OK workspace:<n>`에서
+Orca는 `status(handle)`와 `status_worktree(root)`도 구현한다. cmux CLI의 상태 조회와 worktree 단위 부재
+판정을 이 환경에서 확인하지 못했으므로 cmux·generic·opal-agent fallback은 status를
+`unknown(status_unsupported)`로 취급한다. 이 adapter로 실패한 launch는 `recovery_required`에서 명시
+복구를 기다린다. cmux는 `new-workspace --cwd --command`의 stdout 한 줄 `OK workspace:<n>`에서
 workspace ref를 handle로 사용하고 `read-screen --workspace`, `close-workspace --workspace`로 같은 workspace만
 읽고 닫는다. worktree 경로만으로 cmux workspace를 추측하는 광역 close는 지원하지 않는다.
 
@@ -227,6 +244,10 @@ launcher는 명시 owner 또는 ownership-tool resolver의 신원을 시작 시 
 기동 명령은 공개 `ownership-tool session-launch`로 감싸 부모 플랫폼 신원을 지운다.
 
 최종 registry owner는 허브 입력 ID를 재사용하지 않고 공개
-`worktree-tool ownership-set --owner-from-lease`로 연결한다. 자식이 먼저 claim하면
-실제 lease owner를 기록하고, 아직 pending이면 빈 owner를 남겨 자식 SessionStart가
-등록하게 한다. receipt 수신은 명령 제출 증거이며 실제 Codex 실행/claim 완료 증거는 아니다.
+`worktree-tool ownership-set --owner-from-lease --expected-owner --exclude-owner`로 연결한다.
+hub가 child live lease를 관측한 뒤에만 실제 lease owner를 기록하며, pending·unresolved이면 성공을
+기록하지 않는다. receipt 수신은 명령 제출 증거이며 실제 Codex 실행/claim 완료 증거는 아니다.
+
+Codex 기본 argv의 `--no-daemon`은 `codex --help`에 해당 옵션이 표시되는 설치본에서만 지원된다.
+지원하지 않는 binary의 즉시 종료는 child claim timeout으로 처리하며, terminal absence를 확인할 수 있을
+때만 hub로 복귀한다.

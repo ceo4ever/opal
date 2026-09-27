@@ -35,9 +35,12 @@ LAUNCHER_BLOCK_KEY = "launcher"
 DEFAULT_AGENT = "claude"
 DEFAULT_AGENTS = {
     "claude": {"argv_template": 'claude "{utterance}"'},
-    "codex": {"argv_template": 'codex "{utterance}"'},
+    "codex": {"argv_template": 'codex --no-daemon "{utterance}"'},
 }
 DEFAULT_UTTERANCE_TEMPLATE = "{task_path} 이어서 수행"
+# Bounded child-lease observation limit.  Configuration uses the public camel
+# case key so the JSON setting stays consistent with the other launcher keys.
+DEFAULT_LEASE_POLL_TIMEOUT_SEC = 30
 
 # 치환 토큰은 이 2종뿐이다(D-E).
 PLACEHOLDER_UTTERANCE = "{utterance}"
@@ -100,6 +103,10 @@ def _apply_layer(resolved: dict, block: dict) -> None:
     if isinstance(utterance_template, str) and utterance_template:
         resolved["utterance_template"] = utterance_template
 
+    lease_poll_timeout = block.get("leasePollTimeoutSec")
+    if isinstance(lease_poll_timeout, (int, float)) and not isinstance(lease_poll_timeout, bool) and lease_poll_timeout > 0:
+        resolved["leasePollTimeoutSec"] = lease_poll_timeout
+
     agents = block.get("agents")
     if isinstance(agents, dict):
         for name, entry in agents.items():
@@ -121,6 +128,7 @@ def load_launcher_settings(project_root=None) -> dict:
         "default": DEFAULT_AGENT,
         "agents": copy.deepcopy(DEFAULT_AGENTS),
         "utterance_template": DEFAULT_UTTERANCE_TEMPLATE,
+        "leasePollTimeoutSec": DEFAULT_LEASE_POLL_TIMEOUT_SEC,
     }
 
     _apply_layer(resolved, _launcher_block(_read_json_object(GLOBAL_SETTING_PATH)))

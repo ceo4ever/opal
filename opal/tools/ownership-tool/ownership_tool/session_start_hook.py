@@ -112,6 +112,20 @@ def _registry_entry_for_task(allocator_root, task_path):
     return None
 
 
+def _ownership_set_error_code(completed):
+    """Return the exact structured error emitted by ownership-set, if present."""
+    for output in (completed.stdout, completed.stderr):
+        if not isinstance(output, str) or not output.strip():
+            continue
+        try:
+            response = json.loads(output)
+        except ValueError:
+            continue
+        if isinstance(response, dict) and isinstance(response.get("error"), str):
+            return response["error"]
+    return None
+
+
 def _register_registry_owner(cwd, task_path, session_id, env):
     """워크트리 세션의 부트 owner 등록을 1회 시도한다. (등록 여부, 진단 목록).
 
@@ -166,7 +180,13 @@ def _register_registry_owner(cwd, task_path, session_id, env):
         # 실행 불가도 멈춘 CLI도 세션을 막지 않는다 — 예외로 새지 않고 구조화 반환한다(fail-safe).
         return False, ["ownership_set_failed", "ownership_set_detail:{}".format(exc)]
     if completed.returncode != 0:
-        detail = ((completed.stderr or completed.stdout) or "").strip()
+        detail = "\n".join(value.strip() for value in (completed.stderr, completed.stdout) if value).strip()
+        # The worktree sandbox may prohibit this child from writing the hub
+        # registry.  The lease remains authoritative and the hub will make the
+        # final registry transition.  Only its exact structured error code is
+        # deferrable; wording in an unrelated error must stay a failure.
+        if _ownership_set_error_code(completed) == "registry_write_denied":
+            return False, ["registry_write_denied", "ownership_set_detail:{}".format(detail)]
         return False, ["ownership_set_failed", "ownership_set_detail:{}".format(detail)]
     return True, []
 

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "OPAL .opal/worktree.json Schema",
-  "description": "worktree-tool이 소비하는 프로젝트 선언 파일. PLAN(092) §3.1.2 SSOT. 문서 SSOT로만 기능하며 런타임에 로드되지 않는다(DEC-4) — 검증은 worktree_tool.py의 validate_worktree_config()가 hand-rolled로 수행한다(state.schema.json과 동일한 선례).",
+  "description": "worktree-tool이 소비하는 프로젝트 선언 파일. PLAN(092) §3.1.2 SSOT. 문서 SSOT로만 기능하며 런타임에 로드되지 않는다(DEC-4) — 검증은 worktree_tool.py의 validate_worktree_config()가 hand-rolled로 수행한다(state.schema.json과 동일한 선례). 실행 registry의 ownership 상태는 이 설정 스키마와 분리되며, worktree_tool.py가 hub_owned·session_launching·worktree_session_owned·recovery_required·released 전이를 원자적으로 검증한다.",
   "type": "object",
   "required": ["layout", "repos"],
   "additionalProperties": false,

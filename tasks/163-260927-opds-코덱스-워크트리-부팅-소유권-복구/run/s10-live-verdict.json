@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "profile": "manual",
+  "fidelity": "real-usage",
+  "observed_executors": ["human"],
+  "assertion_results": [{
+    "id": "s10-installed-checkpoint",
+    "expected": "installed checkpoint SHA equals the active task registry checkpoint SHA",
+    "actual": "installed checkpoint SHA equals the active task registry checkpoint SHA"
+  }],
+  "observed_evidence": ["installed_worktree_tool_status", "registry_execution_ownership", "git_rev_parse", "git_show_stat"],
+  "evidence": "Read-only installed worktree-tool status and meta registry list checkpoint 48f25a5aac77d320b4f491ddb938992acba50328. git rev-parse HEAD yields the same SHA, and git show identifies the Task 162 checkpoint commit."
+}

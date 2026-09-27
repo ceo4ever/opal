@@ -1,0 +1,64 @@
+{
+  "returncode": 0,
+  "response": {
+    "ok": true,
+    "command": "launch",
+    "status": "worktree_session_owned",
+    "failure_reason": null,
+    "task": "162",
+    "generation": 8,
+    "adapter": "orca",
+    "adapter_handle": "term_808e3d38-bf1d-452e-bada-2ddb9ea96884",
+    "launch_receipt": {
+      "adapter": "orca",
+      "adapter_handle": "term_808e3d38-bf1d-452e-bada-2ddb9ea96884",
+      "reported_cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162",
+      "launched_at": "2026-09-27T13:02:14.158981+00:00"
+    },
+    "prompt_receipt": {
+      "prompt_id": "a8edbcc852e6c7f9",
+      "submitted_at": "2026-09-27T13:02:14.158981+00:00"
+    },
+    "lease_handoff": {
+      "ok": true,
+      "command": "ownership-tool",
+      "subcommand": "handoff",
+      "session_id": "01a0e27f-0587-7bd2-8ff0-d90accacbb92",
+      "claim_source": "state_transition",
+      "claimed_at": "2026-09-27T22:01:25.438041+09:00",
+      "generation": 3,
+      "heartbeat_at": "2026-09-27T22:01:25.438041+09:00",
+      "lease_expires_at": "2026-09-28T02:01:25.438041+09:00",
+      "owner_session_id": null,
+      "status": "handoff_pending",
+      "task_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축",
+      "ttl_sec": 14400,
+      "handoff_to_worktree_root": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162",
+      "handoff_from_session_id": "01a0e27f-0587-7bd2-8ff0-d90accacbb92",
+      "handoff_expires_at": "2026-09-27T22:17:13.848813+09:00"
+    },
+    "meta_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/.meta/task_162.json"
+  },
+  "registry": {
+    "state": "worktree_session_owned",
+    "owner_session_id": "01a0e2f5-873d-73c2-afa1-30f88f1e8a0d",
+    "adapter": "orca",
+    "adapter_handle": "term_808e3d38-bf1d-452e-bada-2ddb9ea96884",
+    "generation": 8,
+    "launch_receipt": {
+      "adapter": "orca",
+      "adapter_handle": "term_808e3d38-bf1d-452e-bada-2ddb9ea96884",
+      "launched_at": "2026-09-27T13:02:14.158981+00:00",
+      "reported_cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162"
+    },
+    "prompt_receipt": {
+      "prompt_id": "a8edbcc852e6c7f9",
+      "submitted_at": "2026-09-27T13:02:14.158981+00:00"
+    },
+    "failure_reason": null,
+    "terminal_creation": null,
+    "observed_lease_owner": null,
+    "checkpoint_shas": []
+  },
+  "setting_unchanged": true
+}

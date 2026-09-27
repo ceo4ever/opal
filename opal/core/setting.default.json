@@ -14,7 +14,7 @@
     "default": "claude",
     "agents": {
       "claude": { "argv_template": "claude \"{utterance}\"" },
-      "codex":  { "argv_template": "codex \"{utterance}\"" }
+      "codex":  { "argv_template": "codex --no-daemon \"{utterance}\"" }
     },
     "utterance_template": "{task_path} 이어서 수행"
   },

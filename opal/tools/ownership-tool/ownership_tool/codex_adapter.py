@@ -41,8 +41,34 @@ def start(cwd, env):
     hook_env = {"OPAL_HOME": str(pathlib.Path(__file__).resolve().parents[3])}
     result = session_start_hook.handle(payload, project_root=root, env=hook_env)
     beat = heartbeat_hook.handle(payload, project_root=root, env={})
-    registry_error = next((item for item in result["diagnostics"]
+    diagnostics = result["diagnostics"]
+    registry_error = next((item for item in diagnostics
                            if item in ("foreign_registry_owner", "ownership_set_failed")), None)
-    ok = result["registered"] and (not result["task_path"] or result["lease_claimed"]) and not registry_error
-    return {"ok": bool(ok), "error": None if ok else registry_error or result["classification"] or "session_start_failed",
-            "session_start": result, "heartbeat": beat}
+    # A child holding the lease can finish booting when only its hub registry
+    # write is denied.  The launcher observes the lease and makes that registry
+    # transition.  This exception does not cover any failed claim or other
+    # registration/ownership error.
+    deferred_diagnostics = {
+        "registry_write_denied",
+        "env_file_not_provided",
+    }
+    deferred_to_hub = (
+        result["lease_claimed"]
+        and "registry_write_denied" in diagnostics
+        and not registry_error
+        and all(
+            item in deferred_diagnostics or item.startswith("ownership_set_detail:")
+            for item in diagnostics
+        )
+    )
+    ok = deferred_to_hub or (
+        result["registered"]
+        and (not result["task_path"] or result["lease_claimed"])
+        and not registry_error
+    )
+    response = {"ok": bool(ok),
+                "error": None if ok else registry_error or result["classification"] or "session_start_failed",
+                "session_start": result, "heartbeat": beat}
+    if deferred_to_hub:
+        response["diagnostic"] = "registry_owner_deferred_to_hub"
+    return response

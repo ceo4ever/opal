@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "profile": "manual",
+  "fidelity": "real-usage",
+  "observed_executors": ["human"],
+  "assertion_results": [{
+    "id": "s4-live-orca-status",
+    "expected": "show result is classified before list absence",
+    "actual": "show result is classified before list absence"
+  }],
+  "observed_evidence": ["installed_orca_show", "installed_orca_list", "launcher_source_tests"],
+  "evidence": "Read-only installed Orca checks completed under approved live access. The closed probe handle remained observable as orphaned, so it cannot be inferred absent merely because it is not in the active list; the source suite covers stale plus empty-list absence."
+}

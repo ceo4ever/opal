@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "profile": "manual",
+  "fidelity": "real-usage",
+  "observed_executors": ["human"],
+  "assertion_results": [{
+    "id": "s8-installed-timeout-recovery",
+    "expected": "unclaimed child times out, confirmed terminal is absent, and registry returns to hub_owned",
+    "actual": "unclaimed child times out, confirmed terminal is absent, and registry returns to hub_owned"
+  }],
+  "observed_evidence": ["live-failure-probe.json", "installed_source_sha256"],
+  "evidence": "The installed failure probe used the deployed launcher. Source and installed launcher SHA256 values match; its registry and returned response satisfy the bounded failure-recovery contract."
+}
