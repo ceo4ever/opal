@@ -14,6 +14,7 @@ AC/C가 없으면 추론으로 채우지 않고 TASK 보완으로 되돌린다. 
 ## Setup
 
 여러 시나리오가 공유하는 환경, 데이터, 서비스, 사용자 협업 조건만 한 번 적는다.
+사람 조치가 필요한 시나리오는 로그인·DDL·권한·관찰 등 선행 조건, 실행 주체, 제출할 증거를 명시한다. TEST 시작 시 전체 handoff를 한 묶음으로 먼저 요청할 수 있어야 한다. 실행 순서는 `opal/core/references/harness/test-cycle.md` §진입과 병행 실행이 소유한다.
 
 test substitute를 쓰면 대체 대상·이유·한계와 실제 연동으로 별도 확인할 부분을 적는다.
 substitute 결과는 실제 integration, E2E, manual 증거를 대신하지 않는다.
@@ -39,6 +40,8 @@ E2E 시나리오는 `test-scenario.json` 변환 시 구조화 계약을 함께 �
 - `assertions[]`: semantic assertion의 `id`와 `expected`
 - `required_evidence[]`: pass 또는 `real-usage`에 필요한 증적 이름
 - `handoff`: Collaborative/Manual 대기·재개가 필요한 경우 `handoff_id`, `instruction`, `expected_observation`, `required_evidence`, `timeout_seconds`, `resume_token`, `server_policy`, `submission_path` 8개 필드를 모두 가진다.
+
+여러 human step이 있으면 각 step의 선행 조치와 제출 증거를 분리해 적되, 한 번의 TEST 진입 요청에 함께 실을 수 있도록 작성한다. 자동 시나리오의 실행을 사람 제출 완료에 종속시키지 않는다.
 
 `pass`와 `real-usage`는 assertion expected/actual과 required/observed evidence가 모두 충족된 구조화 verdict로만 기록한다.
 사람 협업은 자유형식 완료 선언으로 pass가 되지 않으며, 최초 대기는 `awaiting_human`이고 구조화 submission 검증 뒤 최종 상태로 전이한다. 실행 전 result zone의 `handoff_state`는 `null`일 수 있다. `scenario-mark --verdict-json`이 `awaiting_human`을 기록할 때 `handoff` 기본값과 runtime `handoff_state`를 병합해 위 8개 필드를 완성하고 `run_id`를 함께 저장한다. 재개는 같은 run-id/resume-token의 `--submission`으로만 수행하며, submission은 사람의 완료 선언이 아니라 verifier가 검사할 expected/actual과 observed evidence 입력이다.

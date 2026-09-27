@@ -44,6 +44,42 @@ from conftest import (
 )
 
 
+def test_t162_s6_divergence_reads_frozen_base_without_writing(project_b: ProjectB):
+    """A real main commit after task creation must appear as behind, with no fetch/merge."""
+    created = parse_json_stdout(
+        run_worktree_cli(["create", "--project-root", str(project_b.root), "--task", "162"]),
+        "T162 create",
+    )
+    assert created["ok"] is True, created
+    meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_162.json"
+    before_meta = meta_path.read_bytes()
+    frozen_refs = {e["repo"]: e["base_ref"] for e in json.loads(before_meta)["entries"]}
+    equal = parse_json_stdout(
+        run_worktree_cli(["divergence", "--project-root", str(project_b.root), "--task", "162"]),
+        "T162 equal divergence",
+    )
+    assert equal["ok"] is True, equal
+    assert equal["integration_required"] is False
+    assert all(e["ahead"] == 0 and e["behind"] == 0 for e in equal["repos"])
+    assert {e["repo"]: e["base_ref"] for e in equal["repos"]} == frozen_refs
+    assert all(len(e["head_sha"]) == 40 for e in equal["repos"])
+
+    marker = project_b.root / "new-main.txt"
+    marker.write_text("new main commit\n", encoding="utf-8")
+    run_git(["add", "new-main.txt"], cwd=project_b.root)
+    run_git(["commit", "-m", "main advanced"], cwd=project_b.root)
+    # create가 동결한 origin/main이 움직이도록 fixture의 로컬 bare remote에 push한다.
+    run_git(["push", "origin", "main"], cwd=project_b.root)
+    behind = parse_json_stdout(
+        run_worktree_cli(["divergence", "--project-root", str(project_b.root), "--task", "162"]),
+        "T162 behind divergence",
+    )
+    assert behind["ok"] is True, behind
+    assert behind["integration_required"] is True
+    assert any(e["behind"] > 0 for e in behind["repos"])
+    assert meta_path.read_bytes() == before_meta
+
+
 def _minimal_project(tmp_path: pathlib.Path, config: dict, name: str) -> pathlib.Path:
     """레포·워크트리 없이 `.opal/worktree.json`만 있는 프로젝트 — list의 config 검증만
     타는 S-14 ①②③④ 케이스용(pre-flight 파일시스템 검사는 create에서만 발생한다)."""

@@ -427,6 +427,14 @@ DESIGN_GATE_ERROR_CODES = {
         "현재 문서 묶음 hash({bundle_hash})가 설계 게이트 통과·승인 hash와 다릅니다 — 재평가·재승인이 필요합니다",
 }
 
+# TEST cycle errors are kept separate from the frozen legacy ERROR_CODES catalog.
+TEST_CYCLE_ERROR_CODES = {
+    "test_change_kind_requires_test": "--test-change-kind is valid only for TEST rows",
+    "test_requirement_change_limit": "TEST requirement changes reached the limit of 3",
+    "test_clock_already_open": "TEST interval is already open: {kind}/{id}",
+    "test_clock_not_open": "No open TEST interval exists: {kind}/{id}",
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 보관함 상한 (CONTRACT §1.4) — 항목당 4 KiB · 전체 128건(= 최악 512 KiB).
 #   일반 admission 한도는 `TOTAL_LIMIT − (보관함에 있는 override 사건 수)`이며
@@ -454,7 +462,7 @@ ALLOWED_TRANSITIONS = {
     "in_progress":          {"done", "blocked", "additional_work",
                              STATUS_COMPLETED_UNMERGED},
     "done":                 {"additional_work", "blocked"},
-    "blocked":              {"in_progress", "done", STATUS_COMPLETED_UNMERGED},
+    "blocked":              {"in_progress", "done", "additional_work", STATUS_COMPLETED_UNMERGED},
     "additional_work":      {"additional_work_done", "blocked", "in_progress"},
     "additional_work_done": {"additional_work", "blocked"},
     STATUS_COMPLETED_UNMERGED: {"done", "additional_work", "blocked"},
@@ -585,7 +593,7 @@ def ok(command, **kwargs):
     print(json.dumps(_with_transition_fields(payload), ensure_ascii=False, default=str))
 
 def _error_template(code):
-    """ERROR_CODES → RUN_LOG_STATE_ERROR_CODES → DESIGN_GATE_ERROR_CODES 순으로 조회만 합성한다(PLAN D-A, 157 W-2).
+    """Look up legacy, run-log, design-gate, then TEST-cycle error templates.
 
     두 테이블에 같은 키가 있으면 `ERROR_CODES`(상태 도구 자기 계약)가 선순위다 —
     이 딕셔너리 리터럴 자체는 어느 경로로도 변경되지 않는다(T02 QA-SPEC F-4).
@@ -599,6 +607,8 @@ def _error_template(code):
         return RUN_LOG_STATE_ERROR_CODES[code]
     if code in DESIGN_GATE_ERROR_CODES:
         return DESIGN_GATE_ERROR_CODES[code]
+    if code in TEST_CYCLE_ERROR_CODES:
+        return TEST_CYCLE_ERROR_CODES[code]
     return None
 
 def err(command, code, message=None, exit_code=1, **kwargs):
@@ -4691,6 +4701,30 @@ def cmd_add_row(args):
     # stage enum 검증 (§2.12 G-9 단계 5)
     if args.stage not in STAGE_ENUM:
         err(command, "invalid_stage_enum", value=args.stage)
+    change_kind = getattr(args, "test_change_kind", None)
+    if change_kind and args.stage != "TEST":
+        err(command, "test_change_kind_requires_test")
+    if change_kind == "requirement_change" and sum(
+        row.get("stage") == "TEST" and row.get("test_change_kind") == "requirement_change"
+        for row in state["rows"]
+    ) >= 3:
+        now_str = get_kst_datetime(command)
+        previous = state["current_status"]
+        state["current_status"] = "blocked"
+        state["updated_at"] = now_str
+        _rl_fields = run_log_commit(
+            task_path, state, command,
+            event=build_state_changed_event(
+                state, task_id=task_path.name, command=command,
+                from_status=previous, to_status="blocked", row_key="current_status"))
+        _jw = sync_state_md(
+            task_path, state, now_str, command,
+            decision="TEST requirement_change limit exceeded (3 rows)",
+            reason="Fourth requirement change requires a new task or PLAN re-entry")
+        err(command, "test_requirement_change_limit",
+            current_status="blocked", transition_action="await_user",
+            report_type="decision_request", next_action="새 태스크 또는 PLAN 재진입 선택",
+            **(_jw or {}), **(_rl_fields or {}))
 
     # 기존 행 식별 (070 F-003 R-4: --after-task-step/--after-task-step-id/--after(deprecated))
     after_index = resolve_row_index(state, command,
@@ -4724,6 +4758,8 @@ def cmd_add_row(args):
         "owner":        None,
         "note":         resolve_owner_placeholder(args.note) or None,
     }
+    if change_kind:
+        new_row["test_change_kind"] = change_kind
 
     # 삽입 (G-9 단계 3)
     state["rows"].insert(after_index + 1, new_row)
@@ -4804,6 +4840,73 @@ def cmd_status(args):
     ok(command, **{"from": from_status, "to": to_status}, timestamp=now_str,
        _transition_state=state,
        **(_jw or {}), **(_rl_fields or {}))
+
+
+def cmd_test_clock(args):
+    """Record the UTC event time of a TEST execution or human wait boundary."""
+    command = "test-clock"
+    task_path = resolve_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+    intervals = state.get("test_timing", {}).get("intervals", [])
+    active = next((item for item in intervals
+                   if item["kind"] == args.kind and item["id"] == args.id
+                   and item["ended_at"] is None), None)
+    if args.action == "start" and active is not None:
+        err(command, "test_clock_already_open", kind=args.kind, id=args.id)
+    if args.action == "stop" and active is None:
+        err(command, "test_clock_not_open", kind=args.kind, id=args.id)
+    at = datetime.now(timezone.utc).isoformat()
+    if args.action == "start":
+        intervals.append({"kind": args.kind, "id": args.id,
+                          "started_at": at, "ended_at": None})
+    else:
+        active["ended_at"] = at
+    state["test_timing"] = {"intervals": intervals}
+    state["updated_at"] = get_kst_datetime(command)
+    _atomic_write_state_json(task_path, state)
+    ok(command, action=args.action, kind=args.kind, id=args.id, at=at)
+
+
+def _interval_union_seconds(intervals):
+    """Return elapsed seconds across completed intervals, merging overlaps."""
+    spans = sorted((datetime.fromisoformat(item["started_at"]),
+                    datetime.fromisoformat(item["ended_at"]))
+                   for item in intervals if item["ended_at"] is not None)
+    if not spans:
+        return None
+    total = 0.0
+    start, end = spans[0]
+    for next_start, next_end in spans[1:]:
+        if next_start <= end:
+            end = max(end, next_end)
+        else:
+            total += (end - start).total_seconds()
+            start, end = next_start, next_end
+    return total + (end - start).total_seconds()
+
+
+def _interval_sum_seconds(intervals):
+    durations = [(datetime.fromisoformat(item["ended_at"]) -
+                  datetime.fromisoformat(item["started_at"])).total_seconds()
+                 for item in intervals if item["ended_at"] is not None]
+    return sum(durations) if durations else None
+
+
+def cmd_test_metrics(args):
+    """Read only TEST timing and typed iteration counts."""
+    command = "test-metrics"
+    task_path = resolve_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+    intervals = state.get("test_timing", {}).get("intervals", [])
+    test_rows = [row for row in state["rows"] if row["stage"] == "TEST"]
+    ok(command,
+       auto_seconds=_interval_sum_seconds([i for i in intervals if i["kind"] == "auto"]),
+       human_wait_seconds=_interval_union_seconds([i for i in intervals if i["kind"] == "human"]),
+       fix_count=sum(row.get("test_change_kind") == "fix" for row in test_rows),
+       requirement_change_count=sum(row.get("test_change_kind") == "requirement_change"
+                                    for row in test_rows),
+       legacy_unclassified_rows=sum("test_change_kind" not in row for row in test_rows),
+       open_intervals=[i for i in intervals if i["ended_at"] is None])
 
 
 # ── 8a. run-start (131 D8) ───────────────────────────────────────────────────
@@ -7507,6 +7610,7 @@ def build_parser():
     p_add.add_argument("--key", metavar="<key>",
                        help="070 R-9: 신규 행 key 명시 지정 (미지정 시 자동 생성)")
     p_add.add_argument("--note")
+    p_add.add_argument("--test-change-kind", choices=["fix", "requirement_change"])
     p_add.set_defaults(func=cmd_add_row)
 
     # ── status ──
@@ -7518,6 +7622,17 @@ def build_parser():
                                 STATUS_COMPLETED_UNMERGED])
     p_sts.add_argument("--note")
     p_sts.set_defaults(func=cmd_status)
+
+    p_clock = sub.add_parser("test-clock", help="Record TEST execution or human wait interval")
+    p_clock.add_argument("action", choices=["start", "stop"])
+    p_clock.add_argument("task_path", metavar="<task-path>")
+    p_clock.add_argument("--kind", required=True, choices=["auto", "human"])
+    p_clock.add_argument("--id", required=True)
+    p_clock.set_defaults(func=cmd_test_clock)
+
+    p_metrics = sub.add_parser("test-metrics", help="Read only TEST timing and iteration counts")
+    p_metrics.add_argument("task_path", metavar="<task-path>")
+    p_metrics.set_defaults(func=cmd_test_metrics)
 
     # ── run-start (131 D8) ──
     p_run = sub.add_parser(

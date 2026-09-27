@@ -18,6 +18,7 @@
     "cmd_create",
     "cmd_list",
     "cmd_status",
+    "cmd_divergence",
     "cmd_ownership_set",
     "cmd_checkpoint",
     "cmd_remove",
@@ -1845,6 +1846,49 @@ def cmd_status(args) -> None:
     )
 
 
+def cmd_divergence(args) -> None:
+    """Compare each worktree HEAD with its registry-frozen base ref, without writes."""
+    project_root = _resolve_project_root(args.project_root)
+    meta = _load_meta(project_root, args.task)
+    repos = []
+    for entry in meta.get("entries", []):
+        wt_path = pathlib.Path(entry["path"])
+        if not wt_path.is_dir():
+            err_response("WORKTREE_NOT_FOUND", path=str(wt_path))
+        base_ref = entry["base_ref"]
+        head = _run_git(["rev-parse", "HEAD"], wt_path)
+        counts = _run_git(
+            ["rev-list", "--left-right", "--count", f"HEAD...{base_ref}"], wt_path
+        )
+        if head.returncode != 0 or counts.returncode != 0:
+            err_response(
+                "GIT_COMMAND_FAILED",
+                path=str(wt_path),
+                detail=(head.stderr if head.returncode != 0 else counts.stderr).strip(),
+            )
+        try:
+            ahead, behind = (int(value) for value in counts.stdout.split())
+        except (ValueError, TypeError):
+            err_response("GIT_COMMAND_FAILED", path=str(wt_path), detail=counts.stdout.strip())
+        repos.append(
+            {
+                "repo": entry["repo"],
+                "path": entry["path"],
+                "ahead": ahead,
+                "behind": behind,
+                "base_ref": base_ref,
+                "head_sha": head.stdout.strip(),
+            }
+        )
+    ok_response(
+        command="divergence",
+        task=args.task,
+        project_root=str(project_root),
+        integration_required=any(repo["behind"] > 0 for repo in repos),
+        repos=repos,
+    )
+
+
 def _parse_receipt_arg(value, field):
     """`--launch-receipt`/`--prompt-receipt` 값을 registry meta에 실을 객체로 정규화한다.
 
@@ -2894,6 +2938,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_status.add_argument("--task", default=None)
     p_status.add_argument("--task-path", default=None, dest="task_path")
     p_status.set_defaults(func=cmd_status)
+
+    p_divergence = subparsers.add_parser("divergence")
+    p_divergence.add_argument("--project-root", required=True)
+    p_divergence.add_argument("--task", required=True)
+    p_divergence.set_defaults(func=cmd_divergence)
 
     p_ownership = subparsers.add_parser("ownership-set")
     p_ownership.add_argument("--project-root", default=None)

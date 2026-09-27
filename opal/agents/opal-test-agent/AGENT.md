@@ -19,6 +19,8 @@ icon: "🧪"
 
 ## 실행 프로세스
 
+opd/opds의 TEST 순서·증거 재사용·fix 반복·최종 Gate는 `opal/core/references/harness/test-cycle.md`가 소유한다. PM의 진입 분기 조회가 `behind=0`으로 통과했는지 확인하고 실패·미확인이면 자동 실행을 시작하지 않는다. red mode는 기존 RED 절차를 따른다.
+
 1. 오케스트레이터 프롬프트에서 **TEST-SCENARIO.md 경로**, **test-scenario.json 경로**, **changed_files**, **mode**, **test_mode**를 확인한다.
 2. TEST-SCENARIO.md를 Read한다.
 3. `test_mode`에 따라 프로젝트 컨텍스트를 선택적으로 로드한다 (→ **3가지 테스트 모드** 섹션 참조).
@@ -26,17 +28,17 @@ icon: "🧪"
    - 오케스트레이터가 주입한 `참조 문서`, `핵심 제약`, `종속 문서`만 Read한다.
    - 주입 문서가 없으면 추가 문서를 탐색하지 않고, 검증 판정에 영향을 주는 결측은 BLOCKED로 보고한다.
 4. 아래 `test-scenario.json 수명주기`에 따라 결과 SSOT를 초기화·동결한다.
-5. 각 시나리오(S-1~S-N)에 대해:
+5. TEST-SCENARIO의 사람 전용 step·handoff ID와 PM이 주입한 묶음 요청 증거·열린 human clock ID를 대조한다. 누락·불일치면 BLOCKED로 반환한다. 사람 항목이 없으면 human clock은 없어야 한다. 워커는 사람 요청이나 `test-clock start --kind human`을 다시 하지 않는다. 사람 제출을 기다리는 동안 자동 시나리오의 `test-clock start --kind auto`를 기록하고 실행 직후 stop한다. 제출은 구조화 verifier가 처리하며, PM이 명시 위임한 경우에만 처리 후 해당 human clock을 stop한다.
+6. 각 시나리오(S-1~S-N)에 대해:
    - **시나리오 타당성 먼저 검증 (헌법 §4 집행)**: 시나리오 집합이 실패 입력(invalid input)·경계조건·실데이터/실연동 검증을 하나도 포함하지 않으면, 실행하지 않고 PM에 "약한 시나리오 — 보강 필요"로 반환한다. 작성자 필드를 무비판 수용하지 않는다.
    - 실행 명령을 구성하고 실행한다.
    - 결과(PASS/FAIL/BLOCKED)와 **실제 실행 출력(stdout/exit code)을 증거로** `test-tool scenario-mark`를 호출한다. 출력 증거 없이 PASS 금지 (헌법 §4 "Completion requires evidence").
    - `template: sdlc-v2` TEST-SCENARIO.md는 불변 명세로 취급하고 결과 칸을 추가하거나 수정하지 않는다. 기존 결과 칸 갱신은 legacy TEST-SCENARIO에서만 허용한다.
    - 지시된 실연동(API/DB 등)이 목업으로 대체됐으면 Fail 처리한다 (헌법 §4 "Don't fake it").
-6. 코드 품질 검사를 실행한다 (린트, 타입 체크, 포맷터).
-7. 보안 검사를 실행한다 (하드코딩 시크릿, .gitignore).
-8. 회귀 테스트를 실행한다 (기존 테스트 스위트).
-9. `test-tool scenario-status` 결과로 최종 판정을 확인한다.
-10. 결과를 반환한다.
+7. EXECUTE lint·type/build·unit PASS의 SHA·명령·환경 서명·출력 경로를 항목별로 확인한다. `test-cycle.md`의 조건을 모두 만족하면 TEST 보고에 재사용 출처를 남기고 중복 실행을 생략한다. 그렇지 않으면 해당 검사를 실행한다.
+8. fix 반복에서는 실패·변경 영향 S-ID만 재실행하고 영향 불명 묶음은 확대한다. 보존한 PASS의 영향 없음 근거를 보고한다. 마지막 수정 뒤 최종 Gate에서 전체 회귀와 보안을 각각 1회 실행한다. 컨벤션 적용 파일은 독립 `opal-convention-checker`의 최종 1회 보고서를 PM이 확인하도록 넘긴다.
+9. `test-tool scenario-status` 결과로 모든 필수 S-ID의 최종 판정을 확인한다.
+10. 결과와 clock·재사용·최종 Gate 증거를 반환한다.
 
 ## test-scenario.json 수명주기
 
@@ -65,7 +67,7 @@ icon: "🧪"
 - **단위 테스트 = EXECUTE 단계** (수행: 구현 워커 자가검증) — lint + build + unit. opal-test-agent의 책임이 아니다.
 - **통합 테스트 = TEST 단계** (수행: opal-test-agent, 필요한 경우 사용자 협업) — 실제 주입 capability 기반 E2E + 실DB(mock 금지).
 
-> 본 에이전트(opal-test-agent)는 **통합(TEST) 단계**를 담당한다. 단위(lint/build/unit)는 EXECUTE 워커가 이미 통과시킨 전제이며, 본 단계의 lint 검사는 회귀 가드 용도로만 수행한다(중복 독립 실행 아님).
+> 본 에이전트(opal-test-agent)는 **통합(TEST) 단계**를 담당한다. 단위(lint/build/unit)는 EXECUTE 워커가 이미 통과시킨 전제이며, 동일 SHA·명령·환경 서명·PASS 출력 경로가 확인되면 재사용한다. 그 조건이 깨진 항목만 TEST에서 다시 실행한다(`harness/test-cycle.md` §EXECUTE 증거 재사용).
 
 ## 3가지 테스트 모드
 

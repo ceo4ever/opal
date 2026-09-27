@@ -264,13 +264,15 @@ PLAN.md Work items의 담당·실행 그룹 필드에 따라 배치를 구성한
 
 ## STEP 5: TEST
 
+**실행 순서 SSOT**: `opal/core/references/harness/test-cycle.md`. PM은 TEST 시작 전에 `worktree-tool divergence`를 조회하고 behind가 있으면 통합 승인·재조회 전 자동 검사를 시작하지 않는다. 통과하면 사람 handoff 전체를 한 번에 먼저 요청하고 각 handoff ID의 `state-tool test-clock start --kind human`을 정확히 한 번 호출한다. 요청 증거와 열린 ID 목록을 TEST 워커에 주입한 뒤 디스패치한다. PM은 verifier 처리 뒤 해당 human clock을 stop한다(워커에게 종료 호출을 명시 위임할 수 있다). `opal-test-agent`는 요청과 시작 ID를 확인하고 그 대기 중 자동 검사를 진행한다.
+
 opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고, `test-tool scenario-status`로 잠금 상태를 확인한 뒤 각 결과·증거를 `scenario-mark`로 기록하고 PASS/FAIL/BLOCKED를 판정한다. E2E 결과는 `test-tool` E2E contract의 final status `pass` / `fail` / `executor_unavailable` / `infra_error` / `blocked`와 operational `awaiting_human`을 보존한다. 사용자 행동이 필요한 시나리오는 구조화 handoff로 `awaiting_human`을 반환하고, 사람 제출을 verifier가 검증한 뒤 final status로 전이한다.
 
 > **[MUST] actor 무관 유지**: TEST 단계(`opal-test-agent` 디스패치·`test.run_tests`+`test.pm_gate`의 실제 실행 증거 요건)는 `actor` 값과 무관하게 항상 서브에이전트가 수행한다 — `coordinator`·legacy `pm`에서도 생략되지 않는다(`harness/actor.md` §독립 검증 경계).
 
 > **[PM 컨텍스트 주입]** 디스패치 프롬프트 첫 줄에 `[WORKER]` 삽입. 주입 항목·핵심 제약(전 워커 공통 고정 포함)은 `opal/core/references/pm/dispatch-process.md` §워커 컨텍스트 주입 템플릿을 따른다 — 본 스킬은 항목을 열거하지 않는다. 단계 추가 전달: TEST-SCENARIO.md 경로 · changed_files.
 
-워커 완료 → 행 mark.
+워커 완료 → 행 mark. TEST 보고에는 자동 실행·사람 대기 clock의 시작/종료, EXECUTE lint/type/unit 재사용 여부와 SHA·명령·환경 서명·증거 경로, 반복 재검증 S-ID와 제외 근거를 포함한다(`harness/test-cycle.md`).
 
 ### PASS 시
 
@@ -283,7 +285,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
      - [ ] 보안 항목(시크릿 스캔/.gitignore) Pass
      - [ ] 회귀 테스트 항목 Pass
      - [ ] 설계 피드백 미해결 빈틈 없음
-     - [ ] 컨벤션 자동 진단 PASS (changed_files 컨벤션 적용 대상 ≥1건 시 발동, GC-CONVENTION-*.md 보고서 Critical/High 0건)
+     - [ ] 마지막 수정 기준 전체 회귀·보안 독립 실행과 컨벤션 적용 파일이 있을 때 최종 checker 1회 PASS (GC-CONVENTION-*.md 보고서 Critical/High 0건). 중간 fix 반복의 필수 컨벤션 호출은 없음 (`harness/test-cycle.md` §최종 TEST PM Gate)
 → PM Gate 통과 후 해당 행을 단일 mark. 완료를 비차단 보고하고 state-tool 전이 출력에 따라 CLOSE를 계속한다.
 
 > **사용자 확인 (P-5)**: 이 행은 **모드에 따라 주체가 다르다**.
@@ -315,9 +317,9 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
      - 현재 시도 회차: {N}/3
      - 실패 요약: {opal-test-agent 결과 요약}
    **checklist_source**: PLAN.md 실행 체크리스트 (실패 항목 집중)
-   **하네스 Guards**: fix 범위를 실패 항목으로 한정. 회귀 방지: 이전 PASS 항목 재실행.
+   **하네스 Guards**: fix 범위를 실패·변경 영향 항목으로 한정하고, 영향 불명 시 해당 묶음을 확대한다. 재검증·요구 변경 분리는 `harness/test-cycle.md`를 따른다.
    ```
-3. fix 완료 → fix 행 mark → opal-test-agent 재호출 (루프)
+3. fix 완료 → `state-tool add-row ... --stage TEST --test-change-kind fix`로 행을 기록하고 mark → opal-test-agent를 실패·영향 S-ID로 재호출 (루프). 요구·UX 변경은 `--test-change-kind requirement_change`로 별도 기록하고 3회 초과 시 도구의 결정 요청에 따라 새 태스크 또는 PLAN 재진입을 사용자에게 묻는다.
 4. 3회 초과 시 사용자 에스컬레이션:
    "TEST {N}회 FAIL — 수동 개입 필요. 실패 항목: {목록}"
 
@@ -391,7 +393,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
 
 > TASK.md 생성은 `task.task_md` 행에 흡수, ANALYSIS.md 생성은 `analysis.analysis_md` 행에 흡수, PLAN.md 생성은 `plan.plan_md` 행에 흡수, TEST-SCENARIO.md 생성은 `test_scenario.test_scenario_md` 행에 흡수. State Gate 성격의 판정은 개별 행이 아니라 state-tool stage-transition guard(PLAN §M-A)가 자동 수행한다 — 행으로 강제하지 않는다.
 > **[MUST] `test_scenario.scenario_gate` 행(목표-커버 게이트)은 `op-scenario-gate` 스킬 반환 `verdict: pass`일 때만 mark한다** — PM이 산문 판단만으로 mark할 수 없으며, 이 행이 미완이면 stage-transition guard가 EXECUTE(`execute.implement`) 진입을 구조적으로 거부한다(073/F-005, R-5).
-> TEST 루핑 발생 시: `~/.opal/tools/state-tool/run.sh add-row <task-path> --after 15 --stage TEST --item 'fix 작업 (N/3)'` 호출로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
+> TEST 루핑 발생 시: `harness/test-cycle.md` §수정 반복의 기준 key에 따라 `~/.opal/tools/state-tool/run.sh add-row <task-path> --after-task-step <마지막 TEST 추가 행 key, 없으면 test.run_tests> --stage TEST --test-change-kind fix|requirement_change --item '<작업>'`로 동적 추가한다 (P-6 추가작업 행 추가 패턴).
 
 ## PM Gate 점검 목록
 
