@@ -4,6 +4,7 @@
   "layer": "util",
   "domain": "opal-workspace",
   "description": "태스크별 코드 작업본을 git worktree로 격리하는 CLI. `.opal/worktree.json`(multi-repo/monorepo 2유형)을 선언 기반으로 읽어 create/list/status/ownership-set/checkpoint/remove/finalize/init 8서브명령을 제공한다. create는 `--project-root`가 작업본(조상 허브의 `.opal-worktrees/` 하위 또는 Git linked worktree)이면 설정을 읽기 전에 PROJECT_ROOT_IS_WORKTREE로 거부한다. create의 슬롯·브랜치 판정은 '존재'가 아니라 '점유'다(DEC-7) — 대상 경로가 `git worktree list --porcelain`에 실제 등록돼 있으면 WORKTREE_EXISTS, 브랜치가 다른 worktree에 체크아웃 중이면 BRANCH_EXISTS로 거부하고, 브랜치가 존재하지만 미점유면 `worktree add <path> <branch>` 단일 명령으로 재사용한다(빈 디렉토리 잔존은 차단 사유가 아니다). pre-flight(대상 미점유·repos 경로 실재·git 레포 여부) 전부 통과 후에만 worktree를 생성하고(all-or-nothing), 중간 실패 시 자기 생성물만 롤백한다(DEC-2, 신규 브랜치 경로에만 적용). base-ref는 create 시점에 1회 해석해 `.opal-worktrees/.meta/task_{NNN}.json`(worktree 밖)에 동결 기록하고 remove/status는 그 값만 읽는다(DEC-3, 재해석 없음). create는 canonical task path 6필드(`allocator_root`·`task_home`·`task_folder`·`task_path`·`artifact_repo`·`task_ownership_version`)를 응답과 메타에 additive로 발급하고 불변식 `task_path == realpath(task_home/tasks/task_folder)`를 발급 시점에 검증한다 — `task_folder`는 basename만 허용한다. create는 registry meta와 **같은 발급값 원천**으로 이 6종을 `<worktree_root>/.opal/task-ownership.json`에도 읽기 snapshot 사본으로 내려보내고 status는 누락·불일치 사본을 registry 기준으로 멱등 보강한다(본문 동일이면 파일을 건드리지 않아 연속 호출이 바이트 동일하다) — 워크트리 안에는 `.opal-worktrees`가 없어 소비자가 허브 registry를 탐색으로 찾을 수 없으므로 추론이 아니라 발급으로 해결한다. 이 사본은 `.opal/worktree.json`과 별개 파일이며 `task_ownership_version` 부재 legacy 메타에는 만들지 않는다. 계약 원문은 `opal/core/references/harness/worktree.md`가 소유한다. optional 설정 키 `taskCapsuleCone`(list[str], 기본 `[]`)은 monorepo 분기에서만 `repos`에 이어 sparse-checkout cone에 전개하며 multi-repo 분기에는 적용하지 않는다. multi-repo에서는 optional 키 `task_artifacts.repo`(1차 도입은 예약값 `'.'`=루트 저장소만 허용하고 그 외 값은 TASK_ARTIFACT_REPO_UNSUPPORTED)로 루트 저장소가 태스크 캡슐을 소유한다 — 이때 slot root 자체가 루트 저장소의 worktree이자 `task_home`이고 `artifact_repo`는 `'.'`다. `task_artifacts` 미설정 multi-repo는 위치 필드를 발급하지 않고 `--task-folder`가 명시되면 TASK_ARTIFACT_REPO_MISSING으로 중단한다. create는 부수 효과·소유권 발급 이전에 루트 Git 적격 R-1(루트가 git 저장소)·R-2(`tasks` 추적)·R-3(`.opal/AGENT.md` 추적)·R-4(`.opal/MEMORY.json` 추적)를 **각각** 판정하고(R-1 불만족이면 R-2~R-4는 판정 자체가 불가하므로 `['R-1']`만 보고한다), 판정 순서는 R-1~R-4 → 추적 범위 겹침 → R-5다 — 루트가 `repos[]` 경로를 1파일이라도 추적하면 TASK_ARTIFACT_REPO_OVERLAP, 루트가 `repos[]`를 ignore하지 않으면 violations `['R-5']`를 실은 TASK_ARTIFACT_REPO_INVALID로 거부한다. R-5는 `git check-ignore -q`의 '실효 ignore' 축이며 `--no-index`를 쓰지 않는다 — 추적 중인 경로는 rc=1이 되므로 R-5를 겹침 판정보다 앞에 두면 겹침 위반이 전용 오류에 도달하지 못한다. 루트를 포함한 전 entry 목록은 ordered `plan_entries`(`(rel, git_root, dest)`, 루트가 `'.'`로 먼저 오고 `repos[]`가 뒤따른다) **하나**가 소유하며 pre-flight·base-ref 해석·worktree 생성·메타 `entries`·롤백이 모두 이 목록만 소비한다(생성부가 `repos`를 따로 순회하지 않는다). 생성은 루트 → 자식 순이고 롤백은 생성의 역순(자식 → 루트)이며, multi-repo 롤백은 회수 실패 시 slot을 지워 흔적을 없애지 않고 잔존 entry를 `residual`로 보고한다(monorepo는 무조건 정리한다). `baseBranchOverrides`(`dict[str,str]`, 키는 `repos[]`∪`{'.'}`이며 벗어나면 CONFIG_UNKNOWN_REPO)도 multi-repo 분기 전용이고, `resolve_base_ref`의 `declared` 자리에 값을 넣을 뿐 3단 폴백 순서를 바꾸지 않는다. `init` 초안은 R-1~R-5 전건을 만족할 때만 `task_artifacts`를 제시하고 `baseBranchOverrides`는 추측하지 않는다. multi-repo 캡슐 소유권 경로의 오류 코드는 TASK_ARTIFACT_REPO_INVALID·TASK_ARTIFACT_REPO_UNSUPPORTED·TASK_ARTIFACT_REPO_OVERLAP·CONFIG_UNKNOWN_REPO·WORKTREE_REMOVE_FAILED 5종이다. canonical task path 해석은 registry meta의 `attribution_state`에 의존한다(제안서 §4.3) — active 3상태(키 부재·`completed_unmerged`·`attribution_pending`)에서는 등록된 worktree task path가 canonical이며 허브 `tasks/{task_folder}`가 동시에 실재하면 자동 선택 없이 TASK_PATH_AMBIGUOUS로 차단하고(단일 복사본 불변식), merge 확인 뒤 `closed`에서는 허브에 merge된 사본을 `task_path_source=\"hub_merged\"`로 반환하고 차단하지 않는다. 차단은 active에만 적용되며 가드가 사라진 것이 아니다. `task_ownership_version` 부재 메타는 legacy로 판정을 건너뛰고 해석 결과를 출력에 싣지 않는다. status는 해석된 canonical 경로를 `task_path`·`task_path_source`로 보고하고, `attribution_state`를 `task_ownership_version` 보유 메타 전건에 대해 방출하면서 파생 불리언 `completed_unmerged` 하나를 함께 싣는다(145 D-G — `execution_ownership`이 없는 미기동 슬롯의 복귀도 허브가 읽을 수 있어야 한다. merge 판단의 나머지 입력은 이미 `entries[]`에 있으므로 새 필드를 만들지 않고, legacy 메타는 판정에서 제외한다). finalize는 `closed` 상태에서 커밋 없이 `idempotent: true`로 멱등 반환한다. remove는 해석기를 호출하지 않는다. remove는 미처리 memory index 요청(캡슐 파일 `memory-index-request.json`의 body_sha256 중 메타 `memory_index_requests_resolved`에 없는 건)을 MEMORY_INDEX_REQUEST_PENDING으로 먼저 거부한 뒤 dirty→unpushed→unmerged 순서로 3중 가드를 적용하고 worktree 디렉토리 + 슬롯 루트(`task_{NNN}/`)를 회수한다(브랜치 보존, user sovereignty. `.opal-worktrees/`·`.meta/`는 남긴다). 3중 가드를 통과한 뒤 `git worktree remove` 루프 직전에는 워크트리 터미널을 1회 스윕한다(145 D-H) — registry에 `execution_ownership.adapter`가 기록돼 있을 때만 `{OPAL_HOME|~/.opal}/tools/worktree-launcher/run.sh close --adapter <adapter> --worktree-root <root> --all --json`을 subprocess로 호출해 보고를 `terminals_closed`에 싣고, adapter 미기록 경로는 분기에 진입조차 하지 않아 기존 응답 키 집합이 그대로다. close 실패는 회수를 차단하지 않고 `warnings`로만 보고한다(orca 부재 환경의 슬롯 영구 잠금 방지). 이 회수 계약은 메타에 동결된 `layout: multi-repo` 분기 **전용**이다 — monorepo·비워크트리는 경로 부재 시 WORKTREE_NOT_FOUND(`--force`면 skip)를 반환하고, 반환값을 검사하지 않는 무조건 회수를 수행한다. multi-repo에서만 entry를 생성의 역순(자식 → 루트)으로 순회하고 **경로 실재 × Git 등록** 2축으로 판정한다 — 둘 다 없으면 이미 회수된 것으로 보고 skip하고(오류가 아니며 `--force`를 요구하지 않는다), 한쪽만 있으면 mismatch(`registration_without_path` 또는 `path_without_registration`)를 실은 WORKTREE_REMOVE_FAILED로 차단·보존하며 자동 복구하지 않는다(`git worktree prune`을 호출하지 않고 미등록 잔여 디렉토리를 삭제하지 않는다). 전 entry의 `git worktree remove`가 성공한 뒤에만 메타와 슬롯 루트를 삭제하고, 하나라도 실패하면 WORKTREE_REMOVE_FAILED로 반환하며 메타·슬롯을 보존해 재시도와 수동 복구 여지를 남긴다. `--force`는 가드 우회에만 적용되며 이 실패 판정을 우회하지 않는다. `.gitignore`·캐시 볼륨·code-scan exclude·동시 슬롯 수는 전부 비차단 진단이다. finalize(PLAN D-3b, 제안서 §6.3)는 merge 후 귀속 후처리를 확정한다 — DONE.md `## 회고적 학습 후보` 선언 집합 D(∪ `.opal/brain/index.md`·`.opal/brain/log.md`·`.opal/MEMORY.json`)와 `git status --porcelain -z -uall`을 `.opal/brain/**`·`.opal/MEMORY.json`으로 필터한 관측 집합 S를 레포 루트 상대 POSIX 경로로 정규화해 대조하고, `S ⊆ D`이면 재개를 허용하고 아니면 ATTRIBUTION_COMMIT_BLOCKED(위반 경로 동봉)로 거부한다. `.opal/MEMORY.json`의 선행 diff는 allocator의 `last_task_number` 변경만 허용한다. 판정 범위 밖(소스·태스크 문서)의 dirty는 판정 대상이 아니며 remove의 이진 dirty 가드(check_guards)는 finalize 경로에서 쓰지 않는다. 관측 경로만 stage해 단일 귀속 commit으로 확정한 뒤 registry meta의 `memory_index_requests_resolved`에 처리한 body_sha256을 append하고 캡슐 파일의 해당 요청 status를 applied로 바꾼다. 상태 전이는 `completed_unmerged → attribution_pending → closed`이고 commit·clean 검증 실패 시 `attribution_pending`에 머문다. init(DEC-8, ADD-1)은 `.opal/worktree.json`을 탐지 기반으로 초안 생성한다(자동 생성이 아니다) — 루트 이하 최대 3 depth에서 독립 `.git` 디렉토리를 찾아 ≥1개면 multi-repo(그 경로들이 repos), 0개면 root 자체가 git 레포일 때만 루트 레포가 추적하는 최상위 디렉토리 중 하위에 코드 manifest를 가진 것을 monorepo repos로 채운다(둘 다 실패하면 LAYOUT_UNDETERMINED). `copy`는 항상 빈 배열·`portOffset`은 항상 0으로 두고 추측하지 않으며(로컬 설정 후보는 `_copy_candidates` 주석 키로만 제시), 기존 파일이 있으면 `--force` 없이는 `CONFIG_EXISTS`로 거부해 파일을 건드리지 않고, `--dry-run`은 쓰지 않고 최상위 `draft` 키로만 반환한다. worktree 실행 lifecycle의 영속 SSOT도 이 registry meta가 소유한다(TASK 138 §Worktree registry SSOT, C-12·C-15) — `execution_ownership` 하위 객체가 `state`(`hub_owned`·`session_launching`·`worktree_session_owned`·`released`)·`owner_session_id`·`adapter`·`adapter_handle`·`generation`·`launch_receipt`·`prompt_receipt`·`failure_reason`·`checkpoint_shas[]`를 canonical 발급 6필드와 분리해 담고, create는 소유권을 발급하는 v2 메타에만 원점(`hub_owned`, generation 0)을 심으며 이미 기록된 블록이 있으면 generation을 잃지 않도록 이어받는다(legacy 메타에는 붙이지 않는다). `ownership-set`은 `execution_ownership`과 `attribution_state` 두 축을 registry lock(`<meta>.lock`, LOCK_EX|LOCK_NB 재시도)과 temp→os.replace 원자 교체 **한 번** 안에서 함께 전이하며, 허용 조합은 `hub_owned`/`session_launching`/`worktree_session_owned` × attribution 키 부재와 `released` × `completed_unmerged`/`attribution_pending`/`closed` 6개뿐이고 나머지는 `ownership_state_invalid`다(CLI에서 attribution 키 부재는 토큰 `active`로 지칭한다). `--launch-receipt`·`--prompt-receipt`는 registry meta에 **객체**로만 기록한다 — argparse 변환자(`type=json.loads`)를 두면 파싱 실패가 usage+exit 2로 새므로 `cmd_ownership_set`이 lock 획득 전에 문자열 인자를 생김새 추론 없이 항상 JSON으로 파싱하며(이미 dict면 그대로, None은 미지정), 파싱 실패와 dict가 아닌 파싱 결과(배열·스칼라)를 모두 `ownership_receipt_invalid` 구조화 오류로 거부한다. `worktree_session_owned`로 진입하는 전이는 prior 상태와 무관하게 `launch_receipt`와 `prompt_receipt`가 둘 다 있을 때만 성공하고(`ownership_receipt_missing`, 메타에 이미 기록된 receipt는 승계되므로 멱등 재설정은 통과한다), `--failure-reason launch_failed`는 `hub_owned` + attribution 키 부재로만 허용되어 generation 증가와 owner·receipt 소거를 같은 교체에 담아 dual writer·orphan owner를 남기지 않는다. `generation`은 단조 증가이며 역행은 `ownership_generation_regressed`다. `ownership-set`과 `status`는 정규형 `--project-root`+`--task` 외에 경로 주소형 `--task-path`를 받는다 — 허브 루트는 자신 포함 조상 중 registry나 `.opal/worktree.json`을 가진 첫 디렉터리이고, 태스크는 registry에 기록된 `task_path`·`worktree_root`·entry 경로와 realpath 동치인 행으로만 찾는다(문자열 접두·mtime·이름 추론 금지, C-6). registry 조회는 대상 디렉터리 존재 검사보다 앞서므로 등록된 행이 가리키는 worktree가 이미 회수돼 사라졌어도 해석에 성공하고, 등록도 없고 디렉터리도 없을 때만 PROJECT_ROOT_NOT_FOUND다. 미등록 경로는 `status`에서 `registered: false`로 통과하고 `ownership-set`은 등록된 행에만 동작해 미등록 경로·미등록 task를 `ownership_task_unregistered`로 거부한다(행도 lock 파일도 만들지 않는다) — registry 행은 `create`만 발급한다. create는 부수 효과 이전에 허브 `.claude/settings.json`을 읽어 워크트리 설정 provisioning 대상을 확정하고(D-8, C-4·C-5), 성공 경로에서 `permissions` 키 **하나만** `<worktree_root>/.claude/settings.local.json`에 내려보낸 뒤 기존 export `ensure_gitignore_entry`로 그 경로를 워크트리 `.gitignore`에 멱등 등록한다 — 원본에 `hooks` 키가 있으면 아무것도 복사하지 않고 `settings_hook_key_forbidden`으로 create를 거부해 워크트리 세션이 허브 Stop evaluator를 물려받는 dual owner를 원천 차단하고, 파일 부재·읽기 실패는 create를 차단하지 않는 no-op이며, `.claude` 디렉터리 복제와 `taskCapsuleCone` 변경은 이 경로에서 하지 않는다. `checkpoint`는 소유 worktree branch의 로컬 체크포인트 커밋 **하나**를 폐쇄 검사 뒤에만 수행한다(TASK 138 C-17~C-20) — 검사 순서는 금지 Git 동작 → 소유권 → branch 일치 → staged scope → 모드 경계다. `--git-command`로 들어온 요청은 예외 없이 `requires_user_approval`이고(merge·push·pull·rebase·reset·revert·cherry-pick·amend·worktree·tag·filter-branch는 `forbidden_git_operation`, 그 밖은 `unsupported_git_command` — 이 서브명령의 수행 범위가 commit 하나뿐이므로 기본 거부다), `main`·`master` 브랜치와 허브 루트 자체에 대한 commit도 같은 코드로 거부한다. 대상은 `--worktree-root`(발급값 사본 `.opal/task-ownership.json`의 `allocator_root`로만 허브에 도달하고 registry에서 realpath 동치 행을 찾는다 — 경로 추론 금지) 또는 `--project-root`+`--task`·`--task-path`로 지정한다. registry 행이 있으면 `execution_ownership.state == worktree_session_owned` + `owner_session_id == ownership-tool resolver의 session ID`를 요구하거나, `hub_owned`(전용 세션 미기동·기동 실패)이면 현재 세션이 태스크 lease(`run/.runtime/owner.json`)를 `current_session_owned`로 보유할 것을 요구하며(`checkpoint_ownership_denied`, reason `hub_lease_not_held`, registry 상태는 바꾸지 않고 응답 `ownership_basis`로 `registry_owner`|`hub_lease`를 보고), 현재 branch가 registry `branch`와 다르면 `checkpoint_branch_mismatch`다. staged 경로는 `--owned-scope`(반복 지정, 경로 구분자 경계 판정)를 벗어나면 `checkpoint_scope_violation`이며 미지정이면 worktree 경계 자체가 소유 범위다. 모드 경계는 `agentic`=단계 안정 경계 자율, `interactive`=`--approved`(단계 사용자 승인) 필요, `semi_agentic`=`--approved` + PLAN·CLOSE 계열 단계만이고 EXECUTE·TEST와 미지정 모드는 `checkpoint_mode_denied`다. staged가 0건이면 `checkpoint_nothing_staged`로 커밋하지 않는다. 성공 SHA는 registry lock + `write_meta_atomic` 기존 경로로 `execution_ownership.checkpoint_shas[]`에 append하며(미등록 worktree는 `registered: false`로 이번 커밋만 보고), 커밋은 worktree cwd에서만 수행돼 허브 working tree에 쓰지 않고 공유 objects/refs만 사용한다. git 신원이 없는 환경에서도 결정론적으로 커밋되도록 `commit.gpgsign=false`를 항상 주고 `user.email` 미설정 시에만 fallback 신원을 주입한다. registry meta 쓰기는 create·finalize 경로까지 전부 원자 교체로 통일하되(본문은 종전과 동일한 `ensure_ascii=False, indent=2`) 락은 두 축을 함께 바꾸는 `ownership-set` 구간에서만 잡는다. ownership-set --owner-from-lease는 registry lock 안에서 canonical live lease owner를 최종 owner로 연결하며 pending이면 부모 신원을 남기지 않는다.",
+  "ownership_contract": "owner-from-lease는 lock 안에서 live lease owner와 expected/exclude 조건을 함께 검증하며 ownerless 성공을 남기지 않는다. permission denial은 registry_write_denied로 즉시 분류하고, recovery_required는 terminal 증거를 보존한 뒤 확인된 hub_owned 복귀에서 소거한다.",
   "exports": [
     "load_config",
     "validate_worktree_config",
@@ -36,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import errno
 import fcntl
 import json
 import os
@@ -97,6 +99,9 @@ ERROR_CODES = {
     "ownership_generation_regressed": "generation은 단조 증가해야 합니다.",
     "ownership_task_unregistered": "registry에 등록되지 않은 태스크입니다 — 행은 create가 발급합니다.",
     "registry_lock_timeout": "registry 잠금 획득 상한을 초과했습니다.",
+    "registry_write_denied": "registry 잠금 파일에 쓸 권한이 없습니다.",
+    "owner_lease_unresolved": "live child lease owner를 확인할 수 없어 registry owner를 확정하지 않습니다.",
+    "owner_lease_mismatch": "live lease owner가 관측한 expected/excluded owner 조건과 일치하지 않습니다.",
     "settings_hook_key_forbidden": "허브 `.claude/settings.json`에 `hooks` 키가 있어 워크트리 설정 provisioning을 중단했습니다 — hook은 워크트리로 복제하지 않습니다.",
     # 체크포인트 커밋 게이트(TASK.md C-17~C-20) — 소유권 축과 같은 소문자 규약이다.
     "checkpoint_scope_violation": "staged 경로가 소유 범위를 벗어납니다 — 체크포인트 커밋을 수행하지 않습니다.",
@@ -156,6 +161,7 @@ EXECUTION_OWNERSHIP_KEY = "execution_ownership"
 EXEC_STATE_HUB_OWNED = "hub_owned"
 EXEC_STATE_SESSION_LAUNCHING = "session_launching"
 EXEC_STATE_WORKTREE_SESSION_OWNED = "worktree_session_owned"
+EXEC_STATE_RECOVERY_REQUIRED = "recovery_required"
 EXEC_STATE_RELEASED = "released"
 
 # `attribution_state`의 "키 부재"를 CLI에서 지칭하는 토큰. 저장 시 키를 지운다 —
@@ -168,6 +174,7 @@ ALLOWED_OWNERSHIP_COMBOS = frozenset(
         (EXEC_STATE_HUB_OWNED, ATTRIBUTION_TOKEN_ACTIVE),
         (EXEC_STATE_SESSION_LAUNCHING, ATTRIBUTION_TOKEN_ACTIVE),
         (EXEC_STATE_WORKTREE_SESSION_OWNED, ATTRIBUTION_TOKEN_ACTIVE),
+        (EXEC_STATE_RECOVERY_REQUIRED, ATTRIBUTION_TOKEN_ACTIVE),
         (EXEC_STATE_RELEASED, ATTRIBUTION_STATE_UNMERGED),
         (EXEC_STATE_RELEASED, ATTRIBUTION_STATE_PENDING),
         (EXEC_STATE_RELEASED, ATTRIBUTION_STATE_CLOSED),
@@ -939,9 +946,13 @@ def _acquire_registry_lock(lock_path: pathlib.Path, timeout_ms: int):
     while True:
         try:
             fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-        except OSError:
+        except OSError as exc:
+            # Permission and read-only filesystem failures cannot become lock contention.
+            # Returning the errno lets registry_lock report the actionable error immediately.
+            if exc.errno in (errno.EACCES, errno.EPERM, errno.EROFS):
+                return (None, exc.errno)
             if time.monotonic() >= deadline:
-                return None
+                return (None, None)
             time.sleep(_LOCK_POLL_INTERVAL_SEC)
             continue
         try:
@@ -950,11 +961,11 @@ def _acquire_registry_lock(lock_path: pathlib.Path, timeout_ms: int):
             pass
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            return fd
+            return (fd, None)
         except OSError:
             os.close(fd)
             if time.monotonic() >= deadline:
-                return None
+                return (None, None)
             time.sleep(_LOCK_POLL_INTERVAL_SEC)
 
 
@@ -983,7 +994,9 @@ def registry_lock(
     """registry meta 1건에 대한 배타 락(`<meta>.lock`). 상한 초과는 즉시 오류 반환이다 —
     두 축(`execution_ownership`·`attribution_state`)을 한 번에 교체하는 구간만 감싼다."""
     lock_path = pathlib.Path(str(meta_path) + ".lock")
-    fd = _acquire_registry_lock(lock_path, timeout_ms)
+    fd, lock_errno = _acquire_registry_lock(lock_path, timeout_ms)
+    if lock_errno is not None:
+        err_response("registry_write_denied", path=str(meta_path), errno=lock_errno)
     if fd is None:
         err_response("registry_lock_timeout", path=str(meta_path), timeout_ms=timeout_ms)
     completed = False
@@ -1896,15 +1909,15 @@ def cmd_ownership_set(args) -> None:
             attribution_state=attribution,
             allowed=sorted(ALLOWED_OWNERSHIP_COMBOS),
         )
-    if args.failure_reason and (state, attribution) != (
-        EXEC_STATE_HUB_OWNED,
-        ATTRIBUTION_TOKEN_ACTIVE,
-    ):
+    if args.failure_reason and (state, attribution) not in {
+        (EXEC_STATE_HUB_OWNED, ATTRIBUTION_TOKEN_ACTIVE),
+        (EXEC_STATE_RECOVERY_REQUIRED, ATTRIBUTION_TOKEN_ACTIVE),
+    }:
         err_response(
             "ownership_state_invalid",
             execution_ownership=state,
             attribution_state=attribution,
-            reason="failure_requires_hub_owned_revert",
+            reason="failure_requires_recovery_or_hub_owned",
         )
 
     # receipt는 registry meta에 **객체**로 저장한다(PLAN W-11) — lock 획득 전에 정규화해
@@ -1927,6 +1940,30 @@ def cmd_ownership_set(args) -> None:
             err_response("META_NOT_FOUND", path=str(meta_path))
 
         prior = meta.get(EXECUTION_OWNERSHIP_KEY) or _execution_ownership_origin()
+        prior_state = prior.get("state", EXEC_STATE_HUB_OWNED)
+        if prior_state == EXEC_STATE_RECOVERY_REQUIRED and not (
+            state == EXEC_STATE_HUB_OWNED and args.failure_reason
+        ):
+            err_response(
+                "ownership_state_invalid",
+                execution_ownership=state,
+                prior_state=prior_state,
+                reason="recovery_requires_confirmed_hub_owned",
+            )
+        if state == EXEC_STATE_RECOVERY_REQUIRED and prior_state != EXEC_STATE_SESSION_LAUNCHING:
+            err_response(
+                "ownership_state_invalid",
+                execution_ownership=state,
+                prior_state=prior_state,
+                reason="recovery_requires_session_launching",
+            )
+        if state == EXEC_STATE_HUB_OWNED and prior_state == EXEC_STATE_RECOVERY_REQUIRED and not args.failure_reason:
+            err_response(
+                "ownership_state_invalid",
+                execution_ownership=state,
+                prior_state=prior_state,
+                reason="recovery_to_hub_owned_requires_failure_reason",
+            )
         launch_receipt = launch_receipt_arg or prior.get("launch_receipt")
         prompt_receipt = prompt_receipt_arg or prior.get("prompt_receipt")
         # `worktree_session_owned`로 **진입하는 모든 전이**가 receipt 2종을 요구한다 —
@@ -1953,16 +1990,47 @@ def cmd_ownership_set(args) -> None:
         else:
             generation = args.generation
 
-        owner_session_id = args.owner_session_id if args.owner_session_id is not None else prior.get("owner_session_id")
+        owner_session_id = (
+            args.owner_session_id
+            if args.owner_session_id is not None
+            else prior.get("owner_session_id")
+        )
         if getattr(args, "owner_from_lease", False):
             if args.owner_session_id is not None or state != EXEC_STATE_WORKTREE_SESSION_OWNED:
                 err_response("ownership_state_invalid", reason="owner_from_lease_requires_owned_state")
-            from ownership_tool import lease, ownership_core
+            if not args.expected_owner or not args.exclude_owner:
+                err_response(
+                    "ownership_state_invalid",
+                    reason="owner_from_lease_requires_expected_and_excluded_owner",
+                )
+            from ownership_tool import lease
+
             task_path = meta.get("task_path")
-            record = ownership_core.read_json(pathlib.Path(task_path) / "run/.runtime/owner.json").get("data") if task_path else None
-            owner_session_id = (record or {}).get("owner_session_id")
-            if not task_path or lease.classify(record, None) != "foreign_session_owned":
-                owner_session_id = None
+            lease_read = (
+                ownership_core.read_json(pathlib.Path(task_path) / "run/.runtime/owner.json")
+                if task_path
+                else {"ok": False, "error": "task_path_missing"}
+            )
+            record = lease_read.get("data") if lease_read.get("ok") else None
+            observed_owner = (record or {}).get("owner_session_id")
+            if lease.classify(record, None) != "foreign_session_owned" or not observed_owner:
+                err_response("owner_lease_unresolved", lease=lease_read)
+            if observed_owner != args.expected_owner or observed_owner == args.exclude_owner:
+                err_response(
+                    "owner_lease_mismatch",
+                    expected_owner=args.expected_owner,
+                    exclude_owner=args.exclude_owner,
+                    observed_owner=observed_owner,
+                )
+            owner_session_id = observed_owner
+
+        if state == EXEC_STATE_WORKTREE_SESSION_OWNED and not owner_session_id:
+            err_response(
+                "ownership_state_invalid",
+                reason="worktree_session_owned_requires_owner_session_id",
+            )
+        if state == EXEC_STATE_RECOVERY_REQUIRED:
+            owner_session_id = None
 
         block = {
             "state": state,
@@ -1975,15 +2043,28 @@ def cmd_ownership_set(args) -> None:
             "launch_receipt": launch_receipt,
             "prompt_receipt": prompt_receipt,
             "failure_reason": args.failure_reason,
+            "terminal_creation": (
+                args.terminal_creation
+                if args.terminal_creation is not None
+                else prior.get("terminal_creation")
+            ),
+            "observed_lease_owner": (
+                args.observed_lease_owner
+                if args.observed_lease_owner is not None
+                else prior.get("observed_lease_owner")
+            ),
             "checkpoint_shas": list(prior.get("checkpoint_shas") or [])
             + list(args.checkpoint_sha or []),
         }
-        if args.failure_reason:
-            # 실패 복귀는 owner·receipt를 남기지 않는다 — orphan owner 금지(C-13).
+        if state == EXEC_STATE_HUB_OWNED and args.failure_reason:
+            # Confirmed recovery clears launch evidence so a later launch cannot inherit it.
             block["owner_session_id"] = None
+            block["adapter"] = None
             block["adapter_handle"] = None
             block["launch_receipt"] = None
             block["prompt_receipt"] = None
+            block["terminal_creation"] = None
+            block["observed_lease_owner"] = None
 
         meta.setdefault("task", task)
         meta[EXECUTION_OWNERSHIP_KEY] = block
@@ -2907,12 +2988,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_ownership.add_argument("--generation", type=int, default=None)
     p_ownership.add_argument("--owner-from-lease", action="store_true")
+    p_ownership.add_argument("--expected-owner", default=None, dest="expected_owner")
+    p_ownership.add_argument("--exclude-owner", default=None, dest="exclude_owner")
     p_ownership.add_argument("--owner-session-id", default=None, dest="owner_session_id")
     p_ownership.add_argument("--adapter", default=None)
     p_ownership.add_argument("--adapter-handle", default=None, dest="adapter_handle")
     p_ownership.add_argument("--launch-receipt", default=None, dest="launch_receipt")
     p_ownership.add_argument("--prompt-receipt", default=None, dest="prompt_receipt")
     p_ownership.add_argument("--failure-reason", default=None, dest="failure_reason")
+    p_ownership.add_argument(
+        "--terminal-creation",
+        choices=("not_created", "created", "unknown"),
+        default=None,
+        dest="terminal_creation",
+    )
+    p_ownership.add_argument(
+        "--observed-lease-owner", default=None, dest="observed_lease_owner"
+    )
     p_ownership.add_argument(
         "--checkpoint-sha", action="append", default=None, dest="checkpoint_sha"
     )

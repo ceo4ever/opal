@@ -476,12 +476,15 @@ function Install-OpalCore {
         try {
             $existing = Get-Content -Raw -Path $settingDst | ConvertFrom-Json
             $default = Get-Content -Raw -Path $settingSrc | ConvertFrom-Json
+            $settingChanged = $false
             if (-not $existing.PSObject.Properties['models']) {
                 $existing | Add-Member -NotePropertyName 'models' -NotePropertyValue $default.models
-                ($existing | ConvertTo-Json -Depth 10) | Set-Content -Path $settingDst -Encoding UTF8
+                $settingChanged = $true
                 Write-OpalInfo 'setting.json에 models scaffold 병합 완료'
-            } else {
-                $migrated = @()
+            }
+
+            $migrated = @()
+            if ($existing.PSObject.Properties['models']) {
                 $legacyCodexDefaults = [ordered]@{
                     light = 'gpt-5.4-mini'
                     standard = 'gpt-5.4'
@@ -501,16 +504,46 @@ function Install-OpalCore {
                     }
                 }
                 if ($migrated.Count -gt 0) {
-                    ($existing | ConvertTo-Json -Depth 10) | Set-Content -Path $settingDst -Encoding UTF8
-                    Write-OpalInfo "setting.json의 이전 Codex 기본값 승격 완료 — $($migrated -join ', ')"
-                } else {
-                    Write-OpalInfo 'setting.json 이미 존재 + 사용자 설정 보존 — 무변 (멱등)'
+                    $settingChanged = $true
                 }
+            }
+
+            if (-not $existing.PSObject.Properties['launcher']) {
+                $existing | Add-Member -NotePropertyName 'launcher' -NotePropertyValue $default.launcher
+                $settingChanged = $true
+                Write-OpalInfo 'setting.json에 launcher scaffold 병합 완료'
+            } else {
+                # Migrate only the former shipped argv. Any other value is a user customization.
+                $existingLauncher = $existing.PSObject.Properties['launcher'].Value
+                if ($null -ne $existingLauncher -and $existingLauncher -is [psobject]) {
+                    $agentsProperty = $existingLauncher.PSObject.Properties['agents']
+                    if ($null -ne $agentsProperty -and $agentsProperty.Value -is [psobject]) {
+                        $codexProperty = $agentsProperty.Value.PSObject.Properties['codex']
+                        if ($null -ne $codexProperty -and $codexProperty.Value -is [psobject]) {
+                            $argvProperty = $codexProperty.Value.PSObject.Properties['argv_template']
+                            if ($null -ne $argvProperty -and $argvProperty.Value -ceq 'codex "{utterance}"') {
+                                $argvProperty.Value = 'codex --no-daemon "{utterance}"'
+                                $migrated += 'launcher.agents.codex.argv_template'
+                                $settingChanged = $true
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($settingChanged) {
+                ($existing | ConvertTo-Json -Depth 10) | Set-Content -Path $settingDst -Encoding UTF8
+                if ($migrated.Count -gt 0) {
+                    Write-OpalInfo "setting.json의 이전 Codex 기본값 승격 완료 — $($migrated -join ', ')"
+                }
+            } else {
+                Write-OpalInfo 'setting.json 이미 존재 + 사용자 설정 보존 — 무변 (멱등)'
             }
         } catch {
             Write-OpalInfo 'setting.json models 병합/승격 실패 — 기존 파일 유지'
         }
     }
+    Write-OpalInfo 'Codex 워크트리 런처는 codex --help에 --no-daemon이 표시되는 Codex CLI가 필요합니다.'
 
     # ── 스킬: skills/ + opal/skills/ 합쳐서 ~/.opal/skills/ ──
     $skillsDst = Join-Path $OpalHome 'skills'

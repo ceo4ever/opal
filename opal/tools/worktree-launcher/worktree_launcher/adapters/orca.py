@@ -49,6 +49,7 @@ FAILURE_REASON_READ_FAILED = "read_failed"
 FAILURE_REASON_CLOSE_FAILED = "close_failed"
 # `handle`·`worktree_root` 중 정확히 하나가 아닐 때의 호출자 인자 위반(D-C).
 FAILURE_REASON_CLOSE_SCOPE_INVALID = "close_scope_invalid"
+FAILURE_REASON_STATUS_FAILED = "status_failed"
 
 # orca 실행 파일 자체가 없을 때의 종료코드(POSIX `command not found` 관례).
 EXIT_ORCA_UNAVAILABLE = 127
@@ -117,6 +118,14 @@ def build_close_argv(*, handle=None, worktree_root=None, all=False):
             argv.append("--all")
     argv.append("--json")
     return argv
+
+
+def build_status_argv(handle):
+    return [ORCA_BIN, "terminal", "show", "--terminal", str(handle), "--json"]
+
+
+def build_status_worktree_argv(worktree_root):
+    return [ORCA_BIN, "terminal", "list", "--worktree", f"{WORKTREE_SELECTOR_SCHEME}{worktree_root}", "--json"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -349,3 +358,98 @@ def close(*, handle=None, worktree_root=None, all=False) -> dict:
         "scope": scope,
         "closed": _closed_handles(response, handle),
     }
+
+
+def _status_call(argv):
+    try:
+        completed = _run_subprocess(argv)
+    except OSError as exc:
+        return None, {"status": "unknown", "reason": "orca_unavailable", "detail": str(exc)}
+    try:
+        payload = json.loads(completed.stdout)
+    except (TypeError, ValueError) as exc:
+        return None, {"status": "unknown", "reason": "response_unparsable", "detail": str(exc)}
+    if not isinstance(payload, dict):
+        return None, {"status": "unknown", "reason": "response_invalid"}
+    return (completed, payload), None
+
+
+def _stale(payload):
+    error = payload.get("error") if isinstance(payload, dict) else None
+    return isinstance(error, dict) and error.get("code") == "terminal_handle_stale"
+
+
+def _listed_handles(payload):
+    result = payload.get("result") if isinstance(payload, dict) else None
+    values = result.get("terminals") if isinstance(result, dict) else None
+    if not isinstance(values, list):
+        return None
+    return {item.get("handle") for item in values if isinstance(item, dict) and item.get("handle")}
+
+
+def _listed_terminals(payload):
+    result = payload.get("result") if isinstance(payload, dict) else None
+    values = result.get("terminals") if isinstance(result, dict) else None
+    return values if isinstance(values, list) and all(isinstance(item, dict) for item in values) else None
+
+
+def _operator_closed(terminal):
+    cause = terminal.get("exitCause") if isinstance(terminal, dict) else None
+    return (
+        terminal.get("orphaned") is True
+        and terminal.get("connected") is False
+        and isinstance(cause, dict)
+        and cause.get("kind") == "operator_close"
+    )
+
+
+def _list_lacks_terminal(payload, handle, pty_id):
+    terminals = _listed_terminals(payload)
+    if terminals is None or not pty_id:
+        return False
+    return all(
+        item.get("handle") != handle and item.get("ptyId") != pty_id
+        for item in terminals
+    )
+
+
+def status(handle, *, worktree_root=None) -> dict:
+    """Classify one handle using stale or proven operator-close evidence plus list absence."""
+    observed, failure = _status_call(build_status_argv(handle))
+    if failure:
+        return {"adapter": ADAPTER_NAME, "handle": handle, **failure}
+    completed, payload = observed
+    terminal = _result_node(payload, "terminal")
+    closed_orphan = (
+        completed.returncode == 0
+        and _operator_closed(terminal)
+        and terminal.get("ptyId")
+    )
+    if completed.returncode == 0 and terminal and not closed_orphan:
+        return {"adapter": ADAPTER_NAME, "handle": handle, "status": "present"}
+    if not (_stale(payload) or closed_orphan) or worktree_root is None:
+        return {"adapter": ADAPTER_NAME, "handle": handle, "status": "unknown", "reason": "show_unconfirmed"}
+    listed, failure = _status_call(build_status_worktree_argv(worktree_root))
+    if failure:
+        return {"adapter": ADAPTER_NAME, "handle": handle, **failure}
+    list_completed, list_payload = listed
+    handles = _listed_handles(list_payload) if list_completed.returncode == 0 else None
+    if _stale(payload) and handles is not None and handle not in handles:
+        return {"adapter": ADAPTER_NAME, "handle": handle, "status": "absent"}
+    if closed_orphan and list_completed.returncode == 0 and _list_lacks_terminal(
+        list_payload, handle, terminal.get("ptyId")
+    ):
+        return {"adapter": ADAPTER_NAME, "handle": handle, "status": "absent"}
+    return {"adapter": ADAPTER_NAME, "handle": handle, "status": "unknown", "reason": "list_unconfirmed"}
+
+
+def status_worktree(worktree_root) -> dict:
+    """Report absent only when Orca successfully lists zero live terminals for this root."""
+    observed, failure = _status_call(build_status_worktree_argv(worktree_root))
+    if failure:
+        return {"adapter": ADAPTER_NAME, **failure}
+    completed, payload = observed
+    handles = _listed_handles(payload) if completed.returncode == 0 else None
+    if handles is None:
+        return {"adapter": ADAPTER_NAME, "status": "unknown", "reason": "list_unconfirmed"}
+    return {"adapter": ADAPTER_NAME, "status": "absent" if not handles else "present", "handles": sorted(handles)}

@@ -111,6 +111,12 @@ def build_parser() -> argparse.ArgumentParser:
     # 호출 형태 호환을 위해 받기만 하고 동작을 바꾸지 않는다.
     p_close.add_argument("--json", action="store_true")
 
+    p_recover = _with_adapter(subparsers.add_parser("recover", add_help=False))
+    p_recover.add_argument("--project-root", dest="project_root", default=None)
+    p_recover.add_argument("--task", default=None)
+    p_recover.add_argument("--worktree-root", dest="worktree_root", default=None)
+    p_recover.add_argument("--owner-session-id", dest="owner_session_id", default=None)
+
     return parser
 
 
@@ -206,6 +212,7 @@ def _cmd_launch(adapter, args) -> int:
         return _fail("launch", code, **extra)
 
     try:
+        launcher_settings = settings.load_launcher_settings(project_root=args.project_root)
         report = launcher_core.run(
             adapter,
             hub_root=args.project_root,
@@ -213,6 +220,7 @@ def _cmd_launch(adapter, args) -> int:
             worktree_root=args.worktree_root,
             command=command,
             owner_session_id=args.owner_session_id,
+            lease_poll_timeout_sec=launcher_settings.get("leasePollTimeoutSec"),
         )
     except launcher_core.LauncherError as exc:
         return _fail("launch", "launcher_error", str(exc))
@@ -260,7 +268,21 @@ def _cmd_close(adapter, args) -> int:
     return _adapter_result("close", report)
 
 
-_HANDLERS = {"launch": _cmd_launch, "read": _cmd_read, "close": _cmd_close}
+def _cmd_recover(adapter, args) -> int:
+    missing = [flag for flag, value in (("--project-root", args.project_root), ("--task", args.task), ("--worktree-root", args.worktree_root)) if not value]
+    if missing:
+        return _fail("recover", "invalid_arguments", f"required: {' '.join(missing)}")
+    try:
+        report = launcher_core.recover(adapter, hub_root=args.project_root, task=args.task,
+                                       worktree_root=args.worktree_root, owner_session_id=args.owner_session_id)
+    except launcher_core.LauncherError as exc:
+        return _fail("recover", "launcher_error", str(exc))
+    if report.get("ok"):
+        return _succeed("recover", report)
+    return _fail("recover", report.get("error", "recovery_failed"), **{k: v for k, v in report.items() if k not in ("ok", "error")})
+
+
+_HANDLERS = {"launch": _cmd_launch, "read": _cmd_read, "close": _cmd_close, "recover": _cmd_recover}
 
 
 def main(argv=None) -> int:
@@ -273,7 +295,7 @@ def main(argv=None) -> int:
     command = getattr(args, "command", None)
     if command not in _HANDLERS:
         return _fail(
-            TOOL_NAME, "invalid_arguments", "subcommand required: launch | read | close"
+            TOOL_NAME, "invalid_arguments", "subcommand required: launch | read | close | recover"
         )
 
     adapter, error = _resolve_adapter(args.adapter)

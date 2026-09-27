@@ -125,14 +125,14 @@ entry별 `dirty`/`unpushed`/`merged`를 보고하며, 해석된 canonical 경로
 
 ```bash
 ~/.opal/tools/worktree-tool/run.sh ownership-set --project-root <경로> --task <NNN> \
-  --execution-ownership <hub_owned|session_launching|worktree_session_owned|released> \
+  --execution-ownership <hub_owned|session_launching|worktree_session_owned|recovery_required|released> \
   [--attribution-state <active|completed_unmerged|attribution_pending|closed>] \
   [--owner-session-id <id>] [--adapter <name>] [--adapter-handle <h>] \
   [--launch-receipt <path>] [--prompt-receipt <path>] [--generation <n>] \
-  [--failure-reason launch_failed] [--checkpoint-sha <sha>]
+  [--failure-reason <launch_failed|session_boot_timeout>] [--checkpoint-sha <sha>]
 ```
 
-registry meta의 `execution_ownership`과 `attribution_state` 두 축을 registry lock + 원자 교체 **한 번** 안에서 함께 전이한다. 허용 조합·receipt 요구·`generation` 단조 증가 규칙은 모듈 `@header`와 `harness/worktree.md`가 소유한다. 미등록 경로·미등록 task는 `ownership_task_unregistered`로 거부하며 행을 만들지 않는다(행 발급은 `create`만 한다).
+registry meta의 `execution_ownership`과 `attribution_state` 두 축을 registry lock + 원자 교체 **한 번** 안에서 함께 전이한다. `--owner-from-lease`는 `worktree_session_owned`에서만 사용하며 `--expected-owner`와 `--exclude-owner`를 함께 요구한다. lock 안에서 live foreign lease owner가 두 값과 일치할 때만 owner를 기록하고, pending·만료·부재·불일치면 meta를 바꾸지 않는다. `registry_write_denied`는 lock contention과 구분해 즉시 반환한다. 허용 조합·receipt 요구·`generation` 단조 증가 규칙은 모듈 `@header`와 `harness/worktree.md`가 소유한다.
 
 ---
 
@@ -151,6 +151,7 @@ staged 변경의 **로컬 commit 하나**만 수행한다. 검사 순서는 금�
 - `--git-command` 요청은 예외 없이 `requires_user_approval`이다 — 이 서브명령의 수행 범위가 commit 하나뿐이므로 기본 거부다. `main`·`master` 브랜치 commit과 허브 루트 commit도 같은 코드로 거부한다.
 - `--owned-scope` 미지정이면 worktree 경계 자체가 소유 범위다. 성공 SHA는 `execution_ownership.checkpoint_shas[]`에 append하며, 미등록 worktree는 `registered: false`로 이번 커밋만 보고한다.
 - 커밋은 worktree cwd에서만 수행돼 **허브 working tree에 쓰지 않는다**(공유 objects/refs만 사용).
+- commit 뒤 checkpoint SHA를 hub registry에 기록할 때 `registry_write_denied`가 나오면, 자식 세션은 그 hub meta 쓰기에 대한 권한 상승을 요청한 뒤 **같은 checkpoint 명령**을 재실행한다. 승인 없는 상승은 금지하며, 승인 불가 또는 재실패는 checkpoint 실패로 보고한다.
 
 ---
 
@@ -221,7 +222,7 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 
 ## 오류 코드 (ERROR_CODES SSOT)
 
-`worktree_tool.py`의 `ERROR_CODES` 딕셔너리가 SSOT이며 **45종**이다. 대문자 32종은 설정·슬롯 lifecycle 축이고, 소문자 13종은 registry 소유권·체크포인트 축이다(아래 표 후반부).
+`worktree_tool.py`의 `ERROR_CODES` 딕셔너리가 SSOT이며 **49종**이다. 대문자 33종은 설정·슬롯 lifecycle 축이고, 소문자 16종은 registry 소유권·체크포인트 축이다(아래 표 후반부).
 
 | 코드 | 의미 |
 |------|------|
@@ -264,6 +265,9 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 | `ownership_generation_regressed` | generation은 단조 증가해야 합니다. |
 | `ownership_task_unregistered` | registry에 등록되지 않은 태스크입니다 — 행은 create가 발급합니다. |
 | `registry_lock_timeout` | registry 잠금 획득 상한을 초과했습니다. |
+| `registry_write_denied` | registry 잠금 파일 또는 meta에 쓸 권한이 없습니다. |
+| `owner_lease_unresolved` | live child lease owner를 확인할 수 없어 registry owner를 확정하지 않습니다. |
+| `owner_lease_mismatch` | live lease owner가 expected/excluded owner 조건과 일치하지 않습니다. |
 | `settings_hook_key_forbidden` | 허브 `.claude/settings.json`에 `hooks` 키가 있어 워크트리 설정 provisioning을 중단했습니다 — hook은 워크트리로 복제하지 않습니다. |
 | `checkpoint_scope_violation` | staged 경로가 소유 범위를 벗어납니다 — 체크포인트 커밋을 수행하지 않습니다. |
 | `checkpoint_mode_denied` | 현재 모드·단계 조합에서는 자율 체크포인트 커밋이 허용되지 않습니다. |
@@ -281,7 +285,7 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 | 코드 | 의미 |
 |------|------|
 | `0` | `ok: true` |
-| `1` | `err_response()` 경유 전건(위 45종) |
+| `1` | `err_response()` 경유 전건(위 49종) |
 | `2` | argparse 인자 오류(서브명령 누락, `--project-root`/`--task` 누락 등) |
 
 `__main__` 진입점이 예상 밖 예외를 잡아 `INTERNAL_ERROR` JSON + exit 1로 바꾸므로 **traceback이 stdout·stderr로 새지 않는다.** exit 2 경로만 argparse 기본 usage 텍스트를 stderr로 내보낸다. `run.sh`의 venv 부재 메시지도 stderr로 나간다.
@@ -298,7 +302,8 @@ registry meta의 `attribution_state`가 판정에 들어간다.
 ## Launcher의 실제 새 owner 등록 (task 155)
 
 `ownership-set --owner-from-lease`는 `worktree_session_owned`와 함께 사용하며
-`--owner-session-id`와는 상호 배타다. registry lock 안에서 발급된 canonical task의
-live lease를 읽고 해당 owner를 기록한다. pending·만료·부재이면 owner를 비워
-늦게 시작하는 자식의 공개 SessionStart 등록을 허용한다. registry private writer는 없다.
+`--owner-session-id`와는 상호 배타다. registry lock 안에서 발급된 canonical task의 live
+foreign lease를 읽고 `--expected-owner` 일치 및 `--exclude-owner` 불일치를 확인한 뒤 그 owner를
+기록한다. pending·만료·부재·불일치에서는 owner 없는 성공을 만들지 않고 meta를 보존한다.
+`recovery_required`는 terminal 증거를 보존하며 확인된 recover만 `hub_owned`로 되돌린다.
 checkpoint 신원도 ownership-tool resolver를 사용해 Codex native ID를 지원한다.

@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "profile": "manual",
+  "fidelity": "real-usage",
+  "observed_executors": ["human"],
+  "assertion_results": [{
+    "id": "s6-installed-codex-start-defer",
+    "expected": "a successful child claim with only real registry_write_denied returns ok and registry_owner_deferred_to_hub without registry mutation",
+    "actual": "a successful child claim with only real registry_write_denied returns ok and registry_owner_deferred_to_hub without registry mutation"
+  }],
+  "observed_evidence": ["approved_orca_transcript", "installed_ownership_set_subprocess", "pre_post_meta_sha256", "pre_post_lease_owner_sha256", "focused_source_tests"],
+  "evidence": "An approved no-elevation, in-memory harness used the real current Codex native ID and Task 162 cwd. It replaced only session registry registration, lease claim, and heartbeat with success responses and supplied a deep-copied registry row with no owner; installed _register_registry_owner, its ownership-set subprocess, and installed worktree-tool were unmocked. The real sandbox lock returned structured registry_write_denied (EPERM), and installed codex_adapter.start returned ok=true, registry_owner_deferred_to_hub, and diagnostics [env_file_not_provided, registry_write_denied] in 93.777ms. Actual Task 162 registry and lease-owner SHA256 values were unchanged before/after. Focused tests verify the exact deferred and foreign-owner public branches."
+}

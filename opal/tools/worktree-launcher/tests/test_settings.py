@@ -339,6 +339,16 @@ def test_setting_default_json_has_launcher_block():
     assert "adapter" not in block
 
 
+def test_codex_default_uses_no_daemon(layers):
+    from worktree_launcher import settings
+
+    resolved = layers.load()
+    assert resolved["agents"]["codex"]["argv_template"] == 'codex --no-daemon "{utterance}"'
+    assert settings.resolve_command(resolved, agent="codex", task_path=TASK_PATH) == (
+        f'codex --no-daemon "{TASK_PATH} 이어서 수행"'
+    )
+
+
 def test_setting_default_json_launcher_help_states_asymmetry_rationale():
     data = json.loads(SETTING_DEFAULT.read_text(encoding="utf-8"))
 

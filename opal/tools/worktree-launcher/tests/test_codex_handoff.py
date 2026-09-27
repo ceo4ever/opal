@@ -33,11 +33,12 @@ def setup_hub(tmp_path):
 
 
 class Terminal:
-    name = 'generic'
+    name = 'orca'
 
-    def __init__(self, hub, task, monkeypatch, fail=False):
+    def __init__(self, hub, task, monkeypatch, fail=False, child_session='codex-child-001'):
         self.hub, self.task, self.monkeypatch, self.fail = hub, task, monkeypatch, fail
         self.calls, self.closed, self.pending = [], [], None
+        self.child_session = child_session
 
     def launch(self, worktree_root, command):
         self.calls.append((worktree_root, command))
@@ -46,11 +47,24 @@ class Terminal:
         if self.fail:
             self.monkeypatch.setenv('OPAL_SESSION_ID', 'ambient-changed-after-handoff')
             report['prompt_id'] = None
+        else:
+            claimed = lease.claim(
+                self.task,
+                session_id=self.child_session,
+                claimant_root=self.hub.worktree_root,
+                claim_source='session_start',
+            )
+            assert claimed['ok'], claimed
         return report
 
     def close(self, *, handle):
         self.closed.append(handle)
         return {'exit_code': 0}
+
+    def status(self, handle, *, worktree_root):
+        assert handle in self.closed
+        assert worktree_root == str(self.hub.worktree_root)
+        return {'status': 'absent', 'reason': 'test_close_confirmed'}
 
 
 def test_s3_explicit_owner_handoff_with_disagreeing_ambient(tmp_path, monkeypatch):
@@ -63,6 +77,9 @@ def test_s3_explicit_owner_handoff_with_disagreeing_ambient(tmp_path, monkeypatc
     assert adapter.pending['handoff_from_session_id'] == 'hub-explicit'
     assert adapter.pending['owner_session_id'] is None
     assert adapter.pending['status'] == 'handoff_pending'
+    registry = read_meta(hub.meta_path)['execution_ownership']
+    assert registry['state'] == 'worktree_session_owned'
+    assert registry['owner_session_id'] == 'codex-child-001'
 
 
 def test_s4_cancel_reuses_explicit_id_after_ambient_changes(tmp_path, monkeypatch):
@@ -79,4 +96,9 @@ def test_s4_cancel_reuses_explicit_id_after_ambient_changes(tmp_path, monkeypatc
     assert 'handoff_from_session_id' not in restored
     assert result['lease_handoff_cancel']['ok']
     assert len(adapter.closed) == 1
-    assert read_meta(hub.meta_path)['execution_ownership']['state'] == 'hub_owned'
+    assert result['terminal_status'] == {'status': 'absent', 'reason': 'test_close_confirmed'}
+    assert result['lease_status']['classification'] == 'current_session_owned'
+    # A confirmed terminal absence plus successful cancellation lets the hub
+    # reclaim the lease safely; this is distinct from the unknown-terminal
+    # failure covered by test_integration.py.
+    assert read_meta(hub.meta_path)['execution_ownership']['state'] == 'hub_owned', result

@@ -1,0 +1,275 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+    "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+    "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+    "opal/tools/ownership-tool/tests/test_codex_identity.py",
+    "opal/tools/ownership-tool/tests/test_session_start.py",
+    "opal/tools/worktree-launcher/tests/test_adapter_orca.py",
+    "opal/tools/worktree-launcher/tests/test_cli.py",
+    "opal/tools/worktree-launcher/tests/test_codex_handoff.py",
+    "opal/tools/worktree-launcher/tests/test_integration.py",
+    "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+    "opal/tools/worktree-launcher/tests/test_settings.py",
+    "opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py",
+    "opal/tools/worktree-launcher/worktree_launcher/cli.py",
+    "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+    "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+    "opal/tools/worktree-tool/schema/worktree.schema.json",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py",
+    "scripts/install-mac.sh",
+    "scripts/install/windows.ps1",
+    "scripts/tests/test_agent_adapter_fields.sh"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "97ea126092f56f5d",
+      "category": "header_history",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+        "line": 1
+      },
+      "evidence": "code-scan validate: header_history/description; detail=153,999; 경로 opal/tools/ownership-tool/ownership_tool/session_start_hook.py. ",
+      "impact": "@header가 현재 사실만 기록한다는 프로젝트 규약에 맞지 않을 수 있으며 코드 지도 경고가 남습니다.",
+      "remediation": {
+        "guidance": "@header의 과거 태스크 번호 또는 별도 필드를 현재 사실 중심의 허용된 설명/의존 필드로 정리합니다. 본 점검은 소스를 수정하지 않았습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "021702dae9aa2bc5",
+      "category": "header_coverage",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/ownership-tool/tests/test_session_start.py",
+        "line": 1
+      },
+      "evidence": "code-scan validate: uncovered/pre_existing; 경로 opal/tools/ownership-tool/tests/test_session_start.py. 기존 미커버리지로 분류됨.",
+      "impact": "code-scan의 해당 테스트 파일 헤더 인식 범위가 비어 코드 지도의 완전성이 낮습니다.",
+      "remediation": {
+        "guidance": "code-scan target으로 기록 위치를 확인하고 인식 가능한 @header 구문을 보강합니다. 기존 미커버리지이므로 이번 변경의 신규 결함으로 계산하지 않습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "021702dae9aa2bc5",
+      "category": "header_coverage",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_adapter_orca.py",
+        "line": 1
+      },
+      "evidence": "code-scan validate: uncovered/pre_existing; 경로 opal/tools/worktree-launcher/tests/test_adapter_orca.py. 기존 미커버리지로 분류됨.",
+      "impact": "code-scan의 해당 테스트 파일 헤더 인식 범위가 비어 코드 지도의 완전성이 낮습니다.",
+      "remediation": {
+        "guidance": "code-scan target으로 기록 위치를 확인하고 인식 가능한 @header 구문을 보강합니다. 기존 미커버리지이므로 이번 변경의 신규 결함으로 계산하지 않습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "021702dae9aa2bc5",
+      "category": "header_coverage",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_cli.py",
+        "line": 1
+      },
+      "evidence": "code-scan validate: uncovered/pre_existing; 경로 opal/tools/worktree-launcher/tests/test_cli.py. 기존 미커버리지로 분류됨.",
+      "impact": "code-scan의 해당 테스트 파일 헤더 인식 범위가 비어 코드 지도의 완전성이 낮습니다.",
+      "remediation": {
+        "guidance": "code-scan target으로 기록 위치를 확인하고 인식 가능한 @header 구문을 보강합니다. 기존 미커버리지이므로 이번 변경의 신규 결함으로 계산하지 않습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-005",
+      "fingerprint": "021702dae9aa2bc5",
+      "category": "header_coverage",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_integration.py",
+        "line": 1
+      },
+      "evidence": "code-scan validate: uncovered/pre_existing; 경로 opal/tools/worktree-launcher/tests/test_integration.py. 기존 미커버리지로 분류됨.",
+      "impact": "code-scan의 해당 테스트 파일 헤더 인식 범위가 비어 코드 지도의 완전성이 낮습니다.",
+      "remediation": {
+        "guidance": "code-scan target으로 기록 위치를 확인하고 인식 가능한 @header 구문을 보강합니다. 기존 미커버리지이므로 이번 변경의 신규 결함으로 계산하지 않습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-006",
+      "fingerprint": "021702dae9aa2bc5",
+      "category": "header_coverage",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+        "line": 1
+      },
+      "evidence": "code-scan validate: uncovered/pre_existing; 경로 opal/tools/worktree-launcher/tests/test_launcher_core.py. 기존 미커버리지로 분류됨.",
+      "impact": "code-scan의 해당 테스트 파일 헤더 인식 범위가 비어 코드 지도의 완전성이 낮습니다.",
+      "remediation": {
+        "guidance": "code-scan target으로 기록 위치를 확인하고 인식 가능한 @header 구문을 보강합니다. 기존 미커버리지이므로 이번 변경의 신규 결함으로 계산하지 않습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-007",
+      "fingerprint": "021702dae9aa2bc5",
+      "category": "header_coverage",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_settings.py",
+        "line": 1
+      },
+      "evidence": "code-scan validate: uncovered/pre_existing; 경로 opal/tools/worktree-launcher/tests/test_settings.py. 기존 미커버리지로 분류됨.",
+      "impact": "code-scan의 해당 테스트 파일 헤더 인식 범위가 비어 코드 지도의 완전성이 낮습니다.",
+      "remediation": {
+        "guidance": "code-scan target으로 기록 위치를 확인하고 인식 가능한 @header 구문을 보강합니다. 기존 미커버리지이므로 이번 변경의 신규 결함으로 계산하지 않습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-008",
+      "fingerprint": "79d51b2ff6ace215",
+      "category": "header_history",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+        "line": 1
+      },
+      "evidence": "code-scan validate: header_history/description; detail=092,112,118,119,124,138; 경로 opal/tools/worktree-tool/tests/test_worktree_tool.py. ",
+      "impact": "@header가 현재 사실만 기록한다는 프로젝트 규약에 맞지 않을 수 있으며 코드 지도 경고가 남습니다.",
+      "remediation": {
+        "guidance": "@header의 과거 태스크 번호 또는 별도 필드를 현재 사실 중심의 허용된 설명/의존 필드로 정리합니다. 본 점검은 소스를 수정하지 않았습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-009",
+      "fingerprint": "79d51b2ff6ace215",
+      "category": "header_history",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-tool/worktree_tool.py",
+        "line": 1
+      },
+      "evidence": "code-scan validate: header_history/description; detail=138,145; 경로 opal/tools/worktree-tool/worktree_tool.py. ",
+      "impact": "@header가 현재 사실만 기록한다는 프로젝트 규약에 맞지 않을 수 있으며 코드 지도 경고가 남습니다.",
+      "remediation": {
+        "guidance": "@header의 과거 태스크 번호 또는 별도 필드를 현재 사실 중심의 허용된 설명/의존 필드로 정리합니다. 본 점검은 소스를 수정하지 않았습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-010",
+      "fingerprint": "c13bce930c1764ba",
+      "category": "header_history",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-tool/worktree_tool.py",
+        "line": 7
+      },
+      "evidence": "code-scan validate: header_history/undeclared_field; detail=ownership_contract; 경로 opal/tools/worktree-tool/worktree_tool.py. ",
+      "impact": "@header가 현재 사실만 기록한다는 프로젝트 규약에 맞지 않을 수 있으며 코드 지도 경고가 남습니다.",
+      "remediation": {
+        "guidance": "@header의 과거 태스크 번호 또는 별도 필드를 현재 사실 중심의 허용된 설명/의존 필드로 정리합니다. 본 점검은 소스를 수정하지 않았습니다.",
+        "reference": "opal/core/references/header-standard.md §2.1·§7",
+        "auto_fixable": false
+      },
+      "verification": "opal/tools/code-scan/run.sh validate --changed <해당 파일> --json에서 해당 진단 부재 확인",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git diff --check: exit 0",
+    "21/21: 경로·존재·EOF 개행·공백·탭 검사 통과; Python AST와 JSON 파싱 통과",
+    "bash -n scripts/install-mac.sh scripts/tests/test_agent_adapter_fields.sh: exit 0",
+    "code-scan validate --changed <17 Python files> --json: ok=true, newly_uncovered=0, pre_existing=6, header_history=4"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    "docs/ARCHITECTURE.md",
+    ".opal/code-scan.json",
+    "opal/core/references/header-standard.md",
+    "opal/skills/op-gc-convention/references/convention-categories.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/tasks/163-260927-opds-코덱스-워크트리-부팅-소유권-복구/GC-CONVENTION-2026-09-27T22-19-00.md"
+}

@@ -653,6 +653,30 @@ def test_s7_non_target_cwd_session_start_fails_claim_and_leaves_diagnostic(tmp_p
     assert _s7_lease_record(task_dir) == before
 
 
+def test_task163_registry_write_defer_requires_exact_ownership_set_error(tmp_path, monkeypatch):
+    """A textual mention in another ownership-set failure must not defer Codex boot."""
+    from ownership_tool import session_start_hook
+
+    _hub_root, registry_entry, worktree_root, task_dir = _build_s7_handoff_case(tmp_path)
+    other_error = {"ok": False, "error": "owner_lease_mismatch",
+                   "detail": "previous registry_write_denied observation"}
+    monkeypatch.setattr(
+        session_start_hook.subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(
+            args[0], 1, stdout=json.dumps(other_error), stderr=""
+        ),
+    )
+
+    registered, diagnostics = session_start_hook._register_registry_owner(
+        worktree_root, task_dir, S7_WT_SESSION, {}
+    )
+
+    assert registered is False
+    assert diagnostics[0] == "ownership_set_failed"
+    assert "registry_write_denied" not in diagnostics
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # TASK-149 RED-first — S-7 (AC-2). 워크트리형 루트의 하위 cwd로 SessionStart →
 # SessionEnd를 subprocess로 순서 실행하면, session registry가

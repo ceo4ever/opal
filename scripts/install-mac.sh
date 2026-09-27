@@ -1164,7 +1164,7 @@ install_opal_setting() {
 import json, sys
 
 src_path, dst_path = sys.argv[1], sys.argv[2]
-SEED_KEYS = ['models', 'shardPolicy', 'quietHours']
+SEED_KEYS = ['models', 'shardPolicy', 'quietHours', 'launcher']
 
 try:
     with open(src_path, 'r', encoding='utf-8') as f:
@@ -1203,6 +1203,21 @@ if isinstance(existing_models, dict) and isinstance(default_models, dict):
                 existing_codex[level] = replacement
                 migrated.append(f'models.codex.{level}')
 
+# Migrate only the former shipped argv. Any other value is a user customization.
+legacy_launcher_codex_argv = 'codex "{utterance}"'
+new_launcher_codex_argv = 'codex --no-daemon "{utterance}"'
+existing_launcher = existing.get('launcher')
+if isinstance(existing_launcher, dict):
+    existing_agents = existing_launcher.get('agents')
+    if isinstance(existing_agents, dict):
+        existing_codex_launcher = existing_agents.get('codex')
+        if isinstance(existing_codex_launcher, dict):
+            if existing_codex_launcher.get('argv_template') == legacy_launcher_codex_argv:
+                existing_codex_launcher['argv_template'] = new_launcher_codex_argv
+                migrated.append('launcher.agents.codex.argv_template')
+
+sys.stderr.write("info: Codex 워크트리 런처는 `codex --help`에 `--no-daemon`이 표시되는 Codex CLI가 필요합니다.\n")
+
 if not added and not migrated:
     sys.stderr.write(f"info: setting.json에 {SEED_KEYS} 모두 존재 — 무변 (멱등)\n")
     sys.exit(0)
@@ -1220,6 +1235,7 @@ PYEOF
     fi
     cp "$src" "$dst"
     success "OPAL setting.json (기본값) → $dst"
+    info "Codex 워크트리 런처는 \`codex --help\`에 \`--no-daemon\`이 표시되는 Codex CLI가 필요합니다."
 }
 
 # ─── record_installed_version ────────────────────────────────────────────────

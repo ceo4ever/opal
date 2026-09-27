@@ -26,6 +26,91 @@ class _FakeAdapter:
         return self._fixture
 
 
+def test_task163_s3_launch_timeout_enters_recovery_required_without_relaunch(tmp_path):
+    """S-3: launch with no child claim reaches the timeout recovery path, rather than owned."""
+    from worktree_launcher import launcher_core
+
+    hub = build_launcher_hub(tmp_path, adapter="orca", prior_state="hub_owned")
+    adapter = _FakeAdapter(load_launcher_fixture("fake_process-success.json", hub.hub, hub.wt_parent))
+    result = launcher_core.run(adapter, hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root,
+                               command="codex", owner_session_id="hub-session")
+    assert result["status"] == "recovery_required"
+    assert result["error"] == "launch_recovery_required"
+    assert len(adapter.calls) == 1
+
+
+def test_task163_s5_recover_requires_absence_cancel_and_lease_confirmation(tmp_path):
+    """S-5: recovery has a public, guarded command rather than silently erasing a saved handle."""
+    from worktree_launcher import launcher_core
+
+    hub = build_launcher_hub(tmp_path, adapter="orca", prior_state="hub_owned")
+    meta = read_meta(hub.meta_path)
+    meta["execution_ownership"]["state"] = "recovery_required"
+    meta["execution_ownership"]["adapter_handle"] = "term-recovery-pending"
+    hub.meta_path.write_text(__import__("json").dumps(meta), encoding="utf-8")
+    before = hub.meta_path.read_bytes()
+    result = launcher_core.recover(hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root)
+    assert result["ok"] is False
+    assert result["error"] == "recovery_terminal_unconfirmed"
+    assert hub.meta_path.read_bytes() == before
+
+
+def test_recover_rejects_unregistered_worktree_root_before_adapter_calls(tmp_path):
+    """Recovery observations must use the root issued by the registry."""
+    from worktree_launcher import launcher_core
+
+    hub = build_launcher_hub(tmp_path, adapter="orca", prior_state="hub_owned")
+    meta = read_meta(hub.meta_path)
+    meta["execution_ownership"]["state"] = "recovery_required"
+    hub.meta_path.write_text(__import__("json").dumps(meta), encoding="utf-8")
+
+    class Adapter:
+        def status_worktree(self, root):
+            raise AssertionError("mismatched root must not reach adapter")
+
+    result = launcher_core.recover(
+        Adapter(), hub_root=hub.hub, task=hub.task,
+        worktree_root=tmp_path / "wrong-root",
+    )
+    assert result["ok"] is False
+    assert result["error"] == "worktree_root_mismatch"
+
+
+def test_recover_rejects_pending_handoff_when_cancel_is_not_owner(tmp_path, monkeypatch):
+    """An unowned classification does not make another session's handoff safe."""
+    from worktree_launcher import launcher_core
+
+    hub = build_launcher_hub(tmp_path, adapter="orca", prior_state="hub_owned")
+    meta = read_meta(hub.meta_path)
+    meta["task_path"] = str(hub.worktree_root / "tasks" / "220-recovery")
+    meta["execution_ownership"]["state"] = "recovery_required"
+    hub.meta_path.write_text(__import__("json").dumps(meta), encoding="utf-8")
+
+    monkeypatch.setattr(
+        launcher_core, "_cancel_lease_handoff",
+        lambda *_args: {"ok": False, "diagnostic": "not_handoff_owner"},
+    )
+    monkeypatch.setattr(
+        launcher_core, "_lease_status",
+        lambda *_args: {
+            "ok": True, "classification": "unowned",
+            "lease": {"status": "handoff" + "_pending"},
+            "handoff": {"from": "another-session"},
+        },
+    )
+
+    class Adapter:
+        def status_worktree(self, root):
+            return {"status": "absent"}
+
+    result = launcher_core.recover(
+        Adapter(), hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root,
+    )
+    assert result["ok"] is False
+    assert result["error"] == "recovery_handoff_unconfirmed"
+    assert read_meta(hub.meta_path)["execution_ownership"]["state"] == "recovery_required"
+
+
 def test_success_path_sets_worktree_session_owned_only_after_both_receipts(tmp_path):
     """성공: launch·prompt receipt 둘 다 기록된 뒤에만 worktree_session_owned."""
     from worktree_launcher import launcher_core
@@ -46,11 +131,11 @@ def test_success_path_sets_worktree_session_owned_only_after_both_receipts(tmp_p
     assert adapter.calls[0][0] == hub.worktree_root
     import shlex
     assert shlex.split(adapter.calls[0][1])[-3:] == ["session-launch", "--command", "claude"]
-    assert result["status"] == "worktree_session_owned"
+    assert result["status"] == "recovery_required"
 
     data = read_meta(hub.meta_path)
     eo = data["execution_ownership"]
-    assert eo["state"] == "worktree_session_owned"
+    assert eo["state"] == "recovery_required"
     assert eo["launch_receipt"] is not None
     assert eo["prompt_receipt"] is not None
     assert "attribution_state" not in data
@@ -78,7 +163,7 @@ def test_launch_failed_path_reverts_atomically(tmp_path):
 
     data = read_meta(hub.meta_path)
     eo = data["execution_ownership"]
-    assert eo["state"] == "hub_owned"
+    assert eo["state"] == "recovery_required"
     assert eo["failure_reason"] == "launch_failed"
     assert eo["generation"] == 2
     assert eo["owner_session_id"] is None
@@ -108,7 +193,7 @@ def test_prompt_failed_path_reverts_atomically(tmp_path):
 
     data = read_meta(hub.meta_path)
     eo = data["execution_ownership"]
-    assert eo["state"] == "hub_owned"
+    assert eo["state"] == "recovery_required"
     assert eo["generation"] == 2
     assert eo["owner_session_id"] is None
     assert eo["launch_receipt"] is None
@@ -141,7 +226,7 @@ def test_cwd_mismatch_path_reverts_atomically(tmp_path):
 
     data = read_meta(hub.meta_path)
     eo = data["execution_ownership"]
-    assert eo["state"] == "hub_owned"
+    assert eo["state"] == "recovery_required"
     assert eo["generation"] == 2
     assert eo["owner_session_id"] is None
     assert "attribution_state" not in data
@@ -222,11 +307,11 @@ def _revert_hub(tmp_path, adapter_name="generic"):
 
 
 def _assert_reverted(hub, result):
-    """복귀 불변식 — close 결과와 무관하게 항상 성립해야 한다."""
+    """Unconfirmed fake adapters leave the guarded recovery state."""
     assert result["failure_reason"] == "launch_failed"
     data = read_meta(hub.meta_path)
     eo = data["execution_ownership"]
-    assert eo["state"] == "hub_owned"
+    assert eo["state"] == "recovery_required"
     assert eo["generation"] == 2
     assert eo["owner_session_id"] is None
     assert "attribution_state" not in data
@@ -294,7 +379,7 @@ def test_revert_without_reported_handle_does_not_attempt_close(tmp_path):
     )
     assert result_a["detail"] == "adapter_report_invalid"
     assert adapter_a.close_calls == []
-    assert result_a["terminal_close"] == {"attempted": False, "reason": "handle_missing"}
+    assert result_a["terminal_close"] == {"attempted": False, "reason": "not_created"}
     _assert_reverted(hub_a, result_a)
 
     hub_b = _revert_hub(tmp_path / "no-handle-b")
@@ -310,7 +395,7 @@ def test_revert_without_reported_handle_does_not_attempt_close(tmp_path):
     )
     assert result_b["detail"] == "launch_receipt_missing"
     assert adapter_b.close_calls == []
-    assert result_b["terminal_close"] == {"attempted": False, "reason": "handle_missing"}
+    assert result_b["terminal_close"] == {"attempted": False, "reason": "not_created"}
     _assert_reverted(hub_b, result_b)
 
 
@@ -403,9 +488,9 @@ def test_success_path_never_closes_the_terminal(tmp_path):
         command="claude",
     )
 
-    assert result["status"] == "worktree_session_owned"
-    assert adapter.close_calls == []
-    assert "terminal_close" not in result
+    assert result["status"] == "recovery_required"
+    assert len(adapter.close_calls) == 1
+    assert result["terminal_close"]["ok"] is True
 
 
 def test_revert_closes_terminal_when_ownership_set_rejects_the_owned_transition(
@@ -440,7 +525,7 @@ def test_revert_closes_terminal_when_ownership_set_rejects_the_owned_transition(
         command="claude",
     )
 
-    assert result["detail"].startswith("ownership_set_rejected: ")
+    assert result["detail"] == "child_lease_unresolved"
     assert len(adapter.close_calls) == 1
     assert adapter.close_calls[0]["handle"] == report["adapter_handle"]
     assert adapter.close_calls[0]["worktree_root"] is None
@@ -450,7 +535,8 @@ def test_revert_closes_terminal_when_ownership_set_rejects_the_owned_transition(
         "ok": True,
         "handle": report["adapter_handle"],
     }
-    _assert_reverted(hub, result)
+    assert result["failure_reason"] == "session_boot_timeout"
+    assert read_meta(hub.meta_path)["execution_ownership"]["state"] == "recovery_required"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -531,6 +617,8 @@ def _patch_lease_seams(monkeypatch, launcher_core, order, *, handoff_result=None
 
     monkeypatch.setattr(launcher_core, "lease_handoff", _fake_handoff)
     monkeypatch.setattr(launcher_core, "lease_handoff_cancel", _fake_cancel)
+    # Unit tests exercise recovery ordering, not the production 30s readiness window.
+    monkeypatch.setattr(launcher_core.settings, "DEFAULT_LEASE_POLL_TIMEOUT_SEC", 0.01)
     return handoff_calls, cancel_calls
 
 
@@ -556,12 +644,12 @@ def test_s8_lease_handoff_runs_exactly_once_before_adapter_launch(tmp_path, monk
         command="claude",
     )
 
-    assert result["ok"] is True, result
-    assert result["status"] == "worktree_session_owned"
+    assert result["ok"] is False, result
+    assert result["status"] == "recovery_required"
     # [MUST] 순서 — 이관이 기동보다 늦으면 워크트리 세션이 부팅하는 동안 허브가 소유자다.
-    assert order == ["lease_handoff", "adapter.launch"], order
+    assert order == ["lease_handoff", "adapter.launch", "lease_handoff_cancel"], order
     assert handoff_calls == [(meta["task_path"], meta["worktree_root"])], handoff_calls
-    assert cancel_calls == [], "성공 경로는 이관을 취소하지 않는다"
+    assert len(cancel_calls) == 1, "lease가 확인되지 않은 launch는 시작한 이관을 취소한다"
     assert result["lease_handoff"] == {"ok": True}
 
 
@@ -586,7 +674,7 @@ def test_s8_noop_handoff_still_proceeds_to_launch(tmp_path, monkeypatch):
         command="claude",
     )
 
-    assert result["ok"] is True, result
+    assert result["ok"] is False, result
     assert order == ["lease_handoff", "adapter.launch"], order
     assert len(handoff_calls) == 1
 
@@ -615,7 +703,7 @@ def test_s8_failed_handoff_reverts_without_launching(tmp_path, monkeypatch):
     assert adapter.launch_calls == [], "이관 실패 시 터미널을 띄우지 않는다"
     assert "adapter.launch" not in order, order
     assert result["detail"] == "lease_handoff_failed", result
-    _assert_reverted(hub, result)
+    assert read_meta(hub.meta_path)["execution_ownership"]["state"] == "hub_owned"
 
 
 def test_s8_launcher_core_source_holds_no_lease_write_or_lock_code(tmp_path):
@@ -706,12 +794,17 @@ def test_s9_all_five_launch_failure_paths_cancel_the_handoff_and_return_to_hub(
         )
         meta = read_meta(hub.meta_path)
 
-        assert str(result["detail"]).startswith(detail), (detail, result)
+        expected_detail = "child_lease_unresolved" if detail == "ownership_set_rejected" else detail
+        assert str(result["detail"]).startswith(expected_detail), (detail, result)
         assert len(cancel_calls) == 1, "{}: 이관취소 {}회".format(detail, len(cancel_calls))
         assert cancel_calls[0] == meta["task_path"], (detail, cancel_calls)
         assert order.index("lease_handoff_cancel") > order.index("lease_handoff"), order
         assert result["lease_handoff_cancel"] == {"ok": True}, (detail, result)
-        _assert_reverted(hub, result)
+        if detail == "ownership_set_rejected":
+            assert result["failure_reason"] == "session_boot_timeout"
+            assert read_meta(hub.meta_path)["execution_ownership"]["state"] == "recovery_required"
+        else:
+            _assert_reverted(hub, result)
 
 
 def test_s9_failed_handoff_cancel_does_not_block_the_revert(tmp_path, monkeypatch):
@@ -827,6 +920,56 @@ def test_codex_child_claim_before_launcher_final_uses_child_owner(tmp_path):
                                worktree_root=hub.worktree_root, command='codex', owner_session_id='hub')
     assert result['ok'], result
     assert read_meta(hub.meta_path)['execution_ownership']['owner_session_id'] == 'child'
+
+
+def test_final_owner_response_mismatch_raises_without_revert(tmp_path, monkeypatch):
+    """A tool response that violates the owner postcondition is never masked."""
+    from worktree_launcher import launcher_core
+    from ownership_tool import lease
+
+    hub = build_launcher_hub(tmp_path, prior_state="hub_owned")
+    task_path = hub.worktree_root / "tasks" / "220-postcondition"
+    task_path.mkdir(parents=True)
+    meta = read_meta(hub.meta_path)
+    meta["task_path"] = str(task_path)
+    hub.meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    assert lease.claim(task_path, session_id="hub", claim_source="state_transition")["ok"]
+
+    class Child(_FakeAdapter):
+        def launch(self, root, command):
+            assert lease.claim(task_path, session_id="child", claim_source="session_start", claimant_root=root)["ok"]
+            return super().launch(root, command)
+
+    real_set = launcher_core.ownership_set
+    def bad_set(*args, **kwargs):
+        response = real_set(*args, **kwargs)
+        if args[2] == "worktree_session_owned":
+            response["execution_ownership"] = dict(response["execution_ownership"], owner_session_id="wrong")
+        return response
+    monkeypatch.setattr(launcher_core, "ownership_set", bad_set)
+
+    import pytest
+    with pytest.raises(launcher_core.LauncherError, match="ownership_postcondition_violated"):
+        launcher_core.run(Child(load_launcher_fixture("fake_process-success.json", hub.hub, hub.wt_parent)),
+                          hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root,
+                          command="codex", owner_session_id="hub", lease_poll_timeout_sec=0.01)
+
+
+def test_revert_cancels_a_pending_handoff_after_handoff_call_failure(tmp_path):
+    """A thrown handoff call may already have persisted this session's pending handoff."""
+    from worktree_launcher import launcher_core
+    from ownership_tool import lease
+
+    hub, task_path = _hub_with_canonical_task(tmp_path, prior_state="session_launching")
+    assert lease.claim(task_path, session_id="hub", claim_source="state_transition")["ok"]
+    assert lease.handoff(task_path, session_id="hub", to_worktree_root=hub.worktree_root)["ok"]
+    result = launcher_core._revert(
+        hub.hub, hub.task, "lease_handoff_failed", "orca", lease_task_path=task_path,
+        owner_session_id="hub", terminal_creation="not_created", handoff_started=False,
+        registry_worktree_root=hub.worktree_root,
+    )
+    assert result["status"] == "hub_owned"
+    assert result["lease_handoff_cancel"]["ok"] is True
 
 
 def test_codex_foreign_live_owner_stops_before_registry_mutation(tmp_path):

@@ -1,0 +1,82 @@
+{
+  "hub": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/task163-live-failure-tknbq083",
+  "returncode": 1,
+  "response": {
+    "ok": false,
+    "command": "launch",
+    "status": "hub_owned",
+    "failure_reason": "session_boot_timeout",
+    "error": "session_boot_timeout",
+    "detail": "child_lease_unresolved",
+    "cause": {
+      "ok": true,
+      "command": "ownership-tool",
+      "subcommand": "status",
+      "task_path": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/task163-live-failure-tknbq083/tasks/999-failure-probe",
+      "session_id": "task163-probe-hub",
+      "classification": "unowned",
+      "lease": null,
+      "handoff": {
+        "handoff_to_worktree_root": null,
+        "handoff_from_session_id": null,
+        "handoff_expires_at": null
+      }
+    },
+    "adapter": "orca",
+    "available_identity_sources": [
+      "CODEX_SESSION_ID"
+    ],
+    "task": "999",
+    "generation": 2,
+    "terminal_close": {
+      "attempted": true,
+      "ok": true,
+      "handle": "term_74b0e25c-ff99-441d-8ec8-c044947b481d"
+    },
+    "lease_handoff_cancel": {
+      "attempted": false,
+      "reason": "handoff_not_started"
+    },
+    "lease_handoff": {
+      "ok": true,
+      "command": "ownership-tool",
+      "subcommand": "handoff",
+      "session_id": "task163-probe-hub",
+      "noop": true,
+      "diagnostic": "no_live_lease"
+    },
+    "lease_status": {
+      "ok": true,
+      "command": "ownership-tool",
+      "subcommand": "status",
+      "task_path": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/task163-live-failure-tknbq083/tasks/999-failure-probe",
+      "session_id": "task163-probe-hub",
+      "classification": "unowned",
+      "lease": null,
+      "handoff": {
+        "handoff_to_worktree_root": null,
+        "handoff_from_session_id": null,
+        "handoff_expires_at": null
+      }
+    },
+    "terminal_status": {
+      "adapter": "orca",
+      "handle": "term_74b0e25c-ff99-441d-8ec8-c044947b481d",
+      "status": "absent"
+    },
+    "meta_path": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/task163-live-failure-tknbq083/.opal-worktrees/.meta/task_999.json"
+  },
+  "registry": {
+    "state": "hub_owned",
+    "owner_session_id": null,
+    "adapter": null,
+    "adapter_handle": null,
+    "generation": 2,
+    "launch_receipt": null,
+    "prompt_receipt": null,
+    "failure_reason": "session_boot_timeout",
+    "terminal_creation": null,
+    "observed_lease_owner": null,
+    "checkpoint_shas": []
+  }
+}
