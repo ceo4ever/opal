@@ -1,0 +1,27 @@
+                        "actual": assertion["expected"], "passed": True}
+                return {"artifacts": {}, "redacted": True, "redaction_failed": False}
+            # 선택돼 실행됐다는 뜻이며, "fail"/"assertion_failed" 같은 결과값이 아니다
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestBrowserRealUsage::test_browser_dashboard_call_reaches_backend
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestHybridWiring::test_a_driver_missing_an_operation_blocks_instead_of_switching_candidates
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestHybridWiring::test_a_type_with_no_selected_candidate_ends_as_executor_unavailable
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestHybridWiring::test_browser_step_runs_end_to_end_and_emits_the_a21_transitions
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestAcceptanceBrowserPathways::test_ac4_cleanup_touches_only_the_page_this_run_opened
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestAcceptanceBrowserPathways::test_ac4_real_browser_run_passes_with_a_semantic_assertion
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_auth
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_job
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_prime
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_query_transport_only
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_status
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_config_get
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_config_prewarm
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_dashboard
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_doctor
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_memory
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_detail
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_doc
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_list
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_artifact
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_detail
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_list
+FAILED opal/tools/test-tool/tests/test_red_s27_no_retry_on_product_failure.py::TestNoRetryOrSwitchOnProductFailure::test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt
+23 failed, 529 passed, 3 skipped, 329 subtests passed in 137.59s (0:02:17)

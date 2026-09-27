@@ -62,10 +62,12 @@
 각 W 완료 직후 변경 범위에 맞는 검증을 실행한다.
 
 - `test-tool resolve`
-- BE 변경: `test-tool unit --scope be`
-- FE 변경: `test-tool unit --scope fe`
+- BE 변경: `test-tool unit --scope be --changed-files <이번 W에서 바꾼 파일>`
+- FE 변경: `test-tool unit --scope fe --changed-files <이번 W에서 바꾼 파일>`
 - sdlc-v2 scenario coverage: `test-tool scenario-coverage-build --task-folder <task-folder> --template sdlc-v2` 후 `test-tool scenario-coverage-check --coverage-input <task-folder>/.scenario-coverage-input.json`
 - 담당 AC/C/H에 연결된 L1/L2 시나리오가 있으면 공개 인터페이스로 직접 실행한다.
+
+`unit` 응답은 `status`로만 소비한다. `pass`만 통과다. `incomplete`는 통과 처리하지 않고 응답의 사유와 함께 환경·설정 블로커로 보고한다. `fail`은 수정·재실행 대상이다. 상태값·사유 코드·exit 계약의 원문은 `~/.opal/tools/test-tool/README.md`의 `unit` 절을 참조한다.
 
 실패하면 최대 3회 수정·재실행한다. 환경, 외부 서비스, 권한 문제로 검증할 수 없으면 통과 처리하지 않고 블로커로 보고한다.
 

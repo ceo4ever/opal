@@ -1,0 +1,1 @@
+{"input_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b", "iteration": 2, "design": {"axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"}, "gaps": []}, "scenario": {"scores": {"goal": 2, "adoption": 2, "boundary": 2}, "average": 2.0, "gaps": []}, "verdict": "pass", "rewrite_target": null}

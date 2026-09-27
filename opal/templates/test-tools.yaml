@@ -51,24 +51,30 @@ tiers:
           purpose: JavaScript/TypeScript 정적 분석
           check: "npx eslint --version"
           install: "npm install -D eslint"
+          run: "npx eslint ."
+          run_files: "npx eslint {files}"
+          file_globs: ["*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs"]
           required: true
       typecheck:
         - name: tsc
           purpose: TypeScript 타입 안전성 검사
           check: "npx tsc --version"
           install: "npm install -D typescript"
+          run: "npx tsc --noEmit"
           required: true
       unit:
         - name: vitest
           purpose: 단위 테스트 (Vite 기반, RTL 컴포넌트 테스트 포함)
           check: "npx vitest --version"
           install: "npm install -D vitest @testing-library/react"
+          run: "npx vitest run"
           required: true
       a11y:
         - name: jest-axe
           purpose: 접근성(WCAG) 단위 검증 — axe-core 래퍼, vitest+RTL 동일 러너 내 통합
           check: "npm ls jest-axe"
           install: "npm install -D jest-axe"
+          # run 없음: jest-axe는 독립 실행 명령이 없다 (vitest+RTL 테스트 코드 내부에서 사용).
           required: false
     be:
       lint:
@@ -76,38 +82,49 @@ tiers:
           purpose: Python 빠른 린터 (py)
           check: "ruff --version"
           install: "pip install ruff"
+          run: "ruff check ."
+          run_files: "ruff check {files}"
+          file_globs: ["*.py"]
           required: true
         - name: eslint
           purpose: TypeScript/Node 정적 분석 (ts)
           check: "npx eslint --version"
           install: "npm install -D eslint"
+          run: "npx eslint ."
+          run_files: "npx eslint {files}"
+          file_globs: ["*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs"]
           required: true
       typecheck:
         - name: mypy
           purpose: Python 타입 체크 (py)
           check: "mypy --version"
           install: "pip install mypy"
+          run: "mypy ."
           required: true
         - name: pyright
           purpose: Python 타입 체크 대안 (py)
           check: "pyright --version"
           install: "pip install pyright"
+          run: "pyright"
           required: false
         - name: tsc
           purpose: TypeScript 타입 안전성 검사 (ts)
           check: "npx tsc --version"
           install: "npm install -D typescript"
+          run: "npx tsc --noEmit"
           required: true
       unit:
         - name: pytest
           purpose: 단위 테스트 (py)
           check: "pytest --version"
           install: "pip install pytest"
+          run: "pytest"
           required: true
         - name: vitest
           purpose: 단위 테스트 (ts)
           check: "npx vitest --version"
           install: "npm install -D vitest"
+          run: "npx vitest run"
           required: true
 
   # ── 단계2: 통합 (TEST, opal-test-agent + [SUPERVISOR]) ─────────────────────
@@ -120,6 +137,7 @@ tiers:
           deps: [httpx]
           check: "pytest --version"
           install: "pip install pytest httpx"
+          run: "pytest"
           real_db: true        # [MUST] 실 DB — mock 금지 (헌법 §4)
           required: true
     fe: {}                     # FE 통합 단위는 E2E로 흡수
@@ -161,16 +179,21 @@ resolution_order:
 #         - name: ruff
 #           check: "ruff --version"
 #           install: "pip install ruff"
+#           run: "ruff check ."
+#           run_files: "ruff check {files}"
+#           file_globs: ["*.py"]
 #           required: true
 #       typecheck:
 #         - name: mypy
 #           check: "mypy --version"
 #           install: "pip install mypy"
+#           run: "mypy ."
 #           required: true
 #       unit:
 #         - name: pytest
 #           check: "pytest --version"
 #           install: "pip install pytest"
+#           run: "pytest"
 #           required: true
 #   integration:
 #     be:
@@ -179,6 +202,7 @@ resolution_order:
 #           deps: [httpx]
 #           check: "pytest --version"
 #           install: "pip install pytest httpx"
+#           run: "pytest"
 #           real_db: true        # [MUST] 실 DB — mock 금지 (헌법 §4)
 #           required: true
 
