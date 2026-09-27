@@ -1,0 +1,88 @@
+{
+  "cmd": [
+    "zsh",
+    "-lic",
+    "export PATH=\"/private/tmp/opal-s161-mypy-venv/bin:$PATH\"; \"$HOME/.opal/tools/test-tool/run.sh\" unit --scope be --project-root \"/private/tmp/opal-s161-deploytest/python-clean\""
+  ],
+  "exit": 0,
+  "stdout": "{\"ok\": true, \"status\": \"pass\", \"layers\": [{\"name\": \"lint\", \"tool\": \"ruff\", \"required\": true, \"status\": \"pass\", \"check\": {\"cmd\": \"ruff --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"ruff check .\", \"exit\": 0, \"stdout\": \"All checks passed!\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"typecheck\", \"tool\": \"mypy\", \"required\": true, \"status\": \"pass\", \"check\": {\"cmd\": \"mypy --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"mypy .\", \"exit\": 0, \"stdout\": \"Success: no issues found in 2 source files\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"unit\", \"tool\": \"pytest\", \"required\": true, \"status\": \"pass\", \"check\": {\"cmd\": \"pytest --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"pytest\", \"exit\": 0, \"stdout\": \"============================= test session starts ==============================\\nplatform darwin -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0\\nrootdir: /private/tmp/opal-s161-deploytest/python-clean\\nconfigfile: pyproject.toml\\nplugins: anyio-4.14.0\\ncollected 1 item\\n\\ntest_calc.py .                                                           [100%]\\n\\n============================== 1 passed in 0.01s ===============================\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}], \"stopped_at\": null, \"requested_files\": [], \"command\": \"unit\", \"scope\": \"be\", \"cwd\": \"/private/tmp/opal-s161-deploytest/python-clean\", \"config\": {\"source\": \"global\", \"path\": \"/Users/iskang/.opal/templates/test-tools.yaml\"}}\n",
+  "stderr": "(anon):setopt:7: can't change option: monitor\n\n[\u001b[31mERROR\u001b[39m]: gitstatus failed to initialize.\n\n\n  Add the following parameter to \u001b[4m~/.zshrc\u001b[24m for extra diagnostics on error:\n\n    \u001b[1mGITSTATUS_LOG_LEVEL=DEBUG\u001b[0m\n\n  Restart Zsh to retry gitstatus initialization:\n\n    \u001b[32m\u001b[4mexec\u001b[24m\u001b[32m zsh\u001b[39m\n",
+  "parsed": {
+    "ok": true,
+    "status": "pass",
+    "layers": [
+      {
+        "name": "lint",
+        "tool": "ruff",
+        "required": true,
+        "status": "pass",
+        "check": {
+          "cmd": "ruff --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "ruff check .",
+        "exit": 0,
+        "stdout": "All checks passed!",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "typecheck",
+        "tool": "mypy",
+        "required": true,
+        "status": "pass",
+        "check": {
+          "cmd": "mypy --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "mypy .",
+        "exit": 0,
+        "stdout": "Success: no issues found in 2 source files",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "unit",
+        "tool": "pytest",
+        "required": true,
+        "status": "pass",
+        "check": {
+          "cmd": "pytest --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "pytest",
+        "exit": 0,
+        "stdout": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0\nrootdir: /private/tmp/opal-s161-deploytest/python-clean\nconfigfile: pyproject.toml\nplugins: anyio-4.14.0\ncollected 1 item\n\ntest_calc.py .                                                           [100%]\n\n============================== 1 passed in 0.01s ===============================",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      }
+    ],
+    "stopped_at": null,
+    "requested_files": [],
+    "command": "unit",
+    "scope": "be",
+    "cwd": "/private/tmp/opal-s161-deploytest/python-clean",
+    "config": {
+      "source": "global",
+      "path": "/Users/iskang/.opal/templates/test-tools.yaml"
+    }
+  }
+}

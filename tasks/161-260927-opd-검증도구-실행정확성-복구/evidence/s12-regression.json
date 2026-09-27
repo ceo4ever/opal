@@ -1,0 +1,72 @@
+{
+  "regression_output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/tasks/161-260927-opd-검증도구-실행정확성-복구/evidence/test-tool-regression-escalated.txt",
+  "baseline_output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/tasks/161-260927-opd-검증도구-실행정확성-복구/evidence/baseline-test-tool-suite.txt",
+  "checks": {
+    "suite_all_pass": true,
+    "target_tests_pass": true,
+    "changed_paths_allowed": true,
+    "scenario_module_unchanged": true,
+    "no_new_runner_or_cache_module": true,
+    "plan_work_item_columns_unchanged": true
+  },
+  "changed": {
+    "cmd": [
+      "git",
+      "diff",
+      "--name-only",
+      "main"
+    ],
+    "exit": 0,
+    "stdout": "opal/agents/opal-test-agent/AGENT.md\nopal/core/references/test-tools-schema.yaml\nopal/skills/op-dev-execute/references/execute-guide.md\nopal/templates/test-tools.yaml\nopal/tools/test-tool/README.md\nopal/tools/test-tool/lib/resolver.py\nopal/tools/test-tool/lib/runner.py\nopal/tools/test-tool/test_tool.py\nopal/tools/test-tool/tests/fixtures/unit-real/conftest.py\nopal/tools/test-tool/tests/fixtures/unit-real/python-clean/calc.py\nopal/tools/test-tool/tests/fixtures/unit-real/python-clean/pyproject.toml\nopal/tools/test-tool/tests/fixtures/unit-real/python-clean/test_calc.py\nopal/tools/test-tool/tests/fixtures/unit-real/python-lint/calc.py\nopal/tools/test-tool/tests/fixtures/unit-real/python-lint/pyproject.toml\nopal/tools/test-tool/tests/fixtures/unit-real/python-lint/test_calc.py\nopal/tools/test-tool/tests/fixtures/unit-real/python-test/calc.py\nopal/tools/test-tool/tests/fixtures/unit-real/python-test/pyproject.toml\nopal/tools/test-tool/tests/fixtures/unit-real/python-test/test_calc.py\nopal/tools/test-tool/tests/fixtures/unit-real/python-type/calc.py\nopal/tools/test-tool/tests/fixtures/unit-real/python-type/pyproject.toml\nopal/tools/test-tool/tests/fixtures/unit-real/python-type/test_calc.py\nopal/tools/test-tool/tests/fixtures/unit-real/ts-clean/eslint.config.js\nopal/tools/test-tool/tests/fixtures/unit-real/ts-clean/package.json\nopal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.test.ts\nopal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.ts\nopal/tools/test-tool/tests/fixtures/unit-real/ts-clean/tsconfig.json\nopal/tools/test-tool/tests/fixtures/unit-real/ts-lint/eslint.config.js\nopal/tools/test-tool/tests/fixtures/unit-real/ts-lint/package.json\nopal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.test.ts\nopal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.ts\nopal/tools/test-tool/tests/fixtures/unit-real/ts-lint/tsconfig.json\nopal/tools/test-tool/tests/fixtures/unit-real/ts-test/eslint.config.js\nopal/tools/test-tool/tests/fixtures/unit-real/ts-test/package.json\nopal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.test.ts\nopal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.ts\nopal/tools/test-tool/tests/fixtures/unit-real/ts-test/tsconfig.json\nopal/tools/test-tool/tests/fixtures/unit-real/ts-type/eslint.config.js\nopal/tools/test-tool/tests/fixtures/unit-real/ts-type/package.json\nopal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.test.ts\nopal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.ts\nopal/tools/test-tool/tests/fixtures/unit-real/ts-type/tsconfig.json\nopal/tools/test-tool/tests/test_red_s161_unit_contract.py\nopal/tools/test-tool/tests/test_test_tool.py\ntasks/161-260927-opd-검증도구-실행정확성-복구/.scenario-coverage-input.json\ntasks/161-260927-opd-검증도구-실행정확성-복구/AGENTIC-LOG.md\ntasks/161-260927-opd-검증도구-실행정확성-복구/PLAN.md\ntasks/161-260927-opd-검증도구-실행정확성-복구/REQUEST.md\ntasks/161-260927-opd-검증도구-실행정확성-복구/STATE.md\ntasks/161-260927-opd-검증도구-실행정확성-복구/TASK.md\ntasks/161-260927-opd-검증도구-실행정확성-복구/TEST-SCENARIO.md\ntasks/161-260927-opd-검증도구-실행정확성-복구/evidence/baseline-test-tool-suite.txt\ntasks/161-260927-opd-검증도구-실행정확성-복구/run/design-gate-i2.json\ntasks/161-260927-opd-검증도구-실행정확성-복구/run/run-log-run_b9a895df-5032-49bb-b54b-6c0c3bc8cf74-0001.jsonl\ntasks/161-260927-opd-검증도구-실행정확성-복구/state.json\ntasks/161-260927-opd-검증도구-실행정확성-복구/test-scenario.json\n",
+    "stderr": ""
+  },
+  "status": {
+    "cmd": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "exit": 0,
+    "stdout": " M tasks/161-260927-opd-검증도구-실행정확성-복구/STATE.md\n M tasks/161-260927-opd-검증도구-실행정확성-복구/run/run-log-run_b9a895df-5032-49bb-b54b-6c0c3bc8cf74-0001.jsonl\n M tasks/161-260927-opd-검증도구-실행정확성-복구/state.json\n M tasks/161-260927-opd-검증도구-실행정확성-복구/test-scenario.json\n?? tasks/161-260927-opd-검증도구-실행정확성-복구/evidence/real-tools/\n?? tasks/161-260927-opd-검증도구-실행정확성-복구/evidence/s1-s8/\n?? tasks/161-260927-opd-검증도구-실행정확성-복구/evidence/s11-doc-consumer.json\n?? tasks/161-260927-opd-검증도구-실행정확성-복구/evidence/test-tool-regression-escalated.txt\n?? tasks/161-260927-opd-검증도구-실행정확성-복구/evidence/test-tool-regression.txt\n",
+    "stderr": ""
+  },
+  "target_tests": {
+    "cmd": [
+      "/Users/iskang/.opal/.venv/bin/python",
+      "-m",
+      "pytest",
+      "opal/tools/test-tool/tests/test_test_tool.py",
+      "opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+      "-q",
+      "-p",
+      "no:cacheprovider"
+    ],
+    "exit": 0,
+    "stdout": "...............................                             [100%]\n31 passed, 13 subtests passed in 12.21s\n",
+    "stderr": ""
+  },
+  "scenario_module": {
+    "cmd": [
+      "git",
+      "diff",
+      "--quiet",
+      "main",
+      "--",
+      "opal/tools/test-tool/lib/scenario.py"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "plan_diff": {
+    "cmd": [
+      "git",
+      "diff",
+      "--",
+      "tasks/161-260927-opd-검증도구-실행정확성-복구/PLAN.md"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+}

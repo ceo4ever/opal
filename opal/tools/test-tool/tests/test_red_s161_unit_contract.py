@@ -130,7 +130,7 @@ class TestS1RunMissingNotConfigured(unittest.TestCase):
             self.assertEqual(data.get("error"), "unit_incomplete")
 
             layers = data.get("layers", [])
-            lint_layer = next((l for l in layers if l.get("name") == "lint"), None)
+            lint_layer = next((layer for layer in layers if layer.get("name") == "lint"), None)
             self.assertIsNotNone(lint_layer, msg=f"layers={layers}")
             self.assertEqual(lint_layer.get("status"), "not_configured")
             self.assertEqual(lint_layer.get("reason"), "run_missing")
@@ -169,7 +169,7 @@ class TestS2CheckVsRunSeparation(unittest.TestCase):
 
             self.assertEqual(returncode, 0, msg=f"stdout={stdout}")
             self.assertEqual(data.get("status"), "pass")
-            lint_layer = next(l for l in data.get("layers", []) if l.get("name") == "lint")
+            lint_layer = next(layer for layer in data.get("layers", []) if layer.get("name") == "lint")
             self.assertEqual(lint_layer.get("status"), "pass")
             self.assertEqual(lint_layer.get("check", {}).get("exit"), 0)
             self.assertEqual(lint_layer.get("cmd"), str(run_stub))
@@ -199,7 +199,7 @@ class TestS2CheckVsRunSeparation(unittest.TestCase):
             )
 
             self.assertEqual(returncode, 21, msg=f"stdout={stdout}")
-            lint_layer = next(l for l in data.get("layers", []) if l.get("name") == "lint")
+            lint_layer = next(layer for layer in data.get("layers", []) if layer.get("name") == "lint")
             self.assertEqual(lint_layer.get("status"), "tool_unavailable")
             self.assertEqual(lint_layer.get("reason"), "install_check_failed")
             self.assertEqual(lint_layer.get("check", {}).get("exit"), 1)
@@ -249,7 +249,7 @@ class TestS3StopOnFailNotRun(unittest.TestCase):
             self.assertEqual(data.get("error"), "layer_failed")
             self.assertEqual(data.get("stopped_at"), "lint")
 
-            layers = {l["name"]: l for l in data.get("layers", [])}
+            layers = {layer["name"]: layer for layer in data.get("layers", [])}
             self.assertIn("typecheck", layers)
             self.assertIn("unit", layers)
             self.assertEqual(layers["typecheck"].get("status"), "not_run")
@@ -364,7 +364,7 @@ class TestS5FileScope(unittest.TestCase):
 
             self.assertEqual(data.get("requested_files"), ["a.py", "b.md", "gone.py", "../outside.py"])
 
-            layers = {l["name"]: l for l in data.get("layers", [])}
+            layers = {layer["name"]: layer for layer in data.get("layers", [])}
             lint_scope = layers["lint"].get("scope", {})
             self.assertEqual(lint_scope.get("kind"), "files")
             self.assertEqual(sorted(lint_scope.get("requested", [])), sorted(["a.py", "b.md", "gone.py", "../outside.py"]))
@@ -419,7 +419,7 @@ class TestS6EvidenceFields(unittest.TestCase):
                 data.get("config", {}).get("path"),
                 str(project_root / ".opal" / "test-tools.yaml"),
             )
-            lint_layer = next(l for l in data.get("layers", []) if l.get("name") == "lint")
+            lint_layer = next(layer for layer in data.get("layers", []) if layer.get("name") == "lint")
             for field in ("name", "tool", "required", "status", "cmd", "exit", "stdout", "scope"):
                 self.assertIn(field, lint_layer, msg=f"missing field {field} in {lint_layer}")
 
@@ -498,7 +498,7 @@ class TestS7RequiredOptionalLayers(unittest.TestCase):
             )
             self.assertEqual(returncode, 0, msg=f"stdout={stdout}")
             self.assertEqual(data.get("status"), "pass")
-            a11y_layer = next(l for l in data.get("layers", []) if l.get("name") == "a11y")
+            a11y_layer = next(layer for layer in data.get("layers", []) if layer.get("name") == "a11y")
             self.assertEqual(a11y_layer.get("status"), "not_configured")
 
     def test_s7b_required_a11y_not_configured_makes_incomplete(self):

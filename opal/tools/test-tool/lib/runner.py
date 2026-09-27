@@ -386,19 +386,19 @@ def run_unit_layers(
             stopped_at = layer_name
 
     # D-4: 전체 상태 결정
-    required_layers = [l for l in layers if l.get("required")]
+    required_layers = [layer for layer in layers if layer.get("required")]
     overall_status: str
     overall_reason: Optional[str] = None
     overall_error: Optional[str] = None
 
-    if any(l.get("status") == "fail" for l in required_layers):
+    if any(layer.get("status") == "fail" for layer in required_layers):
         overall_status = "fail"
         overall_error = "layer_failed"
-    elif any(l.get("status") in ("tool_unavailable", "not_configured") for l in required_layers):
+    elif any(layer.get("status") in ("tool_unavailable", "not_configured") for layer in required_layers):
         overall_status = "incomplete"
         overall_reason = "required_layer_unverified"
         overall_error = "unit_incomplete"
-    elif not any(l.get("status") == "pass" for l in layers):
+    elif not any(layer.get("status") == "pass" for layer in layers):
         overall_status = "incomplete"
         overall_reason = "no_layers_declared" if not layers else "no_check_executed"
         overall_error = "unit_incomplete"

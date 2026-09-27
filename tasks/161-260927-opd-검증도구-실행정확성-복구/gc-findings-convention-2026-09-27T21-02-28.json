@@ -1,0 +1,92 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/agents/opal-test-agent/AGENT.md",
+    "opal/core/references/test-tools-schema.yaml",
+    "opal/skills/op-dev-execute/references/execute-guide.md",
+    "opal/templates/test-tools.yaml",
+    "opal/tools/test-tool/README.md",
+    "opal/tools/test-tool/lib/resolver.py",
+    "opal/tools/test-tool/lib/runner.py",
+    "opal/tools/test-tool/test_tool.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/conftest.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/pyproject.toml",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/test_calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/pyproject.toml",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/test_calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-test/calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-test/pyproject.toml",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-test/test_calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-type/calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-type/pyproject.toml",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-type/test_calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/eslint.config.js",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/package.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.test.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/tsconfig.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/eslint.config.js",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/package.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.test.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/tsconfig.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/eslint.config.js",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/package.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.test.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/tsconfig.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/eslint.config.js",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/package.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.test.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/tsconfig.json",
+    "opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "opal/tools/test-tool/tests/test_test_tool.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "e59cc617a195c965",
+      "category": "문서화",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "test-tools-schema.yaml tiers.item_fields.file_globs",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/test-tool/README.md",
+        "line": 101
+      },
+      "evidence": "README.md:101는 file_globs 생략을 파일 단위 실행 미지원으로 설명한다. test-tools-schema.yaml:207은 생략 시 전체 대상이라고 명시하며 runner.py:201-208은 file_globs가 비어 있으면 모든 요청 파일을 checked에 넣는다.",
+      "impact": "설정 작성자가 file_globs 없이 run_files를 선언했을 때 실제 실행 범위를 잘못 이해할 수 있다.",
+      "remediation": {
+        "guidance": "README의 file_globs 설명을 스키마와 실행기 동작에 맞춰 생략 시 모든 요청 파일을 대상으로 한다고 고친다.",
+        "reference": "opal/core/references/test-tools-schema.yaml:203",
+        "auto_fixable": false
+      },
+      "verification": "README, 스키마, runner.py의 생략 시 의미를 비교하고 run_files만 선언한 변경 파일 사례의 공개 CLI 출력을 확인한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git diff --name-only main -- opal/ (43 files)",
+    "all 43 target paths exist inside project_root and were read",
+    "git diff --check main -- opal/ (exit 0)",
+    "ruff check --no-cache on changed Python code/tests: 13 warnings, all present on main baseline",
+    "manual comparison: README.md:101, test-tools-schema.yaml:207, runner.py:201-208"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    ".opal/AGENT.md",
+    "opal/core/references/test-tools-schema.yaml",
+    "opal/tools/test-tool/README.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/tasks/161-260927-opd-검증도구-실행정확성-복구/GC-CONVENTION-2026-09-27T21-02-28.md"
+}

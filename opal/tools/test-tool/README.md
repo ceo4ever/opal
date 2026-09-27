@@ -98,7 +98,7 @@ bash run.sh unit [--scope fe|be] [--changed-files FILE...] [--project-root PATH]
 | `install` | 설치 안내 명령(문서용, 자동 실행 없음). |
 | `run` | 실제 검사 명령. 프로젝트 전체 범위로 실행한다. |
 | `run_files` (선택) | `{files}` 자리표시자를 가진 파일 단위 검사 명령. |
-| `file_globs` (선택) | `run_files`에 넘길 파일을 고르는 glob 목록. 생략 시 파일 단위 실행을 지원하지 않는 것으로 본다. |
+| `file_globs` (선택) | `run_files`에 넘길 파일을 고르는 glob 목록. 생략 시 프로젝트 안에 실재하는 요청 파일을 모두 넘긴다. 파일 단위 실행은 `run_files`가 없을 때 지원하지 않는다. |
 | `required` (기본 true) | 이 계층 결과가 전체 `incomplete` 판정에 영향을 준다. |
 
 **실행 순서(D-2)**: 계층마다 첫 번째 도구만 쓴다.

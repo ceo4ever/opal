@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-27 07:31:06",
-  "updated_at": "2026-09-27 20:33:04",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-27 21:55:56",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -36,9 +36,10 @@
       "key": "plan.plan_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-27 20:04:54",
+      "timestamp": "2026-09-27 21:46:58",
       "owner": "PM",
-      "note": "PLAN 완료. 외부 결정 캡틴 A안 채택(2026-09-27 20:04)"
+      "note": "PLAN 완료. 외부 결정 캡틴 A안 채택(2026-09-27 20:04). PM 직접 작성으로 워커 소요 미측정 선언.",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 4,
@@ -91,32 +92,34 @@
       "key": "execute.implement",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-27 20:33:04",
+      "timestamp": "2026-09-27 21:46:53",
       "owner": "PM",
-      "note": null,
-      "step": "3/3"
+      "note": "이전 Claude 워커의 duration_ms 수신 기록이 없어 미측정 선언. 구현 산출물과 TEST 증거는 별도 확인.",
+      "step": "3/3",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 8,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:45:24",
       "owner": "PM",
-      "note": null
+      "note": "독립 TEST S-1~S-13 PASS. S-13 README 비교 기준은 캡틴 승인에 따라 설치기의 변경이력 제거 정책 적용.",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 9,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:45:38",
       "owner": "PM",
-      "note": null,
+      "note": "13/13 시나리오 PASS와 실제 증거 확인; 전체 회귀 569 passed, 변경 코드 E741 0, code-scan newly_uncovered 0, 보안 패턴 0, 컨벤션 Critical/High 0. README Medium 문구 보정 확인.",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md",
@@ -135,20 +138,20 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:46:17",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
     },
     {
       "row_id": 11,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:47:02",
       "owner": "PM",
       "note": null
     },
@@ -157,11 +160,11 @@
       "stage": "CLOSE",
       "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
       "key": "close.docs_sync",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:47:13",
       "owner": "PM",
-      "note": null,
+      "note": "no-op: PROJECT·ARCHITECTURE·CONVENTIONS의 test-tool 언급은 변경된 unit 공개 계약을 재정의하지 않으며, 계약 원문은 갱신된 test-tool README·스키마가 소유.",
       "conditional": true
     },
     {
@@ -169,11 +172,11 @@
       "stage": "CLOSE",
       "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
       "key": "close.brain_ingest",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:48:35",
       "owner": "PM",
-      "note": null,
+      "note": "작업본 brain 직접 쓰기 금지. op-brain-ingest 검토 결과 .opal/brain/pages/entity/test-tool.md 갱신 후보를 DONE.md에 선언하고 허브 귀속 단계로 이월.",
       "conditional": true
     },
     {
@@ -181,22 +184,22 @@
       "stage": "CLOSE",
       "item": "회고/개선 후보 기록",
       "key": "close.retrospective",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:48:42",
       "owner": "PM",
-      "note": null
+      "note": "개선후보 0건. E741과 README 문구는 태스크 안에서 보정했고, 설치 변환을 반영한 S-13 기준도 캡틴 승인으로 정정했다. 별도 반복 패턴 근거 없음."
     },
     {
       "row_id": 15,
       "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
       "key": "close.worktree_finalize",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:55:47",
       "owner": "PM",
-      "note": null,
+      "note": "worktree-tool finalize 성공: attribution_state=closed, observed=0, committed=false. merge·push 미실행.",
       "conditional": true
     },
     {
@@ -204,14 +207,14 @@
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:55:56",
       "owner": "PM",
-      "note": null
+      "note": "TEST 13/13 PASS, DONE·docs sync·brain candidate·retrospective·worktree attribution 완료. 태스크 브랜치 merge 대기."
     }
   ],
-  "next_action": "TEST 작업 진입",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161",
   "actor": "coordinator",
   "run_log": {
@@ -223,11 +226,11 @@
     "status": "active",
     "pending_events": [],
     "last_report": {
-      "event_id": "evt_7c93f738-2fa1-49ac-ba4a-f9d492ffcc56",
+      "event_id": "evt_a8ade0b2-96a1-47f4-a826-0c593a635779",
       "report_type": "decision_request",
       "transition_action": "blocked",
       "user_input_required": true,
-      "at": "2026-09-26T22:46:29.444Z"
+      "at": "2026-09-27T12:49:48.774Z"
     }
   },
   "design_gate": {

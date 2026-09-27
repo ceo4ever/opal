@@ -1,0 +1,85 @@
+{
+  "cmd": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/run.sh",
+    "unit",
+    "--scope",
+    "fe",
+    "--project-root",
+    "/private/tmp/opal-s161-real-cases/ts-type"
+  ],
+  "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161",
+  "exit": 5,
+  "stdout": "{\"ok\": false, \"status\": \"fail\", \"layers\": [{\"name\": \"lint\", \"tool\": \"eslint\", \"required\": true, \"status\": \"pass\", \"check\": {\"cmd\": \"npx eslint --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"npx eslint .\", \"exit\": 0, \"stdout\": \"\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"typecheck\", \"tool\": \"tsc\", \"required\": true, \"status\": \"fail\", \"check\": {\"cmd\": \"npx tsc --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"npx tsc --noEmit\", \"exit\": 2, \"stdout\": \"src/calc.ts(2,3): error TS2322: Type 'string' is not assignable to type 'number'.\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"unit\", \"tool\": \"vitest\", \"required\": true, \"status\": \"not_run\", \"reason\": \"stopped_after_failure\", \"check\": null, \"cmd\": null, \"exit\": null, \"stdout\": null, \"scope\": null}], \"stopped_at\": \"typecheck\", \"requested_files\": [], \"error\": \"layer_failed\", \"command\": \"unit\", \"scope\": \"fe\", \"cwd\": \"/private/tmp/opal-s161-real-cases/ts-type\", \"config\": {\"source\": \"infer\", \"path\": \"/private/tmp/opal-s161-real-cases/ts-type/package.json\"}}\n",
+  "stderr": "",
+  "parsed": {
+    "ok": false,
+    "status": "fail",
+    "layers": [
+      {
+        "name": "lint",
+        "tool": "eslint",
+        "required": true,
+        "status": "pass",
+        "check": {
+          "cmd": "npx eslint --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "npx eslint .",
+        "exit": 0,
+        "stdout": "",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "typecheck",
+        "tool": "tsc",
+        "required": true,
+        "status": "fail",
+        "check": {
+          "cmd": "npx tsc --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "npx tsc --noEmit",
+        "exit": 2,
+        "stdout": "src/calc.ts(2,3): error TS2322: Type 'string' is not assignable to type 'number'.",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "unit",
+        "tool": "vitest",
+        "required": true,
+        "status": "not_run",
+        "reason": "stopped_after_failure",
+        "check": null,
+        "cmd": null,
+        "exit": null,
+        "stdout": null,
+        "scope": null
+      }
+    ],
+    "stopped_at": "typecheck",
+    "requested_files": [],
+    "error": "layer_failed",
+    "command": "unit",
+    "scope": "fe",
+    "cwd": "/private/tmp/opal-s161-real-cases/ts-type",
+    "config": {
+      "source": "infer",
+      "path": "/private/tmp/opal-s161-real-cases/ts-type/package.json"
+    }
+  }
+}

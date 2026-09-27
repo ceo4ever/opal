@@ -1,0 +1,34 @@
+{
+  "checks": {
+    "python": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "ts": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "targeted": "31 passed, 13 subtests",
+  "ruff_e741": "All checks passed",
+  "scenarios": "S-1..S-10 rerun pass",
+  "full_suite": "not repeated; prior 569 passed; rename only"
+}

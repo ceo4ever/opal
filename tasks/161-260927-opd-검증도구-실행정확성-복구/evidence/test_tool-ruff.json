@@ -1,0 +1,144 @@
+[
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 44,
+      "row": 39
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 39
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 39,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 50,
+      "row": 40
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 40
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 40,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 64,
+      "row": 41
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 41
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 41,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 44,
+      "row": 42
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 42
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 42,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 68,
+      "row": 43
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 43
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 43,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "E402",
+    "end_location": {
+      "column": 40,
+      "row": 44
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 44
+    },
+    "message": "Module level import not at top of file",
+    "noqa_row": 44,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file"
+  },
+  {
+    "cell": null,
+    "code": "F841",
+    "end_location": {
+      "column": 18,
+      "row": 146
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/test_tool.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 21,
+            "row": 146
+          },
+          "location": {
+            "column": 9,
+            "row": 146
+          }
+        }
+      ],
+      "message": "Remove assignment to unused variable `error_key`"
+    },
+    "location": {
+      "column": 9,
+      "row": 146
+    },
+    "message": "Local variable `error_key` is assigned to but never used",
+    "noqa_row": 146,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+  }
+]

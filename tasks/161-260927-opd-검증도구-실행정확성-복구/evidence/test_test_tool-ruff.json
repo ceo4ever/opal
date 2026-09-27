@@ -1,0 +1,108 @@
+[
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 11,
+      "row": 40
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_test_tool.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 41
+          },
+          "location": {
+            "column": 1,
+            "row": 40
+          }
+        }
+      ],
+      "message": "Remove unused import: `sys`"
+    },
+    "location": {
+      "column": 8,
+      "row": 40
+    },
+    "message": "`sys` imported but unused",
+    "noqa_row": 40,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 31,
+      "row": 356
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 30,
+      "row": 356
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 356,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 32,
+      "row": 363
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 31,
+      "row": 363
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 363,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 31,
+      "row": 369
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 30,
+      "row": 369
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 369,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 37,
+      "row": 391
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_test_tool.py",
+    "fix": null,
+    "location": {
+      "column": 36,
+      "row": 391
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 391,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  }
+]

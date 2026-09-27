@@ -1,0 +1,15 @@
+{
+  "cmd": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "opal/tools/test-tool/tests/test_test_tool.py",
+    "-q",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "exit": 0,
+  "stdout": "...............................                             [100%]\n31 passed, 13 subtests passed in 11.44s\n",
+  "stderr": ""
+}

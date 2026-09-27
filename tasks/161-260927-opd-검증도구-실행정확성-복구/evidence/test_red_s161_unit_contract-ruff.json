@@ -1,0 +1,128 @@
+[
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 39,
+      "row": 133
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "fix": null,
+    "location": {
+      "column": 38,
+      "row": 133
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 133,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 38,
+      "row": 172
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "fix": null,
+    "location": {
+      "column": 37,
+      "row": 172
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 172,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 38,
+      "row": 202
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "fix": null,
+    "location": {
+      "column": 37,
+      "row": 202
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 202,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 41,
+      "row": 252
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "fix": null,
+    "location": {
+      "column": 40,
+      "row": 252
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 252,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 41,
+      "row": 367
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "fix": null,
+    "location": {
+      "column": 40,
+      "row": 367
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 367,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 38,
+      "row": 422
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "fix": null,
+    "location": {
+      "column": 37,
+      "row": 422
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 422,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  },
+  {
+    "cell": null,
+    "code": "E741",
+    "end_location": {
+      "column": 38,
+      "row": 501
+    },
+    "filename": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "fix": null,
+    "location": {
+      "column": 37,
+      "row": 501
+    },
+    "message": "Ambiguous variable name: `l`",
+    "noqa_row": 501,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/ambiguous-variable-name"
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "pairs": [
+    {
+      "name": "runner.py",
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/lib/runner.py",
+      "deployed": "/Users/iskang/.opal/tools/test-tool/lib/runner.py",
+      "source_sha256": "78a2fbe1fe2811ce9301bf3e52509fa6c59905035a12d5e318c48f772d302f52",
+      "deployed_sha256": "78a2fbe1fe2811ce9301bf3e52509fa6c59905035a12d5e318c48f772d302f52",
+      "literal_match": true
+    },
+    {
+      "name": "resolver.py",
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/lib/resolver.py",
+      "deployed": "/Users/iskang/.opal/tools/test-tool/lib/resolver.py",
+      "source_sha256": "ca40478dafbb5fe4d06141e3d192b286589cf15672c4d819a8f28d2938c251bf",
+      "deployed_sha256": "ca40478dafbb5fe4d06141e3d192b286589cf15672c4d819a8f28d2938c251bf",
+      "literal_match": true
+    },
+    {
+      "name": "test_tool.py",
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/test_tool.py",
+      "deployed": "/Users/iskang/.opal/tools/test-tool/test_tool.py",
+      "source_sha256": "9f1eb6094d8c4716c8e101970c99676234b4795f38ac384427549081cdb70604",
+      "deployed_sha256": "9f1eb6094d8c4716c8e101970c99676234b4795f38ac384427549081cdb70604",
+      "literal_match": true
+    },
+    {
+      "name": "README.md",
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/README.md",
+      "deployed": "/Users/iskang/.opal/tools/test-tool/README.md",
+      "source_sha256": "4c913bb02f11f5d2c680eff5219e4031652d7fa45825390ec7055b73509efd97",
+      "deployed_sha256": "4217ce8473ac36b85965ad49f0a8e5d9a527fd71ddc5a842dd82786050afeffb",
+      "literal_match": false
+    },
+    {
+      "name": "test-tools.yaml",
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/templates/test-tools.yaml",
+      "deployed": "/Users/iskang/.opal/templates/test-tools.yaml",
+      "source_sha256": "204ac597427700fadc1b7756f440223eba191a100194bb4a59910b2aa587dd94",
+      "deployed_sha256": "204ac597427700fadc1b7756f440223eba191a100194bb4a59910b2aa587dd94",
+      "literal_match": true
+    },
+    {
+      "name": "test-tools-schema.yaml",
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/core/references/test-tools-schema.yaml",
+      "deployed": "/Users/iskang/.opal/references/test-tools-schema.yaml",
+      "source_sha256": "3e23d3d772fecf60c6cd7fe1aafcc474f719448d2f093ec0840908b4ba6e9dbe",
+      "deployed_sha256": "3e23d3d772fecf60c6cd7fe1aafcc474f719448d2f093ec0840908b4ba6e9dbe",
+      "literal_match": true
+    }
+  ],
+  "all_literal_match": false,
+  "readme_normalized_body_match": true,
+  "readme_source_has_change_history": true,
+  "installer_policy": "scripts/install-mac.sh:261-275,1870-1874 strips ## 변경이력 tail from deployed Markdown"
+}

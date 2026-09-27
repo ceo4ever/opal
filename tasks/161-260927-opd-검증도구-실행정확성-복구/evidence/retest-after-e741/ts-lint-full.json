@@ -1,0 +1,75 @@
+{
+  "cmd": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/run.sh",
+    "unit",
+    "--scope",
+    "fe",
+    "--project-root",
+    "/private/tmp/opal-s161-real-cases/ts-lint"
+  ],
+  "exit": 5,
+  "stdout": "{\"ok\": false, \"status\": \"fail\", \"layers\": [{\"name\": \"lint\", \"tool\": \"eslint\", \"required\": true, \"status\": \"fail\", \"check\": {\"cmd\": \"npx eslint --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"npx eslint .\", \"exit\": 1, \"stdout\": \"/private/tmp/opal-s161-real-cases/ts-lint/src/calc.ts\\n  1:10  error  'readFileSync' is defined but never used  @typescript-eslint/no-unused-vars\\n\\n\u2716 1 problem (1 error, 0 warnings)\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"typecheck\", \"tool\": \"tsc\", \"required\": true, \"status\": \"not_run\", \"reason\": \"stopped_after_failure\", \"check\": null, \"cmd\": null, \"exit\": null, \"stdout\": null, \"scope\": null}, {\"name\": \"unit\", \"tool\": \"vitest\", \"required\": true, \"status\": \"not_run\", \"reason\": \"stopped_after_failure\", \"check\": null, \"cmd\": null, \"exit\": null, \"stdout\": null, \"scope\": null}], \"stopped_at\": \"lint\", \"requested_files\": [], \"error\": \"layer_failed\", \"command\": \"unit\", \"scope\": \"fe\", \"cwd\": \"/private/tmp/opal-s161-real-cases/ts-lint\", \"config\": {\"source\": \"infer\", \"path\": \"/private/tmp/opal-s161-real-cases/ts-lint/package.json\"}}\n",
+  "stderr": "",
+  "parsed": {
+    "ok": false,
+    "status": "fail",
+    "layers": [
+      {
+        "name": "lint",
+        "tool": "eslint",
+        "required": true,
+        "status": "fail",
+        "check": {
+          "cmd": "npx eslint --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "npx eslint .",
+        "exit": 1,
+        "stdout": "/private/tmp/opal-s161-real-cases/ts-lint/src/calc.ts\n  1:10  error  'readFileSync' is defined but never used  @typescript-eslint/no-unused-vars\n\n\u2716 1 problem (1 error, 0 warnings)",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "typecheck",
+        "tool": "tsc",
+        "required": true,
+        "status": "not_run",
+        "reason": "stopped_after_failure",
+        "check": null,
+        "cmd": null,
+        "exit": null,
+        "stdout": null,
+        "scope": null
+      },
+      {
+        "name": "unit",
+        "tool": "vitest",
+        "required": true,
+        "status": "not_run",
+        "reason": "stopped_after_failure",
+        "check": null,
+        "cmd": null,
+        "exit": null,
+        "stdout": null,
+        "scope": null
+      }
+    ],
+    "stopped_at": "lint",
+    "requested_files": [],
+    "error": "layer_failed",
+    "command": "unit",
+    "scope": "fe",
+    "cwd": "/private/tmp/opal-s161-real-cases/ts-lint",
+    "config": {
+      "source": "infer",
+      "path": "/private/tmp/opal-s161-real-cases/ts-lint/package.json"
+    }
+  }
+}
