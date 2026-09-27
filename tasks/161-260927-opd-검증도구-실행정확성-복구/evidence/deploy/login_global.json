@@ -1,0 +1,10 @@
+{
+  "cmd": [
+    "zsh",
+    "-lic",
+    "printf \"%s\\n\" \"$OPAL_TEST_TOOLS_GLOBAL\""
+  ],
+  "exit": 0,
+  "stdout": "/Users/iskang/.opal/templates/test-tools.yaml\n",
+  "stderr": "(anon):setopt:7: can't change option: monitor\n\n[\u001b[31mERROR\u001b[39m]: gitstatus failed to initialize.\n\n\n  Add the following parameter to \u001b[4m~/.zshrc\u001b[24m for extra diagnostics on error:\n\n    \u001b[1mGITSTATUS_LOG_LEVEL=DEBUG\u001b[0m\n\n  Restart Zsh to retry gitstatus initialization:\n\n    \u001b[32m\u001b[4mexec\u001b[24m\u001b[32m zsh\u001b[39m\n"
+}

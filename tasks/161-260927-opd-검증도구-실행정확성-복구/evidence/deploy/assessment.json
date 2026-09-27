@@ -1,0 +1,19 @@
+{
+  "checks": {
+    "five_non_md_literal_hashes_match": true,
+    "readme_literal_hash_match": false,
+    "readme_body_after_installer_strip_match": true,
+    "login_global_path": true,
+    "resolve_global": true,
+    "resolve_ruff_run": true,
+    "real_versions": true,
+    "deployed_unit_pass": true,
+    "real_commands": true,
+    "all_checks_pass": true
+  },
+  "literal_s13_sha_criterion_met": false,
+  "runtime_checks_met": true,
+  "verdict": "not_pass_due_to_readme_literal_sha_mismatch",
+  "reason": "Installer strips ## 변경이력 tail from deployed Markdown; body matches after documented normalization. S-13 expects all six literal SHA256 values to match.",
+  "scenario_mark": "unchanged; S-13 remains blocked pending PM decision"
+}

@@ -1,0 +1,94 @@
+{
+  "cmd": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/run.sh",
+    "unit",
+    "--scope",
+    "fe",
+    "--project-root",
+    "/private/tmp/opal-s161-real-cases/ts-test"
+  ],
+  "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161",
+  "exit": 5,
+  "stdout": "{\"ok\": false, \"status\": \"fail\", \"layers\": [{\"name\": \"lint\", \"tool\": \"eslint\", \"required\": true, \"status\": \"pass\", \"check\": {\"cmd\": \"npx eslint --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"npx eslint .\", \"exit\": 0, \"stdout\": \"\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"typecheck\", \"tool\": \"tsc\", \"required\": true, \"status\": \"pass\", \"check\": {\"cmd\": \"npx tsc --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"npx tsc --noEmit\", \"exit\": 0, \"stdout\": \"\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"unit\", \"tool\": \"vitest\", \"required\": true, \"status\": \"fail\", \"check\": {\"cmd\": \"npx vitest --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"npx vitest run\", \"exit\": 1, \"stdout\": \"RUN  v4.1.9 /private/tmp/opal-s161-real-cases/ts-test\\n\\n \u276f src/calc.test.ts (1 test | 1 failed) 5ms\\n     \u00d7 adds two numbers 4ms\\n\\n Test Files  1 failed (1)\\n      Tests  1 failed (1)\\n   Start at  20:54:58\\n   Duration  173ms (transform 18ms, setup 0ms, import 25ms, tests 5ms, environment 0ms)\\n\\n\\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af\\n\\n FAIL  src/calc.test.ts > add > adds two numbers\\nAssertionError: expected 5 to be 999 // Object.is equality\\n\\n- Expected\\n+ Received\\n\\n- 999\\n+ 5\\n\\n \u276f src/calc.test.ts:6:23\\n      4| describe('add', () => {\\n      5|   it('adds two numbers', () => {\\n      6|     expect(add(2, 3)).toBe(999)\\n       |                       ^\\n      7|   })\\n      8| })\\n\\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af[1/1]\u23af\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}], \"stopped_at\": \"unit\", \"requested_files\": [], \"error\": \"layer_failed\", \"command\": \"unit\", \"scope\": \"fe\", \"cwd\": \"/private/tmp/opal-s161-real-cases/ts-test\", \"config\": {\"source\": \"infer\", \"path\": \"/private/tmp/opal-s161-real-cases/ts-test/package.json\"}}\n",
+  "stderr": "",
+  "parsed": {
+    "ok": false,
+    "status": "fail",
+    "layers": [
+      {
+        "name": "lint",
+        "tool": "eslint",
+        "required": true,
+        "status": "pass",
+        "check": {
+          "cmd": "npx eslint --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "npx eslint .",
+        "exit": 0,
+        "stdout": "",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "typecheck",
+        "tool": "tsc",
+        "required": true,
+        "status": "pass",
+        "check": {
+          "cmd": "npx tsc --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "npx tsc --noEmit",
+        "exit": 0,
+        "stdout": "",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "unit",
+        "tool": "vitest",
+        "required": true,
+        "status": "fail",
+        "check": {
+          "cmd": "npx vitest --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "npx vitest run",
+        "exit": 1,
+        "stdout": "RUN  v4.1.9 /private/tmp/opal-s161-real-cases/ts-test\n\n \u276f src/calc.test.ts (1 test | 1 failed) 5ms\n     \u00d7 adds two numbers 4ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  20:54:58\n   Duration  173ms (transform 18ms, setup 0ms, import 25ms, tests 5ms, environment 0ms)\n\n\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af\n\n FAIL  src/calc.test.ts > add > adds two numbers\nAssertionError: expected 5 to be 999 // Object.is equality\n\n- Expected\n+ Received\n\n- 999\n+ 5\n\n \u276f src/calc.test.ts:6:23\n      4| describe('add', () => {\n      5|   it('adds two numbers', () => {\n      6|     expect(add(2, 3)).toBe(999)\n       |                       ^\n      7|   })\n      8| })\n\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af[1/1]\u23af",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      }
+    ],
+    "stopped_at": "unit",
+    "requested_files": [],
+    "error": "layer_failed",
+    "command": "unit",
+    "scope": "fe",
+    "cwd": "/private/tmp/opal-s161-real-cases/ts-test",
+    "config": {
+      "source": "infer",
+      "path": "/private/tmp/opal-s161-real-cases/ts-test/package.json"
+    }
+  }
+}

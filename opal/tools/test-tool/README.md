@@ -48,6 +48,7 @@ bash run.sh resolve [--stack py|ts] [--project-root PATH]
     "integration": { "e2e": [...], "api_db": {...} }
   },
   "source": "project",
+  "source_path": "/abs/path/to/project/.opal/test-tools.yaml",
   "stack": { "language": "typescript", "framework": "nextjs", "runtime": "node" }
 }
 ```
@@ -83,30 +84,116 @@ bash run.sh check [--tier unit|integration] [--category CATEGORY] [--project-roo
 
 ### `unit`
 
-lint → typecheck → unit 계층 stop-on-fail 단발 실행.
+lint → typecheck → unit → a11y 계층 stop-on-fail 단발 실행. 도구 항목의 `check`(설치 확인)와 `run`/`run_files`(실제 검사)를 분리 실행한다.
 
 ```bash
 bash run.sh unit [--scope fe|be] [--changed-files FILE...] [--project-root PATH]
 ```
 
-**출력 JSON**:
+**도구 항목 필드 의미(D-1)**:
+
+| 필드 | 의미 |
+|---|---|
+| `check` | 설치 확인 명령. exit 0이면 설치된 것으로 본다. **검사 명령이 아니다** — `run` 대체 실행에 쓰지 않는다. |
+| `install` | 설치 안내 명령(문서용, 자동 실행 없음). |
+| `run` | 실제 검사 명령. 프로젝트 전체 범위로 실행한다. |
+| `run_files` (선택) | `{files}` 자리표시자를 가진 파일 단위 검사 명령. |
+| `file_globs` (선택) | `run_files`에 넘길 파일을 고르는 glob 목록. 생략 시 프로젝트 안에 실재하는 요청 파일을 모두 넘긴다. 파일 단위 실행은 `run_files`가 없을 때 지원하지 않는다. |
+| `required` (기본 true) | 이 계층 결과가 전체 `incomplete` 판정에 영향을 준다. |
+
+**실행 순서(D-2)**: 계층마다 첫 번째 도구만 쓴다.
+
+1. `run`도 `run_files`도 없으면 아무 명령도 실행하지 않는다 → 계층 `not_configured`/`run_missing`.
+2. `check`가 있으면 먼저 실행한다. 실패(exit≠0)하면 `run`은 실행하지 않는다 → 계층 `tool_unavailable`/`install_check_failed`.
+3. `run`(또는 파일 범위가 있으면 `run_files`)을 실행한다. exit 0이면 `pass`, 아니면 `fail`.
+
+**검사 범위(D-3)**: `--changed-files`가 있으면 요청 파일을 `requested_files`에 기록한다. 도구에 `run_files`가 있으면 프로젝트 안에 실재하고 `file_globs`에 맞는 파일만 그 도구에 넘긴다. 매칭 파일이 0개면 명령을 실행하지 않고 계층 `not_applicable`/`no_matching_files`. `run_files`가 없는 도구는 `run`을 프로젝트 전체로 실행하고 계층 `scope.reason`을 `file_scope_unsupported`로 남긴다(C-5 — 파일 단위를 지원하지 않는 도구에 인자를 붙이지 않는다). `--changed-files`가 없거나 비면 전체 도구가 프로젝트 전체 범위로 실행된다.
+
+계층 `scope` 형태: `{kind: "files"|"project", requested: [...], checked: [...], excluded: [{path, reason}], reason}`. `excluded[].reason` ∈ `missing`(파일 부재) · `outside_project`(프로젝트 밖) · `pattern_mismatch`(glob 불일치).
+
+**계층 상태값(D-4, 폐쇄 목록)**: `pass` · `fail` · `tool_unavailable` · `not_configured` · `not_applicable` · `not_run`. 한 필수 계층이 `fail`이면 이후 계층은 실행하지 않고 `not_run`/`stopped_after_failure`로 응답에 남긴다(cmd는 `null`).
+
+**전체 상태값(D-4)**: `pass` · `fail` · `incomplete`.
+
+- `fail`: 필수 계층에 `fail`이 있다. `error: "layer_failed"`.
+- `incomplete`: 필수 계층에 `tool_unavailable`·`not_configured`가 있거나(`reason: "required_layer_unverified"`), 실행된 계층이 없거나(`reason: "no_layers_declared"`), 통과(`pass`) 계층이 0개다(`reason: "no_check_executed"`). `error: "unit_incomplete"`.
+- `pass`: 그 외. `ok`는 `status == "pass"`일 때만 `true`.
+
+**필수 여부(D-5)**: `required: false`인 계층의 `tool_unavailable`·`not_configured`는 전체를 `incomplete`로 만들지 않고 계층 상태로만 남는다. `required` 키가 없으면 필수로 본다.
+
+**exit·오류 코드(D-6)**: `pass` → exit `0`. `fail` → exit `5`, `error: "layer_failed"`. `incomplete` → exit `21`, `error: "unit_incomplete"`. 설정 해석 실패(resolve 단계)는 기존대로 exit `1`.
+
+**응답 예시(D-7)**:
 ```json
 {
   "ok": true,
-  "command": "unit",
+  "status": "pass",
   "layers": [
-    { "name": "lint",      "cmd": "eslint .",     "status": "pass", "stdout": "", "exit": 0 },
-    { "name": "typecheck", "cmd": "tsc --noEmit", "status": "pass", "stdout": "", "exit": 0 },
-    { "name": "unit",      "cmd": "vitest run",   "status": "pass", "stdout": "", "exit": 0 }
+    {
+      "name": "lint",
+      "tool": "ruff",
+      "required": true,
+      "status": "pass",
+      "check": { "cmd": "ruff --version", "exit": 0, "status": "pass" },
+      "cmd": "ruff check .",
+      "exit": 0,
+      "stdout": "All checks passed!",
+      "scope": { "kind": "project", "requested": [], "checked": [], "excluded": [], "reason": null }
+    },
+    {
+      "name": "typecheck",
+      "tool": "mypy",
+      "required": true,
+      "status": "pass",
+      "check": { "cmd": "mypy --version", "exit": 0, "status": "pass" },
+      "cmd": "mypy .",
+      "exit": 0,
+      "stdout": "Success: no issues found in 2 source files",
+      "scope": { "kind": "project", "requested": [], "checked": [], "excluded": [], "reason": null }
+    },
+    {
+      "name": "unit",
+      "tool": "pytest",
+      "required": true,
+      "status": "pass",
+      "check": { "cmd": "pytest --version", "exit": 0, "status": "pass" },
+      "cmd": "pytest",
+      "exit": 0,
+      "stdout": "1 passed",
+      "scope": { "kind": "project", "requested": [], "checked": [], "excluded": [], "reason": null }
+    }
   ],
-  "stopped_at": null
+  "stopped_at": null,
+  "requested_files": [],
+  "command": "unit",
+  "scope": "be",
+  "cwd": "/abs/path/to/project",
+  "config": { "source": "project", "path": "/abs/path/to/project/.opal/test-tools.yaml" }
 }
 ```
 
-**[MUST] stop-on-fail**: lint 실패 시 typecheck/unit 미실행 + `stopped_at=lint` 기록.  
-**[MUST] 단발 실행**: watch 플래그(`--watch`/`-w`) 사용 금지.
+계층 필드: `name`(계층명) · `tool`(도구 이름) · `required` · `status` · `reason`(비통과 시) · `check`(`{cmd, exit, status}`, 실행 시에만) · `cmd`(실제 실행한 run 명령, 미실행이면 `null`) · `exit` · `stdout` · `scope`. 최상위 필드: `status` · `reason`(비통과 시) · `scope`(요청 범위 `fe`/`be`) · `cwd`(절대경로) · `config: {source, path}` · `requested_files` · `layers` · `stopped_at`.
 
-**exit code**: `0` / `layer_failed(5)`
+**구형 설정 이관(D-9)**: `check`에 실제 검사 명령을 넣은 구형 설정은 `run`이 없으므로 `not_configured`/`run_missing`(exit 21)이 된다. `check`를 임의로 `run`에 복사하지 않는다(C-2) — 사용자가 명시적으로 편집해야 한다.
+
+이관 전:
+```yaml
+lint:
+  - name: eslint
+    check: "npx eslint ."
+    required: true
+```
+
+이관 후:
+```yaml
+lint:
+  - name: eslint
+    check: "npx eslint --version"   # 설치 확인
+    run: "npx eslint ."             # 실제 검사
+    run_files: "npx eslint {files}" # 선택 — 파일 단위 실행
+    file_globs: ["*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs"]
+    required: true
+```
 
 ---
 
@@ -517,6 +604,7 @@ bash run.sh scenario-coverage-check --coverage-input <PATH>
 | `no_runner` | 3 | yaml 없음 + 추론 불가 | test-tools.yaml 생성 |
 | `required_missing` | 4 | required 도구 미설치 | 도구 설치 후 재시도 |
 | `layer_failed` | 5 | unit 계층 stop-on-fail | 실패 계층 수정 후 재시도 |
+| `unit_incomplete` | 21 | unit 필수 계층 미검증(설치 확인 실패·미설정) 또는 통과 계층 0개 | 계층별 `reason` 확인 후 설정 보완·도구 설치 |
 | `e2e_failed` | 6 | 제품 동작 또는 assertion 실패 | 실패 시나리오 수정·재검증 |
 | `e2e_infra_error` | 7 | E2E 서버·포트·driver·증적 저장 등 인프라 오류 | 실행 환경·로그 확인 |
 | `red_not_confirmed` | 8 | scenario-lock 시 RED 대상의 red_confirmed 미충족 | 해당 RED 대상의 구현 전 실패 확인 후 재시도 |

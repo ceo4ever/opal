@@ -3,7 +3,7 @@
   "module": "test_tool",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "test-tool CLI — resolve/check/unit/integration · e2e(run/resume/status/clean/driver-verify/promote-check/env-inspect/env-validate/env-check) · scenario-* argparse 라우터 + ERROR_CODES 카탈로그 + JSON 출력 헬퍼. integration은 Ego Lite → cmux → Playwright 우선순위 후보 체인을 돈다.",
+  "description": "test-tool CLI — resolve/check/unit/integration · e2e(run/resume/status/clean/driver-verify/promote-check/env-inspect/env-validate/env-check) · scenario-* argparse 라우터 + ERROR_CODES 카탈로그 + JSON 출력 헬퍼. integration은 Ego Lite → cmux → Playwright 우선순위 후보 체인을 돈다. unit은 task 161 D-1~D-7 계약(--changed-files 전달, cwd·config·requested_files 기록, pass/fail/incomplete → exit 0/5/21)을 따른다.",
   "exports": [
     "main",
     "ERROR_CODES"
@@ -54,6 +54,7 @@ ERROR_CODES: Dict[str, str] = {
     "no_runner":          "test-tools.yaml 없음 + package.json/pyproject.toml 추론 불가",
     "required_missing":   "required 도구 미설치 — check 게이트 차단",
     "layer_failed":       "unit 계층 실패 (stop-on-fail) — lint/typecheck/unit 중 한 계층 실패",
+    "unit_incomplete":    "unit 미완료 — 필수 계층 미검증(설치 확인 실패·미설정) 또는 통과 계층 0개",
     "e2e_failed":         "E2E 테스트 실패 — browser executor 후보 전건 실패",
     "escalation":         "cmux-tool 에스컬레이션 에러코드 — 폴백 금지, 호출자 수정 필요",
     "e2e_infra_error":    "E2E 실행 인프라 오류 — provider 오류 또는 환경 오류",
@@ -160,8 +161,9 @@ def cmd_check(args: argparse.Namespace) -> None:
 
 
 def cmd_unit(args: argparse.Namespace) -> None:
-    """unit 서브명령 — lint→typecheck→unit stop-on-fail 단발 실행."""
-    project_root = pathlib.Path(args.project_root) if args.project_root else None
+    """unit 서브명령 — lint→typecheck→unit→a11y stop-on-fail 단발 실행(task 161 D-1~D-7)."""
+    project_root_arg = pathlib.Path(args.project_root) if args.project_root else pathlib.Path.cwd()
+    project_root = project_root_arg.absolute()
     resolved = resolve_test_tools(project_root=project_root)
     if not resolved.get("ok"):
         print(json.dumps(resolved, ensure_ascii=False))
@@ -169,6 +171,7 @@ def cmd_unit(args: argparse.Namespace) -> None:
 
     tiers_data = resolved.get("tiers", {})
     scope = getattr(args, "scope", "be") or "be"
+    changed_files = getattr(args, "changed_files", None) or []
 
     import os
     env = os.environ.copy()
@@ -178,12 +181,23 @@ def cmd_unit(args: argparse.Namespace) -> None:
         scope=scope,
         project_root=project_root,
         env=env,
+        changed_files=changed_files,
     )
     result["command"] = "unit"
+    result["scope"] = scope
+    result["cwd"] = str(project_root)
+    result["config"] = {
+        "source": resolved.get("source"),
+        "path": resolved.get("source_path"),
+    }
 
-    if not result.get("ok"):
+    overall_status = result.get("status")
+    if overall_status == "fail":
         print(json.dumps(result, ensure_ascii=False))
         sys.exit(5)
+    if overall_status == "incomplete":
+        print(json.dumps(result, ensure_ascii=False))
+        sys.exit(21)
     _respond(result, 0)
 
 

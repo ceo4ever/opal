@@ -296,15 +296,15 @@ tiers:
     be:
       lint:
         - name: eslint
-          check: eslint .
+          run: eslint .
           required: true
       typecheck:
         - name: tsc
-          check: tsc --noEmit
+          run: tsc --noEmit
           required: true
       unit:
         - name: vitest
-          check: vitest run
+          run: vitest run
 """
         )
         return yaml_path
@@ -328,15 +328,15 @@ tiers:
     be:
       lint:
         - name: eslint
-          check: eslint .
+          run: eslint .
           required: true
       typecheck:
         - name: tsc
-          check: tsc --noEmit
+          run: tsc --noEmit
           required: true
       unit:
         - name: vitest
-          check: vitest run
+          run: vitest run
 """
         )
         return yaml_path

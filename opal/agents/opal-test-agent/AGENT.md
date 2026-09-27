@@ -106,7 +106,7 @@ opd/opds의 TEST 순서·증거 재사용·fix 반복·최종 Gate는 `opal/core
 - **추가 로드 문서**: 테스트 스택 탐지를 위해 PM이 주입한 테스트·컨벤션·대상 도메인 문서만 읽는다. 러너 탐지는 `test-tool resolve`가 담당한다.
 - **수행 절차**:
   1. TEST-SCENARIO.md에서 RED-first 트랙 M1 시나리오를 식별한다.
-  2. 테스트 스택 탐지는 `test-tool resolve`로 수행한다. 도구가 project → global → infer 순서를 집행하며, 러너 부재 시 사용자 에스컬레이션한다.
+  2. 테스트 스택 탐지는 `test-tool resolve`로 수행한다. 도구가 project → global → infer 순서를 집행하며, 러너 부재 시 사용자 에스컬레이션한다. resolve 결과 도구 항목의 실행 명령은 `run`이며 `check`는 설치 확인 명령이라 테스트 실행에 쓰지 않는다.
   3. 시나리오를 실행 가능한 테스트 코드(RED 상태 — 미구현으로 실패)로 변환·작성한다. 공개 인터페이스·관찰 가능 행위(반환값/exit code/관측 출력)로만 검증한다 (내부 구현/private 결합 금지).
   4. 작성된 테스트를 실행하여 실패(exit code≠0)를 확인하고 출력 증거를 `test-tool scenario-red`로 기록한다. legacy TEST-SCENARIO에서만 문서 결과 칸 갱신을 허용한다.
   5. RED 증거 없이 완료 선언 금지 (헌법 §4 "Completion requires evidence").

@@ -1,0 +1,84 @@
+{
+  "cmd": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/run.sh",
+    "unit",
+    "--scope",
+    "be",
+    "--project-root",
+    "/private/tmp/opal-s161-real-cases/python-type"
+  ],
+  "exit": 5,
+  "stdout": "{\"ok\": false, \"status\": \"fail\", \"layers\": [{\"name\": \"lint\", \"tool\": \"ruff\", \"required\": true, \"status\": \"pass\", \"check\": {\"cmd\": \"ruff --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"ruff check .\", \"exit\": 0, \"stdout\": \"All checks passed!\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"typecheck\", \"tool\": \"mypy\", \"required\": true, \"status\": \"fail\", \"check\": {\"cmd\": \"mypy --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"mypy .\", \"exit\": 1, \"stdout\": \"calc.py:2: error: Incompatible return value type (got \\\"str\\\", expected \\\"int\\\")  [return-value]\\nFound 1 error in 1 file (checked 2 source files)\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"unit\", \"tool\": \"pytest\", \"required\": true, \"status\": \"not_run\", \"reason\": \"stopped_after_failure\", \"check\": null, \"cmd\": null, \"exit\": null, \"stdout\": null, \"scope\": null}], \"stopped_at\": \"typecheck\", \"requested_files\": [], \"error\": \"layer_failed\", \"command\": \"unit\", \"scope\": \"be\", \"cwd\": \"/private/tmp/opal-s161-real-cases/python-type\", \"config\": {\"source\": \"infer\", \"path\": \"/private/tmp/opal-s161-real-cases/python-type/pyproject.toml\"}}\n",
+  "stderr": "",
+  "parsed": {
+    "ok": false,
+    "status": "fail",
+    "layers": [
+      {
+        "name": "lint",
+        "tool": "ruff",
+        "required": true,
+        "status": "pass",
+        "check": {
+          "cmd": "ruff --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "ruff check .",
+        "exit": 0,
+        "stdout": "All checks passed!",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "typecheck",
+        "tool": "mypy",
+        "required": true,
+        "status": "fail",
+        "check": {
+          "cmd": "mypy --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "mypy .",
+        "exit": 1,
+        "stdout": "calc.py:2: error: Incompatible return value type (got \"str\", expected \"int\")  [return-value]\nFound 1 error in 1 file (checked 2 source files)",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "unit",
+        "tool": "pytest",
+        "required": true,
+        "status": "not_run",
+        "reason": "stopped_after_failure",
+        "check": null,
+        "cmd": null,
+        "exit": null,
+        "stdout": null,
+        "scope": null
+      }
+    ],
+    "stopped_at": "typecheck",
+    "requested_files": [],
+    "error": "layer_failed",
+    "command": "unit",
+    "scope": "be",
+    "cwd": "/private/tmp/opal-s161-real-cases/python-type",
+    "config": {
+      "source": "infer",
+      "path": "/private/tmp/opal-s161-real-cases/python-type/pyproject.toml"
+    }
+  }
+}

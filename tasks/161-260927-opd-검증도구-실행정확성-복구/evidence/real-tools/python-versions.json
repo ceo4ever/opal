@@ -1,0 +1,17 @@
+{
+  "ruff": {
+    "exit": 0,
+    "stdout": "ruff 0.15.17\n",
+    "stderr": ""
+  },
+  "mypy": {
+    "exit": 0,
+    "stdout": "mypy 2.3.1 (compiled: yes)\n",
+    "stderr": ""
+  },
+  "pytest": {
+    "exit": 0,
+    "stdout": "pytest 9.1.0\n",
+    "stderr": ""
+  }
+}

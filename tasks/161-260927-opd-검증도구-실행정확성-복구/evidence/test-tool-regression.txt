@@ -1,0 +1,3386 @@
+...................................................................F..F..FF.FFFF..F...FF..FFFFFFFFF..F.F.............................................................. [ 29%]
+.........................FFFFFF.FF........F.FFEEEE............ [ 40%]
+.................FFFFFFFFF..F................... [ 48%]
+............................................FFFFFF.........FF.FFF....F..FF.....FFFF... [ 63%]
+..........................F.F.F..FF..FFFFFFFFFFFFFFFFsss.s...................F......FF....FF....... [ 81%]
+.........F..F...FF................................................. [ 92%]
+........................... [ 97%]
+..............                                              [100%]
+==================================== ERRORS ====================================
+________ ERROR at setup of TestReadinessInProcess.test_unreachable_url _________
+
+cls = <class 'test_e2e_env_commands.TestReadinessInProcess'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.server = http.server.HTTPServer(("127.0.0.1", 0), _Handler)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_env_commands.py:451: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.HTTPServer object at 0x107abf620>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ ERROR at setup of TestReadinessInProcess.test_url_surfaces_ready_with_driver _
+
+cls = <class 'test_e2e_env_commands.TestReadinessInProcess'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.server = http.server.HTTPServer(("127.0.0.1", 0), _Handler)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_env_commands.py:451: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.HTTPServer object at 0x107abf620>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+____ ERROR at setup of TestReadinessInProcess.test_web_5xx_and_api_non_200 _____
+
+cls = <class 'test_e2e_env_commands.TestReadinessInProcess'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.server = http.server.HTTPServer(("127.0.0.1", 0), _Handler)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_env_commands.py:451: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.HTTPServer object at 0x107abf620>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ ERROR at setup of TestReadinessInProcess.test_web_without_driver_is_driver_unavailable _
+
+cls = <class 'test_e2e_env_commands.TestReadinessInProcess'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.server = http.server.HTTPServer(("127.0.0.1", 0), _Handler)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_env_commands.py:451: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.HTTPServer object at 0x107abf620>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+=================================== FAILURES ===================================
+_ TestExecutorOperationContract.test_act_without_step_role_is_refused_before_any_request _
+
+self = <test_e2e_api_executor.TestExecutorOperationContract testMethod=test_act_without_step_role_is_refused_before_any_request>
+
+    def test_act_without_step_role_is_refused_before_any_request(self):
+        """C-EXE-2 — §C.4 fidelity 집행의 입력이므로 기본값으로 얼버무리지 않는다."""
+>       server = _Server({"/x": (200, {"ok": True})})
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107abe7b0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+__ TestExecutorOperationContract.test_prepare_returns_the_three_contract_keys __
+
+self = <test_e2e_api_executor.TestExecutorOperationContract testMethod=test_prepare_returns_the_three_contract_keys>
+
+    def test_prepare_returns_the_three_contract_keys(self):
+>       server = _Server({})
+                 ^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107734690>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+____ TestProbeIsEvidenceBased.test_probe_against_a_dead_port_is_unavailable ____
+
+self = <test_e2e_api_executor.TestProbeIsEvidenceBased testMethod=test_probe_against_a_dead_port_is_unavailable>
+
+    def test_probe_against_a_dead_port_is_unavailable(self):
+>       probe = _executor(f"http://127.0.0.1:{_closed_port()}").dispatch("probe", {})
+                                              ^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:180: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _closed_port() -> int:
+        """아무도 듣지 않는 포트 — transport 오류(ECONNREFUSED)를 실제로 일으킨다."""
+        import socket
+    
+        with socket.socket() as sock:
+>           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:97: PermissionError
+_ TestProbeIsEvidenceBased.test_probe_against_a_live_health_surface_is_available _
+
+self = <test_e2e_api_executor.TestProbeIsEvidenceBased testMethod=test_probe_against_a_live_health_surface_is_available>
+
+    def test_probe_against_a_live_health_surface_is_available(self):
+>       server = _Server({"/health": (200, {"status": "ok"})})
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x1076c0e10>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestRealHttpAct.test_act_opens_a_real_socket_and_reports_the_product_status __
+
+self = <test_e2e_api_executor.TestRealHttpAct testMethod=test_act_opens_a_real_socket_and_reports_the_product_status>
+
+    def test_act_opens_a_real_socket_and_reports_the_product_status(self):
+>       server = _Server({"/api/projects": (201, {"id": "p-1", "state": "created"})})
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:198: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107d848a0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestRealHttpAct.test_assertion_result_always_carries_expected_and_actual_keys _
+
+self = <test_e2e_api_executor.TestRealHttpAct testMethod=test_assertion_result_always_carries_expected_and_actual_keys>
+
+    def test_assertion_result_always_carries_expected_and_actual_keys(self):
+        """§A.5 [MUST] — 값이 null이어도 키는 존재해야 한다."""
+>       server = _Server({})
+                 ^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:289: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107d85350>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestRealHttpAct.test_observe_url_records_the_follow_up_state_as_its_own_action _
+
+self = <test_e2e_api_executor.TestRealHttpAct testMethod=test_observe_url_records_the_follow_up_state_as_its_own_action>
+
+    def test_observe_url_records_the_follow_up_state_as_its_own_action(self):
+>       server = _Server({
+            "/api/tasks": (202, {"accepted": True}),
+            "/api/tasks/1": (200, {"state": "done"}),
+        })
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:250: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107683d10>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_____ TestRealHttpAct.test_state_verifier_asserts_against_a_follow_up_call _____
+
+self = <test_e2e_api_executor.TestRealHttpAct testMethod=test_state_verifier_asserts_against_a_follow_up_call>
+
+    def test_state_verifier_asserts_against_a_follow_up_call(self):
+>       server = _Server({"/api/state": (200, {"phase": "ready"})})
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:272: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107c3a250>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+____ TestRetryWhitelist.test_failed_action_is_recorded_as_error_not_omitted ____
+
+self = <test_e2e_api_executor.TestRetryWhitelist testMethod=test_failed_action_is_recorded_as_error_not_omitted>
+
+    def test_failed_action_is_recorded_as_error_not_omitted(self):
+>       dead = f"http://127.0.0.1:{_closed_port()}"
+                                   ^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:356: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _closed_port() -> int:
+        """아무도 듣지 않는 포트 — transport 오류(ECONNREFUSED)를 실제로 일으킨다."""
+        import socket
+    
+        with socket.socket() as sock:
+>           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:97: PermissionError
+_ TestRetryWhitelist.test_product_4xx_and_5xx_are_returned_once_and_never_retried (status=404) _
+
+self = <test_e2e_api_executor.TestRetryWhitelist testMethod=test_product_4xx_and_5xx_are_returned_once_and_never_retried>
+
+    def test_product_4xx_and_5xx_are_returned_once_and_never_retried(self):
+        for status in (404, 409, 500):
+            with self.subTest(status=status):
+>               server = _Server({"/fail": (status, {"detail": "product failure"})})
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:322: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107c3acf0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestRetryWhitelist.test_product_4xx_and_5xx_are_returned_once_and_never_retried (status=409) _
+
+self = <test_e2e_api_executor.TestRetryWhitelist testMethod=test_product_4xx_and_5xx_are_returned_once_and_never_retried>
+
+    def test_product_4xx_and_5xx_are_returned_once_and_never_retried(self):
+        for status in (404, 409, 500):
+            with self.subTest(status=status):
+>               server = _Server({"/fail": (status, {"detail": "product failure"})})
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:322: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107d58b50>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestRetryWhitelist.test_product_4xx_and_5xx_are_returned_once_and_never_retried (status=500) _
+
+self = <test_e2e_api_executor.TestRetryWhitelist testMethod=test_product_4xx_and_5xx_are_returned_once_and_never_retried>
+
+    def test_product_4xx_and_5xx_are_returned_once_and_never_retried(self):
+        for status in (404, 409, 500):
+            with self.subTest(status=status):
+>               server = _Server({"/fail": (status, {"detail": "product failure"})})
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:322: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107d58b50>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestRetryWhitelist.test_transport_failure_retries_up_to_the_contract_ceiling_then_errors _
+
+self = <test_e2e_api_executor.TestRetryWhitelist testMethod=test_transport_failure_retries_up_to_the_contract_ceiling_then_errors>
+
+    def test_transport_failure_retries_up_to_the_contract_ceiling_then_errors(self):
+>       dead = f"http://127.0.0.1:{_closed_port()}"
+                                   ^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:340: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _closed_port() -> int:
+        """아무도 듣지 않는 포트 — transport 오류(ECONNREFUSED)를 실제로 일으킨다."""
+        import socket
+    
+        with socket.socket() as sock:
+>           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:97: PermissionError
+_ TestEvidenceGate.test_action_rows_carry_the_contract_a4_keys_and_the_step_role _
+
+self = <test_e2e_api_executor.TestEvidenceGate testMethod=test_action_rows_carry_the_contract_a4_keys_and_the_step_role>
+
+    def test_action_rows_carry_the_contract_a4_keys_and_the_step_role(self):
+>       _, executor, _ = self._capture(
+            {"/api/ping": (200, {"pong": True})},
+            method="GET", url="/api/ping", step_role="setup",
+        )
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:412: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:374: in _capture
+    server = _Server(routes)
+             ^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107d3e300>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_____ TestEvidenceGate.test_api_rows_cross_reference_the_action_log_by_seq _____
+
+self = <test_e2e_api_executor.TestEvidenceGate testMethod=test_api_rows_cross_reference_the_action_log_by_seq>
+
+    def test_api_rows_cross_reference_the_action_log_by_seq(self):
+        """§A.11 — requests/responses 1행은 actions.jsonl의 같은 seq를 가리킨다."""
+>       _, executor, _ = self._capture(
+            {"/api/ping": (200, {"pong": True})},
+            method="GET", url="/api/ping", step_role="verify",
+        )
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:427: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:374: in _capture
+    server = _Server(routes)
+             ^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107cebb60>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestEvidenceGate.test_body_is_not_collected_unless_the_endpoint_is_allowlisted _
+
+self = <test_e2e_api_executor.TestEvidenceGate testMethod=test_body_is_not_collected_unless_the_endpoint_is_allowlisted>
+
+    def test_body_is_not_collected_unless_the_endpoint_is_allowlisted(self):
+        """§A.11 — body 기본 미수집. allowlist endpoint만 수집한다."""
+>       _, executor, _ = self._capture(
+            {"/api/private": (200, {"payload": "not-collected"})},
+            method="GET", url="/api/private", step_role="verify",
+        )
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:437: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:374: in _capture
+    server = _Server(routes)
+             ^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107a8db70>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestEvidenceGate.test_capture_without_an_evidence_writer_is_a_contract_error _
+
+self = <test_e2e_api_executor.TestEvidenceGate testMethod=test_capture_without_an_evidence_writer_is_a_contract_error>
+
+    def test_capture_without_an_evidence_writer_is_a_contract_error(self):
+        """§C.2 [MUST] — executor는 파일을 직접 쓰지 않는다."""
+>       server = _Server({})
+                 ^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:445: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107c87770>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestEvidenceGate.test_capture_writes_the_two_contract_a11_files_plus_the_action_log _
+
+self = <test_e2e_api_executor.TestEvidenceGate testMethod=test_capture_writes_the_two_contract_a11_files_plus_the_action_log>
+
+    def test_capture_writes_the_two_contract_a11_files_plus_the_action_log(self):
+>       root, _, artifacts = self._capture(
+            {"/api/ping": (200, {"pong": True})},
+            method="GET", url="/api/ping", step_role="verify",
+        )
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:386: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:374: in _capture
+    server = _Server(routes)
+             ^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x1080d20d0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestEvidenceGate.test_secret_headers_never_reach_the_artifact_in_clear_text __
+
+self = <test_e2e_api_executor.TestEvidenceGate testMethod=test_secret_headers_never_reach_the_artifact_in_clear_text>
+
+    def test_secret_headers_never_reach_the_artifact_in_clear_text(self):
+        """TASK.md C-6 / §A.12 — Authorization·Cookie·Set-Cookie는 마스킹본만 남는다."""
+>       root, _, _ = self._capture(
+            {"/api/secure": (200, {"ok": True})},
+            method="GET", url="/api/secure?token=raw-query-secret", step_role="verify",
+            headers={"Authorization": "Bearer raw-header-secret", "Cookie": "sid=raw-cookie"},
+        )
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:397: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:374: in _capture
+    server = _Server(routes)
+             ^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107d796d0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestFixtureOwnership.test_cleanup_actions_are_recorded_with_the_cleanup_step_role _
+
+self = <test_e2e_api_executor.TestFixtureOwnership testMethod=test_cleanup_actions_are_recorded_with_the_cleanup_step_role>
+
+    def test_cleanup_actions_are_recorded_with_the_cleanup_step_role(self):
+        """§C.4 / TD-17 — setup·cleanup API와 검증 대상 API가 구분 기록된다."""
+>       server = _Server({"/api/fixtures/mine": (204, {})})
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:530: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107d79910>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+___ TestFixtureOwnership.test_cleanup_calls_only_the_owned_fixture_endpoint ____
+
+self = <test_e2e_api_executor.TestFixtureOwnership testMethod=test_cleanup_calls_only_the_owned_fixture_endpoint>
+
+    def test_cleanup_calls_only_the_owned_fixture_endpoint(self):
+>       server = _Server({"/api/fixtures/mine": (204, {})})
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:507: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107a5f6a0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+_ TestFixtureOwnership.test_cleanup_reports_a_leak_instead_of_claiming_success _
+
+self = <test_e2e_api_executor.TestFixtureOwnership testMethod=test_cleanup_reports_a_leak_instead_of_claiming_success>
+
+    def test_cleanup_reports_a_leak_instead_of_claiming_success(self):
+>       server = _Server({})  # mine → 404
+                 ^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:521: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x107a5d4f0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+____ TestFixtureOwnership.test_owned_ledger_lists_only_this_runs_namespace _____
+
+self = <test_e2e_api_executor.TestFixtureOwnership testMethod=test_owned_ledger_lists_only_this_runs_namespace>
+
+    def test_owned_ledger_lists_only_this_runs_namespace(self):
+>       server = _Server({})
+                 ^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:490: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x1080a8f50>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+__ TestCandidateResolution.test_registered_and_available_executor_is_selected __
+
+self = <test_e2e_api_executor.TestCandidateResolution testMethod=test_registered_and_available_executor_is_selected>
+
+    def test_registered_and_available_executor_is_selected(self):
+>       server = _Server({"/health": (200, {"status": "ok"})})
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:554: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_api_executor.py:76: in __init__
+    self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Recorder)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:457: in __init__
+    self.server_bind()
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py:148: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x1080a9130>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py:478: PermissionError
+______ TestCandidateResolution.test_unavailable_executor_is_not_selected _______
+
+self = <test_e2e_api_executor.TestCandidateResolution testMethod=test_unavailable_executor_is_not_selected>
+
+    def test_unavailable_executor_is_not_selected(self):
+        e2e_api.register()
+        candidates, _ = e2e_executors.resolve_executor_candidates(
+>           ["api"], runtime_context={"backend_url": f"http://127.0.0.1:{_closed_port()}"}
+                                                                         ^^^^^^^^^^^^^^
+        )
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:568: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _closed_port() -> int:
+        """아무도 듣지 않는 포트 — transport 오류(ECONNREFUSED)를 실제로 일으킨다."""
+        import socket
+    
+        with socket.socket() as sock:
+>           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/tests/test_e2e_api_executor.py:97: PermissionError
+____ TestJournalTransitionOrder.test_executor_ready_is_emitted_exactly_once ____
+
+self = <test_e2e_drivers.TestJournalTransitionOrder testMethod=test_executor_ready_is_emitted_exactly_once>
+
+    def test_executor_ready_is_emitted_exactly_once(self):
+        _payload, states = self._run(selected=True)
+>       self.assertEqual(states.count(self.orchestrator.STATE_EXECUTOR_READY), 1)
+E       AssertionError: 0 != 1
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:579: AssertionError
+_ TestJournalTransitionOrder.test_no_selected_candidate_keeps_the_shortcut_and_never_starts_a_sut _
+
+self = <test_e2e_drivers.TestJournalTransitionOrder testMethod=test_no_selected_candidate_keeps_the_shortcut_and_never_starts_a_sut>
+
+    def test_no_selected_candidate_keeps_the_shortcut_and_never_starts_a_sut(self):
+        """§A.1.2 [MUST] — selected 0건이면 executor_unavailable이며 SUT를 기동하지 않는다."""
+        payload, states = self._run(selected=False)
+>       self.assertEqual(payload["status"], "executor_unavailable")
+E       AssertionError: 'infra_error' != 'executor_unavailable'
+E       - infra_error
+E       + executor_unavailable
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:584: AssertionError
+_ TestJournalTransitionOrder.test_profile_resolved_follows_sut_ready_on_the_progress_path _
+
+self = <test_e2e_drivers.TestJournalTransitionOrder testMethod=test_profile_resolved_follows_sut_ready_on_the_progress_path>
+
+    def test_profile_resolved_follows_sut_ready_on_the_progress_path(self):
+        """진행 경로에서 profile_resolved가 sut_ready보다 앞서면 §A.2.1 위반이다."""
+        _payload, states = self._run(selected=True)
+        self.assertLess(
+>           states.index(self.orchestrator.STATE_SUT_READY),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            states.index(self.orchestrator.STATE_PROFILE_RESOLVED),
+        )
+E       ValueError: list.index(x): x not in list
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:573: ValueError
+____ TestJournalTransitionOrder.test_selected_candidate_emits_the_a21_order ____
+
+self = <test_e2e_drivers.TestJournalTransitionOrder testMethod=test_selected_candidate_emits_the_a21_order>
+
+    def test_selected_candidate_emits_the_a21_order(self):
+        _payload, states = self._run(selected=True)
+        order = [
+            self.orchestrator.STATE_SUT_STARTING,
+            self.orchestrator.STATE_SUT_READY,
+            self.orchestrator.STATE_PROFILE_RESOLVED,
+            self.orchestrator.STATE_EXECUTOR_READY,
+        ]
+>       positions = [states.index(state) for state in order]
+                     ^^^^^^^^^^^^^^^^^^^
+E       ValueError: list.index(x): x not in list
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:565: ValueError
+___ TestSutDependentProbeOrdering.test_api_probe_receives_a_live_backend_url ___
+
+self = <test_e2e_drivers.TestSutDependentProbeOrdering testMethod=test_api_probe_receives_a_live_backend_url>
+
+    def test_api_probe_receives_a_live_backend_url(self):
+        """backend_url이 채워진다는 것은 health를 물어볼 대상이 실제로 있다는 뜻이다."""
+        self._run_api_profile()
+>       self.assertTrue(self.probe_contexts)
+E       AssertionError: [] is not true
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:698: AssertionError
+______ TestSutDependentProbeOrdering.test_api_profile_emits_the_a21_order ______
+
+self = <test_e2e_drivers.TestSutDependentProbeOrdering testMethod=test_api_profile_emits_the_a21_order>
+
+    def test_api_profile_emits_the_a21_order(self):
+        _payload, _run_json, states = self._run_api_profile()
+        order = [
+            self.orchestrator.STATE_SUT_STARTING,
+            self.orchestrator.STATE_SUT_READY,
+            self.orchestrator.STATE_PROFILE_RESOLVED,
+            self.orchestrator.STATE_EXECUTOR_READY,
+        ]
+>       positions = [states.index(state) for state in order]
+                     ^^^^^^^^^^^^^^^^^^^
+E       ValueError: list.index(x): x not in list
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:711: ValueError
+__ TestSutDependentProbeOrdering.test_selected_api_candidate_is_recorded_once __
+
+self = <test_e2e_drivers.TestSutDependentProbeOrdering testMethod=test_selected_api_candidate_is_recorded_once>
+
+    def test_selected_api_candidate_is_recorded_once(self):
+        _payload, run_json, _states = self._run_api_profile()
+        selected = [c for c in run_json["candidates"] if c["outcome"] == "selected"]
+>       self.assertEqual(len(selected), 1)
+E       AssertionError: 0 != 1
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:717: AssertionError
+___ TestSutDependentProbeOrdering.test_sut_starts_before_the_api_probe_runs ____
+
+self = <test_e2e_drivers.TestSutDependentProbeOrdering testMethod=test_sut_starts_before_the_api_probe_runs>
+
+    def test_sut_starts_before_the_api_probe_runs(self):
+        _payload, _run_json, _states = self._run_api_profile()
+>       self.assertEqual(self.events, ["start_sut", "probe"])
+E       AssertionError: Lists differ: [] != ['start_sut', 'probe']
+E       
+E       Second list contains 2 additional elements.
+E       First extra element 0:
+E       'start_sut'
+E       
+E       - []
+E       + ['start_sut', 'probe']
+
+opal/tools/test-tool/tests/test_e2e_drivers.py:693: AssertionError
+___________ TestEnvCheckCli.test_desktop_secret_and_service_failure ____________
+
+self = <test_e2e_env_commands.TestEnvCheckCli testMethod=test_desktop_secret_and_service_failure>
+
+    def test_desktop_secret_and_service_failure(self):
+        name = "E2E_ENV_CMD_TEST_TOKEN"
+        env = dict(os.environ)
+        env.pop(name, None)
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as artifacts:
+            root = pathlib.Path(tmp)
+            _write_config(root, {
+                "schema_version": "1.0",
+                "services": [
+                    {"id": "dead", "command": ["{python}", "-c", "import sys; sys.exit(3)"]},
+                    {"id": "child", "command": ["{python}", "-c", "import time; time.sleep(30)"],
+                     "depends_on": ["dead"]},
+                ],
+                "surfaces": [
+                    {"id": "a-dead", "kind": "api", "service": "dead"},
+                    {"id": "a-child", "kind": "api", "service": "child"},
+                    {"id": "mac1", "kind": "macos-app", "app": {"path": "/nonexistent/X.app"}},
+                    {"id": "win1", "kind": "windows-app", "app": {"launch": ["true"]}},
+                ],
+                "secrets": [{"name": name}],
+            })
+            code, out, err, parsed = _run_cli(
+                ["e2e", "env-check", "--project-root", str(root), "--artifact-root", artifacts], env=env)
+            self.assertEqual(code, 1, out + err)
+            self.assertFalse(parsed["ready"])
+            surfaces = {s["id"]: s for s in parsed["surfaces"]}
+    
+            dead = surfaces["a-dead"]
+            self.assertEqual(dead["cause"], "service_start_failed")
+            self.assertEqual([c["detail"] for c in dead["checks"][1:]], ["skipped", "skipped"])
+>           self.assertIn(str(pathlib.Path(artifacts) / "readiness"), dead["checks"][0]["detail"])
+E           AssertionError: '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp4nyfyt9y/readiness' not found in 'e2e_port_lease_failed: no free port outside the set already leased or reserved by the user'
+
+opal/tools/test-tool/tests/test_e2e_env_commands.py:403: AssertionError
+___________ TestEnvCheckCli.test_readiness_log_masks_from_env_secret ___________
+
+self = <test_e2e_env_commands.TestEnvCheckCli testMethod=test_readiness_log_masks_from_env_secret>
+
+    def test_readiness_log_masks_from_env_secret(self):
+        """GC-006 — 서비스가 찍은 from_env 비밀값은 readiness 로그에 마스킹본으로만 남는다."""
+        name = "E2E_ENV_CMD_LOG_SECRET"
+        secret = "s3cr3t-log-value-7f2a91"
+        env = dict(os.environ)
+        env[name] = secret
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as artifacts:
+            root = pathlib.Path(tmp)
+            script = root / "leaky.py"
+            script.write_text(
+                "import os, sys\n"
+                "print('booting with token', os.environ['APP_TOKEN'], flush=True)\n"
+                "print('stderr token', os.environ['APP_TOKEN'], file=sys.stderr, flush=True)\n"
+                + _SERVER_SCRIPT,
+                encoding="utf-8",
+            )
+            _write_config(root, {
+                "schema_version": "1.0",
+                "services": [{
+                    "id": "leaky",
+                    "command": ["{python}", str(script), "{host}", "{port}"],
+                    "env": {"APP_TOKEN": {"from_env": name}},
+                    "health": {"type": "http", "path": "/health"},
+                    "startup_timeout_s": 20,
+                }],
+                "surfaces": [{"id": "api1", "kind": "api", "service": "leaky"}],
+            })
+            code, out, err, parsed = _run_cli(
+                ["e2e", "env-check", "--project-root", str(root), "--artifact-root", artifacts], env=env)
+>           self.assertEqual(code, 0, out + err)
+E           AssertionError: 1 != 0 : {"ok": true, "command": "e2e env-check", "path": "/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpblmsv2sm/.opal/e2e/environment.json", "ready": false, "secrets": [], "surfaces": [{"id": "api1", "kind": "api", "status": "not_ready", "checks": [{"name": "service_start", "ok": false, "detail": "e2e_port_lease_failed: no free port outside the set already leased or reserved by the user"}, {"name": "health", "ok": false, "detail": "skipped"}, {"name": "executor", "ok": false, "detail": "skipped"}], "cause": "service_start_failed", "remediation": "서비스 command·cwd·의존성을 점검하고 check detail의 기동 로그를 확인한 뒤 다시 실행한다."}], "run_dir": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmps9qmsbv8/readiness/readiness-20260927T205540-38739"}
+
+opal/tools/test-tool/tests/test_e2e_env_commands.py:361: AssertionError
+_______ TestEnvCheckCli.test_ready_api_and_human_exit_zero_and_cleans_up _______
+
+self = <test_e2e_env_commands.TestEnvCheckCli testMethod=test_ready_api_and_human_exit_zero_and_cleans_up>
+
+    def test_ready_api_and_human_exit_zero_and_cleans_up(self):
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as artifacts:
+            root = pathlib.Path(tmp)
+            _write_config(root, {
+                "schema_version": "1.0",
+                "services": [_server_service(root)],
+                "surfaces": [
+                    {"id": "api1", "kind": "api", "service": "api-svc", "health_path": "/health"},
+                    {"id": "api2", "kind": "api", "service": "api-svc"},
+                    {"id": "human1", "kind": "human"},
+                ],
+                "secrets": [{"name": "PATH"}],
+            })
+            code, out, err, parsed = _run_cli(
+                ["e2e", "env-check", "--project-root", str(root), "--artifact-root", artifacts])
+>           self.assertEqual(code, 0, out + err)
+E           AssertionError: 1 != 0 : {"ok": true, "command": "e2e env-check", "path": "/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpjs6pwjuz/.opal/e2e/environment.json", "ready": false, "secrets": [{"name": "PATH", "ok": true, "remediation": null}], "surfaces": [{"id": "api1", "kind": "api", "status": "not_ready", "checks": [{"name": "service_start", "ok": false, "detail": "e2e_port_lease_failed: no free port outside the set already leased or reserved by the user"}, {"name": "health", "ok": false, "detail": "skipped"}, {"name": "executor", "ok": false, "detail": "skipped"}], "cause": "service_start_failed", "remediation": "서비스 command·cwd·의존성을 점검하고 check detail의 기동 로그를 확인한 뒤 다시 실행한다."}, {"id": "api2", "kind": "api", "status": "not_ready", "checks": [{"name": "service_start", "ok": false, "detail": "e2e_port_lease_failed: no free port outside the set already leased or reserved by the user"}, {"name": "health", "ok": false, "detail": "skipped"}, {"name": "executor", "ok": false, "detail": "skipped"}], "cause": "service_start_failed", "remediation": "서비스 command·cwd·의존성을 점검하고 check detail의 기동 로그를 확인한 뒤 다시 실행한다."}, {"id": "human1", "kind": "human", "status": "ready", "checks": [{"name": "executor", "ok": true, "detail": "human executor registered"}], "cause": null, "remediation": null}], "run_dir": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp8pzy8b42/readiness/readiness-20260927T205540-38741"}
+
+opal/tools/test-tool/tests/test_e2e_env_commands.py:312: AssertionError
+__________________ TestStartService.test_default_port_health ___________________
+
+self = <test_e2e_environment.TestStartService testMethod=test_default_port_health>
+
+    def test_default_port_health(self):
+>       port, rendered = self._render()
+                         ^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_environment.py:421: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_environment.py:400: in _render
+    port = e2e_ports.find_free_port()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+_______________________ TestStartService.test_early_exit _______________________
+
+self = <test_e2e_environment.TestStartService testMethod=test_early_exit>
+
+    def test_early_exit(self):
+>       port, rendered = self._render(command=["{python}", "-c", "import sys; sys.exit(3)"])
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_environment.py:435: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_environment.py:400: in _render
+    port = e2e_ports.find_free_port()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+______________ TestStartService.test_http_health_with_json_field _______________
+
+self = <test_e2e_environment.TestStartService testMethod=test_http_health_with_json_field>
+
+    def test_http_health_with_json_field(self):
+>       port, rendered = self._render(health={"type": "http", "path": "/health", "json_field": "status"})
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_environment.py:413: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_environment.py:400: in _render
+    port = e2e_ports.find_free_port()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+___________ TestStartService.test_missing_json_field_is_bad_response ___________
+
+self = <test_e2e_environment.TestStartService testMethod=test_missing_json_field_is_bad_response>
+
+    def test_missing_json_field_is_bad_response(self):
+>       port, rendered = self._render(body='{"ok": true}', health={"type": "http", "path": "/", "json_field": "status"})
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_environment.py:450: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_environment.py:400: in _render
+    port = e2e_ports.find_free_port()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+___ TestStartService.test_non_http_bytes_is_bad_response_and_group_reclaimed ___
+
+self = <test_e2e_environment.TestStartService testMethod=test_non_http_bytes_is_bad_response_and_group_reclaimed>
+
+    def test_non_http_bytes_is_bad_response_and_group_reclaimed(self):
+        # GC-001: http.client.HTTPException(BadStatusLine 등)은 health_bad_response로 바뀌고 그룹이 남지 않는다.
+        (self.root / "raw.py").write_text(_RAW_TCP_SERVER, encoding="utf-8")
+        pid_file = self.root / "raw.pid"
+>       port, rendered = self._render(command=["{python}", "raw.py", "{port}", str(pid_file)],
+                                      health={"type": "http", "path": "/health"}, timeout=5)
+
+opal/tools/test-tool/tests/test_e2e_environment.py:462: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_environment.py:400: in _render
+    port = e2e_ports.find_free_port()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+______________ TestStartService.test_port_never_opens_is_timeout _______________
+
+self = <test_e2e_environment.TestStartService testMethod=test_port_never_opens_is_timeout>
+
+    def test_port_never_opens_is_timeout(self):
+>       port, rendered = self._render(command=["{python}", "-c", "import time; time.sleep(30)"], timeout=1)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_environment.py:488: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_environment.py:400: in _render
+    port = e2e_ports.find_free_port()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+_________ TestStartService.test_spawn_failure_is_process_exited_early __________
+
+self = <test_e2e_environment.TestStartService testMethod=test_spawn_failure_is_process_exited_early>
+
+    def test_spawn_failure_is_process_exited_early(self):
+>       port, rendered = self._render(command=["/nonexistent/opal-e2e-binary"])
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_environment.py:439: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_environment.py:400: in _render
+    port = e2e_ports.find_free_port()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+__ TestStartService.test_status_mismatch_is_bad_response_and_group_reclaimed ___
+
+self = <test_e2e_environment.TestStartService testMethod=test_status_mismatch_is_bad_response_and_group_reclaimed>
+
+    def test_status_mismatch_is_bad_response_and_group_reclaimed(self):
+>       port, rendered = self._render(status=503, health={"type": "http", "path": "/health"}, timeout=2)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_environment.py:443: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_environment.py:400: in _render
+    port = e2e_ports.find_free_port()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+___ TestStartService.test_unexpected_exception_reclaims_group_and_propagates ___
+
+self = <test_e2e_environment.TestStartService testMethod=test_unexpected_exception_reclaims_group_and_propagates>
+
+    def test_unexpected_exception_reclaims_group_and_propagates(self):
+        # GC-001: SutStartupError가 아닌 예외도 그룹을 회수한 뒤 그대로 올린다.
+        pid_file = self.root / "sleep.pid"
+        script = f"import os, time; open({str(pid_file)!r}, 'w').write(str(os.getpid())); time.sleep(60)"
+>       port, rendered = self._render(command=["{python}", "-c", script.replace("{", "{{").replace("}", "}}")],
+                                      health={"type": "http", "path": "/"}, timeout=5)
+
+opal/tools/test-tool/tests/test_e2e_environment.py:471: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_environment.py:400: in _render
+    port = e2e_ports.find_free_port()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+_ TestExternalProjectWalkthrough.test_walkthrough_env_inspect_then_setup_then_validate_check_run _
+
+self = <test_e2e_external_project.TestExternalProjectWalkthrough testMethod=test_walkthrough_env_inspect_then_setup_then_validate_check_run>
+
+    def test_walkthrough_env_inspect_then_setup_then_validate_check_run(self):
+        # 1) env-inspect — 설정 부재, api 후보 존재(실제 FastAPI 앱을 근거로), 트리 미변경.
+        before_tree = self._snapshot_tree()
+        proc = self._cli("e2e", "env-inspect", "--project-root", str(self.project_root))
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        inspected = json.loads(proc.stdout)
+        self.assertTrue(inspected["ok"])
+        self.assertFalse(inspected["config"]["present"])
+        api_candidates = [c for c in inspected["surface_candidates"] if c.get("kind") == "api"]
+        self.assertTrue(api_candidates, inspected["surface_candidates"])
+        self.assertIn("app.py", api_candidates[0]["evidence"])
+        self.assertEqual(before_tree, self._snapshot_tree(), "env-inspect가 트리를 바꿨다")
+    
+        # 제안 명령이 실제로 그 파일(app.py의 FastAPI 앱)을 가리키는지 — 탐지된 앱과
+        # 기동될 앱이 같은 대상임을 명령 자체로 확인한다(대역 아님).
+        suggested = api_candidates[0]["suggested"]
+        self.assertIn("uvicorn", suggested["command"])
+        self.assertIn("app:app", suggested["command"])
+        self.assertEqual(suggested["health"], {"type": "http", "path": "/health", "expect_status": 200})
+    
+        # 2) 설정 작성 — env-inspect가 제시한 suggested.command를 그대로 서비스 command로
+        #    쓴다(치환 토큰 {python}/{host}/{port}는 이미 그 형태). 표면은 api 하나만
+        #    (web 표면 미포함).
+        config = {
+            "schema_version": "1.0",
+            "services": [
+                {
+                    "id": "api",
+                    "command": suggested["command"],
+                    "cwd": suggested.get("cwd") or ".",
+                    "health": suggested["health"],
+                    "startup_timeout_s": 20,
+                }
+            ],
+            "surfaces": [
+                {"id": "svc-api", "kind": "api", "service": "api", "health_path": "/health"},
+            ],
+        }
+        env_dir = self.project_root / ".opal" / "e2e"
+        env_dir.mkdir(parents=True, exist_ok=True)
+        (env_dir / "environment.json").write_text(json.dumps(config), encoding="utf-8")
+    
+        # 3) env-validate — exit 0.
+        proc = self._cli("e2e", "env-validate", "--project-root", str(self.project_root))
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        validated = json.loads(proc.stdout)
+        self.assertTrue(validated["ok"])
+        self.assertEqual(validated["summary"], {"services": 1, "surfaces": 1})
+    
+        # 4) env-check — exit 0, ready:true, 서버 프로세스·포트 잔존 없음.
+        proc = self._cli(
+            "e2e", "env-check",
+            "--project-root", str(self.project_root),
+            "--artifact-root", str(self.artifact_root),
+        )
+>       self.assertEqual(proc.returncode, 0, proc.stderr)
+E       AssertionError: 1 != 0 :
+
+opal/tools/test-tool/tests/test_e2e_external_project.py:207: AssertionError
+_ TestRunConfigAbsentOrInvalid.test_invalid_config_blocks_without_echoing_values _
+
+self = <test_e2e_run_environment.TestRunConfigAbsentOrInvalid testMethod=test_invalid_config_blocks_without_echoing_values>
+
+    def test_invalid_config_blocks_without_echoing_values(self):
+        with tempfile.TemporaryDirectory() as root:
+            _write_config(pathlib.Path(root), {"schema_version": "1.0", "surfaces": []})
+            payload, run_json, owned, journal, _ = self._run(root, "api")
+>       self._assert_blocked_before_sut(payload, run_json, owned, journal, "e2e_env_config_invalid")
+
+opal/tools/test-tool/tests/test_e2e_run_environment.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_run_environment.py:126: in _assert_blocked_before_sut
+    self.assertEqual(payload["status"], "blocked", payload)
+E   AssertionError: 'infra_error' != 'blocked'
+E   - infra_error
+E   + blocked
+E    : {'run_id': 'e2e-20260927-001', 'scenario_id': 'S-1', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp2gkod24i/tmpxjnhlet8/e2e-20260927-001/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp2gkod24i/tmpxjnhlet8/e2e-20260927-001', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpxjnhlet8', 'lease_reclaimed': [], 'candidates': []}
+_ TestRunConfigAbsentOrInvalid.test_missing_config_leases_compat_roles_and_blocks _
+
+self = <test_e2e_run_environment.TestRunConfigAbsentOrInvalid testMethod=test_missing_config_leases_compat_roles_and_blocks>
+
+    def test_missing_config_leases_compat_roles_and_blocks(self):
+        with tempfile.TemporaryDirectory() as root:
+            payload, run_json, owned, journal, _ = self._run(root, "api")
+>       self._assert_blocked_before_sut(payload, run_json, owned, journal, "e2e_env_config_missing")
+
+opal/tools/test-tool/tests/test_e2e_run_environment.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_run_environment.py:126: in _assert_blocked_before_sut
+    self.assertEqual(payload["status"], "blocked", payload)
+E   AssertionError: 'infra_error' != 'blocked'
+E   - infra_error
+E   + blocked
+E    : {'run_id': 'e2e-20260927-001', 'scenario_id': 'S-1', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpao_putfn/tmpoprlp4bw/e2e-20260927-001/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpao_putfn/tmpoprlp4bw/e2e-20260927-001', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpoprlp4bw', 'lease_reclaimed': [], 'candidates': []}
+_ TestRunSurfaceSelectionFailure.test_ambiguous_api_surface_blocks_unless_surface_ref_names_one _
+
+self = <test_e2e_run_environment.TestRunSurfaceSelectionFailure testMethod=test_ambiguous_api_surface_blocks_unless_surface_ref_names_one>
+
+    def test_ambiguous_api_surface_blocks_unless_surface_ref_names_one(self):
+        surfaces = [
+            {"id": "alpha", "kind": "api", "service": "api"},
+            {"id": "beta", "kind": "api", "url": "http://127.0.0.1:9"},
+        ]
+        with tempfile.TemporaryDirectory() as root:
+            _write_config(pathlib.Path(root), self._config_with_service(surfaces))
+            payload, run_json, owned, journal, logs = self._run(root, "api", surface_ref="gamma.health")
+>       self._assert_blocked_before_sut(payload, run_json, owned, journal, "e2e_env_surface_ambiguous")
+
+opal/tools/test-tool/tests/test_e2e_run_environment.py:190: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_run_environment.py:126: in _assert_blocked_before_sut
+    self.assertEqual(payload["status"], "blocked", payload)
+E   AssertionError: 'infra_error' != 'blocked'
+E   - infra_error
+E   + blocked
+E    : {'run_id': 'e2e-20260927-001', 'scenario_id': 'S-1', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpnfdzuo1h/tmpehjg4_mg/e2e-20260927-001/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpnfdzuo1h/tmpehjg4_mg/e2e-20260927-001', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpehjg4_mg', 'lease_reclaimed': [], 'candidates': []}
+_ TestRunSurfaceSelectionFailure.test_missing_api_surface_blocks_and_starts_nothing _
+
+self = <test_e2e_run_environment.TestRunSurfaceSelectionFailure testMethod=test_missing_api_surface_blocks_and_starts_nothing>
+
+    def test_missing_api_surface_blocks_and_starts_nothing(self):
+        with tempfile.TemporaryDirectory() as root:
+            _write_config(
+                pathlib.Path(root),
+                self._config_with_service([{"id": "console", "kind": "web", "service": "api"}]),
+            )
+            payload, run_json, owned, journal, logs = self._run(root, "api")
+>       self._assert_blocked_before_sut(payload, run_json, owned, journal, "e2e_env_surface_missing")
+
+opal/tools/test-tool/tests/test_e2e_run_environment.py:176: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_run_environment.py:126: in _assert_blocked_before_sut
+    self.assertEqual(payload["status"], "blocked", payload)
+E   AssertionError: 'infra_error' != 'blocked'
+E   - infra_error
+E   + blocked
+E    : {'run_id': 'e2e-20260927-001', 'scenario_id': 'S-1', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpfeamzmne/tmpl0ayiv1a/e2e-20260927-001/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpfeamzmne/tmpl0ayiv1a/e2e-20260927-001', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpl0ayiv1a', 'lease_reclaimed': [], 'candidates': []}
+_ TestRunStartsConfiguredServices.test_temp_project_service_is_leased_started_once_and_reclaimed _
+
+self = <test_e2e_run_environment.TestRunStartsConfiguredServices testMethod=test_temp_project_service_is_leased_started_once_and_reclaimed>
+
+    def test_temp_project_service_is_leased_started_once_and_reclaimed(self):
+        with tempfile.TemporaryDirectory() as root:
+            root_path = pathlib.Path(root)
+            (root_path / "server.py").write_text(_SERVER_SOURCE, encoding="utf-8")
+            _write_config(
+                root_path,
+                {
+                    "schema_version": "1.0",
+                    "services": [
+                        {
+                            "id": "api",
+                            "command": ["{python}", "server.py", "--port", "{port}"],
+                            "health": {"type": "http", "path": "/ready", "json_field": "status"},
+                            "startup_timeout_s": 20,
+                        }
+                    ],
+                    # 두 표면이 같은 서비스를 공유해도 서비스는 1회만 기동한다.
+                    "surfaces": [
+                        {"id": "svc-api", "kind": "api", "service": "api", "health_path": "/ready"},
+                        {"id": "svc-web", "kind": "web", "service": "api", "path": "/"},
+                    ],
+                },
+            )
+            payload, run_json, owned, journal, logs = self._run(root, "api")
+    
+        self.assertNotEqual(run_json["detail_code"], "e2e_sut_startup_failed", run_json)
+        self.assertNotIn(
+            run_json["detail_code"],
+            ("e2e_env_config_missing", "e2e_env_config_invalid",
+             "e2e_env_surface_missing", "e2e_env_surface_ambiguous"),
+        )
+        states = [item["to"] for item in journal["transitions"]]
+>       self.assertIn(e2e_orchestrator.STATE_SUT_READY, states)
+E       AssertionError: 'sut_ready' not found in ['created', 'context_resolved', 'infra_error', 'cleanup_complete']
+
+opal/tools/test-tool/tests/test_e2e_run_environment.py:231: AssertionError
+_ TestRunRenderViolationStartsNothing.test_second_service_cwd_symlink_escape_blocks_before_any_start _
+
+self = <test_e2e_run_environment.TestRunRenderViolationStartsNothing testMethod=test_second_service_cwd_symlink_escape_blocks_before_any_start>
+
+    def test_second_service_cwd_symlink_escape_blocks_before_any_start(self):
+        with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as outside:
+            root_path = pathlib.Path(root)
+            (root_path / "server.py").write_text(_SERVER_SOURCE, encoding="utf-8")
+            # 프로젝트 안 경로처럼 보이지만 실제로는 프로젝트 밖을 가리키는 symlink.
+            (root_path / "escape").symlink_to(outside, target_is_directory=True)
+            _write_config(
+                root_path,
+                {
+                    "schema_version": "1.0",
+                    "services": [
+                        {
+                            "id": "api",
+                            "command": ["{python}", "server.py", "--port", "{port}"],
+                            "health": {"type": "http", "path": "/ready", "json_field": "status"},
+                            "startup_timeout_s": 20,
+                        },
+                        {
+                            "id": "web",
+                            "command": ["{python}", "server.py", "--port", "{port}"],
+                            "cwd": "escape",
+                            "depends_on": ["api"],
+                            "health": {"type": "http", "path": "/ready", "json_field": "status"},
+                            "startup_timeout_s": 20,
+                        },
+                    ],
+                    "surfaces": [
+                        {"id": "svc-api", "kind": "api", "service": "api", "health_path": "/ready"},
+                        {"id": "svc-web", "kind": "web", "service": "web", "path": "/"},
+                    ],
+                },
+            )
+            payload, run_json, owned, journal, logs = self._run(root, "api")
+    
+>       self.assertEqual(payload["status"], "blocked", payload)
+E       AssertionError: 'infra_error' != 'blocked'
+E       - infra_error
+E       + blocked
+E        : {'run_id': 'e2e-20260927-001', 'scenario_id': 'S-1', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpzt6tdjv3/tmp2opwb4qr/e2e-20260927-001/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpzt6tdjv3/tmp2opwb4qr/e2e-20260927-001', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp2opwb4qr', 'lease_reclaimed': [], 'candidates': []}
+
+opal/tools/test-tool/tests/test_e2e_run_environment.py:287: AssertionError
+______ TestPortAllocator.test_find_free_port_is_still_the_t01_entry_point ______
+
+self = <test_e2e_runtime.TestPortAllocator testMethod=test_find_free_port_is_still_the_t01_entry_point>
+
+    def test_find_free_port_is_still_the_t01_entry_point(self):
+        """PLAN.md W-1 — 기존 find_free_port를 치환하지 않는다."""
+>       port = e2e_ports.find_free_port()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:118: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+_________ TestPortAllocator.test_lease_writes_contract_shaped_records __________
+
+self = <test_e2e_runtime.TestPortAllocator testMethod=test_lease_writes_contract_shaped_records>
+
+    def test_lease_writes_contract_shaped_records(self):
+        with tempfile.TemporaryDirectory() as root:
+>           leases, reclaimed = e2e_ports.lease_ports(
+                artifact_root=root, run_id="e2e-20260914-001", roles=("backend", "frontend")
+            )
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/lib/e2e/ports.py:249: in lease_ports
+    port = _pick_port(host, blocked, open_sockets)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1', blocked = {7823}, open_sockets = []
+
+    def _pick_port(host: str, blocked: set, open_sockets: list) -> int:
+        for _ in range(_CANDIDATE_ATTEMPTS):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                sock.bind((host, 0))
+            except OSError:
+                sock.close()
+                continue
+            port = sock.getsockname()[1]
+            open_sockets.append(sock)
+            if port not in blocked:
+                return port
+>       raise PortLeaseError(
+            "e2e_port_lease_failed",
+            "no free port outside the set already leased or reserved by the user",
+        )
+E       lib.e2e.ports.PortLeaseError: e2e_port_lease_failed: no free port outside the set already leased or reserved by the user
+
+opal/tools/test-tool/lib/e2e/ports.py:283: PortLeaseError
+_______ TestPortAllocator.test_live_lease_ports_are_not_handed_out_twice _______
+
+self = <test_e2e_runtime.TestPortAllocator testMethod=test_live_lease_ports_are_not_handed_out_twice>
+
+    def test_live_lease_ports_are_not_handed_out_twice(self):
+        """S-1의 핵심 — 살아 있는 lease가 점유한 포트는 다음 임대 후보에서 제외된다."""
+        with tempfile.TemporaryDirectory() as root:
+>           first, _ = e2e_ports.lease_ports(
+                artifact_root=root, run_id="e2e-20260914-001", roles=("backend",)
+            )
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/lib/e2e/ports.py:249: in lease_ports
+    port = _pick_port(host, blocked, open_sockets)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1', blocked = {7823}, open_sockets = []
+
+    def _pick_port(host: str, blocked: set, open_sockets: list) -> int:
+        for _ in range(_CANDIDATE_ATTEMPTS):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                sock.bind((host, 0))
+            except OSError:
+                sock.close()
+                continue
+            port = sock.getsockname()[1]
+            open_sockets.append(sock)
+            if port not in blocked:
+                return port
+>       raise PortLeaseError(
+            "e2e_port_lease_failed",
+            "no free port outside the set already leased or reserved by the user",
+        )
+E       lib.e2e.ports.PortLeaseError: e2e_port_lease_failed: no free port outside the set already leased or reserved by the user
+
+opal/tools/test-tool/lib/e2e/ports.py:283: PortLeaseError
+___________ TestPortAllocator.test_release_removes_only_own_records ____________
+
+self = <test_e2e_runtime.TestPortAllocator testMethod=test_release_removes_only_own_records>
+
+    def test_release_removes_only_own_records(self):
+        with tempfile.TemporaryDirectory() as root:
+>           leases, _ = e2e_ports.lease_ports(
+                artifact_root=root, run_id="e2e-20260914-004", roles=("backend", "frontend")
+            )
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/lib/e2e/ports.py:249: in lease_ports
+    port = _pick_port(host, blocked, open_sockets)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1', blocked = {7823}, open_sockets = []
+
+    def _pick_port(host: str, blocked: set, open_sockets: list) -> int:
+        for _ in range(_CANDIDATE_ATTEMPTS):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                sock.bind((host, 0))
+            except OSError:
+                sock.close()
+                continue
+            port = sock.getsockname()[1]
+            open_sockets.append(sock)
+            if port not in blocked:
+                return port
+>       raise PortLeaseError(
+            "e2e_port_lease_failed",
+            "no free port outside the set already leased or reserved by the user",
+        )
+E       lib.e2e.ports.PortLeaseError: e2e_port_lease_failed: no free port outside the set already leased or reserved by the user
+
+opal/tools/test-tool/lib/e2e/ports.py:283: PortLeaseError
+_____ TestPortAllocator.test_stale_lease_with_dead_owner_pid_is_reclaimed ______
+
+self = <test_e2e_runtime.TestPortAllocator testMethod=test_stale_lease_with_dead_owner_pid_is_reclaimed>
+
+    def test_stale_lease_with_dead_owner_pid_is_reclaimed(self):
+        """계약 규칙 C-LEASE-2 — owner_pid가 죽은 reserved record는 다음 실행이 회수한다."""
+        with tempfile.TemporaryDirectory() as root:
+            lease_dir = e2e_ports.lease_dir_for(root)
+            dead = subprocess.Popen([sys.executable, "-c", "pass"])
+            dead.wait()
+            (lease_dir / "stale-run-backend.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": e2e_contract.E2E_CONTRACT_SCHEMA_VERSION,
+                        "lease_id": "stale-run-backend",
+                        "run_id": "stale-run",
+                        "owner_pid": dead.pid,
+                        "port": 18765,
+                        "role": "backend",
+                        "state": "reserved",
+                        "created_at": "2020-01-01T00:00:00Z",
+                        "confirmed_at": None,
+                        "attempt": 1,
+                    }
+                ),
+                encoding="utf-8",
+            )
+>           _, reclaimed = e2e_ports.lease_ports(
+                artifact_root=root, run_id="e2e-20260914-003", roles=("backend",)
+            )
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:190: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/lib/e2e/ports.py:249: in lease_ports
+    port = _pick_port(host, blocked, open_sockets)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1', blocked = {7823}, open_sockets = []
+
+    def _pick_port(host: str, blocked: set, open_sockets: list) -> int:
+        for _ in range(_CANDIDATE_ATTEMPTS):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                sock.bind((host, 0))
+            except OSError:
+                sock.close()
+                continue
+            port = sock.getsockname()[1]
+            open_sockets.append(sock)
+            if port not in blocked:
+                return port
+>       raise PortLeaseError(
+            "e2e_port_lease_failed",
+            "no free port outside the set already leased or reserved by the user",
+        )
+E       lib.e2e.ports.PortLeaseError: e2e_port_lease_failed: no free port outside the set already leased or reserved by the user
+
+opal/tools/test-tool/lib/e2e/ports.py:283: PortLeaseError
+_ TestOrchestratorRunJson.test_run_json_carries_every_contract_a1_required_key _
+
+self = <test_e2e_runtime.TestOrchestratorRunJson testMethod=test_run_json_carries_every_contract_a1_required_key>
+
+    def test_run_json_carries_every_contract_a1_required_key(self):
+        _, run_json, _, _ = self._run(
+            target=e2e_target.TARGET_SOURCE_WORKTREE, worktree_root=str(_SOURCE_ROOT)
+        )
+        for key in (
+            "schema_version", "run_id", "scenario_id", "profile", "actors", "surface_kind",
+            "target", "project_root", "worktree_root", "opal_home", "commit", "dirty",
+            "dirty_files", "urls", "executors", "candidates", "state", "status",
+            "operational_status", "error", "exit_code", "assertion_summary",
+            "required_evidence", "observed_evidence", "missing_evidence",
+            "evidence_complete", "fidelity", "cleanup", "artifact_dir", "started_at",
+            "ended_at", "driver_version",
+        ):
+            self.assertIn(key, run_json, f"run.json missing CONTRACT §A.1 key: {key}")
+        self.assertEqual(run_json["schema_version"], e2e_contract.E2E_CONTRACT_SCHEMA_VERSION)
+        self.assertEqual(run_json["target"], e2e_target.TARGET_SOURCE_WORKTREE)
+        self.assertIsNone(run_json["opal_home"])
+        self.assertEqual(run_json["scenario_id"], "S-1")
+>       self.assertEqual(run_json["profile"], "api")
+E       AssertionError: None != 'api'
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:363: AssertionError
+_ TestOrchestratorRunJson.test_unreadable_scenario_blocks_without_leasing_a_sut _
+
+self = <test_e2e_runtime.TestOrchestratorRunJson testMethod=test_unreadable_scenario_blocks_without_leasing_a_sut>
+
+    def test_unreadable_scenario_blocks_without_leasing_a_sut(self):
+        with tempfile.TemporaryDirectory() as empty_task:
+            payload, _, _, owned = self._run(
+                target=e2e_target.TARGET_SOURCE_WORKTREE,
+                worktree_root=str(_SOURCE_ROOT),
+                scenario_id="S-1",
+                task_path=empty_task,
+            )
+>       self.assertEqual(payload["status"], "blocked")
+E       AssertionError: 'infra_error' != 'blocked'
+E       - infra_error
+E       + blocked
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:395: AssertionError
+_ TestOrchestratorRunJson.test_zero_executor_candidates_ends_before_the_sut_is_started _
+
+self = <test_e2e_runtime.TestOrchestratorRunJson testMethod=test_zero_executor_candidates_ends_before_the_sut_is_started>
+
+    def test_zero_executor_candidates_ends_before_the_sut_is_started(self):
+        """§A.1.2 [MUST] — selected가 0개이면 status는 executor_unavailable이다.
+    
+        판정이 기동 전에 확정되므로 아무도 구동하지 않을 uvicorn·vite를 띄우지 않는다
+        (TASK.md C-4·C-5).
+    
+        재현 대상은 **SUT probe가 필요 없는 profile**이다. `api` executor의 probe는 실제
+        SUT `/health`를 호출해야 가용성을 확정하므로(§A.8 [MUST], NR-7) `api` profile은
+        원리상 기동 전에 판정할 수 없다 — 그 경로까지 이 단축으로 묶으면 probe 없이
+        가용성을 추정하게 된다. `browser` profile은 driver binary 해석만으로 판정되므로
+        단축이 성립하며, 여기서는 driver 레지스트리를 비워 후보 전건을 미가용으로 만든다.
+        """
+        original_registry = e2e_drivers.registered_drivers
+        e2e_drivers.registered_drivers = lambda: {}
+        try:
+            with tempfile.TemporaryDirectory() as other_tree:
+                payload, run_json, journal, owned = self._run(
+                    target=e2e_target.TARGET_SOURCE_WORKTREE,
+                    worktree_root=other_tree,
+                    scenario_id="S-8",  # profile=browser — SUT probe가 필요 없다.
+                )
+        finally:
+            e2e_drivers.registered_drivers = original_registry
+>       self.assertEqual(payload["status"], "executor_unavailable")
+E       AssertionError: 'infra_error' != 'executor_unavailable'
+E       - infra_error
+E       + executor_unavailable
+
+opal/tools/test-tool/tests/test_e2e_runtime.py:304: AssertionError
+___ TestBackendHealthAndOpenapi.test_health_and_openapi_surfaces_return_200 ____
+
+self = <test_e2e_skeleton.TestBackendHealthAndOpenapi testMethod=test_health_and_openapi_surfaces_return_200>
+
+    def test_health_and_openapi_surfaces_return_200(self):
+>       be_port = e2e_ports.find_free_port()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+_____ TestCorsRealHttp.test_injected_origin_reflected_and_other_origin_not _____
+
+self = <test_e2e_skeleton.TestCorsRealHttp testMethod=test_injected_origin_reflected_and_other_origin_not>
+
+    def test_injected_origin_reflected_and_other_origin_not(self):
+>       be_port = e2e_ports.find_free_port()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+_______ TestBrowserRealUsage.test_browser_dashboard_call_reaches_backend _______
+
+self = <test_e2e_skeleton.TestBrowserRealUsage testMethod=test_browser_dashboard_call_reaches_backend>
+
+    def test_browser_dashboard_call_reaches_backend(self):
+        chrome_path = _chrome_headless_shell_path()
+        if not chrome_path:
+            # D-17: 기본은 hard fail. 명시적 opt-out이 설정된 경우에만 skip하고,
+            # 그 경우에도 executor_unavailable 사유를 결과에 남긴다.
+            if os.environ.get("OPAL_E2E_ALLOW_NO_BROWSER") == "1":
+                self.skipTest(
+                    "executor_unavailable: chrome-headless-shell binary not found "
+                    "(OPAL_E2E_ALLOW_NO_BROWSER=1 opt-out) — 완료 기준 5는 충족되지 않은 것으로 남는다"
+                )
+            self.fail(
+                "executor_unavailable: chrome-headless-shell binary not found. "
+                "D-17에 따라 기본 경로는 hard fail이다. skip을 원하면 "
+                "OPAL_E2E_ALLOW_NO_BROWSER=1을 명시적으로 설정하라."
+            )
+    
+        # 호출 순서 계약 ①~⑤ (F-1, D-12) — 어길 경우 CORS 차단인데 CDP는 200을
+        # 보고하는 거짓 통과가 성립한다.
+>       fe_port = e2e_ports.find_free_port()          # ① frontend 포트 먼저
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:210: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+_ TestCleanupAndNonInterference.test_pgid_reclaimed_and_no_leak_after_stop_all _
+
+self = <test_e2e_skeleton.TestCleanupAndNonInterference testMethod=test_pgid_reclaimed_and_no_leak_after_stop_all>
+
+    def test_pgid_reclaimed_and_no_leak_after_stop_all(self):
+>       be_port = e2e_ports.find_free_port()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:364: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+host = '127.0.0.1'
+
+    def find_free_port(host: str = "127.0.0.1") -> int:
+        """host에 bind 가능한 임시 포트 1건을 확보해 반환한다.
+    
+        확보 이후 실제 기동 전까지 다른 프로세스가 같은 포트를 선점할 수 있는 TOCTOU 창은
+        닫지 않는다(H-5) — strict-port 기동 실패를 신호로 호출자가 MAX_PORT_ATTEMPTS회까지
+        재확보하는 것으로 완화한다. 창을 닫는 allocator lock은 T03 소유다.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+>           sock.bind((host, 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+opal/tools/test-tool/lib/e2e/ports.py:26: PermissionError
+_ TestHybridWiring.test_a_driver_missing_an_operation_blocks_instead_of_switching_candidates _
+
+self = <test_e2e_surface_fidelity.TestHybridWiring testMethod=test_a_driver_missing_an_operation_blocks_instead_of_switching_candidates>
+
+    def test_a_driver_missing_an_operation_blocks_instead_of_switching_candidates(self):
+        """연산 부재는 `infra_error`가 아니라 `blocked`이며 후보 전환도 없다.
+    
+        `dispatch()`가 연산을 찾지 못해 올리는 오류는 driver가 아무 일도 하기 전에 나온다 —
+        §C.7이 `infra_error`로 규정한 "driver 실행 오류"가 아니라 하네스가 그 표면을 실행할
+        수단이 없다는 뜻이다. 어느 쪽이든 다음 후보로 넘어가지 않는다(TASK.md C-3).
+        """
+        e2e_drivers.register_driver("agent-browser", "orca-managed", _FakeBrowserDriver)
+        payload, run_json, journal = self._run({
+            "id": "browser-only", "surface_kind": "browser", "profile": "browser",
+            "actors": ["browser"],
+            "steps": [{"id": "st-1", "executor": "browser", "step_role": "verify"}],
+            "assertions": [{"id": "a1", "expected": "ok"}],
+            "required_evidence": ["metadata"],
+        })
+        # _FakeBrowserDriver는 probe만 구현한다 — open에서 연산 부재가 드러난다.
+>       self.assertEqual(payload["status"], "blocked")
+E       AssertionError: 'infra_error' != 'blocked'
+E       - infra_error
+E       + blocked
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:558: AssertionError
+_ TestHybridWiring.test_a_type_with_no_selected_candidate_ends_as_executor_unavailable _
+
+self = <test_e2e_surface_fidelity.TestHybridWiring testMethod=test_a_type_with_no_selected_candidate_ends_as_executor_unavailable>
+
+    def test_a_type_with_no_selected_candidate_ends_as_executor_unavailable(self):
+        """[MUST] §A.1.2 — 필요 타입 중 하나라도 selected가 0개이면 executor_unavailable.
+    
+        이 머신에는 가용 browser 후보가 없다. 그럴 때 api executor를 대역으로 세워
+        pass를 만들지 않고 구조화된 미가용 사유로 끝낸다(H-2, §C.4).
+        """
+        original = e2e_drivers.registered_drivers
+        e2e_drivers.registered_drivers = lambda: {}
+        try:
+            payload, run_json, journal = self._run(_hybrid_scenario([
+                {"id": "st-1", "executor": "api", "step_role": "setup"},
+                {"id": "st-2", "executor": "browser", "step_role": "verify"},
+            ]))
+        finally:
+            e2e_drivers.registered_drivers = original
+    
+>       self.assertEqual(payload["status"], "executor_unavailable")
+E       AssertionError: 'infra_error' != 'executor_unavailable'
+E       - infra_error
+E       + executor_unavailable
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:335: AssertionError
+_ TestHybridWiring.test_browser_step_runs_end_to_end_and_emits_the_a21_transitions _
+
+self = <test_e2e_surface_fidelity.TestHybridWiring testMethod=test_browser_step_runs_end_to_end_and_emits_the_a21_transitions>
+
+    def test_browser_step_runs_end_to_end_and_emits_the_a21_transitions(self):
+        """browser 후보가 선택된 run은 step을 **실제로 실행**하고 §A.2.1 전이를 발행한다.
+    
+        이 테스트는 이전의 `..._withheld_and_says_so`를 대체한다. 그때는 동결 RED S-27의
+        "run당 driver 호출 2회" 상한 때문에 browser step 실행을 보류했고, 그 보류 사실을
+        관측점으로 고정했다. PM이 (d-1)을 "같은 연산 시그니처 중복 금지"로 정정해 보류가
+        풀렸으므로, 같은 자리에서 이제 **실행이 실제로 일어난다**는 것을 고정한다 —
+        관측점을 잃지 않는 것이 목적이다.
+    
+        §B.2 연산은 각각 **한 번씩만** 호출된다. 후보 해석이 만든 driver 인스턴스를 step
+        실행이 그대로 이어받기 때문이며(`_DriverCache`), 재생성하면 생성자의 binary 해석이
+        한 번 더 일어나 S-27이 재시도로 잡는다.
+        """
+        calls = []
+    
+        class _RecordingDriver(_FakeBrowserDriver):
+            def op_open(self, request):
+                calls.append("open")
+                return {"page_id": "page-1"}
+    
+            def op_act(self, request):
+                calls.append(f"act:{request.get('step_id')}")
+                return {"ok": True}
+    
+            def op_assert(self, request):
+                calls.append("assert")
+                assertion = request.get("assertion") or {}
+                return {"id": assertion["id"], "expected": assertion["expected"],
+                        "actual": assertion["expected"], "passed": True}
+    
+            def op_capture(self, request):
+                calls.append("capture")
+                return {"artifacts": {}, "redacted": True, "redaction_failed": False}
+    
+            def op_close(self, request):
+                calls.append("close")
+                return {"closed": True}
+    
+        e2e_drivers.register_driver("agent-browser", "orca-managed", _RecordingDriver)
+        try:
+            payload, run_json, journal = self._run({
+                "id": "browser-only", "surface_kind": "browser", "profile": "browser",
+                "actors": ["browser"],
+                "steps": [{"id": "st-1", "executor": "browser", "step_role": "verify"}],
+                "assertions": [{"id": "a1", "expected": "ok"}],
+                "required_evidence": ["metadata"],
+            })
+        finally:
+            # 레지스트리 복원은 tearDown이 일괄 수행한다.
+            pass
+    
+        # 실행이 실제로 일어났다.
+>       self.assertTrue(payload["executed"], f"browser step must actually run: {payload}")
+E       AssertionError: False is not true : browser step must actually run: {'run_id': 'e2e-20260927-327', 'scenario_id': 'browser-only', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp50020pkz/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp50020pkz', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161', 'lease_reclaimed': [], 'candidates': []}
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:515: AssertionError
+_ TestAcceptanceBrowserPathways.test_ac4_cleanup_touches_only_the_page_this_run_opened _
+
+self = <test_e2e_surface_fidelity.TestAcceptanceBrowserPathways testMethod=test_ac4_cleanup_touches_only_the_page_this_run_opened>
+
+    def test_ac4_cleanup_touches_only_the_page_this_run_opened(self):
+        """[MUST] AC-4·C-2 — run이 만든 `browserPageId`만 정리되고 사용자 탭은 남는다."""
+        if not self._orca_session_available():
+            self.skipTest("no selectable orca-managed browser candidate on this machine")
+    
+        payload, art = self._run_fixture({
+            "id": "ac4-cleanup", "surface_kind": "browser", "profile": "browser",
+            "actors": ["browser"],
+            "steps": [{"id": "st-reload", "executor": "browser",
+                       "step_role": "verify", "kind": "reload"}],
+            "assertions": [{"id": "a1", "verifier": "title", "match": "equals",
+                            "expected": "OPAL Console"}],
+            "required_evidence": ["metadata"],
+        })
+        pages = art["owned.json"]["browser_pages"]
+>       self.assertEqual(len(pages), 1, f"run이 연 page 1건만 대장에 올라야 한다: {pages}")
+E       AssertionError: 0 != 1 : run이 연 page 1건만 대장에 올라야 한다: []
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:710: AssertionError
+_ TestAcceptanceBrowserPathways.test_ac4_real_browser_run_passes_with_a_semantic_assertion _
+
+self = <test_e2e_surface_fidelity.TestAcceptanceBrowserPathways testMethod=test_ac4_real_browser_run_passes_with_a_semantic_assertion>
+
+    def test_ac4_real_browser_run_passes_with_a_semantic_assertion(self):
+        """AC-4 — 실 Orca 세션에서 실제 UI 행동 + semantic assertion으로 `pass`.
+    
+        assertion은 브라우저에서 **실제로 읽어 온 값**과 비교한다. `match`는 `equals`여야
+        한다 — `e2e_contract.validate_pass_requirements`가 `expected != actual`을 직접
+        비교하므로(§A.5) `contains`로 통과한 driver 판정도 계약 게이트에서 `fail`이 된다.
+        """
+        if not self._orca_session_available():
+            self.skipTest("no selectable orca-managed browser candidate on this machine")
+    
+        payload, art = self._run_fixture({
+            "id": "ac4-browser", "surface_kind": "browser", "profile": "browser",
+            "actors": ["browser"], "required_fidelity": "real-usage",
+            "steps": [{"id": "st-reload", "executor": "browser",
+                       "step_role": "verify", "kind": "reload"}],
+            "assertions": [
+                {"id": "ac4-title", "verifier": "title", "match": "equals",
+                 "expected": "OPAL Console"},
+            ],
+            "required_evidence": ["metadata", "action_log", "assertions", "cleanup"],
+        })
+        run_json = art["run.json"]
+>       self.assertEqual(payload["status"], "pass", f"AC-4 must pass: {run_json.get('detail')}")
+E       AssertionError: 'infra_error' != 'pass'
+E       - infra_error
+E       + pass
+E        : AC-4 must pass: no free port outside the set already leased or reserved by the user
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:677: AssertionError
+___________________ TestSutHttpSurfaces.test_sut_brain_auth ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_auth>
+
+    def test_sut_brain_auth(self):
+        """`shutil.which("claude")`만 보는 경량 표면이다 — LLM 호출 0회.
+    
+        기대값을 기계 상태에서 끌어오지 않는다: claude가 PATH에 없으면 이 표면의
+        `authenticated=true` 경로를 실측할 수 없으므로 `blocked`로 남긴다(H-2).
+        """
+        if shutil.which("claude") is None:
+            _record("sut-brain-auth", "blocked", reason={
+                "code": "claude_cli_absent_on_path",
+                "detail": "GET /api/brain/auth의 authenticated 경로는 PATH의 claude 실행파일을 "
+                          "전제한다. 대역 바이너리를 심어 pass를 만들지 않는다(H-2).",
+            })
+            self.skipTest("claude CLI not on PATH")
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+>       self._surface("sut-brain-auth", _api_scenario(
+            "w12-sut-brain-auth", "sut-brain-auth",
+            _get("/api/brain/auth"),
+            [
+                _field("a-status", "status", 200),
+                _field("a-cli", "cli_available", True),
+                _field("a-auth", "authenticated", True),
+                _field("a-message", "message", ""),
+                _state("a-state", "/api/brain/auth", "cli_available", True),
+            ],
+        ), fx.home, expect_path="/api/brain/auth")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:721: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-auth must pass: no free port outside the set already leased or reserved by the user
+____________________ TestSutHttpSurfaces.test_sut_brain_job ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_job>
+
+    def test_sut_brain_job(self):
+        """잡 소멸·불일치 경로는 graceful error 응답이다(500 아님)."""
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        sid = f"w12-{uuid.uuid4()}"
+        job_id = f"w12-absent-{uuid.uuid4()}"
+        url = f"/api/brain/job/{job_id}?project={fx.quoted_project}&session_id={sid}"
+>       self._surface("sut-brain-job", _api_scenario(
+            "w12-sut-brain-job", "sut-brain-job",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-job-id", "job_id", job_id),
+                # 본문의 `status` 필드는 단언할 수 없다 — `executors/api.py`의 `_extract`가
+                # field "status"를 HTTP status로 특수 취급한다. 대신 같은 분기에서만
+                # 나오는 `error_msg` 원문으로 graceful error 경로를 못 박는다.
+                _field("a-error-msg", "error_msg",
+                       "잡을 찾을 수 없습니다(세션이 재시작되었을 수 있습니다)"),
+                _field("a-answer", "answer", ""),
+                _field("a-citations", "citations", []),
+                _state("a-observable", url, "job_id", job_id),
+            ],
+        ), fx.home, expect_path=f"/api/brain/job/{job_id}")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:759: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-job must pass: no free port outside the set already leased or reserved by the user
+___________________ TestSutHttpSurfaces.test_sut_brain_prime ___________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_prime>
+
+    def test_sut_brain_prime(self):
+        """POST — run 단위 session_id namespace와 격리 HOME 안에서만 수행한다.
+    
+        부수효과는 그 session_id의 인메모리 세션 1건과, 격리 HOME을 보는 백그라운드
+        claude 시도뿐이다. 사용자 세션·설정은 이름 공간이 겹치지 않는다(C-2).
+        """
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        sid = f"w12-prime-{uuid.uuid4()}"
+>       self._surface("sut-brain-prime", _api_scenario(
+            "w12-sut-brain-prime", "sut-brain-prime",
+            _post("/api/brain/prime", {"project": fx.project_path, "session_id": sid}),
+            [
+                _field("a-status", "status", 200),
+                _field("a-priming", "priming", True),
+            ],
+        ), fx.home, expect_path="/api/brain/prime", expect_method="POST")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:794: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-prime must pass: no free port outside the set already leased or reserved by the user
+___________ TestSutHttpSurfaces.test_sut_brain_query_transport_only ____________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_query_transport_only>
+
+    def test_sut_brain_query_transport_only(self):
+        """[MUST] H-2 — `sut-brain-query`는 `blocked`다. pass로 승격하지 않는다.
+    
+        선언 응답 필드 `job_id`는 난수 UUID이고 assertion 매처는 `equals`뿐이다
+        (`e2e_contract.py` C-1 동결 — `contains`는 `validate_pass_requirements`가
+        뒤집는다). 즉 이 표면이 선언한 응답 필드를 단언할 수단이 없다. 잡 완료 역시
+        인증된 claude 세션을 요구하며 격리 HOME에는 없다. 따라서 여기서는 전송 계층만
+        실측하고 표면 판정은 `blocked`로 남긴다.
+        """
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        sid = f"w12-query-{uuid.uuid4()}"
+        scenario = _api_scenario(
+            "w12-sut-brain-query", "sut-brain-query",
+            _post("/api/brain/query", {
+                "question": "w12 surface transport probe",
+                "project": fx.project_path,
+                "session_id": sid,
+            }),
+            [_field("a-status", "status", 200)],
+        )
+>       _payload, art = self._verify(
+            scenario, fx.home, expect_path="/api/brain/query", expect_method="POST"
+        )
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:835: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-query must pass: no free port outside the set already leased or reserved by the user
+__________________ TestSutHttpSurfaces.test_sut_brain_status ___________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_status>
+
+    def test_sut_brain_status(self):
+        """레지스트리 조회 표면 — 미등록 session_id는 `idle`이다. LLM 호출 0회."""
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        sid = f"w12-{uuid.uuid4()}"
+        url = f"/api/brain/status?project={fx.quoted_project}&session_id={sid}"
+>       self._surface("sut-brain-status", _api_scenario(
+            "w12-sut-brain-status", "sut-brain-status",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-state", "state", "idle"),
+                _field("a-active", "session_active", False),
+                _field("a-message", "message", ""),
+                _field("a-sid", "session_id", sid),
+                _state("a-observable", url, "state", "idle"),
+            ],
+        ), fx.home, expect_path="/api/brain/status")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:739: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-status must pass: no free port outside the set already leased or reserved by the user
+___________________ TestSutHttpSurfaces.test_sut_config_get ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_config_get>
+
+    def test_sut_config_get(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+>       self._surface("sut-config-get", _api_scenario(
+            "w12-sut-config-get", "sut-config-get",
+            _get("/api/config"),
+            [
+                _field("a-status", "status", 200),
+                _field("a-scan-root", "scan_roots.0", str(fx.scan_root)),
+                _field("a-scan-depth", "scan_depth", 2),
+                _field("a-exclude", "exclude.0", "node_modules"),
+                _field("a-prewarm", "prewarm_projects", []),
+                _state("a-state", "/api/config", "scan_depth", 2),
+            ],
+        ), fx.home, expect_path="/api/config")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:692: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-config-get must pass: no free port outside the set already leased or reserved by the user
+_________________ TestSutHttpSurfaces.test_sut_config_prewarm __________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_config_prewarm>
+
+    def test_sut_config_prewarm(self):
+        """POST 쓰기 — 격리 HOME의 console.config.json만 바뀐다(C-2).
+    
+        `enabled=false`를 쓰는 이유는 두 가지다. ① 씨앗으로 심어 둔 항목이 실제로
+        **빠지는** 것을 후속 observable state(`GET /api/config`)로 확인할 수 있어
+        쓰기가 관측 가능한 변화를 만든다. ② `newly_added`가 참일 때만 도는
+        `prewarm()`(백그라운드 claude 다중 기동)을 부르지 않는다 — 검증에 필요하지
+        않은 외부 부수효과를 만들지 않는다.
+        """
+        fx = _Isolated(prewarm_projects=["self"])
+        self.addCleanup(fx.dispose)
+        self.assertEqual(
+            fx.config_snapshot()["prewarm_projects"], [fx.project_path],
+            "씨앗 상태가 먼저 성립해야 '빠졌다'가 관측 가능한 변화가 된다",
+        )
+>       self._surface("sut-config-prewarm", _api_scenario(
+            "w12-sut-config-prewarm", "sut-config-prewarm",
+            _post("/api/config/prewarm", {"project": fx.project_path, "enabled": False}),
+            [
+                _field("a-status", "status", 200),
+                _field("a-ok", "ok", True),
+                _field("a-config", "config.prewarm_projects", []),
+                # 후속 observable state — 별도 실 호출로 쓰기가 반영됐는지 본다.
+                _state("a-state", "/api/config", "prewarm_projects", []),
+            ],
+        ), fx.home, expect_path="/api/config/prewarm", expect_method="POST")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:867: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-config-prewarm must pass: no free port outside the set already leased or reserved by the user
+____________________ TestSutHttpSurfaces.test_sut_dashboard ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_dashboard>
+
+    def test_sut_dashboard(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+>       self._surface("sut-dashboard", _api_scenario(
+            "w12-sut-dashboard", "sut-dashboard",
+            _get("/api/dashboard"),
+            [
+                _field("a-status", "status", 200),
+                _field("a-total-projects", "total_projects", 1),
+                _field("a-total-tasks", "total_tasks", 1),
+                _field("a-recent", "recent_activities.0.task_id", _Isolated.TASK_ID),
+                _state("a-state", "/api/dashboard", "status_distribution.pending", 1),
+            ],
+        ), fx.home, expect_path="/api/dashboard")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:532: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-dashboard must pass: no free port outside the set already leased or reserved by the user
+_____________________ TestSutHttpSurfaces.test_sut_doctor ______________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_doctor>
+
+    def test_sut_doctor(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/doctor?project={fx.quoted_project}"
+>       payload, _art = self._surface("sut-doctor", _api_scenario(
+            "w12-sut-doctor", "sut-doctor",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-opal-dir", "sections.0.items.1.status", "ok"),
+                _field("a-agent-md", "sections.0.items.2.status", "ok"),
+                _field("a-tasks", "sections.0.items.6.status", "ok"),
+                _state("a-state", url, "sections.0.items.0.status", "ok"),
+            ],
+        ), fx.home, expect_path="/api/doctor")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:667: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-doctor must pass: no free port outside the set already leased or reserved by the user
+_____________________ TestSutHttpSurfaces.test_sut_memory ______________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_memory>
+
+    def test_sut_memory(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/memory?project={fx.quoted_project}"
+>       self._surface("sut-memory", _api_scenario(
+            "w12-sut-memory", "sut-memory",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                # fixture 프로젝트에는 메모리 인덱스가 없다 — 빈 목록이 실측값이다.
+                _field("a-rows", "rows", []),
+                _field("a-history", "history", []),
+                _field("a-warning", "warning", None),
+                _state("a-state", url, "rows", []),
+            ],
+        ), fx.home, expect_path="/api/memory")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:650: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-memory must pass: no free port outside the set already leased or reserved by the user
+_________________ TestSutHttpSurfaces.test_sut_projects_detail _________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_projects_detail>
+
+    def test_sut_projects_detail(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/projects/detail?path={fx.quoted_project}"
+>       self._surface("sut-projects-detail", _api_scenario(
+            "w12-sut-projects-detail", "sut-projects-detail",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-name", "name", _Isolated.PROJECT_NAME),
+                _field("a-path", "path", fx.project_path),
+                _field("a-is-opal", "is_opal", True),
+                _field("a-project-md", "project_md", _Isolated.DOC_BODY),
+                _field("a-doc", "docs.0.title", _Isolated.DOC_NAME),
+                _state("a-state", url, "docs.0.path", _Isolated.DOC_NAME),
+            ],
+        ), fx.home, expect_path="/api/projects/detail")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:564: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-projects-detail must pass: no free port outside the set already leased or reserved by the user
+__________________ TestSutHttpSurfaces.test_sut_projects_doc ___________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_projects_doc>
+
+    def test_sut_projects_doc(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/projects/doc?path={fx.quoted_project}&name={_Isolated.DOC_NAME}"
+>       self._surface("sut-projects-doc", _api_scenario(
+            "w12-sut-projects-doc", "sut-projects-doc",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-name", "name", _Isolated.DOC_NAME),
+                _field("a-content", "content", _Isolated.DOC_BODY),
+                _field("a-path", "path", str(fx.project / "docs" / _Isolated.DOC_NAME)),
+                _state("a-state", url, "content", _Isolated.DOC_BODY),
+            ],
+        ), fx.home, expect_path="/api/projects/doc")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:582: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-projects-doc must pass: no free port outside the set already leased or reserved by the user
+__________________ TestSutHttpSurfaces.test_sut_projects_list __________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_projects_list>
+
+    def test_sut_projects_list(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+>       self._surface("sut-projects-list", _api_scenario(
+            "w12-sut-projects-list", "sut-projects-list",
+            _get("/api/projects"),
+            [
+                _field("a-status", "status", 200),
+                _field("a-name", "0.name", _Isolated.PROJECT_NAME),
+                _field("a-path", "0.path", fx.project_path),
+                _field("a-is-opal", "0.is_opal", True),
+                _field("a-task-count", "0.task_count", 1),
+                _state("a-state", "/api/projects", "0.name", _Isolated.PROJECT_NAME),
+            ],
+        ), fx.home, expect_path="/api/projects")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:547: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-projects-list must pass: no free port outside the set already leased or reserved by the user
+_________________ TestSutHttpSurfaces.test_sut_tasks_artifact __________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_tasks_artifact>
+
+    def test_sut_tasks_artifact(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = (
+            f"/api/tasks/artifact?project={fx.quoted_project}"
+            f"&task_id={_Isolated.TASK_ID}&name={_Isolated.ARTIFACT_NAME}"
+        )
+>       self._surface("sut-tasks-artifact", _api_scenario(
+            "w12-sut-tasks-artifact", "sut-tasks-artifact",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-name", "name", _Isolated.ARTIFACT_NAME),
+                _field("a-content", "content", _Isolated.ARTIFACT_BODY),
+                _field("a-task-id", "task_id", _Isolated.TASK_ID),
+                _state("a-state", url, "content", _Isolated.ARTIFACT_BODY),
+            ],
+        ), fx.home, expect_path="/api/tasks/artifact")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:634: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-tasks-artifact must pass: no free port outside the set already leased or reserved by the user
+__________________ TestSutHttpSurfaces.test_sut_tasks_detail ___________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_tasks_detail>
+
+    def test_sut_tasks_detail(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/tasks/detail?project={fx.quoted_project}&task_id={_Isolated.TASK_ID}"
+>       self._surface("sut-tasks-detail", _api_scenario(
+            "w12-sut-tasks-detail", "sut-tasks-detail",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-task-id", "task_id", _Isolated.TASK_ID),
+                _field("a-current-status", "current_status", "pending"),
+                _field("a-artifact", "artifacts.0", _Isolated.ARTIFACT_NAME),
+                _field("a-stats", "stats.available", False),
+                _state("a-state", url, "task_id", _Isolated.TASK_ID),
+            ],
+        ), fx.home, expect_path="/api/tasks/detail")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:614: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-tasks-detail must pass: no free port outside the set already leased or reserved by the user
+___________________ TestSutHttpSurfaces.test_sut_tasks_list ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_tasks_list>
+
+    def test_sut_tasks_list(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/tasks?project={fx.quoted_project}"
+>       self._surface("sut-tasks-list", _api_scenario(
+            "w12-sut-tasks-list", "sut-tasks-list",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-task-id", "0.task_id", _Isolated.TASK_ID),
+                _field("a-column", "0.column", "pending"),
+                _field("a-artifact-count", "0.artifact_count", 2),
+                _state("a-state", url, "0.task_id", _Isolated.TASK_ID),
+            ],
+        ), fx.home, expect_path="/api/tasks")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:598: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-tasks-list must pass: no free port outside the set already leased or reserved by the user
+_ TestBrowserProfileStaticRejectionViaCli.test_browser_profile_without_browser_step_rejected_before_execution _
+
+self = <test_red_s12_executor_contract.TestBrowserProfileStaticRejectionViaCli testMethod=test_browser_profile_without_browser_step_rejected_before_execution>
+
+    def test_browser_profile_without_browser_step_rejected_before_execution(self):
+        with tempfile.TemporaryDirectory() as artifact_dir:
+            import os
+            env = os.environ.copy()
+            env["OPAL_E2E_ARTIFACT_DIR"] = artifact_dir
+            proc = subprocess.run(
+                [
+                    _PYTHON, str(_TEST_TOOL_PY),
+                    "e2e", "run",
+                    "--scenario", "s12-browser-no-browser-step",
+                    "--task-path", str(self.task_path),
+                    "--target", "source-worktree",
+                    "--worktree-root", str(_SOURCE_ROOT),
+                ],
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=30,
+            )
+            self.assertNotEqual(
+                proc.returncode, 2,
+                f"'e2e run' subcommand missing (RED target): {proc.stderr!r}",
+            )
+            data = json.loads(proc.stdout)
+>           self.assertEqual(
+                data.get("error"), "surface_profile_mismatch",
+                f"missing browser step must be a static pre-execution rejection: {data}",
+            )
+E           AssertionError: 'e2e_infra_error' != 'surface_profile_mismatch'
+E           - e2e_infra_error
+E           + surface_profile_mismatch
+E            : missing browser step must be a static pre-execution rejection: {'run_id': 'e2e-20260927-004', 'scenario_id': 's12-browser-no-browser-step', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpb7lgtyqw/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpb7lgtyqw', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161', 'lease_reclaimed': [], 'candidates': []}
+
+opal/tools/test-tool/tests/test_red_s12_executor_contract.py:233: AssertionError
+____________ TestEnvCheckReady.test_env_check_surfaces_and_secrets _____________
+
+self = <test_red_s159_env.TestEnvCheckReady testMethod=test_env_check_surfaces_and_secrets>
+
+    def test_env_check_surfaces_and_secrets(self):
+        env_var_name = "E2E_S159_TOKEN"
+        os.environ.pop(env_var_name, None)
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as artifact_root:
+            root = pathlib.Path(tmp)
+            server_script = root / "server.py"
+            server_script.write_text(
+                "import argparse, http.server, json\n"
+                "class H(http.server.BaseHTTPRequestHandler):\n"
+                "    def do_GET(self):\n"
+                "        self.send_response(200)\n"
+                "        self.send_header('Content-Type', 'application/json')\n"
+                "        self.end_headers()\n"
+                "        self.wfile.write(json.dumps({'status': 'ok'}).encode())\n"
+                "parser = argparse.ArgumentParser()\n"
+                "parser.add_argument('--port', type=int, required=True)\n"
+                "args = parser.parse_args()\n"
+                "http.server.HTTPServer(('127.0.0.1', args.port), H).serve_forever()\n",
+                encoding="utf-8",
+            )
+            config = {
+                "schema_version": "1.0",
+                "services": [
+                    {
+                        "id": "api-svc",
+                        "command": [_PYTHON, str(server_script), "--port", "{port}"],
+                    }
+                ],
+                "surfaces": [
+                    {"id": "api1", "kind": "api", "service": "api-svc", "health_path": "/health"},
+                    {"id": "mac1", "kind": "macos-app", "app": {"path": "/System/Applications/Calculator.app"}},
+                    {"id": "lin1", "kind": "linux-app", "app": {"launch": ["true"]}},
+                    {"id": "human1", "kind": "human"},
+                ],
+                "secrets": [{"name": env_var_name, "purpose": "s159 red 계약"}],
+            }
+            _write_config(root, config)
+            code, out, err, parsed = _run_cli(
+                ["e2e", "env-check", "--project-root", str(root), "--artifact-root", artifact_root]
+            )
+            self.assertEqual(code, 1, f"stdout={out!r} stderr={err!r}")
+            self.assertIsNotNone(parsed, f"stdout이 JSON이 아님: {out!r} stderr={err!r}")
+            self.assertFalse(parsed.get("ready"))
+    
+            surfaces = {s["id"]: s for s in parsed.get("surfaces", [])}
+    
+            api_surface = surfaces.get("api1", {})
+            check_names = [c.get("name") for c in api_surface.get("checks", [])]
+            check_oks = {c.get("name"): c.get("ok") for c in api_surface.get("checks", [])}
+            self.assertTrue(check_names, "api 표면에 check 항목이 없음")
+>           self.assertTrue(all(check_oks.values()), f"api1 checks={api_surface.get('checks')!r}")
+E           AssertionError: False is not true : api1 checks=[{'name': 'service_start', 'ok': False, 'detail': 'e2e_port_lease_failed: no free port outside the set already leased or reserved by the user'}, {'name': 'health', 'ok': False, 'detail': 'skipped'}, {'name': 'executor', 'ok': False, 'detail': 'skipped'}]
+
+opal/tools/test-tool/tests/test_red_s159_env.py:300: AssertionError
+_ TestEnvCheckServiceFailure.test_service_exit_immediately_reports_service_start_failed _
+
+self = <test_red_s159_env.TestEnvCheckServiceFailure testMethod=test_service_exit_immediately_reports_service_start_failed>
+
+    def test_service_exit_immediately_reports_service_start_failed(self):
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as artifact_root:
+            root = pathlib.Path(tmp)
+            config = {
+                "schema_version": "1.0",
+                "services": [
+                    {"id": "api-svc", "command": [_PYTHON, "-c", "import sys; sys.exit(3)"]}
+                ],
+                "surfaces": [
+                    {"id": "api1", "kind": "api", "service": "api-svc", "health_path": "/health"}
+                ],
+            }
+            _write_config(root, config)
+            code, out, err, parsed = _run_cli(
+                ["e2e", "env-check", "--project-root", str(root), "--artifact-root", artifact_root]
+            )
+            self.assertEqual(code, 1, f"stdout={out!r} stderr={err!r}")
+            self.assertIsNotNone(parsed, f"stdout이 JSON이 아님: {out!r} stderr={err!r}")
+            surfaces = {s["id"]: s for s in parsed.get("surfaces", [])}
+            api_surface = surfaces.get("api1", {})
+            self.assertEqual(api_surface.get("status"), "not_ready")
+            self.assertEqual(api_surface.get("cause"), "service_start_failed")
+            self.assertTrue(api_surface.get("remediation"))
+            checks = api_surface.get("checks", [])
+            detail_blob = json.dumps(checks)
+>           self.assertIn("readiness", detail_blob, f"로그 경로가 detail에 없음: {checks!r}")
+E           AssertionError: 'readiness' not found in '[{"name": "service_start", "ok": false, "detail": "e2e_port_lease_failed: no free port outside the set already leased or reserved by the user"}, {"name": "health", "ok": false, "detail": "skipped"}, {"name": "executor", "ok": false, "detail": "skipped"}]' : 로그 경로가 detail에 없음: [{'name': 'service_start', 'ok': False, 'detail': 'e2e_port_lease_failed: no free port outside the set already leased or reserved by the user'}, {'name': 'health', 'ok': False, 'detail': 'skipped'}, {'name': 'executor', 'ok': False, 'detail': 'skipped'}]
+
+opal/tools/test-tool/tests/test_red_s159_env.py:359: AssertionError
+_ TestRunEnvironmentBlocked.test_invalid_config_is_blocked_with_config_invalid_detail _
+
+self = <test_red_s159_env.TestRunEnvironmentBlocked testMethod=test_invalid_config_is_blocked_with_config_invalid_detail>
+
+    def test_invalid_config_is_blocked_with_config_invalid_detail(self):
+        with tempfile.TemporaryDirectory() as worktree, tempfile.TemporaryDirectory() as taskdir:
+            root = pathlib.Path(worktree)
+            _write_config(root, {"schema_version": "1.0", "surfaces": []})  # services 누락
+            task_dir = pathlib.Path(taskdir) / "task"
+            _write_scenario(task_dir, "S-1", "api")
+            code, out, err, parsed = self._run(worktree, "S-1", task_dir)
+            self.assertIsNotNone(parsed, f"stdout이 JSON이 아님: {out!r} stderr={err!r}")
+>           self.assertEqual(parsed.get("status"), "blocked", f"payload={parsed!r}")
+E           AssertionError: 'infra_error' != 'blocked'
+E           - infra_error
+E           + blocked
+E            : payload={'run_id': 'e2e-20260927-001', 'scenario_id': 'S-1', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp47p2_jqt/.e2e/artifacts/tmp47p2_jqt/e2e-20260927-001/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp47p2_jqt/.e2e/artifacts/tmp47p2_jqt/e2e-20260927-001', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmp47p2_jqt', 'lease_reclaimed': [], 'candidates': []}
+
+opal/tools/test-tool/tests/test_red_s159_env.py:526: AssertionError
+_ TestRunEnvironmentBlocked.test_missing_config_is_blocked_with_config_missing_detail _
+
+self = <test_red_s159_env.TestRunEnvironmentBlocked testMethod=test_missing_config_is_blocked_with_config_missing_detail>
+
+    def test_missing_config_is_blocked_with_config_missing_detail(self):
+        with tempfile.TemporaryDirectory() as worktree, tempfile.TemporaryDirectory() as taskdir:
+            task_dir = pathlib.Path(taskdir) / "task"
+            _write_scenario(task_dir, "S-1", "api")
+            code, out, err, parsed = self._run(worktree, "S-1", task_dir)
+            self.assertIsNotNone(parsed, f"stdout이 JSON이 아님: {out!r} stderr={err!r}")
+>           self.assertEqual(parsed.get("status"), "blocked", f"payload={parsed!r}")
+E           AssertionError: 'infra_error' != 'blocked'
+E           - infra_error
+E           + blocked
+E            : payload={'run_id': 'e2e-20260927-001', 'scenario_id': 'S-1', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpptdrr18t/.e2e/artifacts/tmpptdrr18t/e2e-20260927-001/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpptdrr18t/.e2e/artifacts/tmpptdrr18t/e2e-20260927-001', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpptdrr18t', 'lease_reclaimed': [], 'candidates': []}
+
+opal/tools/test-tool/tests/test_red_s159_env.py:509: AssertionError
+_ TestConcurrentPortIsolation.test_three_concurrent_runs_do_not_collide_and_release_ports _
+
+self = <test_red_s1_concurrent_port_isolation.TestConcurrentPortIsolation testMethod=test_three_concurrent_runs_do_not_collide_and_release_ports>
+
+    def test_three_concurrent_runs_do_not_collide_and_release_ports(self):
+        with tempfile.TemporaryDirectory() as t1, \
+             tempfile.TemporaryDirectory() as t2, \
+             tempfile.TemporaryDirectory() as t3:
+            roots = [t1, t2, t3]
+            procs = []
+            for root in roots:
+                # --target=source-worktree일 때 --worktree-root로 서로 다른 worktree를
+                # 구분한다(§B.1.1 표). --scenario·--task-path는 필수 인자다.
+                args = [
+                    _PYTHON, str(_TEST_TOOL_PY), "e2e", "run",
+                    "--scenario", _SCENARIO_ID,
+                    "--task-path", str(_TASK_PATH),
+                    "--target", "source-worktree",
+                    "--worktree-root", root,
+                ]
+                procs.append(subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True))
+    
+            results = []
+            for proc in procs:
+                stdout, stderr = proc.communicate(timeout=60)
+                results.append((proc.returncode, stdout, stderr))
+    
+            # 서브명령이 실제로 존재해야 아래 검증이 의미가 있다. 지금은 존재하지
+            # 않으므로 이 assert에서 RED로 실패한다 (argparse invalid choice, exit 2).
+            for returncode, stdout, stderr in results:
+                self.assertNotEqual(
+                    returncode, 2,
+                    f"'e2e run' subcommand missing — argparse rejected it (RED target): {stderr!r}",
+                )
+    
+            run_jsons = []
+            for _, stdout, _ in results:
+                data = json.loads(stdout)
+                run_jsons.append(data)
+    
+            backend_ports = {d["urls"]["backend"] for d in run_jsons}
+            frontend_ports = {d["urls"]["frontend"] for d in run_jsons}
+>           self.assertEqual(len(backend_ports), 3, "backend ports must not collide across concurrent runs")
+E           AssertionError: 1 != 3 : backend ports must not collide across concurrent runs
+
+opal/tools/test-tool/tests/test_red_s1_concurrent_port_isolation.py:89: AssertionError
+_ TestNoSwitchAfterInfraError.test_infra_error_confirmed_final_and_no_candidate2_attempt _
+
+self = <test_red_s26_candidate_no_switch_infra_error.TestNoSwitchAfterInfraError testMethod=test_infra_error_confirmed_final_and_no_candidate2_attempt>
+
+    def test_infra_error_confirmed_final_and_no_candidate2_attempt(self):
+        import os
+        env = os.environ.copy()
+        env["OPAL_E2E_AGENT_BROWSER_BIN"] = str(self.stub_bin)
+    
+        with tempfile.TemporaryDirectory() as artifact_dir:
+            env["OPAL_E2E_ARTIFACT_DIR"] = artifact_dir
+            proc = subprocess.run(
+                [
+                    _PYTHON, str(_TEST_TOOL_PY),
+                    "e2e", "run",
+                    "--scenario", "s26-fixture",
+                    "--task-path", str(self.task_path),
+                    "--target", "source-worktree",
+                    "--worktree-root", str(_SOURCE_ROOT),
+                ],
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=60,
+            )
+            self.assertNotEqual(
+                proc.returncode, 2,
+                f"'e2e run' subcommand missing (RED target): {proc.stderr!r}",
+            )
+            data = json.loads(proc.stdout)
+    
+            candidates = data.get("candidates") or []
+>           self.assertNotEqual(candidates, [], f"candidate 1's attempt must be recorded: {data}")
+E           AssertionError: [] == [] : candidate 1's attempt must be recorded: {'run_id': 'e2e-20260927-337', 'scenario_id': 's26-fixture', 'profile': None, 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpiktgd_gp/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpiktgd_gp', 'executed': False, 'urls': {'backend': None, 'frontend': None}, 'project_root': '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161', 'lease_reclaimed': [], 'candidates': []}
+
+opal/tools/test-tool/tests/test_red_s26_candidate_no_switch_infra_error.py:187: AssertionError
+_ TestNoRetryOrSwitchOnProductFailure.test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt _
+
+self = <test_red_s27_no_retry_on_product_failure.TestNoRetryOrSwitchOnProductFailure testMethod=test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt>
+
+    def test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt(self):
+        import os
+        env = os.environ.copy()
+        env["OPAL_E2E_AGENT_BROWSER_BIN"] = str(self.stub_bin)
+    
+        with tempfile.TemporaryDirectory() as artifact_dir:
+            env["OPAL_E2E_ARTIFACT_DIR"] = artifact_dir
+            proc = subprocess.run(
+                [
+                    _PYTHON, str(_TEST_TOOL_PY),
+                    "e2e", "run",
+                    "--scenario", "s27-fixture",
+                    "--task-path", str(self.task_path),
+                    "--target", "source-worktree",
+                    "--worktree-root", str(_SOURCE_ROOT),
+                ],
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=60,
+            )
+            self.assertNotEqual(
+                proc.returncode, 2,
+                f"'e2e run' subcommand missing (RED target): {proc.stderr!r}",
+            )
+            data = json.loads(proc.stdout)
+    
+            # (a) candidates[]가 비어 있으면 안 된다 — 후보 1의 시도 기록이 실재해야 한다.
+            candidates = data.get("candidates") or []
+>           self.assertNotEqual(
+                candidates, [],
+                "candidates[] must not be empty — candidate 1's attempt must be recorded "
+                "(an empty list is not proof of retry/switch suppression, RED target)",
+            )
+E           AssertionError: [] == [] : candidates[] must not be empty — candidate 1's attempt must be recorded (an empty list is not proof of retry/switch suppression, RED target)
+
+opal/tools/test-tool/tests/test_red_s27_no_retry_on_product_failure.py:192: AssertionError
+____ TestStaleLeaseReclaim.test_stale_lease_is_reclaimed_without_eaddrinuse ____
+
+self = <test_red_s2_stale_lease_reclaim.TestStaleLeaseReclaim testMethod=test_stale_lease_is_reclaimed_without_eaddrinuse>
+
+    def test_stale_lease_is_reclaimed_without_eaddrinuse(self):
+        with tempfile.TemporaryDirectory() as artifact_root:
+            leases_dir = pathlib.Path(artifact_root) / ".leases"
+            leases_dir.mkdir(parents=True, exist_ok=True)
+    
+            # 이미 죽은 PID를 owner_pid로 하는 stale lease record를 CONTRACT.md §A.7
+            # 형식으로 직접 배치한다 (죽은 PID 확보: 자식 프로세스를 즉시 종료해 얻는다).
+            dead = subprocess.Popen([sys.executable, "-c", "pass"])
+            dead.wait()
+            dead_pid = dead.pid
+    
+            stale_lease = {
+                "schema_version": "2.0",
+                "lease_id": "stale-run-backend",
+                "run_id": "stale-run",
+                "owner_pid": dead_pid,
+                "port": 18765,
+                "role": "backend",
+                "state": "reserved",
+                "created_at": "2020-01-01T00:00:00+09:00",
+                "confirmed_at": None,
+                "attempt": 1,
+            }
+            (leases_dir / "stale-run-backend.json").write_text(
+                json.dumps(stale_lease, ensure_ascii=False), encoding="utf-8"
+            )
+    
+            env = {"OPAL_E2E_ARTIFACT_DIR": artifact_root}
+            import os
+            full_env = os.environ.copy()
+            full_env.update(env)
+    
+            proc = subprocess.run(
+                [
+                    _PYTHON, str(_TEST_TOOL_PY), "e2e", "run",
+                    "--scenario", _SCENARIO_ID,
+                    "--task-path", str(_TASK_PATH),
+                    "--target", "source-worktree",
+                    "--worktree-root", str(_TOOL_DIR.parent.parent),
+                ],
+                capture_output=True,
+                text=True,
+                env=full_env,
+                timeout=60,
+            )
+    
+            # RED target: 'e2e run' 서브명령이 없으므로 argparse가 invalid choice로
+            # exit code 2를 반환한다. 실기능이 있다면 EADDRINUSE 없이 성공(0) 혹은
+            # 정상적인 최종 상태 exit code여야 한다.
+            self.assertNotEqual(
+                proc.returncode, 2,
+                f"'e2e run' subcommand missing — cannot exercise stale lease reclaim (RED target): {proc.stderr!r}",
+            )
+            data = json.loads(proc.stdout)
+            self.assertNotIn(
+                "EADDRINUSE", json.dumps(data),
+                "stale lease reclaim must avoid EADDRINUSE on reuse/reallocation",
+            )
+>           self.assertTrue(
+                data.get("lease_reclaimed") or data.get("candidates"),
+                "reclamation fact must be recorded in run artifacts",
+            )
+E           AssertionError: [] is not true : reclamation fact must be recorded in run artifacts
+
+opal/tools/test-tool/tests/test_red_s2_stale_lease_reclaim.py:97: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestExecutorOperationContract::test_act_without_step_role_is_refused_before_any_request
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestExecutorOperationContract::test_prepare_returns_the_three_contract_keys
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestProbeIsEvidenceBased::test_probe_against_a_dead_port_is_unavailable
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestProbeIsEvidenceBased::test_probe_against_a_live_health_surface_is_available
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestRealHttpAct::test_act_opens_a_real_socket_and_reports_the_product_status
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestRealHttpAct::test_assertion_result_always_carries_expected_and_actual_keys
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestRealHttpAct::test_observe_url_records_the_follow_up_state_as_its_own_action
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestRealHttpAct::test_state_verifier_asserts_against_a_follow_up_call
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestRetryWhitelist::test_failed_action_is_recorded_as_error_not_omitted
+SUBFAILED(status=404) opal/tools/test-tool/tests/test_e2e_api_executor.py::TestRetryWhitelist::test_product_4xx_and_5xx_are_returned_once_and_never_retried
+SUBFAILED(status=409) opal/tools/test-tool/tests/test_e2e_api_executor.py::TestRetryWhitelist::test_product_4xx_and_5xx_are_returned_once_and_never_retried
+SUBFAILED(status=500) opal/tools/test-tool/tests/test_e2e_api_executor.py::TestRetryWhitelist::test_product_4xx_and_5xx_are_returned_once_and_never_retried
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestRetryWhitelist::test_transport_failure_retries_up_to_the_contract_ceiling_then_errors
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestEvidenceGate::test_action_rows_carry_the_contract_a4_keys_and_the_step_role
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestEvidenceGate::test_api_rows_cross_reference_the_action_log_by_seq
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestEvidenceGate::test_body_is_not_collected_unless_the_endpoint_is_allowlisted
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestEvidenceGate::test_capture_without_an_evidence_writer_is_a_contract_error
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestEvidenceGate::test_capture_writes_the_two_contract_a11_files_plus_the_action_log
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestEvidenceGate::test_secret_headers_never_reach_the_artifact_in_clear_text
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestFixtureOwnership::test_cleanup_actions_are_recorded_with_the_cleanup_step_role
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestFixtureOwnership::test_cleanup_calls_only_the_owned_fixture_endpoint
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestFixtureOwnership::test_cleanup_reports_a_leak_instead_of_claiming_success
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestFixtureOwnership::test_owned_ledger_lists_only_this_runs_namespace
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestCandidateResolution::test_registered_and_available_executor_is_selected
+FAILED opal/tools/test-tool/tests/test_e2e_api_executor.py::TestCandidateResolution::test_unavailable_executor_is_not_selected
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestJournalTransitionOrder::test_executor_ready_is_emitted_exactly_once
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestJournalTransitionOrder::test_no_selected_candidate_keeps_the_shortcut_and_never_starts_a_sut
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestJournalTransitionOrder::test_profile_resolved_follows_sut_ready_on_the_progress_path
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestJournalTransitionOrder::test_selected_candidate_emits_the_a21_order
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestSutDependentProbeOrdering::test_api_probe_receives_a_live_backend_url
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestSutDependentProbeOrdering::test_api_profile_emits_the_a21_order
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestSutDependentProbeOrdering::test_selected_api_candidate_is_recorded_once
+FAILED opal/tools/test-tool/tests/test_e2e_drivers.py::TestSutDependentProbeOrdering::test_sut_starts_before_the_api_probe_runs
+FAILED opal/tools/test-tool/tests/test_e2e_env_commands.py::TestEnvCheckCli::test_desktop_secret_and_service_failure
+FAILED opal/tools/test-tool/tests/test_e2e_env_commands.py::TestEnvCheckCli::test_readiness_log_masks_from_env_secret
+FAILED opal/tools/test-tool/tests/test_e2e_env_commands.py::TestEnvCheckCli::test_ready_api_and_human_exit_zero_and_cleans_up
+FAILED opal/tools/test-tool/tests/test_e2e_environment.py::TestStartService::test_default_port_health
+FAILED opal/tools/test-tool/tests/test_e2e_environment.py::TestStartService::test_early_exit
+FAILED opal/tools/test-tool/tests/test_e2e_environment.py::TestStartService::test_http_health_with_json_field
+FAILED opal/tools/test-tool/tests/test_e2e_environment.py::TestStartService::test_missing_json_field_is_bad_response
+FAILED opal/tools/test-tool/tests/test_e2e_environment.py::TestStartService::test_non_http_bytes_is_bad_response_and_group_reclaimed
+FAILED opal/tools/test-tool/tests/test_e2e_environment.py::TestStartService::test_port_never_opens_is_timeout
+FAILED opal/tools/test-tool/tests/test_e2e_environment.py::TestStartService::test_spawn_failure_is_process_exited_early
+FAILED opal/tools/test-tool/tests/test_e2e_environment.py::TestStartService::test_status_mismatch_is_bad_response_and_group_reclaimed
+FAILED opal/tools/test-tool/tests/test_e2e_environment.py::TestStartService::test_unexpected_exception_reclaims_group_and_propagates
+FAILED opal/tools/test-tool/tests/test_e2e_external_project.py::TestExternalProjectWalkthrough::test_walkthrough_env_inspect_then_setup_then_validate_check_run
+FAILED opal/tools/test-tool/tests/test_e2e_run_environment.py::TestRunConfigAbsentOrInvalid::test_invalid_config_blocks_without_echoing_values
+FAILED opal/tools/test-tool/tests/test_e2e_run_environment.py::TestRunConfigAbsentOrInvalid::test_missing_config_leases_compat_roles_and_blocks
+FAILED opal/tools/test-tool/tests/test_e2e_run_environment.py::TestRunSurfaceSelectionFailure::test_ambiguous_api_surface_blocks_unless_surface_ref_names_one
+FAILED opal/tools/test-tool/tests/test_e2e_run_environment.py::TestRunSurfaceSelectionFailure::test_missing_api_surface_blocks_and_starts_nothing
+FAILED opal/tools/test-tool/tests/test_e2e_run_environment.py::TestRunStartsConfiguredServices::test_temp_project_service_is_leased_started_once_and_reclaimed
+FAILED opal/tools/test-tool/tests/test_e2e_run_environment.py::TestRunRenderViolationStartsNothing::test_second_service_cwd_symlink_escape_blocks_before_any_start
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestPortAllocator::test_find_free_port_is_still_the_t01_entry_point
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestPortAllocator::test_lease_writes_contract_shaped_records
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestPortAllocator::test_live_lease_ports_are_not_handed_out_twice
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestPortAllocator::test_release_removes_only_own_records
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestPortAllocator::test_stale_lease_with_dead_owner_pid_is_reclaimed
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestOrchestratorRunJson::test_run_json_carries_every_contract_a1_required_key
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestOrchestratorRunJson::test_unreadable_scenario_blocks_without_leasing_a_sut
+FAILED opal/tools/test-tool/tests/test_e2e_runtime.py::TestOrchestratorRunJson::test_zero_executor_candidates_ends_before_the_sut_is_started
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestBackendHealthAndOpenapi::test_health_and_openapi_surfaces_return_200
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestCorsRealHttp::test_injected_origin_reflected_and_other_origin_not
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestBrowserRealUsage::test_browser_dashboard_call_reaches_backend
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestCleanupAndNonInterference::test_pgid_reclaimed_and_no_leak_after_stop_all
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestHybridWiring::test_a_driver_missing_an_operation_blocks_instead_of_switching_candidates
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestHybridWiring::test_a_type_with_no_selected_candidate_ends_as_executor_unavailable
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestHybridWiring::test_browser_step_runs_end_to_end_and_emits_the_a21_transitions
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestAcceptanceBrowserPathways::test_ac4_cleanup_touches_only_the_page_this_run_opened
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestAcceptanceBrowserPathways::test_ac4_real_browser_run_passes_with_a_semantic_assertion
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_auth
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_job
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_prime
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_query_transport_only
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_status
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_config_get
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_config_prewarm
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_dashboard
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_doctor
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_memory
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_detail
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_doc
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_list
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_artifact
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_detail
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_list
+FAILED opal/tools/test-tool/tests/test_red_s12_executor_contract.py::TestBrowserProfileStaticRejectionViaCli::test_browser_profile_without_browser_step_rejected_before_execution
+FAILED opal/tools/test-tool/tests/test_red_s159_env.py::TestEnvCheckReady::test_env_check_surfaces_and_secrets
+FAILED opal/tools/test-tool/tests/test_red_s159_env.py::TestEnvCheckServiceFailure::test_service_exit_immediately_reports_service_start_failed
+FAILED opal/tools/test-tool/tests/test_red_s159_env.py::TestRunEnvironmentBlocked::test_invalid_config_is_blocked_with_config_invalid_detail
+FAILED opal/tools/test-tool/tests/test_red_s159_env.py::TestRunEnvironmentBlocked::test_missing_config_is_blocked_with_config_missing_detail
+FAILED opal/tools/test-tool/tests/test_red_s1_concurrent_port_isolation.py::TestConcurrentPortIsolation::test_three_concurrent_runs_do_not_collide_and_release_ports
+FAILED opal/tools/test-tool/tests/test_red_s26_candidate_no_switch_infra_error.py::TestNoSwitchAfterInfraError::test_infra_error_confirmed_final_and_no_candidate2_attempt
+FAILED opal/tools/test-tool/tests/test_red_s27_no_retry_on_product_failure.py::TestNoRetryOrSwitchOnProductFailure::test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt
+FAILED opal/tools/test-tool/tests/test_red_s2_stale_lease_reclaim.py::TestStaleLeaseReclaim::test_stale_lease_is_reclaimed_without_eaddrinuse
+94 failed, 470 passed, 4 skipped, 4 errors, 319 subtests passed in 52.65s

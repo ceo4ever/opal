@@ -1,0 +1,75 @@
+{
+  "cmd": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161/opal/tools/test-tool/run.sh",
+    "unit",
+    "--scope",
+    "be",
+    "--project-root",
+    "/private/tmp/opal-s161-real-cases/python-lint"
+  ],
+  "exit": 5,
+  "stdout": "{\"ok\": false, \"status\": \"fail\", \"layers\": [{\"name\": \"lint\", \"tool\": \"ruff\", \"required\": true, \"status\": \"fail\", \"check\": {\"cmd\": \"ruff --version\", \"exit\": 0, \"status\": \"pass\"}, \"cmd\": \"ruff check .\", \"exit\": 1, \"stdout\": \"F401 [*] `os` imported but unused\\n --> calc.py:1:8\\n  |\\n1 | import os\\n  |        ^^\\n  |\\nhelp: Remove unused import: `os`\\n\\nFound 1 error.\\n[*] 1 fixable with the `--fix` option.\", \"scope\": {\"kind\": \"project\", \"requested\": [], \"checked\": [], \"excluded\": [], \"reason\": null}}, {\"name\": \"typecheck\", \"tool\": \"mypy\", \"required\": true, \"status\": \"not_run\", \"reason\": \"stopped_after_failure\", \"check\": null, \"cmd\": null, \"exit\": null, \"stdout\": null, \"scope\": null}, {\"name\": \"unit\", \"tool\": \"pytest\", \"required\": true, \"status\": \"not_run\", \"reason\": \"stopped_after_failure\", \"check\": null, \"cmd\": null, \"exit\": null, \"stdout\": null, \"scope\": null}], \"stopped_at\": \"lint\", \"requested_files\": [], \"error\": \"layer_failed\", \"command\": \"unit\", \"scope\": \"be\", \"cwd\": \"/private/tmp/opal-s161-real-cases/python-lint\", \"config\": {\"source\": \"infer\", \"path\": \"/private/tmp/opal-s161-real-cases/python-lint/pyproject.toml\"}}\n",
+  "stderr": "",
+  "parsed": {
+    "ok": false,
+    "status": "fail",
+    "layers": [
+      {
+        "name": "lint",
+        "tool": "ruff",
+        "required": true,
+        "status": "fail",
+        "check": {
+          "cmd": "ruff --version",
+          "exit": 0,
+          "status": "pass"
+        },
+        "cmd": "ruff check .",
+        "exit": 1,
+        "stdout": "F401 [*] `os` imported but unused\n --> calc.py:1:8\n  |\n1 | import os\n  |        ^^\n  |\nhelp: Remove unused import: `os`\n\nFound 1 error.\n[*] 1 fixable with the `--fix` option.",
+        "scope": {
+          "kind": "project",
+          "requested": [],
+          "checked": [],
+          "excluded": [],
+          "reason": null
+        }
+      },
+      {
+        "name": "typecheck",
+        "tool": "mypy",
+        "required": true,
+        "status": "not_run",
+        "reason": "stopped_after_failure",
+        "check": null,
+        "cmd": null,
+        "exit": null,
+        "stdout": null,
+        "scope": null
+      },
+      {
+        "name": "unit",
+        "tool": "pytest",
+        "required": true,
+        "status": "not_run",
+        "reason": "stopped_after_failure",
+        "check": null,
+        "cmd": null,
+        "exit": null,
+        "stdout": null,
+        "scope": null
+      }
+    ],
+    "stopped_at": "lint",
+    "requested_files": [],
+    "error": "layer_failed",
+    "command": "unit",
+    "scope": "be",
+    "cwd": "/private/tmp/opal-s161-real-cases/python-lint",
+    "config": {
+      "source": "infer",
+      "path": "/private/tmp/opal-s161-real-cases/python-lint/pyproject.toml"
+    }
+  }
+}

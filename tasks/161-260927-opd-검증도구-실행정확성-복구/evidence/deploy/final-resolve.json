@@ -1,0 +1,307 @@
+{
+  "command": [
+    "zsh",
+    "-lic",
+    "\"$HOME/.opal/tools/test-tool/run.sh\" resolve --project-root \"/private/tmp/opal-s161-deploytest/empty\""
+  ],
+  "exit": 0,
+  "stdout": "{\"ok\": true, \"command\": \"resolve\", \"tiers\": {\"unit\": {\"fe\": {\"lint\": [{\"name\": \"eslint\", \"purpose\": \"JavaScript/TypeScript 정적 분석\", \"check\": \"npx eslint --version\", \"install\": \"npm install -D eslint\", \"run\": \"npx eslint .\", \"run_files\": \"npx eslint {files}\", \"file_globs\": [\"*.js\", \"*.jsx\", \"*.ts\", \"*.tsx\", \"*.mjs\", \"*.cjs\"], \"required\": true}], \"typecheck\": [{\"name\": \"tsc\", \"purpose\": \"TypeScript 타입 안전성 검사\", \"check\": \"npx tsc --version\", \"install\": \"npm install -D typescript\", \"run\": \"npx tsc --noEmit\", \"required\": true}], \"unit\": [{\"name\": \"vitest\", \"purpose\": \"단위 테스트 (Vite 기반, RTL 컴포넌트 테스트 포함)\", \"check\": \"npx vitest --version\", \"install\": \"npm install -D vitest @testing-library/react\", \"run\": \"npx vitest run\", \"required\": true}], \"a11y\": [{\"name\": \"jest-axe\", \"purpose\": \"접근성(WCAG) 단위 검증 — axe-core 래퍼, vitest+RTL 동일 러너 내 통합\", \"check\": \"npm ls jest-axe\", \"install\": \"npm install -D jest-axe\", \"required\": false}]}, \"be\": {\"lint\": [{\"name\": \"ruff\", \"purpose\": \"Python 빠른 린터 (py)\", \"check\": \"ruff --version\", \"install\": \"pip install ruff\", \"run\": \"ruff check .\", \"run_files\": \"ruff check {files}\", \"file_globs\": [\"*.py\"], \"required\": true}, {\"name\": \"eslint\", \"purpose\": \"TypeScript/Node 정적 분석 (ts)\", \"check\": \"npx eslint --version\", \"install\": \"npm install -D eslint\", \"run\": \"npx eslint .\", \"run_files\": \"npx eslint {files}\", \"file_globs\": [\"*.js\", \"*.jsx\", \"*.ts\", \"*.tsx\", \"*.mjs\", \"*.cjs\"], \"required\": true}], \"typecheck\": [{\"name\": \"mypy\", \"purpose\": \"Python 타입 체크 (py)\", \"check\": \"mypy --version\", \"install\": \"pip install mypy\", \"run\": \"mypy .\", \"required\": true}, {\"name\": \"pyright\", \"purpose\": \"Python 타입 체크 대안 (py)\", \"check\": \"pyright --version\", \"install\": \"pip install pyright\", \"run\": \"pyright\", \"required\": false}, {\"name\": \"tsc\", \"purpose\": \"TypeScript 타입 안전성 검사 (ts)\", \"check\": \"npx tsc --version\", \"install\": \"npm install -D typescript\", \"run\": \"npx tsc --noEmit\", \"required\": true}], \"unit\": [{\"name\": \"pytest\", \"purpose\": \"단위 테스트 (py)\", \"check\": \"pytest --version\", \"install\": \"pip install pytest\", \"run\": \"pytest\", \"required\": true}, {\"name\": \"vitest\", \"purpose\": \"단위 테스트 (ts)\", \"check\": \"npx vitest --version\", \"install\": \"npm install -D vitest\", \"run\": \"npx vitest run\", \"required\": true}]}}, \"integration\": {\"be\": {\"api_db\": [{\"name\": \"pytest\", \"purpose\": \"API+DB 통합 테스트 (실 DB 대상, mock 금지)\", \"deps\": [\"httpx\"], \"check\": \"pytest --version\", \"install\": \"pip install pytest httpx\", \"run\": \"pytest\", \"real_db\": true, \"required\": true}]}, \"fe\": {}, \"e2e\": [{\"name\": \"ego-lite\", \"executor\": \"browser\", \"profiles\": [\"browser\", \"hybrid\", \"collaborative\"], \"priority\": 1, \"via\": \"ego-browser-tool\", \"candidate_on\": \"provider_unavailable\"}, {\"name\": \"cmux\", \"executor\": \"browser\", \"profiles\": [\"browser\", \"hybrid\", \"collaborative\"], \"priority\": 2, \"via\": \"cmux-tool\", \"candidate_on\": \"provider_unavailable\"}], \"e2e_profiles\": {\"browser\": {\"required\": [\"browser\"], \"allowed\": [\"browser\"]}, \"api\": {\"required\": [\"api\"], \"allowed\": [\"api\"]}, \"hybrid\": {\"required\": [\"api\", \"browser\"], \"allowed\": [\"api\", \"browser\"]}, \"collaborative\": {\"required\": [\"human\"], \"allowed\": [\"browser\", \"api\", \"human\"]}, \"manual\": {\"required\": [\"human\"], \"allowed\": [\"human\"]}}, \"supervisor\": [{\"name\": \"captain-manual\"}]}}, \"e2e_profile\": {\"contract_version\": \"2.0\", \"profiles\": [\"browser\", \"api\", \"hybrid\", \"collaborative\", \"manual\"], \"executor_matrix\": {\"browser\": {\"required\": [\"browser\"], \"allowed\": [\"browser\"]}, \"api\": {\"required\": [\"api\"], \"allowed\": [\"api\"]}, \"hybrid\": {\"required\": [\"api\", \"browser\"], \"allowed\": [\"api\", \"browser\"]}, \"collaborative\": {\"required\": [\"human\"], \"allowed\": [\"browser\", \"api\", \"human\"]}, \"manual\": {\"required\": [\"human\"], \"allowed\": [\"human\"]}}, \"candidate_switch_on\": [\"provider_unavailable\"]}, \"source\": \"global\", \"source_path\": \"/Users/iskang/.opal/templates/test-tools.yaml\", \"stack\": {\"language\": \"typescript\", \"framework\": \"nextjs\", \"runtime\": \"node\"}}\n",
+  "stderr": "(anon):setopt:7: can't change option: monitor\n\n[\u001b[31mERROR\u001b[39m]: gitstatus failed to initialize.\n\n\n  Add the following parameter to \u001b[4m~/.zshrc\u001b[24m for extra diagnostics on error:\n\n    \u001b[1mGITSTATUS_LOG_LEVEL=DEBUG\u001b[0m\n\n  Restart Zsh to retry gitstatus initialization:\n\n    \u001b[32m\u001b[4mexec\u001b[24m\u001b[32m zsh\u001b[39m\n",
+  "parsed": {
+    "ok": true,
+    "command": "resolve",
+    "tiers": {
+      "unit": {
+        "fe": {
+          "lint": [
+            {
+              "name": "eslint",
+              "purpose": "JavaScript/TypeScript 정적 분석",
+              "check": "npx eslint --version",
+              "install": "npm install -D eslint",
+              "run": "npx eslint .",
+              "run_files": "npx eslint {files}",
+              "file_globs": [
+                "*.js",
+                "*.jsx",
+                "*.ts",
+                "*.tsx",
+                "*.mjs",
+                "*.cjs"
+              ],
+              "required": true
+            }
+          ],
+          "typecheck": [
+            {
+              "name": "tsc",
+              "purpose": "TypeScript 타입 안전성 검사",
+              "check": "npx tsc --version",
+              "install": "npm install -D typescript",
+              "run": "npx tsc --noEmit",
+              "required": true
+            }
+          ],
+          "unit": [
+            {
+              "name": "vitest",
+              "purpose": "단위 테스트 (Vite 기반, RTL 컴포넌트 테스트 포함)",
+              "check": "npx vitest --version",
+              "install": "npm install -D vitest @testing-library/react",
+              "run": "npx vitest run",
+              "required": true
+            }
+          ],
+          "a11y": [
+            {
+              "name": "jest-axe",
+              "purpose": "접근성(WCAG) 단위 검증 — axe-core 래퍼, vitest+RTL 동일 러너 내 통합",
+              "check": "npm ls jest-axe",
+              "install": "npm install -D jest-axe",
+              "required": false
+            }
+          ]
+        },
+        "be": {
+          "lint": [
+            {
+              "name": "ruff",
+              "purpose": "Python 빠른 린터 (py)",
+              "check": "ruff --version",
+              "install": "pip install ruff",
+              "run": "ruff check .",
+              "run_files": "ruff check {files}",
+              "file_globs": [
+                "*.py"
+              ],
+              "required": true
+            },
+            {
+              "name": "eslint",
+              "purpose": "TypeScript/Node 정적 분석 (ts)",
+              "check": "npx eslint --version",
+              "install": "npm install -D eslint",
+              "run": "npx eslint .",
+              "run_files": "npx eslint {files}",
+              "file_globs": [
+                "*.js",
+                "*.jsx",
+                "*.ts",
+                "*.tsx",
+                "*.mjs",
+                "*.cjs"
+              ],
+              "required": true
+            }
+          ],
+          "typecheck": [
+            {
+              "name": "mypy",
+              "purpose": "Python 타입 체크 (py)",
+              "check": "mypy --version",
+              "install": "pip install mypy",
+              "run": "mypy .",
+              "required": true
+            },
+            {
+              "name": "pyright",
+              "purpose": "Python 타입 체크 대안 (py)",
+              "check": "pyright --version",
+              "install": "pip install pyright",
+              "run": "pyright",
+              "required": false
+            },
+            {
+              "name": "tsc",
+              "purpose": "TypeScript 타입 안전성 검사 (ts)",
+              "check": "npx tsc --version",
+              "install": "npm install -D typescript",
+              "run": "npx tsc --noEmit",
+              "required": true
+            }
+          ],
+          "unit": [
+            {
+              "name": "pytest",
+              "purpose": "단위 테스트 (py)",
+              "check": "pytest --version",
+              "install": "pip install pytest",
+              "run": "pytest",
+              "required": true
+            },
+            {
+              "name": "vitest",
+              "purpose": "단위 테스트 (ts)",
+              "check": "npx vitest --version",
+              "install": "npm install -D vitest",
+              "run": "npx vitest run",
+              "required": true
+            }
+          ]
+        }
+      },
+      "integration": {
+        "be": {
+          "api_db": [
+            {
+              "name": "pytest",
+              "purpose": "API+DB 통합 테스트 (실 DB 대상, mock 금지)",
+              "deps": [
+                "httpx"
+              ],
+              "check": "pytest --version",
+              "install": "pip install pytest httpx",
+              "run": "pytest",
+              "real_db": true,
+              "required": true
+            }
+          ]
+        },
+        "fe": {},
+        "e2e": [
+          {
+            "name": "ego-lite",
+            "executor": "browser",
+            "profiles": [
+              "browser",
+              "hybrid",
+              "collaborative"
+            ],
+            "priority": 1,
+            "via": "ego-browser-tool",
+            "candidate_on": "provider_unavailable"
+          },
+          {
+            "name": "cmux",
+            "executor": "browser",
+            "profiles": [
+              "browser",
+              "hybrid",
+              "collaborative"
+            ],
+            "priority": 2,
+            "via": "cmux-tool",
+            "candidate_on": "provider_unavailable"
+          }
+        ],
+        "e2e_profiles": {
+          "browser": {
+            "required": [
+              "browser"
+            ],
+            "allowed": [
+              "browser"
+            ]
+          },
+          "api": {
+            "required": [
+              "api"
+            ],
+            "allowed": [
+              "api"
+            ]
+          },
+          "hybrid": {
+            "required": [
+              "api",
+              "browser"
+            ],
+            "allowed": [
+              "api",
+              "browser"
+            ]
+          },
+          "collaborative": {
+            "required": [
+              "human"
+            ],
+            "allowed": [
+              "browser",
+              "api",
+              "human"
+            ]
+          },
+          "manual": {
+            "required": [
+              "human"
+            ],
+            "allowed": [
+              "human"
+            ]
+          }
+        },
+        "supervisor": [
+          {
+            "name": "captain-manual"
+          }
+        ]
+      }
+    },
+    "e2e_profile": {
+      "contract_version": "2.0",
+      "profiles": [
+        "browser",
+        "api",
+        "hybrid",
+        "collaborative",
+        "manual"
+      ],
+      "executor_matrix": {
+        "browser": {
+          "required": [
+            "browser"
+          ],
+          "allowed": [
+            "browser"
+          ]
+        },
+        "api": {
+          "required": [
+            "api"
+          ],
+          "allowed": [
+            "api"
+          ]
+        },
+        "hybrid": {
+          "required": [
+            "api",
+            "browser"
+          ],
+          "allowed": [
+            "api",
+            "browser"
+          ]
+        },
+        "collaborative": {
+          "required": [
+            "human"
+          ],
+          "allowed": [
+            "browser",
+            "api",
+            "human"
+          ]
+        },
+        "manual": {
+          "required": [
+            "human"
+          ],
+          "allowed": [
+            "human"
+          ]
+        }
+      },
+      "candidate_switch_on": [
+        "provider_unavailable"
+      ]
+    },
+    "source": "global",
+    "source_path": "/Users/iskang/.opal/templates/test-tools.yaml",
+    "stack": {
+      "language": "typescript",
+      "framework": "nextjs",
+      "runtime": "node"
+    }
+  }
+}

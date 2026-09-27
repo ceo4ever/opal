@@ -1,0 +1,16 @@
+{
+  "scenario": "S-4",
+  "cmd": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "opal/tools/test-tool/tests/test_red_s161_unit_contract.py::TestS4EmptyLayersAndNoMatchingFiles",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "-rf"
+  ],
+  "exit": 0,
+  "stdout": "..                                                                       [100%]\n2 passed in 0.17s\n",
+  "stderr": ""
+}

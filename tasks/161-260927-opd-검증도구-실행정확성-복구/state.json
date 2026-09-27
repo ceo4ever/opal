@@ -1,0 +1,274 @@
+{
+  "task_id": "161-260927-opd-검증도구-실행정확성-복구",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-09-27 07:31:06",
+  "updated_at": "2026-09-27 21:55:56",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 07:31:13",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 07:33:45",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:46:58",
+      "owner": "PM",
+      "note": "PLAN 완료. 외부 결정 캡틴 A안 채택(2026-09-27 20:04). PM 직접 작성으로 워커 소요 미측정 선언.",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "TEST-SCENARIO 작성",
+      "key": "plan.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 20:06:57",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "설계 게이트",
+      "key": "plan.design_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 20:10:07",
+      "owner": "PM",
+      "note": "design gate i2 pass",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "`state-tool design-gate record`가 pass를 기록했고 현재 문서 묶음 hash가 통과 hash와 같다",
+          "evaluator design-rubric 설계 4축 PASS·시나리오 3축 기준 충족"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 20:10:34",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:46:53",
+      "owner": "PM",
+      "note": "이전 Claude 워커의 duration_ms 수신 기록이 없어 미측정 선언. 구현 산출물과 TEST 증거는 별도 확인.",
+      "step": "3/3",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:45:24",
+      "owner": "PM",
+      "note": "독립 TEST S-1~S-13 PASS. S-13 README 비교 기준은 캡틴 승인에 따라 설치기의 변경이력 제거 정책 적용.",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:45:38",
+      "owner": "PM",
+      "note": "13/13 시나리오 PASS와 실제 증거 확인; 전체 회귀 569 passed, 변경 코드 E741 0, code-scan newly_uncovered 0, 보안 패턴 0, 컨벤션 Critical/High 0. README Medium 문구 보정 확인.",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:46:17",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:47:02",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:47:13",
+      "owner": "PM",
+      "note": "no-op: PROJECT·ARCHITECTURE·CONVENTIONS의 test-tool 언급은 변경된 unit 공개 계약을 재정의하지 않으며, 계약 원문은 갱신된 test-tool README·스키마가 소유.",
+      "conditional": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:48:35",
+      "owner": "PM",
+      "note": "작업본 brain 직접 쓰기 금지. op-brain-ingest 검토 결과 .opal/brain/pages/entity/test-tool.md 갱신 후보를 DONE.md에 선언하고 허브 귀속 단계로 이월.",
+      "conditional": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:48:42",
+      "owner": "PM",
+      "note": "개선후보 0건. E741과 README 문구는 태스크 안에서 보정했고, 설치 변환을 반영한 S-13 기준도 캡틴 승인으로 정정했다. 별도 반복 패턴 근거 없음."
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:55:47",
+      "owner": "PM",
+      "note": "worktree-tool finalize 성공: attribution_state=closed, observed=0, committed=false. merge·push 미실행.",
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-27 21:55:56",
+      "owner": "PM",
+      "note": "TEST 13/13 PASS, DONE·docs sync·brain candidate·retrospective·worktree attribution 완료. 태스크 브랜치 merge 대기."
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_161",
+  "actor": "coordinator",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_b9a895df-5032-49bb-b54b-6c0c3bc8cf74",
+    "status": "active",
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_a8ade0b2-96a1-47f4-a826-0c593a635779",
+      "report_type": "decision_request",
+      "transition_action": "blocked",
+      "user_input_required": true,
+      "at": "2026-09-27T12:49:48.774Z"
+    }
+  },
+  "design_gate": {
+    "status": "pass",
+    "iteration": 2,
+    "limit": 3,
+    "limit_from": 0,
+    "task_confirm_req_hash": "999bb61e8ebdccb141264fa002edd3180288b948793d321da4005d19b8a4f964",
+    "current_attempt": {
+      "iteration": 2,
+      "bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+      "files": {
+        "TASK.md": "a0eba433917d5d6a3a3ffb4cdc2252966af30110cfe16afe52be3b3e44eeab70",
+        "PLAN.md": "280b967c19b630860027b6d0aea973009ca9498cc490caf5af18a846f5f6e2d4",
+        "TEST-SCENARIO.md": "41e53f7a3e6a7d95b332265f29b14192035f78ce070e97e47c3504e921067e67"
+      },
+      "started_at": "2026-09-27 20:07:31"
+    },
+    "passed_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+    "approved_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+    "last_rewrite_target": null,
+    "history": [
+      {
+        "iteration": 1,
+        "verdict": "deterministic_fail",
+        "rewrite_target": null,
+        "bundle_hash": "90ca7dc2620cf55d78f8e001fbbf2c75474b9c2feee6e3dfa12b8340cf18a70d",
+        "reason": "finding not in work items: opal/tools/test-tool/tests/fixtures/unit-real/",
+        "at": "2026-09-27 20:07:02"
+      },
+      {
+        "iteration": 2,
+        "verdict": "pass",
+        "rewrite_target": null,
+        "bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+        "reason": null,
+        "at": "2026-09-27 20:10:07"
+      }
+    ]
+  }
+}

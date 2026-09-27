@@ -1,0 +1,17 @@
+{
+  "eslint": {
+    "exit": 0,
+    "stdout": "v10.5.0\n",
+    "stderr": ""
+  },
+  "tsc": {
+    "exit": 0,
+    "stdout": "Version 6.0.3\n",
+    "stderr": ""
+  },
+  "vitest": {
+    "exit": 0,
+    "stdout": "vitest/4.1.9 darwin-arm64 node-v25.8.2\n",
+    "stderr": ""
+  }
+}

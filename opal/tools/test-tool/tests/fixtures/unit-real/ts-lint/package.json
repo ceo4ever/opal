@@ -1,0 +1,11 @@
+{
+  "name": "ts-lint",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "devDependencies": {
+    "eslint": "*",
+    "typescript": "*",
+    "vitest": "*"
+  }
+}
