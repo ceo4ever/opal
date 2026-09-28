@@ -98,10 +98,10 @@ def _seed_worktree_registry(tmp, hub_tmp, wt_tmp, wt_fixture_name: str, task_num
 
     worktree_root = wt_tmp / f"task_{task_num}"
     worktree_root.mkdir(parents=True, exist_ok=True)
-    meta_dir = wt_tmp / ".meta"
+    meta_dir = wt_tmp / ".meta" / f"task_{task_num}"
     meta_dir.mkdir(parents=True, exist_ok=True)
     src = tmp / "registry" / "active" / wt_fixture_name / ".meta" / f"task_{task_num}.json"
-    dst = meta_dir / f"task_{task_num}.json"
+    dst = meta_dir / "meta.json"
     shutil.copy(src, dst)
     registry_entry = json.loads(dst.read_text(encoding="utf-8"))
     _write_task_ownership_copy(ownership_core, worktree_root, registry_entry)
@@ -282,9 +282,9 @@ def test_same_worktree_two_sessions_guard_blocks_then_unblocks_after_release(mon
         "artifact_repo": ".",
         "task_ownership_version": 2,
     }
-    meta_dir = wt_tmp / ".meta"
+    meta_dir = wt_tmp / ".meta" / "task_220"
     meta_dir.mkdir(parents=True, exist_ok=True)
-    (meta_dir / "task_220.json").write_text(json.dumps(registry_entry), encoding="utf-8")
+    (meta_dir / "meta.json").write_text(json.dumps(registry_entry), encoding="utf-8")
     task_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(
         FIXTURES_ROOT / "worktrees" / "SAME-WORKTREE-TWO-SESSIONS" / "tasks" / task_folder / "state.json",
@@ -471,10 +471,10 @@ def test_hub_fossil_ambiguous_shadow_not_forced_and_guard_resolves_no_canonical_
     shutil.copytree(
         FIXTURES_ROOT / "hub" / "HUB-FOSSIL-AMBIGUOUS" / "tasks", hub_tmp / "tasks", dirs_exist_ok=True
     )
-    meta_dir = wt_tmp / ".meta"
+    meta_dir = wt_tmp / ".meta" / "task_132"
     meta_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        tmp / "registry" / "active" / "WT-132" / ".meta" / "task_132.json", meta_dir / "task_132.json"
+        tmp / "registry" / "active" / "WT-132" / ".meta" / "task_132.json", meta_dir / "meta.json"
     )
 
     payload = _load(tmp, "hook-payloads/stop.json")
@@ -566,9 +566,9 @@ def _seed_manual_worktree(tmp, hub_tmp, wt_tmp, task_num, task_folder):
         "artifact_repo": ".",
         "task_ownership_version": 2,
     }
-    meta_dir = wt_tmp / ".meta"
+    meta_dir = wt_tmp / ".meta" / "task_{}".format(task_num)
     meta_dir.mkdir(parents=True, exist_ok=True)
-    (meta_dir / "task_{}.json".format(task_num)).write_text(
+    (meta_dir / "meta.json").write_text(
         json.dumps(registry_entry, ensure_ascii=False), encoding="utf-8"
     )
     _write_task_ownership_copy(ownership_core, worktree_root, registry_entry)
