@@ -6,13 +6,13 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 4회 (Pass: 2 / Fail: 2) |
+| 게이트 판단 | 6회 (Pass: 3 / Fail: 3) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 2건 |
-| 수정 지시 | 2건 (반영: 2 / 미반영: 0) |
+| 오류 발견 | 4건 |
+| 수정 지시 | 3건 (반영: 3 / 미반영: 0) |
 | PM 의사결정 | 4건 |
 | 개선 사항 | 0건 |
-| 에스컬레이션 | 0건 |
+| 에스컬레이션 | 1건 |
 
 ## 대행 일지
 
@@ -26,3 +26,10 @@
 | 6 | 2026-09-28 15:55 | PLAN | ERROR | 설계 게이트 i1 결정론 실패 — `regression target listed as change: scripts/tests/test_agent_adapter_fields.sh`(W-5 변경 대상이 회귀 확인에도 있음), `finding not in work items: .meta/`(Findings 직접 변경의 백틱 `.meta/…` 토큰이 경로로 판정됨). i2는 두 번째 `.meta/` 토큰(같은 줄 끝 "`.meta/`를 남긴다")을 놓쳐 같은 사유로 재실패. 회차 2개 소비 | 기록 |
 | 7 | 2026-09-28 15:55 | PLAN | FIX | #6 보정 — 회귀 확인에서 설치 테스트 항목 삭제, 직접 변경의 `.meta/` 토큰 2곳을 산문 표현으로 교체. i3 전에 `_design_gate_deterministic_check`를 로컬 실행해 `[]` 확인(배포본 state-tool과 source 동일 확인) 후 i3 start 통과 | 반영 |
 | 8 | 2026-09-28 15:57 | PLAN | GATE | 설계 게이트 i3 Pass — 독립 opal-evaluator-agent(design-rubric): 설계 4축 PASS, 시나리오 goal/adoption/boundary 2/2/2(평균 2.0), gaps 0. `design-gate record` status=pass. 비차단 관찰 2건(D-6의 `--command` 기동 시 ②③ 적용 범위를 README에 명시, 점검 실패 시 허브 계속 규칙은 W-6에만 있음)은 W-4·W-6 디스패치에 전달한다 | Pass |
+| 9 | 16:05 | EXECUTE | GATE | RED 확인 — S-1·2·3·5·7·8 신규 테스트 3파일을 PM이 재실행해 assertion 실패(7/1/6 failed) 확인, scenario-lock locked, 제품 코드 변경 0 | Pass |
+| 10 | 16:10 | EXECUTE | ERROR | W-6 PM Gate Fail — worktree.md에 태스크 PLAN 식별자 "D-1" 유입, git 쓰기 상승 문장이 메타 오류 코드 `registry_write_denied`를 git 거부 트리거로 사용 | 기록 |
+| 11 | 16:11 | EXECUTE | FIX | #10 재지시 → 같은 워커가 두 문장 수정, PM grep 확인 | 반영 |
+| 12 | 16:11 | EXECUTE | GATE | W-6 PM Gate Pass(재작업 후) | Pass → #13으로 소실 |
+| 13 | 2026-09-28 16:17 | EXECUTE | ERROR | 병렬 워커 git stash 사고 — W-5(`git stash push -u`)·W-3(`git stash apply stash@{0}` 인덱스 오적용 후 `git restore`)가 공유 stash 스택과 작업 트리를 조작(브리프의 git stash 금지 위반). 결과: W-6 하네스 문서 변경, AGENTIC-LOG #9~12, state.json의 EXECUTE 진입이 HEAD로 되돌아감(git 사본 없음). W-3·W-5 산출물은 각자 stash(`5d7f7f4`, `a85f35c`)와 동일함을 대조 확인, scenario-lock 유지. W-1·W-2·W-4는 진행 중 상태 불명으로 PM이 중지. 허브 main의 과거 stash(`f015d67`·`8107fef`·`66d1b39` 등 unreachable)가 이번 사고로 drop되었는지는 stash reflog 부재로 확인 불가 | 기록 |
+| 14 | 2026-09-28 16:17 | EXECUTE | FIX | #13 복구 — `advance execute.implement` 재실행(plan.user_confirm 재자동승인), AGENTIC-LOG #9~12 재기록, W-6는 같은 워커에게 동일 편집 재적용 지시, W-1·W-2·W-4는 현재 파일 상태 재검증 후 재개 지시(git stash/restore/checkout/reset 전면 금지 재강조) | 진행 |
+| 15 | 2026-09-28 16:17 | EXECUTE | ESCALATION | 캡틴 보고 — 허브 main 과거 stash drop 여부 확인 불가(SHA 보존 목록 제시) | 보고 |

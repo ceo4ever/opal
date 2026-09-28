@@ -76,7 +76,7 @@ load: pilot.start
 | 축 | 위치 | 의미 |
 |---|---|---|
 | lease | `<canonical_task>/run/.runtime/owner.json` | 지금 이 태스크에 쓰기가 허용되는 세션 |
-| registry `execution_ownership` | `<hub_root>/.opal-worktrees/.meta/task_{NNN}.json` | 실행 주체와 터미널 어댑터의 관측 기록 |
+| registry `execution_ownership` | `<hub_root>/.opal-worktrees/.meta/task_{NNN}/meta.json` | 실행 주체와 터미널 어댑터의 관측 기록 |
 
 두 축은 서로를 대체하지 않는다. registry가 `worktree_session_owned`라는 사실만으로 그 세션이
 쓰기 권한을 갖지 않으며, 권한 판정의 유일한 입력은 lease다.
@@ -136,14 +136,15 @@ Orca의 `status(handle)`은 `terminal_handle_stale`와 같은 worktree 목록에
 - **시작 발화는 기동 명령 인자가 소유한다.** 태스크 식별은 워크트리와 canonical task의 1:1 관계와 `state.json`이 이미 결정론적으로 해결하므로 별도 캡슐 파일이나 터미널 입력 채널을 만들지 않는다.
 - 어댑터가 구성되지 않은 환경에서는 워크트리만 생기고 터미널은 열리지 않는다. 허브 세션이 그 워크트리를 그대로 작업하며, 이는 축 도입 이전과 같은 동작이다.
 - 허브가 워크트리 세션의 종료를 아는 수단은 registry `attribution_state`(`completed_unmerged`) 조회 하나다. 별도 통지 채널을 만들지 않는다.
-- Codex 기본 명령은 `--no-daemon`을 사용한다. 설치·기동 전에는 `codex --help` 출력에 이 옵션이 있는지 확인해야 하며, 고정 최소 버전을 추정하지 않는다. 지원하지 않는 바이너리가 즉시 끝나면 위 lease timeout·종료 확인 경로를 적용한다.
-- 체크포인트가 hub registry 기록에서 `registry_write_denied`로 끝나면 자식 세션은 해당 hub meta 쓰기에 대한 권한 상승을 **요청**한 뒤 동일 checkpoint 명령을 다시 실행한다. 승인 없이 상승하지 않으며, 상승이 불가하거나 재실행도 실패하면 checkpoint 실패를 그대로 보고한다.
+- Codex 기본 명령은 `--no-daemon --add-dir "{meta_dir}"`를 사용한다. 설치·기동 전에는 `codex --help` 출력에 `--no-daemon`과 쓰기 경로 부여 옵션(`--add-dir`)이 있는지 확인해야 하며, 고정 최소 버전을 추정하지 않는다. 지원하지 않는 바이너리가 즉시 끝나면 위 lease timeout·종료 확인 경로를 적용한다.
+- **워크트리 세션의 쓰기 권한 범위는 자기 태스크 메타 폴더(`{meta_dir}` = `<hub_root>/.opal-worktrees/.meta/task_{NNN}/`) 하나로 한정된다.** `--add-dir "{meta_dir}"`가 부여하는 경로도 이 폴더뿐이며, `.meta/` 루트, 다른 태스크의 메타 폴더, 공유 `.git`은 이 경로로 받지 않는다. 메타 쓰기(체크포인트의 registry 기록 등)는 부여된 태스크 폴더 안에서 그대로 해결되므로 별도 상승 절차가 필요 없다.
+- **git 쓰기(커밋·머지 등 `.git` 갱신)만 기존 권한 상승 요청 절차를 유지한다.** 체크포인트·finalize가 공유 `.git` 쓰기 거부로 실패하면 자식 세션은 그 git 쓰기에 대한 권한 상승을 **요청**한 뒤 같은 명령을 다시 실행한다. 승인 없이 상승하지 않으며, 상승이 불가하거나 재실행도 실패하면 실패를 그대로 보고한다.
 
 ## canonical path 발급 계약
 
 canonical task path의 **기계 계약은 worktree-tool metadata/schema가 소유한다.** 이 문서는 인터페이스와 의미만 참조하고 경로 판정 알고리즘을 복제하지 않는다.
 
-- `worktree-tool create` 성공 응답과 `.opal-worktrees/.meta/task_{NNN}.json`이 다음 6종 필드를 소유한다: `allocator_root`, `task_home`, `task_folder`, `task_path`, `artifact_repo`, `task_ownership_version`.
+- `worktree-tool create` 성공 응답과 `.opal-worktrees/.meta/task_{NNN}/meta.json`이 다음 6종 필드를 소유한다: `allocator_root`, `task_home`, `task_folder`, `task_path`, `artifact_repo`, `task_ownership_version`.
 - **불변식**: `task_path == realpath(task_home/tasks/task_folder)`.
 - `task_folder`는 **basename만 허용**한다. `/`, `..`, NUL과 경로 구분자를 포함하면 거부한다.
 - PM·워커·state-tool·run-log-tool은 이 발급값을 전달받아 사용한다. cwd에서 `.opal-worktrees` 문자열을 찾아 task path를 추측하지 않는다.
@@ -248,8 +249,8 @@ canonical path 판정은 registry meta의 `attribution_state` 한 값을 **더 �
 | 회수(`remove`) | 자식 → 루트 | 위와 같다 |
 
 - **[MUST] 회수·롤백은 생성의 역순으로 순회한다.**
-- **[MUST] 전 entry의 `git worktree remove`가 성공한 뒤에만 메타와 slot root를 삭제한다.** 각 호출의 반환코드를 확인하고, 하나라도 실패하면 `WORKTREE_REMOVE_FAILED`(실패 repo·stderr 동봉)로 반환하며 메타 삭제와 slot 삭제를 실행하지 않는다. 메타가 남아 있어야 재시도와 수동 복구가 가능하다.
-- **[MUST] 성공한 회수는 registry lock을 보유한 상태에서 메타를 삭제하고, 같은 inode의 `<meta>.lock` 이름도 잠금 해제 전에 회수한다.** 대기 writer는 lock 획득 뒤 메타 존재를 재검사하며, 메타가 없으면 `META_NOT_FOUND`로 중단해 삭제된 registry를 재생성하지 않는다. 가드·entry 회수 실패에서는 메타와 lock을 함께 보존한다.
+- **[MUST] 전 entry의 `git worktree remove`가 성공한 뒤에만 태스크 메타 폴더(`task_{NNN}/`)와 slot root를 삭제한다.** 각 호출의 반환코드를 확인하고, 하나라도 실패하면 `WORKTREE_REMOVE_FAILED`(실패 repo·stderr 동봉)로 반환하며 태스크 메타 폴더 삭제와 slot 삭제를 실행하지 않는다. 태스크 메타 폴더가 남아 있어야 재시도와 수동 복구가 가능하다.
+- **[MUST] 성공한 회수는 registry lock을 보유한 상태에서 `meta.json`을 삭제하고, 같은 inode의 `meta.json.lock` 이름도 잠금 해제 전에 회수한 뒤 태스크 메타 폴더(`task_{NNN}/`) 전체를 삭제한다. `.meta/` 루트는 남긴다.** 대기 writer는 lock 획득 뒤 `meta.json` 존재를 재검사하며, 없으면 `META_NOT_FOUND`로 중단해 삭제된 registry를 재생성하지 않는다. 가드·entry 회수 실패에서는 태스크 메타 폴더 전체를 보존한다.
 - `--force`는 가드 우회에만 적용되며 이 실패 판정을 우회하지 않는다.
 - 롤백 실패도 같은 계약을 따른다. 자기 생성물을 역순 회수하다 실패하면 slot을 지워 흔적을 없애지 않고, 잔존 entry의 경로·repo·branch를 오류 payload에 실어 수동 복구 대상을 명시한다.
 
