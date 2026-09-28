@@ -51,7 +51,7 @@ def test_t162_s6_divergence_reads_frozen_base_without_writing(project_b: Project
         "T162 create",
     )
     assert created["ok"] is True, created
-    meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_162.json"
+    meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_162" / "meta.json"
     before_meta = meta_path.read_bytes()
     frozen_refs = {e["repo"]: e["base_ref"] for e in json.loads(before_meta)["entries"]}
     equal = parse_json_stdout(
@@ -274,7 +274,7 @@ def test_s4_multi_repo_create_creates_worktree_per_repo(project_a: ProjectA):
         expected_path = str(wt_root / "workspace" / name)
         assert expected_path in wt_list, f"{name} worktree 미생성: {wt_list}"
 
-    meta_path = project_a.root / ".opal-worktrees" / ".meta" / "task_092.json"
+    meta_path = project_a.root / ".opal-worktrees" / ".meta" / "task_092" / "meta.json"
     assert meta_path.exists(), "메타 파일 미생성"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     assert len(meta["entries"]) == 2
@@ -391,7 +391,7 @@ def test_s8_remove_rejects_unmerged_branch(tmp_path):
 def test_s9_remove_succeeds_when_all_guards_clear_and_keeps_branch(tmp_path):
     """[T092/L2-F8d] S-9 — 성공 시 worktree·registry meta/lock 회수, 브랜치는 잔존."""
     g = build_guard_repo(tmp_path, "clean")
-    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}" / "meta.json"
     lock_path = pathlib.Path(str(meta_path) + ".lock")
     lock_path.touch(mode=0o600)
     result = run_worktree_cli(
@@ -409,7 +409,7 @@ def test_s9_remove_succeeds_when_all_guards_clear_and_keeps_branch(tmp_path):
 def test_s9_remove_rejection_keeps_registry_lock(tmp_path):
     """회수 거부 중에는 active registry의 lock 이름을 삭제하면 안 된다."""
     g = build_guard_repo(tmp_path, "dirty", name_suffix="_lock_kept")
-    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}" / "meta.json"
     lock_path = pathlib.Path(str(meta_path) + ".lock")
     lock_path.touch(mode=0o600)
 
@@ -922,7 +922,7 @@ def test_s27_duplicate_create_rejected_and_existing_slot_untouched(project_a: Pr
     p1 = parse_json_stdout(r1, "create(S-27 1회차)")
     assert p1.get("ok") is True
 
-    meta_path = project_a.root / ".opal-worktrees" / ".meta" / "task_092.json"
+    meta_path = project_a.root / ".opal-worktrees" / ".meta" / "task_092" / "meta.json"
     sha_before = hashlib.sha256(meta_path.read_bytes()).hexdigest()
 
     r2 = run_worktree_cli(
@@ -1066,6 +1066,69 @@ def test_s29_2_recreate_after_remove_succeeds(tmp_path):
     )
     assert p_recreate.get("error") not in ("WORKTREE_EXISTS", "BRANCH_EXISTS"), (
         f"재생성이 WORKTREE_EXISTS/BRANCH_EXISTS로 막힌다: {p_recreate}"
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# PM Gate 재작업 — remove 경쟁 잔여물과 메타 폴더 정리 실패 보고
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def test_registry_lock_meta_not_found_rmdirs_freshly_created_task_folder(tmp_path):
+    """단위 테스트 — `_acquire_registry_lock`은 lock 파일을 만들 때 부모 폴더(태스크 전용
+    메타 폴더)를 `mkdir(parents=True, exist_ok=True)`로 만든다. 이 폴더가 방금 새로
+    만들어졌고 `meta.json`이 없다면(META_NOT_FOUND), 자기 lock을 회수한 뒤 빈 폴더까지
+    함께 지워야 한다 — 그렇지 않으면 write가 실패한 다른 태스크의 빈 껍데기가
+    `.meta/` 아래 영구히 남는다."""
+    sys.path.insert(0, str(WORKTREE_TOOL_PATH.parent))
+    import worktree_tool
+
+    project_root = tmp_path / "hub_registry_lock_race"
+    project_root.mkdir()
+    meta_path = project_root / ".opal-worktrees" / ".meta" / "task_9041" / "meta.json"
+    task_dir = meta_path.parent
+    assert not task_dir.exists(), "사전 조건: 태스크 폴더가 아직 없어야 한다"
+
+    with pytest.raises(SystemExit):
+        with worktree_tool.registry_lock(meta_path):
+            pytest.fail("meta.json이 없으므로 컨텍스트 본문에 진입하면 안 된다")
+
+    assert not task_dir.exists(), (
+        f"META_NOT_FOUND 경로가 방금 만든 빈 태스크 폴더를 남겼다 — {task_dir}"
+    )
+    assert not (meta_path.with_suffix(".json.lock")).exists()
+
+
+def test_remove_reports_meta_dir_cleanup_failed_warning_without_failing(tmp_path):
+    """`cmd_remove`가 태스크 전용 메타 폴더를 정리하다 실패해도(OSError) remove 자체의
+    성공 판정은 바꾸지 않고 `warnings`에 `meta_dir_cleanup_failed`(경로 포함)를 싣는다.
+    메타는 이미 삭제됐고 `list`는 `meta.json` 없는 폴더를 무시하므로 실패를 숨기지 않고
+    보고만 하면 된다."""
+    g = build_guard_repo(tmp_path, "clean", name_suffix="_meta_cleanup_warn")
+    meta_root = g.project_root / ".opal-worktrees" / ".meta"
+    assert meta_root.is_dir()
+    original_mode = meta_root.stat().st_mode
+    # `.meta/` 자체를 쓰기 금지로 만들면, task 폴더 내부(meta.json·lock)는 정상 삭제되지만
+    # 마지막 `os.rmdir(task_dir)`은 부모(.meta) 쓰기 권한이 필요해 PermissionError로 실패한다.
+    os.chmod(meta_root, 0o555)
+    try:
+        result = run_worktree_cli(
+            ["remove", "--project-root", str(g.project_root), "--task", g.task]
+        )
+    finally:
+        os.chmod(meta_root, original_mode)
+
+    payload = parse_json_stdout(result, "remove(meta_dir_cleanup_failed)")
+    assert payload.get("ok") is True, (
+        f"메타 폴더 정리 실패가 remove 성공 판정 자체를 바꿔서는 안 된다: {payload}"
+    )
+    warnings = payload.get("warnings") or []
+    assert any("meta_dir_cleanup_failed" in w for w in warnings), (
+        f"meta_dir_cleanup_failed 경고가 없다: {payload}"
+    )
+    task_dir = meta_root / f"task_{g.task}"
+    assert task_dir.exists(), (
+        f"정리가 실패했다면 태스크 폴더가 실제로 남아 있어야 한다 — {task_dir}"
     )
 
 
@@ -1814,7 +1877,7 @@ def test_t118_s7_create_response_and_meta_have_task_ownership_fields(
     for field in required_fields:
         assert field in payload, f"S-7: 응답에 {field} 필드 누락: {payload}"
 
-    meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_118.json"
+    meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_118" / "meta.json"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     for field in required_fields:
         assert field in meta, f"S-7: 메타 파일에 {field} 필드 누락: {meta}"
@@ -1960,7 +2023,7 @@ def _build_finalize_fixture(tmp_path: pathlib.Path, name: str):
         ],
         worktree_root=wt_root,
     )
-    meta_path = project_root / ".opal-worktrees" / ".meta" / "task_118.json"
+    meta_path = project_root / ".opal-worktrees" / ".meta" / "task_118" / "meta.json"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     meta.update(
         {
@@ -2056,7 +2119,7 @@ def test_t118_s15_remove_blocked_by_pending_memory_index_request(tmp_path):
             ],
         },
     )
-    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}" / "meta.json"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     meta["task_path"] = str(task_path)
     meta["memory_index_requests_resolved"] = []
@@ -2101,7 +2164,7 @@ def test_t118_s15_remove_allowed_when_all_requests_applied(tmp_path):
             ],
         },
     )
-    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}" / "meta.json"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     meta["task_path"] = str(task_path)
     meta["memory_index_requests_resolved"] = [body_sha]
@@ -2121,7 +2184,7 @@ def test_t118_s15_remove_no_capsule_file_is_noop_pass(tmp_path):
     [MUST] 이 케이스도 현재 코드에서 이미 PASS한다(신규 가드 부재 + clean 상태) — S-15의
     "applied" 케이스와 동형인 회귀 보호 성격이며 순수 RED는 아니다."""
     g = build_guard_repo(tmp_path, "clean", name_suffix="_s15nocaps")
-    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}.json"
+    meta_path = g.project_root / ".opal-worktrees" / ".meta" / f"task_{g.task}" / "meta.json"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     meta["task_path"] = str(g.project_root / "tasks" / "118-260912-opd-nofixture")
     meta["memory_index_requests_resolved"] = []
@@ -2142,7 +2205,7 @@ def test_t118_s15_remove_no_capsule_file_is_noop_pass(tmp_path):
 def _set_meta_attribution_state(project_root: pathlib.Path, task: str, state):
     """registry meta의 `attribution_state`를 직접 설정한다(S-7/S-8 선행 상태 조립).
     `state`가 None이면 키 자체를 제거해 "부재" 상태를 재현한다."""
-    meta_path = project_root / ".opal-worktrees" / ".meta" / f"task_{task}.json"
+    meta_path = project_root / ".opal-worktrees" / ".meta" / f"task_{task}" / "meta.json"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     if state is None:
         meta.pop("attribution_state", None)
@@ -2250,7 +2313,7 @@ def test_t119_s8_closed_state_finalize_is_idempotent_without_new_commit(tmp_path
         f"S-8: finalize 재진입이 브랜치 HEAD를 움직임 {head_before} -> {head_after}"
     )
 
-    meta_path = project_root / ".opal-worktrees" / ".meta" / "task_118.json"
+    meta_path = project_root / ".opal-worktrees" / ".meta" / "task_118" / "meta.json"
     meta_after = json.loads(meta_path.read_text(encoding="utf-8"))
     assert meta_after.get("attribution_state") == "closed", (
         f"S-8: 멱등 재진입이 상태를 되돌리면 안 됨: {meta_after}"
@@ -2286,7 +2349,7 @@ class RootOwnedMultiRepo:
 
     @property
     def meta_path(self):
-        return self.root / ".opal-worktrees" / ".meta" / f"task_{T124_TASK}.json"
+        return self.root / ".opal-worktrees" / ".meta" / f"task_{T124_TASK}" / "meta.json"
 
 
 def _t124_config(drop=(), **overrides) -> dict:
@@ -3333,7 +3396,7 @@ class TestOwnershipSetRed:
         payload = parse_json_stdout(result, "ownership-set(S-14 receipt type enforced)")
         assert payload.get("ok") is True, f"S-14 receipt type setup 실패: {payload}"
 
-        meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_918.json"
+        meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_918" / "meta.json"
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         execution_ownership = meta.get("execution_ownership") or {}
         launch_receipt = execution_ownership.get("launch_receipt")
@@ -3407,7 +3470,7 @@ class TestTask163LeaseOwnerRed:
         assert parse_json_stdout(created, "task163 create")["ok"]
         start = run_worktree_cli(["ownership-set", "--project-root", str(project_b.root), "--task", task, "--execution-ownership", "session_launching", "--attribution-state", "active"])
         assert parse_json_stdout(start, "task163 launching")["ok"]
-        return project_b.root / ".opal-worktrees" / ".meta" / f"task_{task}.json"
+        return project_b.root / ".opal-worktrees" / ".meta" / f"task_{task}" / "meta.json"
 
     def test_s1_owner_from_absent_lease_rejects_without_changing_registry(self, project_b):
         """S-1: no lease must be `owner_lease_unresolved`, never an owner=None transition."""
@@ -3643,7 +3706,7 @@ class TestCheckpointRed:
                 "checkpoint_shas": [],
             },
         }
-        meta_path = project_b.root / ".opal-worktrees" / ".meta" / f"task_{task_id}.json"
+        meta_path = project_b.root / ".opal-worktrees" / ".meta" / f"task_{task_id}" / "meta.json"
         write_json(meta_path, meta)
 
         copy_body = {
@@ -3673,7 +3736,7 @@ class TestCheckpointRed:
     def _hub_owned_with_lease(self, project_b, task_id, lease_owner, status="active"):
         """registry를 `hub_owned`(전용 세션 미기동)로 되돌리고 태스크 lease를 배치한다.
         스텝 5.5 미기동·기동 실패 경로에서 허브 세션이 lease를 쥐고 워크트리를 수행하는 상태다."""
-        meta_path = project_b.root / ".opal-worktrees" / ".meta" / f"task_{task_id}.json"
+        meta_path = project_b.root / ".opal-worktrees" / ".meta" / f"task_{task_id}" / "meta.json"
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         meta["execution_ownership"].update(
             state="hub_owned", owner_session_id=None, adapter=None, adapter_handle=None,
@@ -3849,7 +3912,7 @@ class TestCheckpointRed:
         monkeypatch.setenv("OPAL_SESSION_ID", "sess-checkpoint-red")
         wt = self._add_worktree(project_b, "feat/OP-TASK-s20", "task_s20")
         self._register_v2(project_b, wt, "feat/OP-TASK-s20", "s20", "sess-checkpoint-red")
-        meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_s20.json"
+        meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_s20" / "meta.json"
 
         # S-19 환경 재현에 더해, S-20은 state.json이 실제로 존재하는 태스크가 필요하다
         # (완료 기준 2 — state-tool show로 current_status를 실측 확인해야 하므로).
@@ -4016,7 +4079,7 @@ def test_w21_create_writes_issued_ownership_copy_into_worktree(project_b: Projec
         f"W-21: 사본 키가 발급 6종과 다르다: {sorted(copy_data)}"
     )
 
-    meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_138.json"
+    meta_path = project_b.root / ".opal-worktrees" / ".meta" / "task_138" / "meta.json"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     for key in _OWNERSHIP_ISSUED_KEYS:
         assert copy_data[key] == meta[key], (
@@ -4096,7 +4159,7 @@ def test_w21_legacy_meta_without_ownership_version_gets_no_copy(tmp_path):
     그대로 통과한다 — 없는 발급값을 지어내지 않는다(`_issue_task_ownership` legacy 계약 무변경).
     """
     guard = build_guard_repo(tmp_path, "clean", name_suffix="_w21legacy")
-    meta_path = guard.project_root / ".opal-worktrees" / ".meta" / f"task_{guard.task}.json"
+    meta_path = guard.project_root / ".opal-worktrees" / ".meta" / f"task_{guard.task}" / "meta.json"
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     assert meta.get("task_ownership_version") is None, "픽스처 전제: legacy 메타"
 
@@ -4319,7 +4382,7 @@ class TestTerminalSweepAndAttributionState:
         if attribution_state is not None:
             meta["attribution_state"] = attribution_state
         write_json(
-            project_b.root / ".opal-worktrees" / ".meta" / f"task_{task}.json", meta
+            project_b.root / ".opal-worktrees" / ".meta" / f"task_{task}" / "meta.json", meta
         )
         return wt_root
 
@@ -4434,7 +4497,7 @@ class TestTerminalSweepAndAttributionState:
         assert probe.exists() and "argv: " in probe.read_text(encoding="utf-8")
         assert not wt_root.exists(), "S-7: close 실패인데 회수가 수행되지 않았다"
         assert not (
-            project_b.root / ".opal-worktrees" / ".meta" / "task_s7fail.json"
+            project_b.root / ".opal-worktrees" / ".meta" / "task_s7fail" / "meta.json"
         ).exists()
 
     def test_s7_dirty_worktree_is_rejected_before_sweep(
@@ -4601,7 +4664,7 @@ def test_t156_s6_linked_worktree_project_root_is_rejected(project_b: ProjectB):
     assert payload.get("ok") is False, f"linked worktree project-root가 거부되지 않음: {payload}"
     assert payload.get("error") == "PROJECT_ROOT_IS_WORKTREE", payload
 
-    meta_path = linked_dest / ".opal-worktrees" / ".meta" / "task_901.json"
+    meta_path = linked_dest / ".opal-worktrees" / ".meta" / "task_901" / "meta.json"
     assert not meta_path.exists(), "linked worktree 아래에 meta가 생성됨(DEC-9 위반)"
     assert not (linked_dest / ".opal-worktrees" / "task_901").exists(), (
         "linked worktree 아래에 새 worktree 디렉터리가 생성됨(DEC-9 위반)"
@@ -4628,7 +4691,7 @@ def test_t156_s6_nested_opal_worktrees_project_root_is_rejected(project_b: Proje
     assert payload.get("ok") is False, f"중첩 .opal-worktrees project-root가 거부되지 않음: {payload}"
     assert payload.get("error") == "PROJECT_ROOT_IS_WORKTREE", payload
 
-    meta_path = nested_root / ".opal-worktrees" / ".meta" / "task_901.json"
+    meta_path = nested_root / ".opal-worktrees" / ".meta" / "task_901" / "meta.json"
     assert not meta_path.exists(), "중첩 project-root 아래에 meta가 생성됨(DEC-9 위반)"
     assert not (nested_root / ".opal-worktrees" / "task_901").exists(), (
         "중첩 project-root 아래에 새 worktree 디렉터리가 생성됨(DEC-9 위반)"
