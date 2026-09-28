@@ -1,6 +1,6 @@
 # STATE: 164 워크트리 메타 태스크폴더 권한 분리
 
-> 최종 갱신: 2026-09-28 17:31:18
+> 최종 갱신: 2026-09-28 17:35:53
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 

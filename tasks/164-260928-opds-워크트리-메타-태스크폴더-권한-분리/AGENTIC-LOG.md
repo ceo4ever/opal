@@ -11,7 +11,7 @@
 | 오류 발견 | 12건 |
 | 수정 지시 | 10건 (반영: 10 / 미반영: 0) |
 | PM 의사결정 | 4건 |
-| 개선 사항 | 1건 |
+| 개선 사항 | 4건 |
 | 에스컬레이션 | 2건 |
 
 ## 대행 일지
@@ -52,3 +52,6 @@
 | 32 | 2026-09-28 17:31 | TEST | GATE | S-11 PASS — 배포본 sha256 source 대조 불일치 0, 배포본 argv에 자기 메타 폴더만 `--add-dir`, 배포본 argv로 실제 codex 격리 재현, 배포본 launch `meta_dir_missing` 조기 종료. scenario-status 12/12 PASS·fidelity-check all_met | Pass |
 | 33 | 2026-09-28 17:31 | TEST | GATE | TEST PM Gate Pass — 최종 컨벤션 checker 1회 Critical 0/High 0/Medium 5/Low 1(전부 신규 테스트 파일의 태스크 번호 표기, 기존 `TestTask163`·`TestT138W9` 관행과 같아 advisory로 수용·미수정). test-metrics `auto_seconds`=null(test-clock 미기록 → unknown으로 보고, 추정 안 함) | Pass |
 | 34 | 2026-09-28 17:31 | TEST | IMPROVE | S-11 1차 시도에서 Claude 세션 안에서 직접 띄운 codex가 OPAL 부트 `inherited_identity_conflict`로 정지(부모 신원 상속). 실제 launcher는 session-launch가 부모 신원을 제거하므로 판정 무관이나 미검증 — 회고 후보 | 후보 |
+| 35 | 2026-09-28 17:34 | CLOSE | IMPROVE | 회고 FW 후보 3건 fw-inbox 기록 — ① 워커 계약에 작업 트리·stash 변경 git 명령 금지 ② opal-test-agent test-clock auto 미기록 ③ Claude 세션 내 직접 codex 실행 시 inherited_identity_conflict(#34) | 기록 |
+| 36 | 2026-09-28 17:34 | CLOSE | IMPROVE | 로컬 후보 "격리 실측 시나리오는 실제 배치(cwd·형제 경로·/tmp 제외)를 조건에 고정"은 `improve-tool record --scope local`이 `memory-tool delegation failed: invalid_args`로 2회 실패 — 워크트리 경로 메모리 위임 문제로 추정(미확인). 이 로그 행으로 대신 보존하고 캡틴에게 보고 | 기록(도구 실패) |
+| 37 | 2026-09-28 17:35 | CLOSE | GATE | CLOSE tail — DONE.md 작성, docs_sync no-op, brain ingest skipped(워크트리 merge 전 보류), 회고 기록, `worktree-tool finalize` closed·위반 0. merge·push·worktree 제거는 캡틴 권한 경계로 미수행 | Pass |
