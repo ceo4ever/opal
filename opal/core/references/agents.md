@@ -219,6 +219,7 @@ OPAL frontmatter → 플랫폼 frontmatter:
 | `model: advanced` | `model: opus` | `model: inherit` | `model: gemini-pro-latest` | `model: gpt-5.6-sol` |
 | `icon` | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) | (제거 — 미지원) |
 | `effort` | `effort` (그대로) | (제거 — 예약, `inherit` 정책 해제 전 미적용) | (제거 — 미지원) | `model_reasoning_effort` (`minimal`→`none`, 그 외 그대로) |
+| `tools: [A, B]` | `tools: A, B` (쉼표 문자열) | (제거 — 도구명 체계 상이) | (제거 — 도구명 체계 상이) | (제거) |
 | (변환 테이블 미등재 필드) | (제거) | (제거) | (제거) | (제거) |
 
 > Codex 컬럼 모델값은 `opal/core/setting.default.json`의 `models.codex`와 동일하게 유지한다. GPT-5.4 계열은 ChatGPT 로그인 기반 Codex에서 2026-08-31 퇴역했으며, GPT-5.5는 2026-10-14 퇴역 예정이므로 사용하지 않는다.

@@ -241,14 +241,45 @@ for path in root.glob('*.toml'):
     path.write_text(text, encoding='utf-8')
 PYNORMALIZE
 
+# 의도된 확장 필드 추가(tools — Claude 전용)도 구조 회귀가 아니다. 신판 Claude
+# 산출물의 `tools:` 행만 걷어낸 사본으로 골든을 비교하고, tools 동작은 TS-029가 검증한다.
+NEW_CLAUDE_CMP="$SCRATCH_DIR/new_claude_cmp"
+mkdir -p "$NEW_CLAUDE_CMP"
+for f in "$NEW_OUT"/claude/*.md; do
+    [ -f "$f" ] || continue
+    grep -v '^tools: ' "$f" > "$NEW_CLAUDE_CMP/$(basename "$f")" || true
+done
+
 DIFF_OUT="$SCRATCH_DIR/golden.diff"
-if diff -r "$OLD_OUT/claude" "$NEW_OUT/claude" > "$DIFF_OUT" 2>&1 \
+if diff -r "$OLD_OUT/claude" "$NEW_CLAUDE_CMP" > "$DIFF_OUT" 2>&1 \
     && diff -r "$OLD_OUT/cursor" "$NEW_OUT/cursor" >> "$DIFF_OUT" 2>&1 \
     && diff -r "$OLD_OUT/gemini" "$NEW_OUT/gemini" >> "$DIFF_OUT" 2>&1 \
     && diff -r "$OLD_OUT/codex" "$NEW_OUT/codex" >> "$DIFF_OUT" 2>&1; then
     pass "TS-001/TS-010: 구판 vs 신판 emitter 산출물 diff 공집합 (15 에이전트 × 4플랫폼, body 포함)"
 else
     fail "TS-001/TS-010: 구판 vs 신판 emitter 산출물 diff 비공집합" "$(head -c 2000 "$DIFF_OUT")"
+fi
+
+# ─── TS-029: tools 확장 필드 — Claude는 쉼표 문자열로 emit, 타 플랫폼은 omit ─────
+TS029_ERR=""
+for agent_md in "$REPO_ROOT"/opal/agents/*/AGENT.md; do
+    agent_name="$(basename "$(dirname "$agent_md")")"
+    src_tools="$(awk 'NR==1{next} /^---$/{exit} /^tools:/{sub(/^tools:[[:space:]]*/, ""); print}' "$agent_md")"
+    out_md="$NEW_OUT/claude/$agent_name.md"
+    if [ -n "$src_tools" ]; then
+        expected="tools: $(printf '%s' "$src_tools" | sed -e 's/^\[//' -e 's/\]$//' -e 's/[[:space:]]*,[[:space:]]*/, /g')"
+        grep -qxF "$expected" "$out_md" || TS029_ERR="$TS029_ERR claude/$agent_name(expected '$expected')"
+    else
+        grep -q '^tools:' "$out_md" && TS029_ERR="$TS029_ERR claude/$agent_name(unexpected tools)"
+    fi
+done
+if grep -l '^tools' "$NEW_OUT"/cursor/*.md "$NEW_OUT"/gemini/*.md "$NEW_OUT"/codex/*.toml >/dev/null 2>&1; then
+    TS029_ERR="$TS029_ERR non-claude-platform-has-tools"
+fi
+if [ -z "$TS029_ERR" ]; then
+    pass "TS-029: tools 필드 — Claude 산출물에 원본 배열이 'a, b' 문자열로 emit, cursor/gemini/codex는 omit"
+else
+    fail "TS-029: tools 필드 emit 불일치" "$TS029_ERR"
 fi
 
 # ─── TS-002: 플랫폼명 조건 분기 신규 등장 스캔 ─────────────────────────────

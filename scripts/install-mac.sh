@@ -516,7 +516,7 @@ with open(config_path, 'w') as f:
 # 스키마: fields[].{opal,order,default?,omit_if_empty?,flatten?,platforms.<platform>.
 #   {mode:key|model_param|omit, to?, attach?, values?, fallback?, note?}}
 # >>> OPAL_ADAPTER_FIELD_SPEC >>>
-readonly OPAL_ADAPTER_FIELD_SPEC='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.6-luna","standard":"gpt-5.6-terra","advanced":"gpt-5.6-sol"},"fallback":"gpt-5.6-sol"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"none","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}}}]}'
+readonly OPAL_ADAPTER_FIELD_SPEC='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.6-luna","standard":"gpt-5.6-terra","advanced":"gpt-5.6-sol"},"fallback":"gpt-5.6-sol"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"none","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}}},{"opal":"tools","order":50,"list":true,"platforms":{"claude":{"mode":"key","to":"tools"},"cursor":{"mode":"omit"},"gemini":{"mode":"omit"},"codex":{"mode":"omit"}}}]}'
 # <<< OPAL_ADAPTER_FIELD_SPEC <<<
 
 emit_platform_agent_adapter() {
@@ -541,7 +541,7 @@ emit_platform_agent_adapter() {
     # 값과 반드시 바이트 동일하게 유지한다.
     local spec_json="${OPAL_ADAPTER_FIELD_SPEC:-}"
     if [[ -z "$spec_json" ]]; then
-        spec_json='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.6-luna","standard":"gpt-5.6-terra","advanced":"gpt-5.6-sol"},"fallback":"gpt-5.6-sol"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"none","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}}}]}'
+        spec_json='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.6-luna","standard":"gpt-5.6-terra","advanced":"gpt-5.6-sol"},"fallback":"gpt-5.6-sol"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"none","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}}},{"opal":"tools","order":50,"list":true,"platforms":{"claude":{"mode":"key","to":"tools"},"cursor":{"mode":"omit"},"gemini":{"mode":"omit"},"codex":{"mode":"omit"}}}]}'
     fi
 
     # env 경유 전달(105 fix) — bash 커맨드 prefix-assignment(`VAR=val cmd`)는
@@ -593,6 +593,8 @@ def build_pairs(spec, fm, platform, agent_name):
                 raw = field['default']
             if field.get('flatten'):
                 raw = _flatten_description(raw or '')
+            if field.get('list') and raw is not None:
+                raw = _join_list(raw)
         if raw is None:
             continue
         if raw == '' and field.get('omit_if_empty'):
@@ -621,6 +623,18 @@ def model_level_map(spec, platform):
         if field['opal'] == 'model':
             return field.get('platforms', {}).get(platform, {}).get('values', {}) or {}
     return {}
+
+
+def _join_list(raw):
+    """list 필드(tools 등) — YAML 배열 또는 폴백 파서의 "[a, b]" 문자열을 "a, b"로 정규화."""
+    if isinstance(raw, (list, tuple)):
+        items = [str(x).strip() for x in raw]
+    else:
+        s = str(raw).strip()
+        if s.startswith('[') and s.endswith(']'):
+            s = s[1:-1]
+        items = [x.strip().strip('"\'') for x in s.split(',')]
+    return ', '.join(x for x in items if x)
 
 
 def _flatten_description(s):
@@ -875,7 +889,7 @@ install_codex_agents() {
         # 폴백은 위 OPAL_ADAPTER_FIELD_SPEC 캐노니컬 값과 반드시 바이트 동일하게 유지한다.
         local spec_json="${OPAL_ADAPTER_FIELD_SPEC:-}"
         if [[ -z "$spec_json" ]]; then
-            spec_json='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.6-luna","standard":"gpt-5.6-terra","advanced":"gpt-5.6-sol"},"fallback":"gpt-5.6-sol"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"none","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}}}]}'
+            spec_json='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.6-luna","standard":"gpt-5.6-terra","advanced":"gpt-5.6-sol"},"fallback":"gpt-5.6-sol"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"none","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}}},{"opal":"tools","order":50,"list":true,"platforms":{"claude":{"mode":"key","to":"tools"},"cursor":{"mode":"omit"},"gemini":{"mode":"omit"},"codex":{"mode":"omit"}}}]}'
         fi
 
         # env 경유 전달(105 fix) — emit_platform_agent_adapter와 동일한 readonly
@@ -924,6 +938,8 @@ def build_pairs(spec, fm, platform, agent_name):
                 raw = field['default']
             if field.get('flatten'):
                 raw = _flatten_description(raw or '')
+            if field.get('list') and raw is not None:
+                raw = _join_list(raw)
         if raw is None:
             continue
         if raw == '' and field.get('omit_if_empty'):
@@ -944,6 +960,18 @@ def build_pairs(spec, fm, platform, agent_name):
                 pair[1] = f"{pair[1]}[{composed}]"
                 break
     return [tuple(p) for p in pairs]
+
+
+def _join_list(raw):
+    """list 필드(tools 등) — YAML 배열 또는 폴백 파서의 "[a, b]" 문자열을 "a, b"로 정규화."""
+    if isinstance(raw, (list, tuple)):
+        items = [str(x).strip() for x in raw]
+    else:
+        s = str(raw).strip()
+        if s.startswith('[') and s.endswith(']'):
+            s = s[1:-1]
+        items = [x.strip().strip('"\'') for x in s.split(',')]
+    return ', '.join(x for x in items if x)
 
 
 def _flatten_description(s):

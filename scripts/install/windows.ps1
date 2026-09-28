@@ -1794,7 +1794,7 @@ function Install-OpalMcp {
 # mac 쪽 JSON 리터럴과 바이트 동일 — 값을 바꿀 때는 양쪽을 함께 갱신한다 (§3.1.2 D-결정1).
 $OpalAdapterFieldSpecMirror = @'
 # >>> OPAL_ADAPTER_FIELD_SPEC >>>
-readonly OPAL_ADAPTER_FIELD_SPEC='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.6-luna","standard":"gpt-5.6-terra","advanced":"gpt-5.6-sol"},"fallback":"gpt-5.6-sol"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"none","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}}}]}'
+readonly OPAL_ADAPTER_FIELD_SPEC='{"fields":[{"opal":"name","order":10,"platforms":{"claude":{"mode":"key","to":"name"},"cursor":{"mode":"key","to":"name"},"gemini":{"mode":"key","to":"name"},"codex":{"mode":"key","to":"name"}}},{"opal":"description","order":20,"omit_if_empty":true,"flatten":true,"platforms":{"claude":{"mode":"key","to":"description"},"cursor":{"mode":"key","to":"description"},"gemini":{"mode":"key","to":"description"},"codex":{"mode":"key","to":"description"}}},{"opal":"model","order":30,"default":"standard","platforms":{"claude":{"mode":"key","to":"model","values":{"light":"haiku","standard":"sonnet","advanced":"opus"},"fallback":"inherit"},"cursor":{"mode":"key","to":"model","values":{"light":"inherit","standard":"inherit","advanced":"inherit"},"fallback":"inherit"},"gemini":{"mode":"key","to":"model","values":{"light":"gemini-3.1-flash-lite","standard":"gemini-flash-latest","advanced":"gemini-pro-latest"},"fallback":"inherit"},"codex":{"mode":"key","to":"model","values":{"light":"gpt-5.6-luna","standard":"gpt-5.6-terra","advanced":"gpt-5.6-sol"},"fallback":"gpt-5.6-sol"}}},{"opal":"effort","order":40,"platforms":{"claude":{"mode":"key","to":"effort","values":{"low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}},"cursor":{"mode":"omit","note":"reserved: model_param/effort - cursor inherit policy pending"},"gemini":{"mode":"omit"},"codex":{"mode":"key","to":"model_reasoning_effort","values":{"minimal":"none","low":"low","medium":"medium","high":"high","xhigh":"xhigh","max":"max"}}}},{"opal":"tools","order":50,"list":true,"platforms":{"claude":{"mode":"key","to":"tools"},"cursor":{"mode":"omit"},"gemini":{"mode":"omit"},"codex":{"mode":"omit"}}}]}'
 # <<< OPAL_ADAPTER_FIELD_SPEC <<<
 '@
 
@@ -1855,6 +1855,23 @@ function Resolve-OpalFieldValue {
     return $script:OpalOmit
 }
 
+function ConvertTo-OpalListValue {
+    <#
+    .SYNOPSIS
+        install-mac.sh _join_list() 미러 — list 필드(tools 등)의 배열 또는 "[a, b]" 문자열을
+        "a, b"로 정규화한다.
+    #>
+    param($Raw)
+    if (($Raw -is [System.Collections.IEnumerable]) -and ($Raw -isnot [string])) {
+        $items = @($Raw | ForEach-Object { "$_".Trim() })
+    } else {
+        $s = "$Raw".Trim()
+        if ($s.StartsWith('[') -and $s.EndsWith(']')) { $s = $s.Substring(1, $s.Length - 2) }
+        $items = @($s -split ',' | ForEach-Object { $_.Trim().Trim('"', "'") })
+    }
+    return (($items | Where-Object { $_ }) -join ', ')
+}
+
 function ConvertTo-OpalFieldPairs {
     <#
     .SYNOPSIS
@@ -1884,6 +1901,9 @@ function ConvertTo-OpalFieldPairs {
             }
             if ($field['flatten']) {
                 if ($raw) { $raw = ($raw -replace '\s+', ' ').Trim() } else { $raw = '' }
+            }
+            if ($field['list'] -and ($null -ne $raw)) {
+                $raw = ConvertTo-OpalListValue $raw
             }
         }
         if ($null -eq $raw) { continue }
