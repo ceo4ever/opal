@@ -11,6 +11,7 @@
     "LauncherError",
     "registry_meta_path",
     "read_registry_meta",
+    "task_meta_dir_path",
     "build_launch_receipt",
     "build_prompt_receipt",
     "ownership_set",
@@ -78,19 +79,32 @@ class LauncherError(RuntimeError):
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+def task_meta_dir_path(hub_root, task: str) -> pathlib.Path:
+    """태스크 전용 메타 폴더(`<hub_root>/.opal-worktrees/.meta/task_{NNN}/`) 절대경로.
+    `{meta_dir}` 치환 값과 launch 기동 전 점검이 공유하는 유일한 경로 계산 지점이다.
+    허브 루트·task 번호는 인자로 발급받은 값만 쓴다."""
+    return pathlib.Path(hub_root) / ".opal-worktrees" / ".meta" / f"task_{task}"
+
+
 def registry_meta_path(hub_root, task: str) -> pathlib.Path:
-    """registry meta 경로. 허브 루트와 task 번호는 **인자로 발급받은 값**만 쓴다 —
-    경로 문자열 접두·basename·mtime 추론을 하지 않는다(harness/worktree.md §canonical
-    path 발급 계약, C-6)."""
-    return pathlib.Path(hub_root) / ".opal-worktrees" / ".meta" / f"task_{task}.json"
+    """registry meta 경로(`task_{NNN}/meta.json`, 태스크 전용 폴더 안). 허브 루트와
+    task 번호는 **인자로 발급받은 값**만 쓴다 — 경로 문자열 접두·basename·mtime 추론을
+    하지 않는다(harness/worktree.md §canonical path 발급 계약, C-6)."""
+    return task_meta_dir_path(hub_root, task) / "meta.json"
 
 
 def read_registry_meta(hub_root, task: str) -> dict:
-    """registry meta를 읽기 전용으로 파싱한다. 부재·손상은 LauncherError다."""
+    """registry meta를 읽기 전용으로 파싱한다. 태스크 전용 폴더 안의 `meta.json`
+    (`registry_meta_path`) 하나만 읽는다 — 구 구조 평면 파일 조합·폴백은 두지 않는다.
+    부재·손상은 LauncherError다."""
     path = registry_meta_path(hub_root, task)
     try:
-        meta = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise LauncherError(f"registry_meta_unreadable: {path}") from exc
+    try:
+        meta = json.loads(text)
+    except json.JSONDecodeError as exc:
         raise LauncherError(f"registry_meta_unreadable: {path}") from exc
     if not isinstance(meta, dict):
         raise LauncherError(f"registry_meta_invalid: {path}")

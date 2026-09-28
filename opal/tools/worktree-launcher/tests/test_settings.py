@@ -340,12 +340,18 @@ def test_setting_default_json_has_launcher_block():
 
 
 def test_codex_default_uses_no_daemon(layers):
+    """Codex 기본 argv_template은 `--no-daemon`에 더해 태스크 전용 메타 폴더 쓰기
+    경로 토큰(`--add-dir "{meta_dir}"`)을 포함한다."""
     from worktree_launcher import settings
 
     resolved = layers.load()
-    assert resolved["agents"]["codex"]["argv_template"] == 'codex --no-daemon "{utterance}"'
-    assert settings.resolve_command(resolved, agent="codex", task_path=TASK_PATH) == (
-        f'codex --no-daemon "{TASK_PATH} 이어서 수행"'
+    assert resolved["agents"]["codex"]["argv_template"] == (
+        'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'
+    )
+    assert settings.resolve_command(
+        resolved, agent="codex", task_path=TASK_PATH, meta_dir="/hub/.opal-worktrees/.meta/task_220"
+    ) == (
+        f'codex --no-daemon --add-dir "/hub/.opal-worktrees/.meta/task_220" "{TASK_PATH} 이어서 수행"'
     )
 
 

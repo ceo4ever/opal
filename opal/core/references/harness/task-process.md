@@ -97,6 +97,7 @@
    ```
 
    - **[MUST] 스텝 5보다 앞에서 기동하지 않는다.** 워크트리 세션은 부팅 직후 `state.json`을 읽어 브리핑하므로, `state init` 전에 띄우면 첫 턴이 읽을 상태가 없다.
+   - **[MUST] 명령 확정 뒤, lease 이관·터미널 기동 전에 기동 전 점검을 수행한다.** ① 태스크 메타 폴더(`task_{NNN}/`)와 `meta.json`이 존재하고 허브에서 쓰기 가능한지 확인한다. ② 기동 명령 템플릿에 `{meta_dir}`가 있으면 그 바로 앞 토큰을 쓰기 경로 부여 옵션으로 보고, `<실행 파일> --help`(10초 제한) 출력에 그 옵션이 있는지 확인한다. ③ `{meta_dir}`를 쓰는 에이전트에는 응답에 `git_write_requires_escalation` 경고를 동봉한다(차단 아님). ①·② 중 하나라도 실패하면 `launch_preflight_failed` + `cause`(`meta_dir_missing` | `meta_dir_not_writable` | `grant_option_unsupported` | `agent_help_unavailable`)로 종료하고 터미널·lease를 건드리지 않는다. 이 실패는 **비차단**이다 — 터미널을 띄우지 않고, 아래 실패 시 동작과 동일하게 허브 세션이 그 워크트리에서 이어 수행한다.
    - **[MUST] launcher는 터미널을 띄우기 직전에 태스크 lease를 그 worktree_root로 이관한다.** 스텝 5의 `state init` 뒤 첫 상태 전이에서 허브가 이미 lease를 잡으므로, 이관이 없으면 워크트리 세션의 부팅 시 획득이 거부되어 그 세션은 첫 쓰기부터 전건 차단된다. 이관 계약 원문은 `opal/core/references/harness/worktree.md` §실행 소유권(lease) 계약이 소유한다.
    - `--adapter`는 필수다. terminal context의 `host`가 launcher 폐쇄 목록과 정확히 일치할 때만 그 값을 명시 주입한다. `unknown`·일반 터미널·미지원 host면 launcher를 호출하지 않고 허브 세션이 이어서 수행한다. 설치된 앱, 전역 실행 프로세스, `multiplexers`를 근거로 다른 adapter를 추측하지 않는다.
    - `--command`를 생략하면 launcher가 `launcher` 설정(`~/.opal/setting.json` + `{프로젝트}/.opal/setting.local.json` 2-레이어)에서 기동 명령을 결정한다. 설정이 없으면 코드 기본값으로 폴백한다. 스키마 원문은 `opal/tools/worktree-launcher/README.md`가 소유한다.

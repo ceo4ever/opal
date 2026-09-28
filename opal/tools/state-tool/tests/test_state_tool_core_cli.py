@@ -26,7 +26,13 @@ class TestBootSummary(unittest.TestCase):
 
     def _registry_meta(self, root, name, task_dir, *, task_folder=None,
                        attribution_state="attribution_pending"):
-        meta_dir = root / ".opal-worktrees" / ".meta"
+        """D-1: `.meta/task_{NNN}/meta.json` 새 구조로 registry meta를 만든다.
+
+        `name`은 과거 파일명 관례(예: "task_202.json")를 그대로 받아 폴더 이름
+        (예: "task_202")으로 변환한다. 호출부를 바꾸지 않기 위한 하위 호환 표기.
+        """
+        folder_name = name[:-len(".json")] if name.endswith(".json") else name
+        meta_dir = root / ".opal-worktrees" / ".meta" / folder_name
         meta_dir.mkdir(parents=True, exist_ok=True)
         meta = {
             "task_path": str(task_dir.resolve()),
@@ -35,7 +41,7 @@ class TestBootSummary(unittest.TestCase):
         }
         if attribution_state is not None:
             meta["attribution_state"] = attribution_state
-        path = meta_dir / name
+        path = meta_dir / "meta.json"
         path.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
         return path
 
@@ -158,15 +164,18 @@ class TestBootSummary(unittest.TestCase):
             self._registry_meta(root, "task_303_b.json", duplicate_b)
 
             meta_dir = root / ".opal-worktrees" / ".meta"
-            (meta_dir / "task_304.json").write_text(
+            (meta_dir / "task_304").mkdir(parents=True)
+            (meta_dir / "task_304" / "meta.json").write_text(
                 json.dumps({"task_folder": "304-missing-fields"}), encoding="utf-8")
-            (meta_dir / "task_305.json").write_text(json.dumps({
+            (meta_dir / "task_305").mkdir(parents=True)
+            (meta_dir / "task_305" / "meta.json").write_text(json.dumps({
                 "task_path": str(pathlib.Path(d) / "gone" / "tasks" / "305-gone"),
                 "task_folder": "305-gone",
                 "allocator_root": str(root),
                 "attribution_state": "attribution_pending",
             }), encoding="utf-8")
-            (meta_dir / "task_306.json").write_text("{broken", encoding="utf-8")
+            (meta_dir / "task_306").mkdir(parents=True)
+            (meta_dir / "task_306" / "meta.json").write_text("{broken", encoding="utf-8")
 
             _, payload = self._boot_cli(root)
             self.assertEqual(
@@ -201,8 +210,8 @@ class TestBootSummary(unittest.TestCase):
                     task_id=f"40{number}-" + "아주 긴 제목 " * 80,
                 )
             meta_dir = root / ".opal-worktrees" / ".meta"
-            meta_dir.mkdir(parents=True)
-            (meta_dir / "task_499.json").write_text("{broken", encoding="utf-8")
+            (meta_dir / "task_499").mkdir(parents=True)
+            (meta_dir / "task_499" / "meta.json").write_text("{broken", encoding="utf-8")
             inputs = {path: path.read_bytes() for path in root.rglob("*") if path.is_file()}
 
             completed, payload = self._boot_cli(root)
@@ -212,6 +221,40 @@ class TestBootSummary(unittest.TestCase):
             self.assertEqual(len(payload["anomalies"]), 1)
             self.assertLessEqual(len(completed.stdout.strip().encode("utf-8")), 1024)
             self.assertEqual(inputs, {path: path.read_bytes() for path in inputs})
+
+    def test_legacy_flat_meta_file_is_ignored(self):
+        """D-3: 구 구조 `.meta/task_{NNN}.json` 대조군은 읽지도 이관하지도 않는다."""
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d) / "hub"
+            root.mkdir()
+            canonical = pathlib.Path(d) / "issued" / "tasks" / "900-new-layout"
+            self._state(canonical, "in_progress", "2026-09-14 09:00", "EXECUTE", "진행")
+            self._registry_meta(root, "task_900.json", canonical)
+
+            meta_dir = root / ".opal-worktrees" / ".meta"
+            legacy = meta_dir / "task_900.json"
+            legacy.write_text(json.dumps({
+                "task_path": str(canonical.resolve()),
+                "task_folder": "900-legacy-should-be-ignored",
+                "allocator_root": str(root.resolve()),
+            }), encoding="utf-8")
+            before = legacy.read_bytes()
+
+            _, payload = self._boot_cli(root)
+
+            self.assertEqual(
+                [item["title"] for item in payload["items"]],
+                ["900-new-layout"],
+            )
+            self.assertNotIn(
+                "900-legacy-should-be-ignored",
+                [item["title"] for item in payload["items"]],
+            )
+            self.assertNotIn(
+                "registry_meta_missing_fields",
+                json.dumps(payload["anomalies"], ensure_ascii=False),
+            )
+            self.assertEqual(before, legacy.read_bytes())
 
 
 class TestInit(BaseTestCase):

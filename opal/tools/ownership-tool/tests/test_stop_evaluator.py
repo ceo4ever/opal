@@ -67,9 +67,9 @@ def test_s1_hub_fossil_ambiguous_not_forced_block_continue(monkeypatch):
     # setup(B-1): registry meta를 발급 계약 위치(<hub_root>/.opal-worktrees/.meta/)에 배치해
     # evaluate()의 _load_registry가 실제로 읽도록 한다. task_path는 {WT} 치환을 거쳐
     # <hub_tmp>/.opal-worktrees/task_132/tasks/... — 허브 안쪽 nested 경로다.
-    meta_dir = wt_tmp / ".meta"
+    meta_dir = wt_tmp / ".meta" / "task_132"
     meta_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy(tmp / "registry" / "active" / "WT-132" / ".meta" / "task_132.json", meta_dir / "task_132.json")
+    shutil.copy(tmp / "registry" / "active" / "WT-132" / ".meta" / "task_132.json", meta_dir / "meta.json")
 
     payload = _load(tmp, "hook-payloads/stop.json")
     payload["cwd"] = str(hub_tmp)
@@ -106,10 +106,10 @@ def test_s2_closed_attribution_state_hub_canonical_block_continue(monkeypatch):
 
     # setup(B-1): registry를 발급 계약 위치에도 배치해 evaluate()의 _load_registry가
     # 위에서 직접 검증한 것과 같은 값을 읽도록 한다(실물은 closed 태스크도 registry에 남는다).
-    meta_dir = wt_tmp / ".meta"
+    meta_dir = wt_tmp / ".meta" / "task_132"
     meta_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        tmp / "registry" / "closed" / "WT-132-CLOSED" / ".meta" / "task_132.json", meta_dir / "task_132.json"
+        tmp / "registry" / "closed" / "WT-132-CLOSED" / ".meta" / "task_132.json", meta_dir / "meta.json"
     )
 
     # setup: 현재 세션(stop.json의 session_id와 통일된 sess-live-0001)이 이 태스크를

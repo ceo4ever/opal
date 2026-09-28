@@ -128,9 +128,10 @@ def write_meta(
     pending_setup: list | None = None,
     worktree_root: pathlib.Path | None = None,
 ) -> pathlib.Path:
-    """PLAN §3.2.3 메타 파일 스키마대로 `.opal-worktrees/.meta/task_{NNN}.json`을 직접 기록한다.
-    worktree_tool.py의 create가 아직 없으므로(RED), remove/status를 단독으로 검증하기 위해
-    선행 상태를 이 헬퍼로 조립한다 — 이 스키마 자체가 GREEN 구현이 지켜야 할 계약이다."""
+    """PLAN §3.2.3 메타 파일 스키마대로 `.opal-worktrees/.meta/task_{NNN}/meta.json`(태스크
+    전용 폴더)을 직접 기록한다. worktree_tool.py의 create가 아직 없으므로(RED), remove/status를
+    단독으로 검증하기 위해 선행 상태를 이 헬퍼로 조립한다 — 이 스키마 자체가 GREEN 구현이
+    지켜야 할 계약이다."""
     wt_root = worktree_root or (project_root / ".opal-worktrees" / f"task_{task}")
     meta = {
         "task": task,
@@ -141,7 +142,7 @@ def write_meta(
         "entries": entries,
         "pending_setup": pending_setup or [],
     }
-    meta_path = project_root / ".opal-worktrees" / ".meta" / f"task_{task}.json"
+    meta_path = project_root / ".opal-worktrees" / ".meta" / f"task_{task}" / "meta.json"
     write_json(meta_path, meta)
     return meta_path
 

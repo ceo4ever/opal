@@ -3,7 +3,7 @@
   "module": "cli",
   "layer": "interface",
   "domain": "opal-workspace",
-  "description": "worktree-launcher CLI. `launch`/`read`/`close`와 명시 `--adapter` 폐쇄 목록(`orca`, `cmux`)을 노출하고 자동 탐지·자동 폴백 없이 단일 라인 JSON을 반환한다.",
+  "description": "worktree-launcher CLI. `launch`/`read`/`close`와 명시 `--adapter` 폐쇄 목록(`orca`, `cmux`)을 노출하고 자동 탐지·자동 폴백 없이 단일 라인 JSON을 반환한다. `launch`는 기동 전 점검을 수행한다 — ① `launcher_core.task_meta_dir_path`가 계산한 태스크 전용 메타 폴더와 그 안의 `meta.json` 존재·쓰기 가능을 registry 조회(`--command` 유무와 무관)보다 먼저 독립적으로 판정한다(부재는 `meta_dir_missing`, 쓰기 불가는 `meta_dir_not_writable`) ② 명령이 확정된 뒤, 템플릿에 `{meta_dir}`가 있으면 그 직전 옵션 토큰이 `<실행 파일> --help`(10초 제한) 출력에 있어야 함(옵션 부재는 `grant_option_unsupported`, 실행 파일 탐색·실행 실패는 `agent_help_unavailable`) ③ `{meta_dir}` 사용 시 비차단 경고 `git_write_requires_escalation`. ①②는 실패 시 `launch_preflight_failed`+`cause`로 종료하고 어댑터·lease를 접촉하지 않는다. ①은 `--command`로 명령을 직접 줘도 항상 적용되고, ②③은 템플릿에 `{meta_dir}`가 없으면 적용되지 않는다.",
   "exports": ["SUPPORTED_ADAPTERS", "build_parser", "main"],
   "depends": [
     "worktree_launcher/launcher_core.py(run·read_registry_meta·LauncherError)",
@@ -19,9 +19,16 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import os
+import shlex
+import shutil
+import subprocess
 import sys
 
 from worktree_launcher import launcher_core, settings
+
+# `<실행 파일> --help` 조회 상한. 관측용 짧은 호출이며 준비 대기가 아니다.
+AGENT_HELP_TIMEOUT_SEC = 10
 
 TOOL_NAME = "worktree-launcher"
 
@@ -185,12 +192,77 @@ def _resolve_launch_command(args) -> tuple:
             },
         )
 
+    meta_dir = launcher_core.task_meta_dir_path(args.project_root, args.task)
     resolved = settings.resolve_command(
         settings.load_launcher_settings(project_root=args.project_root),
         agent=args.agent,
         task_path=str(task_path),
+        meta_dir=str(meta_dir),
     )
     return resolved, None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 기동 전 점검 — 명령 확정 전후·lease 이관/터미널 기동 전. 실패는 어댑터·lease를
+# 한 번도 건드리지 않는다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _meta_dir_preflight(args):
+    """① 태스크 전용 메타 폴더(`launcher_core.task_meta_dir_path`)와 그 안의
+    `meta.json` 존재·쓰기 가능. registry 조회(`--command` 유무와 무관)보다 먼저,
+    독립적으로 판정한다 — registry 조회 실패(`registry_unreadable` 등)와 섞이지
+    않는다. 실패 시 `(code, extra_fields)`, 통과 시 `None`을 돌려준다."""
+    meta_dir = launcher_core.task_meta_dir_path(args.project_root, args.task)
+    if not meta_dir.is_dir() or not (meta_dir / "meta.json").is_file():
+        return ("launch_preflight_failed", {"cause": "meta_dir_missing"})
+    if not os.access(meta_dir, os.W_OK):
+        return ("launch_preflight_failed", {"cause": "meta_dir_not_writable"})
+    return None
+
+
+def _grant_option_preflight(args) -> tuple:
+    """`(error, warnings)`를 돌려준다. `error`는 `(code, extra_fields)` 또는 성공 시 `None`.
+    명령이 확정된 뒤에만 의미가 있다 — argv_template에 `{meta_dir}`가 없으면 아무 것도
+    하지 않는다(② 자체가 적용되지 않음).
+
+    ② argv_template에 `{meta_dir}`가 있으면 그 직전 옵션 토큰이 실행 파일의
+       `--help`(10초 제한) 출력에 있어야 한다.
+    ③ `{meta_dir}` 사용 시 비차단 경고 `git_write_requires_escalation`.
+    """
+    warnings: list = []
+
+    loaded_settings = settings.load_launcher_settings(project_root=args.project_root)
+    argv_template = settings.resolve_argv_template(loaded_settings, args.agent)
+    if "{meta_dir}" not in argv_template:
+        return None, warnings
+
+    tokens = shlex.split(argv_template)
+    meta_dir_index = next(
+        (index for index, token in enumerate(tokens) if "{meta_dir}" in token), None
+    )
+    grant_flag = tokens[meta_dir_index - 1] if meta_dir_index else None
+    executable = tokens[0] if tokens else None
+    resolved_executable = shutil.which(executable) if executable else None
+    if resolved_executable is None:
+        return ("launch_preflight_failed", {"cause": "agent_help_unavailable"}), warnings
+
+    try:
+        completed = subprocess.run(
+            [resolved_executable, "--help"],
+            capture_output=True,
+            text=True,
+            timeout=AGENT_HELP_TIMEOUT_SEC,
+        )
+    except (OSError, subprocess.TimeoutExpired, subprocess.SubprocessError):
+        return ("launch_preflight_failed", {"cause": "agent_help_unavailable"}), warnings
+
+    help_text = (completed.stdout or "") + (completed.stderr or "")
+    if not grant_flag or grant_flag not in help_text:
+        return ("launch_preflight_failed", {"cause": "grant_option_unsupported"}), warnings
+
+    warnings.append("git_write_requires_escalation")
+    return None, warnings
 
 
 def _cmd_launch(adapter, args) -> int:
@@ -206,9 +278,19 @@ def _cmd_launch(adapter, args) -> int:
     if missing:
         return _fail("launch", "invalid_arguments", f"required: {' '.join(missing)}")
 
+    meta_dir_error = _meta_dir_preflight(args)
+    if meta_dir_error is not None:
+        code, extra = meta_dir_error
+        return _fail("launch", code, **extra)
+
     command, error = _resolve_launch_command(args)
     if error is not None:
         code, extra = error
+        return _fail("launch", code, **extra)
+
+    grant_error, preflight_warnings = _grant_option_preflight(args)
+    if grant_error is not None:
+        code, extra = grant_error
         return _fail("launch", code, **extra)
 
     try:
@@ -228,6 +310,9 @@ def _cmd_launch(adapter, args) -> int:
     if not isinstance(report, dict):
         return _fail("launch", "adapter_report_invalid")
     if report.get("ok"):
+        if preflight_warnings:
+            report = dict(report)
+            report["warnings"] = preflight_warnings
         return _succeed("launch", report)
 
     payload = {"ok": False, "command": "launch"}

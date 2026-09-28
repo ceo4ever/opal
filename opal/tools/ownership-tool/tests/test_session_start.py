@@ -80,14 +80,14 @@ def test_s10_worktree_cwd_claims_lease_and_registers_session(tmp_path, monkeypat
     # 즉 wt_tmp/.meta)에만 존재한다 — 워크트리 루트 안쪽에는 .opal-worktrees가 없다
     # (worktree.md 발급 계약, 실물 허브 대조 확인). test_stop_evaluator.py가 쓰는 WT-132
     # registry meta 선례를 같은 위치에 그대로 배치한다.
-    meta_dir = wt_tmp / ".meta"
+    meta_dir = wt_tmp / ".meta" / "task_132"
     meta_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy(tmp / "registry" / "active" / "WT-132" / ".meta" / "task_132.json", meta_dir / "task_132.json")
+    shutil.copy(tmp / "registry" / "active" / "WT-132" / ".meta" / "task_132.json", meta_dir / "meta.json")
 
     # setup(D-20): 워크트리 세션은 허브 registry를 직접 추론하지 않고 worktree-tool이
     # 내려보낸 발급값 사본 <worktree_root>/.opal/task-ownership.json(ownership_core.
     # resolve_roots ② 분기)으로 allocator_root·task_path를 얻는다.
-    registry_entry = json.loads((meta_dir / "task_132.json").read_text(encoding="utf-8"))
+    registry_entry = json.loads((meta_dir / "meta.json").read_text(encoding="utf-8"))
     _write_task_ownership_copy(worktree_root, registry_entry)
 
     # setup: canonical task_path(worktree_root/tasks/<task_folder>)에 실제 state.json을
@@ -282,9 +282,9 @@ def test_s13_foreign_session_claim_rejected(tmp_path, monkeypatch):
         "artifact_repo": ".",
         "task_ownership_version": 2,
     }
-    meta_dir = wt_tmp / ".meta"
+    meta_dir = wt_tmp / ".meta" / "task_220"
     meta_dir.mkdir(parents=True, exist_ok=True)
-    (meta_dir / "task_220.json").write_text(json.dumps(registry_entry), encoding="utf-8")
+    (meta_dir / "meta.json").write_text(json.dumps(registry_entry), encoding="utf-8")
 
     # setup(D-20): 워크트리 세션은 허브 registry를 직접 추론하지 않고 worktree-tool이
     # 내려보낸 발급값 사본 <worktree_root>/.opal/task-ownership.json으로
@@ -355,7 +355,10 @@ def _build_registry_boot_case(tmp_path, execution_ownership):
         "attribution_state": "active",
         "execution_ownership": execution_ownership,
     }
-    (meta_dir / ("task_" + S12R_TASK_NUMBER + ".json")).write_text(
+    (meta_dir / ("task_" + S12R_TASK_NUMBER) / "meta.json").parent.mkdir(
+        parents=True, exist_ok=True
+    )
+    (meta_dir / ("task_" + S12R_TASK_NUMBER) / "meta.json").write_text(
         json.dumps(registry_entry, ensure_ascii=False), encoding="utf-8"
     )
     _write_task_ownership_copy(worktree_root, registry_entry)
@@ -537,7 +540,10 @@ def _build_s7_handoff_case(tmp_path):
         "attribution_state": "active",
         "execution_ownership": _execution_ownership(None),
     }
-    (meta_dir / ("task_" + S7_TASK_NUMBER + ".json")).write_text(
+    (meta_dir / ("task_" + S7_TASK_NUMBER) / "meta.json").parent.mkdir(
+        parents=True, exist_ok=True
+    )
+    (meta_dir / ("task_" + S7_TASK_NUMBER) / "meta.json").write_text(
         json.dumps(registry_entry, ensure_ascii=False), encoding="utf-8"
     )
     _write_task_ownership_copy(worktree_root, registry_entry)

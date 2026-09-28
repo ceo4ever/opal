@@ -93,9 +93,9 @@ def test_foreign_owner_blocks_edit_and_git_commit(monkeypatch):
         "artifact_repo": ".",
         "task_ownership_version": 2,
     }
-    meta_dir = worktree_root / ".opal-worktrees" / ".meta"
+    meta_dir = worktree_root / ".opal-worktrees" / ".meta" / "task_220"
     meta_dir.mkdir(parents=True, exist_ok=True)
-    (meta_dir / "task_220.json").write_text(json.dumps(registry_entry), encoding="utf-8")
+    (meta_dir / "meta.json").write_text(json.dumps(registry_entry), encoding="utf-8")
 
     # setup: canonical task_path에 다른 세션("sess-owner")이 소유한 live lease를 실물
     # 배치한다(fixtures/runtime/owner-current-session.json 스키마 재사용).
@@ -151,9 +151,9 @@ def test_foreign_owner_allows_read_and_ls_with_diagnostic(monkeypatch):
         "artifact_repo": ".",
         "task_ownership_version": 2,
     }
-    meta_dir = worktree_root / ".opal-worktrees" / ".meta"
+    meta_dir = worktree_root / ".opal-worktrees" / ".meta" / "task_220"
     meta_dir.mkdir(parents=True, exist_ok=True)
-    (meta_dir / "task_220.json").write_text(json.dumps(registry_entry), encoding="utf-8")
+    (meta_dir / "meta.json").write_text(json.dumps(registry_entry), encoding="utf-8")
 
     owner_record = json.loads(
         (FIXTURES_ROOT / "runtime" / "owner-current-session.json").read_text(encoding="utf-8")
@@ -237,7 +237,8 @@ def _build_handoff_worktree(tmp_path, task_number="308", task_folder="308-handof
         "artifact_repo": ".",
         "task_ownership_version": 2,
     }
-    (meta_dir / ("task_" + task_number + ".json")).write_text(
+    (meta_dir / ("task_" + task_number) / "meta.json").parent.mkdir(parents=True, exist_ok=True)
+    (meta_dir / ("task_" + task_number) / "meta.json").write_text(
         json.dumps(entry, ensure_ascii=False), encoding="utf-8"
     )
     copy_path = worktree_root / ".opal" / "task-ownership.json"

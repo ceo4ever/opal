@@ -62,9 +62,9 @@ def _seed_owned_task_138(hub_tmp, wt_tmp, owner_session_id):
         "artifact_repo": ".",
         "task_ownership_version": 2,
     }
-    meta_dir = worktree_root / ".opal-worktrees" / ".meta"
+    meta_dir = worktree_root / ".opal-worktrees" / ".meta" / "task_138"
     meta_dir.mkdir(parents=True, exist_ok=True)
-    (meta_dir / "task_138.json").write_text(json.dumps(registry_entry), encoding="utf-8")
+    (meta_dir / "meta.json").write_text(json.dumps(registry_entry), encoding="utf-8")
 
     owner_record = json.loads(
         (FIXTURES_ROOT / "runtime" / "owner-current-session.json").read_text(encoding="utf-8")
@@ -228,9 +228,9 @@ def _seed_handoff_pending_worktree(hub_tmp, wt_tmp, task_num, task_folder, regis
         "artifact_repo": ".",
         "task_ownership_version": 2,
     }
-    meta_dir = wt_tmp / ".meta"
+    meta_dir = wt_tmp / ".meta" / "task_{}".format(task_num)
     meta_dir.mkdir(parents=True, exist_ok=True)
-    (meta_dir / "task_{}.json".format(task_num)).write_text(
+    (meta_dir / "meta.json").write_text(
         json.dumps(registry_entry, ensure_ascii=False), encoding="utf-8"
     )
     copy_path = ownership_core.task_ownership_copy_path(worktree_root)

@@ -27,9 +27,6 @@ else:
 # env 파일에 남기는 OPAL 중립 키. 플랫폼 변수명이 아니므로 이 모듈이 소유한다.
 SESSION_ID_ENV_LINE_KEY = "OPAL_SESSION_ID"
 
-# registry meta 파일명 패턴 — 발급 계약이 정한 위치만 읽는다(추론하지 않는다).
-_REGISTRY_META_GLOB = "task_*.json"
-
 # registry `execution_ownership` 전이는 worktree-tool CLI 경유만 허용된다(TASK 999 C-9).
 # 배포본 아래 고정 경로이며 허브 위치 해석은 worktree_tool.py:2254-2257의 기존 선례를 쓴다.
 _WORKTREE_TOOL_RUN_REL = "tools/worktree-tool/run.sh"
@@ -44,24 +41,14 @@ _OWNERSHIP_SET_TIMEOUT_SEC = 45
 
 
 def _load_registry(allocator_root):
-    """<allocator_root>/.opal-worktrees/.meta/task_*.json 전건을 이름순으로 읽는다.
+    """<allocator_root>/.opal-worktrees/.meta/task_*/meta.json 전건을 이름순으로 읽는다.
 
     allocator_root는 resolve_roots가 준 발급값만 받는다(이 모듈이 추론하지 않는다).
-    디렉터리 부재·손상 JSON은 예외가 아니라 빈 목록/해당 항목 생략으로 처리한다.
+    전건 조회는 ownership_core.registry_meta_entries 하나에만 위임한다.
     """
     if not allocator_root:
         return []
-    meta_dir = pathlib.Path(allocator_root) / ".opal-worktrees" / ".meta"
-    try:
-        names = sorted(p.name for p in meta_dir.glob(_REGISTRY_META_GLOB))
-    except OSError:
-        return []
-    entries = []
-    for name in names:
-        read = ownership_core.read_json(meta_dir / name)
-        if read.get("ok") and isinstance(read.get("data"), dict):
-            entries.append(read["data"])
-    return entries
+    return ownership_core.registry_meta_entries(allocator_root)
 
 
 def _canonical_task_path(cwd):

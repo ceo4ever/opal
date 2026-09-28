@@ -45,7 +45,11 @@ def _invoke(capsys, argv):
 
 
 def _hub_with_task_path(tmp_path, task="220", prior_state="hub_owned"):
-    """conftest 허브의 canonical `task_path`를 채워 돌려준다(create 발급값 자리)."""
+    """conftest 허브의 canonical `task_path`를 채워 돌려준다(create 발급값 자리).
+
+    launch 기동 전 점검 ①은 `launcher_core.task_meta_dir_path`가 계산한 태스크 전용
+    메타 폴더와 그 안의 `meta.json` 존재를 요구한다 — `build_launcher_hub`가 이미
+    이 폴더에 registry를 배치하므로 추가 준비는 필요 없다."""
     hub = build_launcher_hub(tmp_path, task=task, prior_state=prior_state, adapter=None)
     meta = read_meta(hub.meta_path)
     task_path = str(hub.worktree_root / "tasks" / f"{task}-demo")
@@ -291,7 +295,33 @@ def test_launch_failure_report_exits_one(capsys, tmp_path, monkeypatch):
     assert payload["failure_reason"] == "launch_failed"
 
 
+def test_launch_missing_hub_is_structured_meta_dir_missing_error(capsys, tmp_path):
+    """태스크 전용 메타 폴더 자체가 없으면(허브가 통째로 없는 경우 포함) 기동 전 점검
+    ①이 registry 조회보다 먼저 이를 잡아 `meta_dir_missing`으로 거부한다."""
+    code, payload = _invoke(
+        capsys,
+        [
+            "launch",
+            "--adapter", "orca",
+            "--project-root", str(tmp_path / "no-hub"),
+            "--task", "999",
+            "--worktree-root", str(tmp_path / "no-hub" / "wt"),
+        ],
+    )
+
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["error"] == "launch_preflight_failed"
+    assert payload["cause"] == "meta_dir_missing"
+
+
 def test_launch_registry_unreadable_is_structured_error(capsys, tmp_path):
+    """태스크 전용 메타 폴더는 있지만(기동 전 점검 ① 통과) 그 안 `meta.json`이
+    깨진 JSON이면 registry 조회 단계에서 `registry_unreadable`로 거부한다."""
+    task_meta_dir = tmp_path / "no-hub" / ".opal-worktrees" / ".meta" / "task_999"
+    task_meta_dir.mkdir(parents=True)
+    (task_meta_dir / "meta.json").write_text("not json", encoding="utf-8")
+
     code, payload = _invoke(
         capsys,
         [

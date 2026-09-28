@@ -104,14 +104,18 @@ loaded = core.read_json(path)   # error: not_found | invalid_json | read_failed
 
 ## registry meta 읽기 전용 어댑터
 
-`read_registry_meta(hub_root, task_number)`는 `<hub_root>/.opal-worktrees/.meta/task_<NNN>.json`을
-읽기만 한다. 발급된 경로를 추측·보정하지 않는다.
+`read_registry_meta(hub_root, task_number)`는 `<hub_root>/.opal-worktrees/.meta/task_<NNN>/meta.json`을
+읽기만 한다. 발급된 경로를 추측·보정하지 않으며, 구 구조 평면 파일(`task_<NNN>.json`)로 폴백하지 않는다.
 
 - 성공: `{ok: true, allocator_root, task_home, task_folder, task_path, artifact_repo,
   task_ownership_version, attribution_state, execution_ownership, legacy}`
 - `task_ownership_version` 부재: `legacy: true`로만 표시한다(거부하지 않는다).
 - 파일 부재·손상 JSON·필수 키 누락: 예외가 아니라
   `{"ok": false, "diagnostic": "invalid_registry", "detail": …}`.
+
+전건 조회는 `list_task_meta_dirs(hub_root)`(`.meta/` 아래 `task_*` 폴더 중 `meta.json`이
+있는 것만 이름순)와 `registry_meta_entries(hub_root)`(그 폴더들의 `meta.json`을 읽어 dict
+목록으로 반환)로 한다. 훅·평가기는 이 두 함수만 거치고 자체적으로 glob하지 않는다.
 
 필수 키는 `allocator_root`·`task_home`·`task_folder`·`task_path`·`artifact_repo` 5종이며,
 `attribution_state`·`execution_ownership`은 키 부재가 정상(active)이다.

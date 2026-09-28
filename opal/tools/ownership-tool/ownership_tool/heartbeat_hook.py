@@ -22,32 +22,21 @@ else:
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
     from ownership_tool import lease, ownership_core, session_registry
 
-# registry meta 파일명 패턴 — 발급 계약이 정한 위치만 읽는다(추론하지 않는다).
-_REGISTRY_META_GLOB = "task_*.json"
-
 # lease.classify가 "이 세션이 소유한다"고 판정하는 단일 값.
 _OWNED = "current_session_owned"
 
 
 def _registry_task_paths(allocator_root):
-    """<allocator_root>/.opal-worktrees/.meta/task_*.json 발급값의 task_path를 이름순으로 모은다.
+    """<allocator_root>/.opal-worktrees/.meta/task_*/meta.json 발급값의 task_path를 이름순으로 모은다.
 
     allocator_root는 resolve_roots가 준 발급값만 받는다(이 모듈이 추론하지 않는다).
-    디렉터리 부재·손상 JSON은 예외가 아니라 빈 목록/해당 항목 생략으로 처리한다.
+    전건 조회는 ownership_core.registry_meta_entries 하나에만 위임한다.
     """
     if not allocator_root:
         return []
-    meta_dir = pathlib.Path(allocator_root) / ".opal-worktrees" / ".meta"
-    try:
-        names = sorted(p.name for p in meta_dir.glob(_REGISTRY_META_GLOB))
-    except OSError:
-        return []
     paths = []
-    for name in names:
-        read = ownership_core.read_json(meta_dir / name)
-        if not (read.get("ok") and isinstance(read.get("data"), dict)):
-            continue
-        task_path = read["data"].get("task_path")
+    for data in ownership_core.registry_meta_entries(allocator_root):
+        task_path = data.get("task_path")
         if task_path:
             paths.append(str(task_path))
     return paths

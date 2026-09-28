@@ -208,12 +208,35 @@ def _pt(ts):
     return None
 
 
+def _registry_meta_files(meta_root):
+    """`.meta/task_*/meta.json`만 이름순으로 반환한다.
+
+    구 구조 파일(`.meta/task_{NNN}.json`)은 읽지도 옮기지도 않는다. 이 파일 안의
+    유일한 경로 계산 지점이며, 모든 소비 지점은 이 함수를 거친다.
+    """
+    if not meta_root.is_dir():
+        return []
+    try:
+        entries = sorted(meta_root.iterdir(), key=lambda p: p.name)
+    except OSError:
+        return []
+    result = []
+    for entry in entries:
+        if not entry.is_dir() or not entry.name.startswith("task_"):
+            continue
+        meta_file = entry / "meta.json"
+        if meta_file.is_file() and not meta_file.is_symlink():
+            result.append(meta_file)
+    return result
+
+
 def _registry_checkpoint_shas(repo, code):
     """허브 registry(.opal-worktrees/.meta)에서 코드 작업본과 같은 worktree 행의 checkpoint_shas를 읽는다."""
     code_real = os.path.realpath(str(code))
-    for mp in glob.glob(str(repo / ".opal-worktrees" / ".meta" / "task_*.json")):
+    meta_root = repo / ".opal-worktrees" / ".meta"
+    for meta_path in _registry_meta_files(meta_root):
         try:
-            meta = json.loads(pathlib.Path(mp).read_text(encoding="utf-8"))
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
         if meta.get("worktree_root") and os.path.realpath(meta["worktree_root"]) == code_real:
