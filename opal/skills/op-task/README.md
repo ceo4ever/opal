@@ -10,7 +10,7 @@
 
 이 스킬은 호출자인 PM이 **직접 수행**합니다. TASK 작성을 위해 워커나 다른 스킬을 별도로 호출하지 않습니다. `pilot_key`·`mode`·태스크 폴더 채번·`state init`은 호출자/하네스가 소유하며, 이 스킬은 이를 재추천하거나 TASK.md에 복제하지 않습니다. 프로젝트 문서와 런타임 capability 선별도 PM dispatch가 소유하므로 이 스킬은 고정 기술 스택·스킬·MCP 카탈로그를 탐색하지 않습니다.
 
-사용자 발화와 프로젝트 맥락에서 `Problem`·`Proposed outcome`·`Affected users and systems`·`Constraints`·`Acceptance criteria` 다섯 항목을 추출해 TASK.md를 작성합니다. 목표·범위·제약·완료 기준을 바꿀 정보가 없을 때만 사용자에게 질문하며, 구현 방식·기술 스택·대안 비교처럼 ANALYSIS/PLAN에서 결정할 내용은 묻지 않습니다.
+사용자 발화와 프로젝트 맥락에서 `Problem`·`Proposed outcome`·`Affected users and systems`·`Constraints`·`Acceptance criteria` 다섯 항목을 추출해 TASK.md를 작성합니다. AC는 별도 Requirements 절이 없는 sdlc-v2에서 검증 가능한 핵심 요구사항 역할을 겸하며, 하나의 AC는 다른 AC와 겹치지 않는 하나의 독립적인 수용 결정을 표현합니다. 같은 요구를 구현 방법이나 검증 환경·단계별로 나누지 않습니다. 목표·범위·제약·완료 기준을 바꿀 정보가 없을 때만 사용자에게 질문하며, 구현 방식·기술 스택·대안 비교처럼 ANALYSIS/PLAN에서 결정할 내용은 묻지 않습니다.
 
 ## 입력
 
@@ -21,7 +21,7 @@
 
 `task_path/TASK.md` — 첫 YAML frontmatter가 정확히 `template: sdlc-v2`이고, 다섯 필수 절이 모두 비어 있지 않으며, `Constraints`는 고유 `C-N`, `Acceptance criteria`는 고유 `AC-N` 식별자를 갖습니다. 단계·승인·gate·pilot·mode 상태는 적지 않으며(`state.json` 소유), 기술 스택·관련 문서 목록·대안표는 별도 절로 만들지 않습니다.
 
-작성 후 `~/.opal/tools/state-tool/run.sh verify <task-path> --clarification-check`로 `template=sdlc-v2`와 필수 절·AC/C 식별자 검사를 통과시켜야 완료로 간주합니다.
+작성 후 `~/.opal/tools/state-tool/run.sh verify <task-path> --clarification-check`로 `template=sdlc-v2`와 필수 절·AC/C 식별자 검사를 통과시키고, 상세 가이드의 AC 채택 조건과 비중복 검사를 직접 수행해야 완료로 간주합니다.
 
 ## 호출 시점
 

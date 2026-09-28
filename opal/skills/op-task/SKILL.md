@@ -40,8 +40,10 @@ description: |
 - 파일 첫 YAML frontmatter는 정확히 `template: sdlc-v2`다.
 - 필수 다섯 절은 모두 비어 있지 않아야 한다.
 - `Constraints`의 모든 항목은 고유 `C-N`, `Acceptance criteria`의 모든 항목은 고유 `AC-N`을 가진다.
-- 추가 제약이 없어도 Constraints를 비우지 않고 기존 프로젝트 규칙 유지 조건을 한 항목으로 적는다.
-- 교체·전환·마이그레이션 목표는 구형 잔존 0과 신형 채택을 관찰 가능한 Acceptance criteria에 포함한다.
+- 각 AC는 `Proposed outcome` 또는 명시된 포함 범위에서 직접 도출된, 다른 AC와 겹치지 않는 핵심 수용 요구사항 하나를 표현한다.
+- 동일 요구를 구현 방법·검증 환경·배포 단계별 AC로 나누지 않는다. 구현 방법은 PLAN, 검증 방법은 TEST-SCENARIO로 보낸다.
+- 추가 제약이 없어도 Constraints를 비우지 않는다. 현재 태스크에 직접 적용되는 프로젝트 강제 계약을 한 항목으로 참조하되 원문을 복제하지 않는다.
+- 교체·전환·마이그레이션 목표는 하나의 수용 결정을 이루는 신형 채택과 구형 비채택을 같은 AC에서 관찰 가능하게 표현할 수 있다.
 - 단계·승인·gate·pilot·mode 상태는 적지 않는다. `state.json`이 소유한다.
 - 기술 스택, 관련 문서 목록, 대안표, 구형 명확화 표를 별도 절로 만들지 않는다.
 
@@ -51,7 +53,8 @@ description: |
 ~/.opal/tools/state-tool/run.sh verify <task-path> --clarification-check
 ```
 
-`template=sdlc-v2`와 필수 절·AC/C 식별자 검사가 통과해야 완료다. 실패하면 누락된 필드만 고치고 다시 검사한다.
+`template=sdlc-v2`와 필수 절·AC/C 식별자 검사가 통과해야 완료다. 도구 통과와 별개로
+`task-guide.md`의 AC 채택 조건·비중복 검사를 직접 수행한다. 실패하면 누락되거나 겹친 항목만 고치고 다시 검사한다.
 
 ### 4. 반환
 

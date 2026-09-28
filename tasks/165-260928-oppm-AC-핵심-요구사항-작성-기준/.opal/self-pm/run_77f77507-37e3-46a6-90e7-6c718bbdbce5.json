@@ -1,0 +1,49 @@
+{
+  "objective": "AC가 서로 겹치지 않는 핵심 수용 요구사항 하나를 표현하도록 op-task 작성 기준을 명확히 한다",
+  "status": "done",
+  "decisions": [
+    "AC 개수 제한 대신 비중복 핵심 수용 요구사항 기준을 채택하고 PM 직접 수정을 승인받음",
+    "캡틴 피드백에 따라 brain no-op 판정을 철회하고 하네스 작성 기준 변경의 WHY를 지식에 반영"
+  ],
+  "open_questions": [],
+  "approved_scope": [
+    "1. 목표/완료조건: AC를 서로 겹치지 않는 핵심 수용 요구사항으로 정의하고 관련 op-task 문서를 정합화한다",
+    "2. 포함/제외 범위: op-task 상세 가이드·실행 지시·README와 변경 WHY의 brain concept 포함; state-tool·기존 TASK·태스크 164 변경 제외",
+    "3. 변경 대상: task-guide.md, SKILL.md, README.md, brain concept 및 태스크 증빙",
+    "4. 결정/가정: 개수 제한 없음; 독립 수용 결정 단위; 불가분한 성공·거부 경계 병합; 남은 가정 없음",
+    "5. 검증 방법: 정적 검색, 관련 state-tool 계약 테스트, code-scan validate, brain 검색·lint",
+    "6. 예상 영향: TASK 작성 규범과 그 결정 배경 지식을 변경; 기획·아키텍처·보안·도구 스키마·기존 태스크에는 동작 변경 없음"
+  ],
+  "changed_files": [
+    "opal/skills/op-task/references/task-guide.md",
+    "opal/skills/op-task/SKILL.md",
+    "opal/skills/op-task/README.md",
+    ".opal/MEMORY.json",
+    ".opal/brain/pages/concept/ac-core-acceptance-requirement.md",
+    ".opal/brain/index.md",
+    ".opal/brain/log.md",
+    "tasks/165-260928-oppm-AC-핵심-요구사항-작성-기준/TASK.md",
+    "tasks/165-260928-oppm-AC-핵심-요구사항-작성-기준/DONE.md",
+    "tasks/165-260928-oppm-AC-핵심-요구사항-작성-기준/evidence/validation.md",
+    "tasks/165-260928-oppm-AC-핵심-요구사항-작성-기준/evidence/brain-concept-body.md"
+  ],
+  "validation": [
+    "초기 system python 테스트는 의존성 인터프리터 가드로 exit 4; 안내된 OPAL venv로 재실행",
+    "관련 clarification 계약 테스트 13 passed, 158 deselected",
+    "전체 관련 파일 테스트 169 passed, 2 environment-dependent unrelated failures; evidence/validation.md에 분리 기록",
+    "git diff --check 및 AC 다섯 채택 조건·중복 금지·라우팅 정적 검사 PASS",
+    "code-scan validate --changed exit 0; newly_uncovered 0, pre_existing 3",
+    "brain concept active·op-task 연결·검색 노출 확인, 새 페이지 대상 lint 이슈 0건",
+    "opal-e2e 미실행; 런타임 영향 없는 문서 규범 변경이며 대체 검증과 미검증 범위 기록"
+  ],
+  "knowledge_impact": [
+    "기획: no-op - 제품 정책·사용자 흐름 변경이 아니라 TASK 작성 규범 변경",
+    "설계: no-op - 런타임 구조·인터페이스·데이터 모델 변경 없음",
+    "프로젝트 문서: no-op - 기존 op-task 컴포넌트와 경로 안의 owner 문서 갱신으로 PROJECT 레지스트리 변경 불필요",
+    "CONVENTIONS: no-op - op-task 전용 계약이며 기존 owner 단일화 규칙 준수",
+    "SECURITY: no-op - 권한·인증·비밀·입력 처리 변경 없음",
+    "brain: update - 실행 규범 원문은 owner 가이드에 유지하고 비중복 수용 결정을 채택한 WHY를 active concept로 동기화",
+    "memory: no-op - 재사용 규범을 소스와 brain에 반영했고 별도 세션 주의사항 없음",
+    "code-scan: no-op - 변경 문서 3개는 pre_existing이고 validate exit 0"
+  ]
+}
