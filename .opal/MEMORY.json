@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 163,
+  "last_task_number": 164,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -157,6 +157,13 @@
   ],
   "history": [
     {
+      "title": "162 TEST 단계 소요시간 단축",
+      "date": "2026-09-28",
+      "stage": "완료",
+      "path": "tasks/162-260927-opd-TEST-단계-소요시간-단축/",
+      "result": "opd/opds TEST에 사람 조치 선요청·자동 실행 병행·증거 재사용·최종 Gate 주기와 계측을 도입하고 병행 계측 유실을 잠금으로 수정함. 시나리오 10/10 통과, main 머지 완료."
+    },
+    {
       "title": "163 코덱스 워크트리 부팅 소유권 복구",
       "date": "2026-09-28",
       "stage": "완료",
@@ -183,13 +190,6 @@
       "stage": "완료",
       "path": "tasks/159-260926-opds-E2E-테스트환경-설정체계/",
       "result": "E2E 환경 설정 파일·env-inspect/validate/check 명령·opal-e2e setup 모드 추가, run이 설정 기반으로 웹·API 기동(dashboard 하드코딩 제거). 13/13 pass, 회귀 555 passed"
-    },
-    {
-      "title": "157 PM 설계경로 단일화와 독립 설계게이트",
-      "date": "2026-09-26",
-      "stage": "완료",
-      "path": "tasks/157-260924-opds-PM-설계경로-단일화와-독립-설계게이트/",
-      "result": "opd/opds PM 경로 6행 공용 파이프라인(pipeline-pm.json)·설계 게이트(결정론 검사+evaluator design-rubric 1회)·문서 묶음 해시 고정·반복 상한 사용자 대기 도입, TEST 14/14. 추가작업으로 opal-skill-tester(opst) 신설"
     }
   ]
 }
