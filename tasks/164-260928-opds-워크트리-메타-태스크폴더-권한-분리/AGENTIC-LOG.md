@@ -6,13 +6,13 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 18회 (Pass: 10 / Fail: 8) |
+| 게이트 판단 | 22회 (Pass: 13 / Fail: 9) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 11건 |
+| 오류 발견 | 12건 |
 | 수정 지시 | 10건 (반영: 10 / 미반영: 0) |
 | PM 의사결정 | 4건 |
-| 개선 사항 | 0건 |
-| 에스컬레이션 | 1건 |
+| 개선 사항 | 1건 |
+| 에스컬레이션 | 2건 |
 
 ## 대행 일지
 
@@ -42,3 +42,13 @@
 | 22 | 2026-09-28 16:47 | EXECUTE | ERROR | W-4 Gate Fail — 미승인 폴백: `read_registry_meta`에 구 구조 평면 파일 폴백과 conftest 이중 배치 추가(D-3·AC-2 위반). 워커 근거 "RED 테스트와 모순"은 RED 테스트 setup 결함(D-1에서 불가능한 '레지스트리 有·폴더 無' 상태)으로 판정 | 기록 |
 | 23 | 2026-09-28 16:47 | EXECUTE | DECISION | RED 테스트 setup 보정 승인 — 구현자와 다른 opal-test-agent가 `test_meta_dir_missing` 조건만 '태스크 메타 폴더 부재'로 교정, 기대 계약(meta_dir_missing·호출 0회·불변) 유지·불변 검사 강화. scenario-red 재기록 없음. 근거: red-first §1.5는 기대 계약 약화만 금지하며 이번 변경은 설계와 불일치하는 조건 교정 | 적용 |
 | 24 | 2026-09-28 16:47 | EXECUTE | FIX | #22 재지시 → 폴백·이중 배치 제거, 메타 폴더 점검을 registry 조회 전으로 분리, 식별자 제거. PM 확인: launcher 170 passed(RED 포함), 폴백 코드 0건, 소스 전체 구 구조 경로 조합 0건 → Pass | 반영 |
+| 25 | 2026-09-28 16:52 | TEST | ESCALATION | TEST 진입 보류 결정 요청 3건 — divergence `behind=1`(main `ab4cb86`, 162 귀속 기록만·충돌 없음), 재배포 전 task_164 구 구조 메타 처리, 허브 main 과거 stash(`f015d67`·`8107fef`·`66d1b39`) 복구 여부 | 캡틴 응답 |
+| 26 | 2026-09-28 16:52 | TEST | DECISION | 캡틴 결정 적용 — ① main을 브랜치로 `git merge --no-ff` 통합 → divergence ahead 9·behind 0 ② 재배포 직후 PM이 허브 `.meta/task_164.json`을 `.meta/task_164/meta.json`으로 이동 ③ main stash는 캡틴이 정리한 것 — 조치 없음(#13의 미확인 항목 해소) | 적용 |
+| 27 | 2026-09-28 17:10 | TEST | GATE | TEST 1차(S-1~S-10·S-12): 10 PASS / S-6 FAIL. S-12 기존 실패 집합(Console 41·installer 3+2)은 `86d08d7` 추출본과 diff 0 — 신규 회귀 없음 | Fail(S-6) |
+| 28 | 2026-09-28 17:10 | TEST | ERROR | S-6 FAIL 원인 = 실측 환경 결함(H-1 판정 무효): codex workdir를 허브 루트로 둬 `.meta/` 전체가 기본 쓰기 영역에 포함, 임시 허브가 `/private/tmp` 아래라 workspace-write 기본 쓰기 루트(`/tmp`·`$TMPDIR`)에 포함. 실제 배치(cwd=워크트리, `.meta/`는 워크트리 밖 형제, 허브는 /tmp 밖)와 불일치. 코드 변경 없이 S-6 재실측 지시 | 재실측 |
+| 29 | 2026-09-28 17:20 | TEST | GATE | S-6 재실측 PASS — cwd=워크트리·`.meta/` 형제·/tmp 제외 조건에서 sandbox 행 `[workdir, .meta/task_901]`, 자기 폴더 쓰기·교체 성공, task_902·`.meta/` 루트·`.git` 거부, 워크트리 쓰기 성공. PM이 파일 존재로 직접 확인 | Pass |
+| 30 | 2026-09-28 17:20 | TEST | DECISION | 정식 install은 auto 모드 분류기가 PM 실행을 거부 → 캡틴이 `!`로 직접 실행(비대화형, OPAL+MCP). 사전 백업 scratch/predeploy-backup. 설치 로그에서 setting.json Codex 기본값 승격 확인 | 적용 |
+| 31 | 2026-09-28 17:20 | TEST | DECISION | 캡틴 승인(#26 ②)대로 허브 `.meta/task_164.json`→`.meta/task_164/meta.json` 이동, 빈 구 lock 삭제. sha256 백업과 일치, 배포본 `worktree-tool status` ok·`worktree_session_owned` | 적용 |
+| 32 | 2026-09-28 17:31 | TEST | GATE | S-11 PASS — 배포본 sha256 source 대조 불일치 0, 배포본 argv에 자기 메타 폴더만 `--add-dir`, 배포본 argv로 실제 codex 격리 재현, 배포본 launch `meta_dir_missing` 조기 종료. scenario-status 12/12 PASS·fidelity-check all_met | Pass |
+| 33 | 2026-09-28 17:31 | TEST | GATE | TEST PM Gate Pass — 최종 컨벤션 checker 1회 Critical 0/High 0/Medium 5/Low 1(전부 신규 테스트 파일의 태스크 번호 표기, 기존 `TestTask163`·`TestT138W9` 관행과 같아 advisory로 수용·미수정). test-metrics `auto_seconds`=null(test-clock 미기록 → unknown으로 보고, 추정 안 함) | Pass |
+| 34 | 2026-09-28 17:31 | TEST | IMPROVE | S-11 1차 시도에서 Claude 세션 안에서 직접 띄운 codex가 OPAL 부트 `inherited_identity_conflict`로 정지(부모 신원 상속). 실제 launcher는 session-launch가 부모 신원을 제거하므로 판정 무관이나 미검증 — 회고 후보 | 후보 |

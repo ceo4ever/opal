@@ -23,15 +23,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest opal/tools/worktree-tool/tests/test_task164_meta_layout.py::TestTask164MetaFolderLayout: 7 passed; CLI 통합(scratch hub): create 901/902 후 meta.json이 .meta/task_{NNN}/meta.json에만 존재, lock(meta.json.lock)도 같은 폴더 안에서만 관측, .meta/ 바로 아래 태스크 폴더 외 파일 없음",
+      "marked_at": "2026-09-28T17:07:11+09:00",
       "fidelity": "mock"
     },
     {
@@ -52,15 +52,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest test_task164_meta_layout.py::TestTask164ListIgnoresOldStructure + ownership-tool test_task164_registry_layout.py: 10 passed; CLI 통합: list/status가 task_901,902만 보고, 임의 삽입한 .meta/task_900.json(legacy) 결과에 미노출·바이트 불변(shasum 동일 확인)",
+      "marked_at": "2026-09-28T17:07:11+09:00",
       "fidelity": "mock"
     },
     {
@@ -81,15 +81,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest TestTask164RemoveRecoversTaskFolder: 통과; CLI 통합: remove 902(clean)->task_902 폴더+메타 완전삭제·.meta/·task_901 보존, remove 901(dirty)->GUARD_DIRTY로 실패·메타/lock/폴더 보존 확인",
+      "marked_at": "2026-09-28T17:07:12+09:00",
       "fidelity": "mock"
     },
     {
@@ -110,15 +110,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "git grep -n -E 'task_\\*\\.json|task_\\{[a-z_]*\\}\\.json' -- ':!**/tests/**' ':!tasks/**' ':!**/*.md' => 0 hits; 각 도구 경로함수 1개 확인: worktree_tool._meta_path, ownership_core.registry_meta_path, launcher_core.registry_meta_path",
+      "marked_at": "2026-09-28T17:07:12+09:00",
       "fidelity": "mock"
     },
     {
@@ -139,15 +139,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest opal/tools/worktree-launcher/tests/test_task164_preflight.py::TestTask164WriteDirToken 및 전체 8 passed",
+      "marked_at": "2026-09-28T17:07:12+09:00",
       "fidelity": "mock"
     },
     {
@@ -175,16 +175,29 @@
         "command_output"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "human"
+      ],
+      "assertion_results": [
+        {
+          "id": "A-1",
+          "expected": "task_901=write_ok+tmp_replace_ok; task_902=denied; meta_root=denied; git=denied; worktree_cwd=write_ok",
+          "actual": "task_901=write_ok+tmp_replace_ok; task_902=denied; meta_root=denied; git=denied; worktree_cwd=write_ok"
+        }
+      ],
+      "observed_evidence": [
+        "command_output",
+        "sandbox 행: 'sandbox: workspace-write [workdir, <hub>/.opal-worktrees/.meta/task_901]' — /tmp, $TMPDIR 미포함 확인(scratch가 /tmp 아래라 생기던 차이 제거됨)",
+        "command: codex exec --sandbox workspace-write -c sandbox_workspace_write.exclude_slash_tmp=true -c sandbox_workspace_write.exclude_tmpdir_env_var=true --add-dir <hub>/.opal-worktrees/.meta/task_901 --skip-git-repo-check -C <hub>/.opal-worktrees/task_901 '<6개 명령>'",
+        "실측(codex 서술이 아닌 ls/cat으로 직접 확인): task_901/w1.txt=tmp(성공), task_902/ 빈 상태 유지(거부), .meta/ 루트에 root.txt 없음(거부), .git/w.txt 없음(거부), task_901/wt.txt=hi(대조군 성공)"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-28T17:13:36+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-7",
@@ -204,15 +217,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest TestTask164PreflightFailures 통과(4 causes: meta_dir_missing/meta_dir_not_writable/grant_option_unsupported/agent_help_unavailable), 전체 launcher suite 8 passed",
+      "marked_at": "2026-09-28T17:07:12+09:00",
       "fidelity": "mock"
     },
     {
@@ -233,15 +246,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "pytest TestTask164GitWriteWarningIsNonBlocking 통과 — Codex git_write_requires_escalation 경고 존재·비차단, Claude 경고 없음",
+      "marked_at": "2026-09-28T17:07:12+09:00",
       "fidelity": "mock"
     },
     {
@@ -262,15 +275,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "worktree.md/task-process.md/3 README grep 구조 표현 0건; worktree.md L73-122에 기동전 점검·쓰기범위(자기 메타 폴더만) 기술 확인",
+      "marked_at": "2026-09-28T17:07:12+09:00",
       "fidelity": "mock"
     },
     {
@@ -291,15 +304,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "bash scripts/tests/test_agent_adapter_fields.sh TS-028 PASS(신규/구기본값2종 이관, 사용자값 보존); 전체 FAIL 3건(TS-001/010,TS-025,TS-026)은 git archive 86d08d7 재현 동일 — 기존 결함, task164 회귀 아님",
+      "marked_at": "2026-09-28T17:07:12+09:00",
       "fidelity": "mock"
     },
     {
@@ -327,16 +340,33 @@
         "command_output"
       ],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
-      "observed_executors": [],
-      "assertion_results": [],
-      "observed_evidence": [],
+      "observed_executors": [
+        "human"
+      ],
+      "assertion_results": [
+        {
+          "id": "A-1",
+          "expected": "S-5=add-dir_1x_task_only_claude_no_add_dir; S-6=task_write_ok_others_denied_worktree_ok; S-7=preflight_failed_meta_dir_missing_exit1_no_adapter; deploy=sha256_match_no_direct_edit",
+          "actual": "S-5=add-dir_1x_task_only_claude_no_add_dir; S-6=task_write_ok_others_denied_worktree_ok; S-7=preflight_failed_meta_dir_missing_exit1_no_adapter; deploy=sha256_match_no_direct_edit",
+          "pass": true
+        }
+      ],
+      "observed_evidence": [
+        "command_output",
+        "sha256 대조 스크립트 출력 0 mismatch(worktree-tool/ownership-tool/state-tool/worktree-launcher .py+README, harness worktree.md/task-process.md)",
+        "~/.opal/setting.json codex argv_template = 'codex --no-daemon --add-dir \"{meta_dir}\" \"{utterance}\"' (python -c 확인)",
+        "배포본 settings.resolve_command 출력: CODEX_ARGV에 --add-dir 1회(.meta/task_901만), CLAUDE_ARGV에 --add-dir 없음",
+        "codex exec sandbox 행: 'sandbox: workspace-write [workdir, <hub>/.opal-worktrees/.meta/task_901]' (/tmp,$TMPDIR 미포함)",
+        "실측 파일존재: task_901/w1.txt=tmp, task_902/(빈 상태), .meta/(root.txt 없음), .git/(w.txt 없음), task_901/wt.txt=hi",
+        "배포본 worktree-launcher launch 응답: {\"ok\":false,\"command\":\"launch\",\"error\":\"launch_preflight_failed\",\"cause\":\"meta_dir_missing\"}, exit=1"
+      ],
       "handoff_state": null,
       "run_id": null,
       "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "marked_at": "2026-09-28T17:25:20+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-12",
@@ -356,15 +386,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
+      "evidence": "worktree-tool 168p/ownership-tool 170p/worktree-launcher 170p+4skip/state-tool 609p+3skip 전원 PASS. dashboard/backend 41 FAIL은 86d08d7 baseline과 diff 0(동일 실패셋, 신규 회귀 없음). installer bash: archive_contents(TC-E 1건 기존 Stop-guard 결함, baseline 동일 계열), install-skill-cleanup(1건 opal-pilot-dev-short 기존 결함, baseline 동일), download_contract/console_ownership/version_stamp/codex_model_mapping/console_scan 전원 PASS",
+      "marked_at": "2026-09-28T17:07:12+09:00",
       "fidelity": "mock"
     }
   ]
