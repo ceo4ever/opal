@@ -1,0 +1,43 @@
+{
+  "documents": [
+    {
+      "bytes": 29896,
+      "id": "agent-registry",
+      "path": "/Users/iskang/.opal/references/agents.md",
+      "sha256": "32735944fd53cabf698ec9a18c2bb117a56b546d84fcaeb5ba62650d30532f80",
+      "token": "{deployed_root}/references/agents.md"
+    },
+    {
+      "bytes": 7557,
+      "id": "dispatch-process",
+      "path": "/Users/iskang/.opal/references/pm/dispatch-process.md",
+      "sha256": "9b8647de4929e04b5cf916d19b6fb3e143635272be600dd3c313b3e2b9abb663",
+      "token": "{deployed_root}/references/pm/dispatch-process.md"
+    },
+    {
+      "bytes": 3116,
+      "id": "context-injection",
+      "path": "/Users/iskang/.opal/references/pm/context-injection.md",
+      "sha256": "930f825f7ff801d49dc1e0cd4ef00308dd1d5f4f9bbcef70905e82234b7aeb05",
+      "token": "{deployed_root}/references/pm/context-injection.md"
+    },
+    {
+      "bytes": 4971,
+      "id": "observability",
+      "path": "/Users/iskang/.opal/references/harness/observability.md",
+      "sha256": "73dbcec93143da2842830c18390f3c1ae6c618be32b414c634f5425744c060c4",
+      "token": "{deployed_root}/references/harness/observability.md"
+    }
+  ],
+  "event": "worker.dispatch",
+  "manifest_path": "/Users/iskang/.opal/references/events.json",
+  "manifest_sha256": "23ad2b8b58fa527dfe09ad12e15242ddb0b860a69563fb06b4da344ca18671a7",
+  "payload_bytes": 45540,
+  "required_document_ids": [
+    "agent-registry",
+    "dispatch-process",
+    "context-injection",
+    "observability"
+  ],
+  "schema_version": 1
+}

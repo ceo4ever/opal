@@ -1,0 +1,18 @@
+{
+  "command": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/test-tool/run.sh",
+    "scenario-mark",
+    "--task-path",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축",
+    "--id",
+    "S-4",
+    "--result",
+    "pass",
+    "--evidence",
+    "fixture trace: s4-base-unit-pass.json 2 pass at c185334; s4-same-signature-decision.json reuse with exact SHA/command/env signature/PASS path; fix1 SHA 0a55adc changed -> s4-sha-changed-rerun.json 2 pass; same SHA env v2 -> s4-env-changed-rerun.json 2 pass"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"scenario-mark\", \"scenario_id\": \"S-4\", \"result\": \"pass\"}\n",
+  "stderr": ""
+}

@@ -1,0 +1,15 @@
+{
+  "command": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/test-tool/run.sh",
+    "scenario-init",
+    "--task-path",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task",
+    "--scenarios",
+    "[{\"id\": \"H1\", \"acceptance_ref\": \"T162/S-1\", \"type\": \"e2e\", \"expected\": \"fixture login approval\", \"red_required\": false, \"profile\": \"manual\", \"surface_ref\": \"fixture-H1\", \"surface_kind\": \"manual\", \"actors\": [\"human\"], \"steps\": [{\"id\": \"approve\", \"executor\": \"human\"}], \"assertions\": [{\"id\": \"H1-approved\", \"expected\": true}], \"required_evidence\": [\"H1-submission\"], \"handoff\": {\"handoff_id\": \"H1\", \"instruction\": \"fixture login approval\", \"expected_observation\": \"approved\", \"required_evidence\": [\"H1-submission\"], \"timeout_seconds\": 900, \"resume_token\": \"task162-H1-token-001\", \"server_policy\": \"keep\", \"submission_path\": \"/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task/H1-submission.json\"}}, {\"id\": \"H2\", \"acceptance_ref\": \"T162/S-1\", \"type\": \"e2e\", \"expected\": \"fixture DDL approval\", \"red_required\": false, \"profile\": \"manual\", \"surface_ref\": \"fixture-H2\", \"surface_kind\": \"manual\", \"actors\": [\"human\"], \"steps\": [{\"id\": \"approve\", \"executor\": \"human\"}], \"assertions\": [{\"id\": \"H2-approved\", \"expected\": true}], \"required_evidence\": [\"H2-submission\"], \"handoff\": {\"handoff_id\": \"H2\", \"instruction\": \"fixture DDL approval\", \"expected_observation\": \"approved\", \"required_evidence\": [\"H2-submission\"], \"timeout_seconds\": 900, \"resume_token\": \"task162-H2-token-001\", \"server_policy\": \"keep\", \"submission_path\": \"/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task/H2-submission.json\"}}, {\"id\": \"A1\", \"acceptance_ref\": \"T162/S-1\", \"expected\": \"pytest A1 passes\", \"red_required\": false}, {\"id\": \"A2\", \"acceptance_ref\": \"T162/S-1\", \"expected\": \"pytest A2 passes\", \"red_required\": false}]"
+  ],
+  "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture",
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"scenario-init\", \"task_id\": \"fixture-task\", \"scenarios_count\": 4}\n",
+  "stderr": ""
+}

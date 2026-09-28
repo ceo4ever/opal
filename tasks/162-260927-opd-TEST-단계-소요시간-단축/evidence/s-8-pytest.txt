@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0 -- /Users/iskang/.opal/.venv/bin/python
+rootdir: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162
+plugins: asyncio-1.4.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+opal/tools/event-loader/tests/test_event_loader_test_event.py::test_t162_s8_stage_test_loads_cycle_and_receipt_verifies PASSED [100%]
+
+============================== 1 passed in 0.15s ===============================

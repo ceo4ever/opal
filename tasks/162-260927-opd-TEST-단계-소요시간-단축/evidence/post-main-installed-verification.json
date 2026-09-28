@@ -1,0 +1,132 @@
+{
+  "file_checks": [
+    {
+      "source": "opal/core/references/events.json",
+      "installed": "references/events.json",
+      "source_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+      "installed_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+      "match": true
+    },
+    {
+      "source": "opal/core/references/harness/test-cycle.md",
+      "installed": "references/harness/test-cycle.md",
+      "source_sha256": "c67c8e8d58adf1480e6da6b4595fa2f9a9b4421c73c9cb05654839ea668dcd9a",
+      "installed_sha256": "c67c8e8d58adf1480e6da6b4595fa2f9a9b4421c73c9cb05654839ea668dcd9a",
+      "match": true
+    },
+    {
+      "source": "opal/skills/opal-pilot-dev/SKILL.md",
+      "installed": "skills/opal-pilot-dev/SKILL.md",
+      "source_sha256": "425484186a777c2300a7bcfc64236794f7adb135158308028869b58435ab6c40",
+      "installed_sha256": "425484186a777c2300a7bcfc64236794f7adb135158308028869b58435ab6c40",
+      "match": true
+    },
+    {
+      "source": "opal/tools/state-tool/state_tool.py",
+      "installed": "tools/state-tool/state_tool.py",
+      "source_sha256": "01b21ea4e1cf810834c08d456d007ad7fbfcc7b2062ea73384893881c7f3922b",
+      "installed_sha256": "01b21ea4e1cf810834c08d456d007ad7fbfcc7b2062ea73384893881c7f3922b",
+      "match": true
+    },
+    {
+      "source": "opal/tools/worktree-tool/worktree_tool.py",
+      "installed": "tools/worktree-tool/worktree_tool.py",
+      "source_sha256": "0810c75a3be6da5f8515391c38ba250d87efaef6c1e75cc51d010d8a31ec28f3",
+      "installed_sha256": "0810c75a3be6da5f8515391c38ba250d87efaef6c1e75cc51d010d8a31ec28f3",
+      "match": true
+    },
+    {
+      "source": "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+      "installed": "tools/ownership-tool/ownership_tool/codex_adapter.py",
+      "source_sha256": "5396eea631ed7f7d06edb1b2101462a55fa30ea9814b6d8ced2391392a8bfccd",
+      "installed_sha256": "5396eea631ed7f7d06edb1b2101462a55fa30ea9814b6d8ced2391392a8bfccd",
+      "match": true
+    }
+  ],
+  "stage_test": {
+    "load_exit": 0,
+    "document_ids": [
+      "test-cycle",
+      "scenario-gate",
+      "qa-standards"
+    ],
+    "verify_exit": 0,
+    "verify_ok": true
+  },
+  "installed_state_tool": {
+    "init_exit": 0,
+    "changes": [
+      {
+        "ordinal": 1,
+        "exit_code": 0,
+        "result": {
+          "ok": true,
+          "command": "add-row",
+          "row_id": 2,
+          "key": "test.accepted_1",
+          "rows_count": 2,
+          "current_status": "in_progress",
+          "transition_action": "continue",
+          "report_type": "progress_report",
+          "next_action": "PLAN 단계 진입"
+        }
+      },
+      {
+        "ordinal": 2,
+        "exit_code": 0,
+        "result": {
+          "ok": true,
+          "command": "add-row",
+          "row_id": 2,
+          "key": "test.accepted_2",
+          "rows_count": 3,
+          "current_status": "in_progress",
+          "transition_action": "continue",
+          "report_type": "progress_report",
+          "next_action": "PLAN 단계 진입"
+        }
+      },
+      {
+        "ordinal": 3,
+        "exit_code": 0,
+        "result": {
+          "ok": true,
+          "command": "add-row",
+          "row_id": 2,
+          "key": "test.accepted_3",
+          "rows_count": 4,
+          "current_status": "in_progress",
+          "transition_action": "continue",
+          "report_type": "progress_report",
+          "next_action": "PLAN 단계 진입"
+        }
+      },
+      {
+        "ordinal": 4,
+        "exit_code": 0,
+        "result": {
+          "ok": true,
+          "command": "add-row",
+          "row_id": 2,
+          "key": "test.accepted_4",
+          "rows_count": 5,
+          "current_status": "in_progress",
+          "transition_action": "continue",
+          "report_type": "progress_report",
+          "next_action": "PLAN 단계 진입"
+        }
+      }
+    ],
+    "metrics_exit": 0,
+    "metrics": {
+      "ok": true,
+      "command": "test-metrics",
+      "auto_seconds": null,
+      "human_wait_seconds": null,
+      "fix_count": 0,
+      "requirement_change_count": 4,
+      "legacy_unclassified_rows": 1,
+      "open_intervals": []
+    }
+  }
+}

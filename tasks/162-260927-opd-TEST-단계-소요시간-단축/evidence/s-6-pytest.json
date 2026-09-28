@@ -1,0 +1,22 @@
+{
+  "scenario": "S-6",
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-v",
+    "-p",
+    "no:cacheprovider",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py::test_t162_s6_divergence_reads_frozen_base_without_writing"
+  ],
+  "exit_code": 0,
+  "clock_stop_ok": true,
+  "elapsed_seconds": 4.198,
+  "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/s-6-pytest.txt",
+  "tail": [
+    "",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py::test_t162_s6_divergence_reads_frozen_base_without_writing PASSED [100%]",
+    "",
+    "============================== 1 passed in 3.71s ==============================="
+  ]
+}

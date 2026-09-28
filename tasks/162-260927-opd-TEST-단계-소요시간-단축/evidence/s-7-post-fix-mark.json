@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/Users/iskang/.opal/tools/test-tool/run.sh",
+    "scenario-mark",
+    "--task-path",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축",
+    "--id",
+    "S-7",
+    "--result",
+    "pass",
+    "--evidence",
+    "evidence/s-7-clock-race-red.txt: old code 16 successful starts but only 2 recorded; evidence/s-7-clock-race-green.txt: 6 PASS including 16 concurrent starts and clock/add-row preservation; evidence/post-fix-installed-clock.json: installed SHA match and 16/16 IDs; original overlap/legacy unknown metrics evidence retained"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"scenario-mark\", \"scenario_id\": \"S-7\", \"result\": \"pass\"}\n",
+  "stderr": ""
+}

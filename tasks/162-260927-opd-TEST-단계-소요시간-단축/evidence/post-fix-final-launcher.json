@@ -1,0 +1,15 @@
+{
+  "head": "51da96d714f854c1507e93410e2d68b4b6518661",
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "opal/tools/worktree-launcher/tests"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 8.94185133301653,
+  "output": "evidence/post-fix-final-launcher.txt"
+}

@@ -1,0 +1,10 @@
+{
+  "selected_cases": 23,
+  "exit_code": 0,
+  "elapsed_seconds": 72.658,
+  "output": "tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/sut-retest.txt",
+  "tail": [
+    ".......................                                                  [100%]",
+    "23 passed in 72.28s (0:01:12)"
+  ]
+}

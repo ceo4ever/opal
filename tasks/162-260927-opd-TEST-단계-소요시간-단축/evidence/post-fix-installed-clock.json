@@ -1,0 +1,27 @@
+{
+  "source_sha256": "4b8920102203c80d2044dc4ae3e8cdb29cad9a30658ef1f974fdb16c7006658c",
+  "installed_sha256": "4b8920102203c80d2044dc4ae3e8cdb29cad9a30658ef1f974fdb16c7006658c",
+  "sha_match": true,
+  "init_exit": 0,
+  "start_exit_codes": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "expected": 16,
+  "recorded": 16,
+  "all_ids_present": true
+}

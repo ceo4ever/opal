@@ -1,0 +1,22 @@
+{
+  "scenario": "S-7",
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-v",
+    "-p",
+    "no:cacheprovider",
+    "opal/tools/state-tool/tests/test_state_tool_test_cycle.py::test_s7_clock_intervals_overlap_duplicate_guards_and_legacy_unknown"
+  ],
+  "exit_code": 0,
+  "clock_stop_ok": true,
+  "elapsed_seconds": 2.322,
+  "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/s-7-pytest.txt",
+  "tail": [
+    "",
+    "opal/tools/state-tool/tests/test_state_tool_test_cycle.py::test_s7_clock_intervals_overlap_duplicate_guards_and_legacy_unknown PASSED [100%]",
+    "",
+    "============================== 1 passed in 1.90s ==============================="
+  ]
+}

@@ -30,8 +30,8 @@
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": "fixture trace: pm-bundled-request.json; human H1/H2 start before auto A1/A2 pytest exit 0 and stop; first verifier exit 6, corrected same run/token verifier exit 0; final-scenario-status.json 4/4 pass; final-metrics.json auto 1.013217s/human 119.271576s/open 0",
-      "marked_at": "2026-09-28T10:46:50+09:00",
+      "evidence": "evidence/agent-cycle-fixture/trace/: bundled H1/H2 request, both human intervals open during A1/A2 pytest, first verifier rejected then corrected same run/token PASS; current writer-lock change rechecked by evidence/s-7-clock-race-green.txt (6 PASS) and installed 16/16 clock preservation",
+      "marked_at": "2026-09-28T13:50:46+09:00",
       "fidelity": "mock"
     },
     {
@@ -204,8 +204,8 @@
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/s-7-pytest.json: exit_code=0; ============================== 1 passed in 1.90s ===============================",
-      "marked_at": "2026-09-27T22:59:09+09:00",
+      "evidence": "evidence/s-7-clock-race-red.txt: old code 16 successful starts but only 2 recorded; evidence/s-7-clock-race-green.txt: 6 PASS including 16 concurrent starts and clock/add-row preservation; evidence/post-fix-installed-clock.json: installed SHA match and 16/16 IDs; original overlap/legacy unknown metrics evidence retained",
+      "marked_at": "2026-09-28T13:50:46+09:00",
       "fidelity": "mock"
     },
     {
@@ -284,15 +284,15 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": "blocked",
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": "사용자 피드백에 따른 state-tool 요구 변경 횟수 제한 제거 및 TEST 계약 수정 후 설치본·전체 관련 회귀·최종 검사 증거 갱신 대기",
-      "marked_at": "2026-09-28T11:04:08+09:00",
+      "evidence": "HEAD 51da96d, divergence ahead=5 behind=0; evidence/post-fix-final-core-regression.txt exit 0 1359 passed/4 skipped/1 deselected, post-fix-final-ownership.txt 167 passed, post-fix-final-launcher.txt 161 passed/4 skipped; post-fix-installed-verification.json source/install 6/6 SHA and stage.test verify PASS; GC-SECURITY-2026-09-28T13-35-41-gc001.md resolved finding 0, GC-CONVENTION-2026-09-28T13-36-15-writer-lock.md PASS finding 0; task161/163 diff/status 0",
+      "marked_at": "2026-09-28T13:50:46+09:00",
       "fidelity": "mock"
     }
   ]

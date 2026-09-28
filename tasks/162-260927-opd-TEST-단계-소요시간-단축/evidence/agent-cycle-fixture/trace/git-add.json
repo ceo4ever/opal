@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "add",
+    "app.py",
+    "test_fixture.py"
+  ],
+  "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-repo",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": ""
+}

@@ -1,0 +1,22 @@
+{
+  "failed": [
+    "test_failed_scenario"
+  ],
+  "changed_files": [
+    "app.py"
+  ],
+  "impacted": [
+    "test_impact_scenario"
+  ],
+  "unknown": [],
+  "selected": [
+    "test_failed_scenario",
+    "test_impact_scenario"
+  ],
+  "excluded_pass": [
+    "test_auto_a1",
+    "test_auto_a2",
+    "test_unknown_scenario"
+  ],
+  "reason": "explicit app.value dependency only; stable() tests unchanged"
+}

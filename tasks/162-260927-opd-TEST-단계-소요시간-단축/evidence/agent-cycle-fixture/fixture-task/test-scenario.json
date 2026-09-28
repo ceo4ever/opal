@@ -1,0 +1,219 @@
+{
+  "schema_version": "2.0",
+  "task_id": "fixture-task",
+  "locked": true,
+  "created_at": "2026-09-28T10:43:06+09:00",
+  "locked_at": "2026-09-28T10:43:06+09:00",
+  "scenarios": [
+    {
+      "id": "H1",
+      "acceptance_ref": "T162/S-1",
+      "type": "e2e",
+      "expected": "fixture login approval",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": "fixture-H1",
+      "surface_kind": "manual",
+      "profile": "manual",
+      "actors": [
+        "human"
+      ],
+      "steps": [
+        {
+          "id": "approve",
+          "executor": "human"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "H1-approved",
+          "expected": true
+        }
+      ],
+      "required_evidence": [
+        "H1-submission"
+      ],
+      "handoff": {
+        "handoff_id": "H1",
+        "instruction": "fixture login approval",
+        "expected_observation": "approved",
+        "required_evidence": [
+          "H1-submission"
+        ],
+        "timeout_seconds": 900,
+        "resume_token": "task162-H1-token-001",
+        "server_policy": "keep",
+        "submission_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task/H1-submission.json"
+      },
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "human"
+      ],
+      "assertion_results": [
+        {
+          "id": "H1-approved",
+          "expected": true,
+          "actual": true
+        }
+      ],
+      "observed_evidence": [
+        "login_approval_record",
+        "H1-submission"
+      ],
+      "handoff_state": {
+        "handoff_id": "H1",
+        "instruction": "fixture login approval",
+        "expected_observation": "approved",
+        "required_evidence": [
+          "H1-submission"
+        ],
+        "timeout_seconds": 900,
+        "resume_token": "task162-H1-token-001",
+        "server_policy": "keep",
+        "submission_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task/H1-submission.json"
+      },
+      "run_id": "task162-agent-cycle-handoff-001",
+      "evidence": null,
+      "marked_at": "2026-09-28T10:45:22+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "H2",
+      "acceptance_ref": "T162/S-1",
+      "type": "e2e",
+      "expected": "fixture DDL approval",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": "fixture-H2",
+      "surface_kind": "manual",
+      "profile": "manual",
+      "actors": [
+        "human"
+      ],
+      "steps": [
+        {
+          "id": "approve",
+          "executor": "human"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "H2-approved",
+          "expected": true
+        }
+      ],
+      "required_evidence": [
+        "H2-submission"
+      ],
+      "handoff": {
+        "handoff_id": "H2",
+        "instruction": "fixture DDL approval",
+        "expected_observation": "approved",
+        "required_evidence": [
+          "H2-submission"
+        ],
+        "timeout_seconds": 900,
+        "resume_token": "task162-H2-token-001",
+        "server_policy": "keep",
+        "submission_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task/H2-submission.json"
+      },
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "human"
+      ],
+      "assertion_results": [
+        {
+          "id": "H2-approved",
+          "expected": true,
+          "actual": true
+        }
+      ],
+      "observed_evidence": [
+        "ddl_approval_record",
+        "H2-submission"
+      ],
+      "handoff_state": {
+        "handoff_id": "H2",
+        "instruction": "fixture DDL approval",
+        "expected_observation": "approved",
+        "required_evidence": [
+          "H2-submission"
+        ],
+        "timeout_seconds": 900,
+        "resume_token": "task162-H2-token-001",
+        "server_policy": "keep",
+        "submission_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task/H2-submission.json"
+      },
+      "run_id": "task162-agent-cycle-handoff-001",
+      "evidence": null,
+      "marked_at": "2026-09-28T10:45:23+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "A1",
+      "acceptance_ref": "T162/S-1",
+      "type": null,
+      "expected": "pytest A1 passes",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "trace/auto-A1-pytest.json exit=0; .                                                                        [100%]\n1 passed in 0.01s",
+      "marked_at": "2026-09-28T10:44:18+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "A2",
+      "acceptance_ref": "T162/S-1",
+      "type": null,
+      "expected": "pytest A2 passes",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "trace/auto-A2-pytest.json exit=0; .                                                                        [100%]\n1 passed in 0.01s",
+      "marked_at": "2026-09-28T10:44:18+09:00",
+      "fidelity": "mock"
+    }
+  ]
+}

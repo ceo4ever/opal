@@ -1,0 +1,16 @@
+{
+  "command": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/test-tool/run.sh",
+    "scenario-mark",
+    "--task-path",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task",
+    "--id",
+    "H2",
+    "--verdict-json",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/trace/H2-awaiting-input.json"
+  ],
+  "exit_code": 20,
+  "stdout": "{\"ok\": true, \"command\": \"scenario-mark\", \"scenario_id\": \"H2\", \"status\": \"awaiting_human\", \"error\": \"e2e_awaiting_human\", \"final_statuses\": [\"pass\", \"fail\", \"executor_unavailable\", \"infra_error\", \"blocked\"], \"operational_statuses\": [\"awaiting_human\"]}\n",
+  "stderr": ""
+}

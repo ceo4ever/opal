@@ -1,0 +1,97 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "docs/CONVENTIONS.md",
+    "docs/PROJECT.md",
+    "opal/agents/opal-test-agent/AGENT.md",
+    "opal/core/references/events.json",
+    "opal/core/references/harness/guards.md",
+    "opal/core/references/harness/pm-review-gate.md",
+    "opal/core/references/harness/test-cycle.md",
+    "opal/skills/op-dev-execute/references/execute-guide.md",
+    "opal/skills/op-dev-test-scenario/references/test-scenario-guide.md",
+    "opal/skills/opal-pilot-dev/SKILL.md",
+    "opal/tools/event-loader/tests/test_event_loader_test_event.py",
+    "opal/tools/state-tool/schema/state.schema.json",
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/tests/test_state_tool_test_cycle.py",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/.scenario-coverage-input.json",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/PLAN.md",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/REQUEST.md",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/STATE.md",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/TASK.md",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/TEST-SCENARIO.md",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/run/design-gate-i1.json",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/run/design-gate-i2.json",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/run/run-log-run_8ded04bb-b413-4a0f-9c84-bfe69503c91a-0001.jsonl",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/state.json",
+    "tasks/162-260927-opd-TEST-단계-소요시간-단축/test-scenario.json"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "ee6385364fa4c70a",
+      "category": "문서화",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/event-loader/tests/test_event_loader_test_event.py",
+        "line": 1
+      },
+      "evidence": "main..HEAD에서 신규 추가된 Python 코드 파일이며 첫머리에 @header 블록이 없음. code-scan target: write_to=inline (header_source_inline).",
+      "impact": "코드 지도 필수 메타데이터 누락으로 신규 파일의 소유 영역·의존성 추적이 불완전함.",
+      "remediation": {
+        "guidance": "파일 상단 docstring에 현재 사실 기반 @header JSON 블록을 추가하고 code-scan validate --changed로 확인한다.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "파일 시작 부분에 @header가 있고 code-scan target의 inline 판정과 일치하며 scoped validate가 통과함.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "8fb34a2ece0de914",
+      "category": "문서화",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/tests/test_state_tool_test_cycle.py",
+        "line": 1
+      },
+      "evidence": "main..HEAD에서 신규 추가된 Python 코드 파일이며 첫머리에 @header 블록이 없음. code-scan target: write_to=inline (header_source_inline).",
+      "impact": "코드 지도 필수 메타데이터 누락으로 신규 파일의 소유 영역·의존성 추적이 불완전함.",
+      "remediation": {
+        "guidance": "파일 상단 docstring에 현재 사실 기반 @header JSON 블록을 추가하고 code-scan validate --changed로 확인한다.",
+        "reference": "docs/CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "파일 시작 부분에 @header가 있고 code-scan target의 inline 판정과 일치하며 scoped validate가 통과함.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git diff --name-only main..HEAD: 27 files; all exist",
+    "git diff --check main..HEAD: no whitespace errors",
+    "opal/tools/code-scan/run.sh target <new Python file>: write_to inline, reason header_source_inline",
+    "Scoped code-scan validate returns exit 0 because HEAD already tracks these files; baseline main..HEAD inspection identifies missing headers"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md",
+    ".opal/code-scan.json"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/GC-CONVENTION-2026-09-27T22-56-05.md",
+  "baseline": "none",
+  "verdict": "FAIL"
+}

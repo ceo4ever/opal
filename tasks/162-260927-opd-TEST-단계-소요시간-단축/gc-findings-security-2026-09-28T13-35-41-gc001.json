@@ -1,0 +1,28 @@
+{
+  "check": "security",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/tests/test_state_tool_test_cycle.py"
+  ],
+  "findings": [],
+  "evidence": [
+    "worker.dispatch receipt verified: ok=true, 4 documents",
+    "state_writer_lock holds fcntl LOCK_EX across CLI writer args.func including test-clock",
+    "lock open uses O_NOFOLLOW and mode 0600",
+    "concurrent CLI tests cover 16 clock starts and clock/add-row preservation; PM evidence says 6 PASS",
+    "post-fix-installed-clock.json source/install SHA match and recorded=expected=16, all IDs present",
+    "git diff --check passed for current uncommitted fix",
+    "inactive areas: web authentication, XSS, SQL, dependency audit; no changed target surface",
+    "remaining scope limits: external direct state writers and concurrent init --force; non-fcntl platforms unverified"
+  ],
+  "references": [
+    "docs/SECURITY.md",
+    "docs/CONVENTIONS.md",
+    "opal/skills/op-gc-security/references/security-baseline.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/gc-findings-security-2026-09-28T13-22-43-final.json"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/GC-SECURITY-2026-09-28T13-35-41-gc001.md"
+}

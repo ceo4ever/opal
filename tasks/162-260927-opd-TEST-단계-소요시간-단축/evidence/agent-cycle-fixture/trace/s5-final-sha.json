@@ -1,0 +1,7 @@
+{
+  "head_sha": "75f4666ed8de212281413682cfe94a388ef216bc",
+  "final_regression": "s5-final-full-regression.json",
+  "ruff_check": "s5-fixture-ruff-check.json",
+  "ruff_format_check": "s5-fixture-ruff-format-check.json",
+  "prior_incomplete_calls": 2
+}

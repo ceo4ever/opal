@@ -1,0 +1,12 @@
+{
+  "command": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/state-tool/run.sh",
+    "test-metrics",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task"
+  ],
+  "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture",
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"test-metrics\", \"auto_seconds\": null, \"human_wait_seconds\": null, \"fix_count\": 0, \"requirement_change_count\": 0, \"legacy_unclassified_rows\": 1, \"open_intervals\": [{\"kind\": \"human\", \"id\": \"H1\", \"started_at\": \"2026-09-28T01:43:34.836577+00:00\", \"ended_at\": null}, {\"kind\": \"human\", \"id\": \"H2\", \"started_at\": \"2026-09-28T01:43:35.039152+00:00\", \"ended_at\": null}]}\n",
+  "stderr": ""
+}

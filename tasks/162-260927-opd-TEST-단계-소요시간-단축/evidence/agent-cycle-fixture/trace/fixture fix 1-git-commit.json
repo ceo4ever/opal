@@ -1,0 +1,17 @@
+{
+  "command": [
+    "git",
+    "-c",
+    "user.name=Task162 Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "fixture fix 1"
+  ],
+  "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-repo",
+  "profile": "v1",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": ""
+}

@@ -1,0 +1,38 @@
+{
+  "check": "convention",
+  "call_number": 2,
+  "previous_result": "INCOMPLETE",
+  "fixture_repo": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-repo",
+  "head_sha": "1549d184295c593144edcf7fd82475ba10970a45",
+  "started_at": "2026-09-28T01:48:36Z",
+  "ended_at": "2026-09-28T01:49:04Z",
+  "checked_files": [
+    "app.py",
+    "test_fixture.py"
+  ],
+  "candidate_standard": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/docs/CONVENTIONS.md",
+  "candidate_standard_applied_as_enforceable": false,
+  "standard_scope_reason": "상위 문서는 OPAL 본체 전용이며 fixture는 독립 임시 Git 저장소",
+  "formatter_linter_config_applied": [],
+  "checks_run": [
+    "worker.dispatch receipt verify",
+    "fixture HEAD and clean status",
+    "read app.py and test_fixture.py",
+    "Python AST parse",
+    "snake_case filenames and functions",
+    "import usage",
+    "EOF newline and whitespace",
+    "parent standard scope and Python config search"
+  ],
+  "critical_count": 0,
+  "high_count": 0,
+  "check_status": "partial",
+  "verdict": "INCOMPLETE",
+  "missing_capabilities": [
+    "fixture-repo/docs/CONVENTIONS.md absent",
+    "상위 docs/CONVENTIONS.md:2,206-208은 OPAL 본체 작성 규칙으로 적용 범위를 명시하며 별도 fixture Git repo를 포함하지 않음",
+    "상위 프로젝트 루트에 Python lint/format 설정이 없음; 발견된 pyproject.toml은 다른 test-tool 단위 fixture 내부에만 존재"
+  ],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/trace/GC-CONVENTION-final-fixture-second.md",
+  "findings_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/trace/gc-findings-convention-final-fixture-second.json"
+}

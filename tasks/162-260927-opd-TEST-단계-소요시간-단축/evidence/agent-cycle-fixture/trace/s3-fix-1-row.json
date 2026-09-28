@@ -1,0 +1,21 @@
+{
+  "command": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/state-tool/run.sh",
+    "add-row",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task",
+    "--after-task-step-id",
+    "1",
+    "--stage",
+    "TEST",
+    "--item",
+    "s3-fix-1-row",
+    "--test-change-kind",
+    "fix"
+  ],
+  "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture",
+  "profile": "v1",
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"add-row\", \"row_id\": 2, \"key\": \"test.s3_1\", \"rows_count\": 2, \"current_status\": \"in_progress\", \"transition_action\": \"continue\", \"report_type\": \"progress_report\", \"next_action\": \"PLAN 단계 진입\"}\n",
+  "stderr": ""
+}

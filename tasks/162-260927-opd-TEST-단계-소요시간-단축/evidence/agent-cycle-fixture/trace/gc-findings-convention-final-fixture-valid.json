@@ -1,0 +1,24 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "app.py",
+    "test_fixture.py"
+  ],
+  "findings": [],
+  "evidence": [
+    "git rev-parse HEAD: 75f4666ed8de212281413682cfe94a388ef216bc",
+    "git status --short: clean",
+    "docs/CONVENTIONS.md explicitly scopes app.py and test_fixture.py; pyproject.toml Ruff config present",
+    "ruff check --no-cache app.py test_fixture.py: exit 0, All checks passed!",
+    "ruff format --check --no-cache app.py test_fixture.py: exit 0, 2 files already formatted",
+    "both files read fully; UTF-8 and Python AST parse, EOF newline, four-space indentation and no trailing whitespace verified"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "pyproject.toml",
+    "/Users/iskang/.opal/skills/op-gc-convention/SKILL.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/trace/GC-CONVENTION-final-fixture-valid.md"
+}

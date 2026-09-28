@@ -1,0 +1,20 @@
+{
+  "selected_cases": 95,
+  "exit_code": 1,
+  "elapsed_seconds": 97.053,
+  "output": "tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/socket-retest.txt",
+  "tail": [
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_config_prewarm",
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_dashboard",
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_doctor",
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_memory",
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_detail",
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_doc",
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_list",
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_artifact",
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_detail",
+    "FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_list",
+    "FAILED opal/tools/test-tool/tests/test_red_s27_no_retry_on_product_failure.py::TestNoRetryOrSwitchOnProductFailure::test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt",
+    "23 failed, 72 passed, 7 subtests passed in 96.69s (0:01:36)"
+  ]
+}

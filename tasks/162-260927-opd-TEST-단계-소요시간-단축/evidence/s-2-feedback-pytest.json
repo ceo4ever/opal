@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "opal/tools/state-tool/tests/test_state_tool_test_cycle.py::test_s2_distinct_fix_and_requirement_counts_do_not_block_feedback",
+    "opal/tools/state-tool/tests/test_state_tool_test_cycle.py::test_s2_kind_only_on_test_rows_and_legacy_rows_unclassified"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 2.257,
+  "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/s-2-feedback-pytest.txt"
+}

@@ -1,0 +1,17 @@
+{
+  "sha": "c18533493f4aee236298379ae0106ce2ff40fe27",
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "test_fixture.py::test_auto_a1",
+    "test_fixture.py::test_auto_a2"
+  ],
+  "environment_signature": "ca4fcf61623e2d7a901e4b8001b8451ff55e73a66557c7ba33b2c036c41b1466",
+  "pass_output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-\ub2e8\uacc4-\uc18c\uc694\uc2dc\uac04-\ub2e8\ucd95/evidence/agent-cycle-fixture/trace/s4-base-unit-pass.json",
+  "decision": "reuse",
+  "rerun": false
+}

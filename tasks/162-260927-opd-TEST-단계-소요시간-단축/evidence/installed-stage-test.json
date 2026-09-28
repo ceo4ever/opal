@@ -1,0 +1,9 @@
+{
+  "command": "installed event-loader load --event stage.test",
+  "exit_code": 0,
+  "document_ids": [
+    "scenario-gate",
+    "qa-standards"
+  ],
+  "test_cycle_present": false
+}

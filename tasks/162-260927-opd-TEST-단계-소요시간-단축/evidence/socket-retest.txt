@@ -1,0 +1,1015 @@
+...........................................................F.FFFF [ 68%]
+FFFFFFFFFFFFFFFFF.......F.....                                           [100%]
+=================================== FAILURES ===================================
+_______ TestBrowserRealUsage.test_browser_dashboard_call_reaches_backend _______
+
+rendered = {'id': 'frontend', 'argv': ['/opt/homebrew/bin/npm', 'run', 'dev', '--', '--host', '127.0.0.1', ...], 'cwd': '/Volumes...ai-framework/.opal-worktrees/task_162/dashboard/frontend', 'env': {'VITE_API_BASE_URL': 'http://127.0.0.1:57761'}, ...}
+role = 'frontend', port = 57760
+artifact_dir = '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/opal-e2e-skeleton-aptm295l'
+
+    def start_service(rendered: dict, *, role: str, port: int, artifact_dir: str) -> SutHandle:
+        """render_service 결과 1건을 기동하고 health를 통과시킨 handle을 돌려준다.
+
+        - `rendered`: `lib.e2e.environment.render_service` 반환값(argv·cwd·env·health·
+          startup_timeout_s·host·url). env는 부모 환경 위에 덮어쓴다.
+        - port는 호출자가 임대해 넘긴다. 명령이 그 포트로 strict 바인딩하는지는 설정이 책임진다.
+        - health `http`: `url + path`가 expect_status를 돌려주고(json_field가 있으면 그 키가
+          JSON 본문에 있어야) 통과. `port`: host:port가 열리면 통과. 제한 시간은 startup_timeout_s.
+        - 실패하면 이 함수가 띄운 그룹을 회수한 뒤 SutStartupError를 올린다(누수 방지). 그 밖의
+          예외도 예외 종류와 관계없이 그룹을 회수한 뒤 그대로 올린다.
+        """
+        env = dict(os.environ)
+        env.update(rendered.get("env") or {})
+        host = rendered.get("host") or "127.0.0.1"
+        url = rendered.get("url") or f"http://{host}:{port}"
+        timeout_s = float(rendered.get("startup_timeout_s") or 60.0)
+        health = rendered.get("health") or {"type": "port"}
+
+        log_paths = _log_paths(artifact_dir, role)
+        try:
+            spawned = e2e_process.spawn_process_group(
+                list(rendered["argv"]),
+                cwd=rendered.get("cwd"),
+                env=env,
+                stdout_path=log_paths["stdout"],
+                stderr_path=log_paths["stderr"],
+            )
+        except OSError as exc:
+            raise SutStartupError(
+                _REASON_PROCESS_EXITED_EARLY,
+                f"{role} process could not be spawned ({type(exc).__name__}: {exc}); log={log_paths['stderr']}",
+            ) from exc
+
+        handle = SutHandle(role=role, port=port, url=url, spawned=spawned, log_paths=log_paths)
+        try:
+            time.sleep(_EARLY_EXIT_GRACE_S)
+>           _raise_if_exited(handle)
+
+opal/tools/test-tool/lib/e2e/runtime.py:114:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+handle = SutHandle(role='frontend', port=57760, url='http://127.0.0.1:57760', spawned=SpawnedProcess(pid=94433, pgid=94433, pop...log', 'stderr': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/opal-e2e-skeleton-aptm295l/server/frontend.err.log'})
+
+    def _raise_if_exited(handle: SutHandle) -> None:
+        popen = handle.spawned.popen
+        if popen.poll() is not None:
+>           raise SutStartupError(
+                _REASON_PROCESS_EXITED_EARLY,
+                f"process exited early (returncode={popen.returncode})",
+            )
+E           lib.e2e.runtime.SutStartupError: process_exited_early: process exited early (returncode=127)
+
+opal/tools/test-tool/lib/e2e/runtime.py:139: SutStartupError
+
+The above exception was the direct cause of the following exception:
+
+self = <test_e2e_skeleton.TestBrowserRealUsage testMethod=test_browser_dashboard_call_reaches_backend>
+
+    def test_browser_dashboard_call_reaches_backend(self):
+        chrome_path = _chrome_headless_shell_path()
+        if not chrome_path:
+            # D-17: 기본은 hard fail. 명시적 opt-out이 설정된 경우에만 skip하고,
+            # 그 경우에도 executor_unavailable 사유를 결과에 남긴다.
+            if os.environ.get("OPAL_E2E_ALLOW_NO_BROWSER") == "1":
+                self.skipTest(
+                    "executor_unavailable: chrome-headless-shell binary not found "
+                    "(OPAL_E2E_ALLOW_NO_BROWSER=1 opt-out) — 완료 기준 5는 충족되지 않은 것으로 남는다"
+                )
+            self.fail(
+                "executor_unavailable: chrome-headless-shell binary not found. "
+                "D-17에 따라 기본 경로는 hard fail이다. skip을 원하면 "
+                "OPAL_E2E_ALLOW_NO_BROWSER=1을 명시적으로 설정하라."
+            )
+
+        # 호출 순서 계약 ①~⑤ (F-1, D-12) — 어길 경우 CORS 차단인데 CDP는 200을
+        # 보고하는 거짓 통과가 성립한다.
+        fe_port = e2e_ports.find_free_port()          # ① frontend 포트 먼저
+        be_port = e2e_ports.find_free_port()           # ② backend 포트
+        fe_origin = f"http://127.0.0.1:{fe_port}"      # ③ ①의 정수로 origin 조립
+        backend = self._start_backend(port=be_port, cors_origin=fe_origin)  # ④ (start_service 내부에서 http health)
+>       frontend = self._start_frontend(port=fe_port, backend_url=backend.url)  # ⑤
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:214:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_skeleton.py:145: in _start_frontend
+    handle, rendered = self._start("frontend", port=port)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_skeleton.py:131: in _start
+    handle = e2e_runtime.start_service(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rendered = {'id': 'frontend', 'argv': ['/opt/homebrew/bin/npm', 'run', 'dev', '--', '--host', '127.0.0.1', ...], 'cwd': '/Volumes...ai-framework/.opal-worktrees/task_162/dashboard/frontend', 'env': {'VITE_API_BASE_URL': 'http://127.0.0.1:57761'}, ...}
+role = 'frontend', port = 57760
+artifact_dir = '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/opal-e2e-skeleton-aptm295l'
+
+    def start_service(rendered: dict, *, role: str, port: int, artifact_dir: str) -> SutHandle:
+        """render_service 결과 1건을 기동하고 health를 통과시킨 handle을 돌려준다.
+
+        - `rendered`: `lib.e2e.environment.render_service` 반환값(argv·cwd·env·health·
+          startup_timeout_s·host·url). env는 부모 환경 위에 덮어쓴다.
+        - port는 호출자가 임대해 넘긴다. 명령이 그 포트로 strict 바인딩하는지는 설정이 책임진다.
+        - health `http`: `url + path`가 expect_status를 돌려주고(json_field가 있으면 그 키가
+          JSON 본문에 있어야) 통과. `port`: host:port가 열리면 통과. 제한 시간은 startup_timeout_s.
+        - 실패하면 이 함수가 띄운 그룹을 회수한 뒤 SutStartupError를 올린다(누수 방지). 그 밖의
+          예외도 예외 종류와 관계없이 그룹을 회수한 뒤 그대로 올린다.
+        """
+        env = dict(os.environ)
+        env.update(rendered.get("env") or {})
+        host = rendered.get("host") or "127.0.0.1"
+        url = rendered.get("url") or f"http://{host}:{port}"
+        timeout_s = float(rendered.get("startup_timeout_s") or 60.0)
+        health = rendered.get("health") or {"type": "port"}
+
+        log_paths = _log_paths(artifact_dir, role)
+        try:
+            spawned = e2e_process.spawn_process_group(
+                list(rendered["argv"]),
+                cwd=rendered.get("cwd"),
+                env=env,
+                stdout_path=log_paths["stdout"],
+                stderr_path=log_paths["stderr"],
+            )
+        except OSError as exc:
+            raise SutStartupError(
+                _REASON_PROCESS_EXITED_EARLY,
+                f"{role} process could not be spawned ({type(exc).__name__}: {exc}); log={log_paths['stderr']}",
+            ) from exc
+
+        handle = SutHandle(role=role, port=port, url=url, spawned=spawned, log_paths=log_paths)
+        try:
+            time.sleep(_EARLY_EXIT_GRACE_S)
+            _raise_if_exited(handle)
+            if health.get("type") == "http":
+                wait_http_health(
+                    url,
+                    health.get("path") or "/",
+                    health.get("expect_status") or 200,
+                    health.get("json_field"),
+                    timeout_s,
+                    spawned=spawned,
+                )
+            else:
+                _wait_port_open(host, port, spawned=spawned, timeout_s=timeout_s)
+        except SutStartupError as exc:
+            e2e_process.terminate_process_group(spawned.pgid, popen=spawned.popen)
+>           raise SutStartupError(exc.reason, f"{role}: {exc.detail}; log={log_paths['stderr']}") from exc
+E           lib.e2e.runtime.SutStartupError: process_exited_early: frontend: process exited early (returncode=127); log=/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/opal-e2e-skeleton-aptm295l/server/frontend.err.log
+
+opal/tools/test-tool/lib/e2e/runtime.py:128: SutStartupError
+_ TestHybridWiring.test_a_driver_missing_an_operation_blocks_instead_of_switching_candidates _
+
+self = <test_e2e_surface_fidelity.TestHybridWiring testMethod=test_a_driver_missing_an_operation_blocks_instead_of_switching_candidates>
+
+    def test_a_driver_missing_an_operation_blocks_instead_of_switching_candidates(self):
+        """연산 부재는 `infra_error`가 아니라 `blocked`이며 후보 전환도 없다.
+
+        `dispatch()`가 연산을 찾지 못해 올리는 오류는 driver가 아무 일도 하기 전에 나온다 —
+        §C.7이 `infra_error`로 규정한 "driver 실행 오류"가 아니라 하네스가 그 표면을 실행할
+        수단이 없다는 뜻이다. 어느 쪽이든 다음 후보로 넘어가지 않는다(TASK.md C-3).
+        """
+        e2e_drivers.register_driver("agent-browser", "orca-managed", _FakeBrowserDriver)
+        payload, run_json, journal = self._run({
+            "id": "browser-only", "surface_kind": "browser", "profile": "browser",
+            "actors": ["browser"],
+            "steps": [{"id": "st-1", "executor": "browser", "step_role": "verify"}],
+            "assertions": [{"id": "a1", "expected": "ok"}],
+            "required_evidence": ["metadata"],
+        })
+        # _FakeBrowserDriver는 probe만 구현한다 — open에서 연산 부재가 드러난다.
+>       self.assertEqual(payload["status"], "blocked")
+E       AssertionError: 'infra_error' != 'blocked'
+E       - infra_error
+E       + blocked
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:558: AssertionError
+_ TestHybridWiring.test_a_type_with_no_selected_candidate_ends_as_executor_unavailable _
+
+self = <test_e2e_surface_fidelity.TestHybridWiring testMethod=test_a_type_with_no_selected_candidate_ends_as_executor_unavailable>
+
+    def test_a_type_with_no_selected_candidate_ends_as_executor_unavailable(self):
+        """[MUST] §A.1.2 — 필요 타입 중 하나라도 selected가 0개이면 executor_unavailable.
+
+        이 머신에는 가용 browser 후보가 없다. 그럴 때 api executor를 대역으로 세워
+        pass를 만들지 않고 구조화된 미가용 사유로 끝낸다(H-2, §C.4).
+        """
+        original = e2e_drivers.registered_drivers
+        e2e_drivers.registered_drivers = lambda: {}
+        try:
+            payload, run_json, journal = self._run(_hybrid_scenario([
+                {"id": "st-1", "executor": "api", "step_role": "setup"},
+                {"id": "st-2", "executor": "browser", "step_role": "verify"},
+            ]))
+        finally:
+            e2e_drivers.registered_drivers = original
+
+>       self.assertEqual(payload["status"], "executor_unavailable")
+E       AssertionError: 'infra_error' != 'executor_unavailable'
+E       - infra_error
+E       + executor_unavailable
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:335: AssertionError
+_ TestHybridWiring.test_browser_step_runs_end_to_end_and_emits_the_a21_transitions _
+
+self = <test_e2e_surface_fidelity.TestHybridWiring testMethod=test_browser_step_runs_end_to_end_and_emits_the_a21_transitions>
+
+    def test_browser_step_runs_end_to_end_and_emits_the_a21_transitions(self):
+        """browser 후보가 선택된 run은 step을 **실제로 실행**하고 §A.2.1 전이를 발행한다.
+
+        이 테스트는 이전의 `..._withheld_and_says_so`를 대체한다. 그때는 동결 RED S-27의
+        "run당 driver 호출 2회" 상한 때문에 browser step 실행을 보류했고, 그 보류 사실을
+        관측점으로 고정했다. PM이 (d-1)을 "같은 연산 시그니처 중복 금지"로 정정해 보류가
+        풀렸으므로, 같은 자리에서 이제 **실행이 실제로 일어난다**는 것을 고정한다 —
+        관측점을 잃지 않는 것이 목적이다.
+
+        §B.2 연산은 각각 **한 번씩만** 호출된다. 후보 해석이 만든 driver 인스턴스를 step
+        실행이 그대로 이어받기 때문이며(`_DriverCache`), 재생성하면 생성자의 binary 해석이
+        한 번 더 일어나 S-27이 재시도로 잡는다.
+        """
+        calls = []
+
+        class _RecordingDriver(_FakeBrowserDriver):
+            def op_open(self, request):
+                calls.append("open")
+                return {"page_id": "page-1"}
+
+            def op_act(self, request):
+                calls.append(f"act:{request.get('step_id')}")
+                return {"ok": True}
+
+            def op_assert(self, request):
+                calls.append("assert")
+                assertion = request.get("assertion") or {}
+                return {"id": assertion["id"], "expected": assertion["expected"],
+                        "actual": assertion["expected"], "passed": True}
+
+            def op_capture(self, request):
+                calls.append("capture")
+                return {"artifacts": {}, "redacted": True, "redaction_failed": False}
+
+            def op_close(self, request):
+                calls.append("close")
+                return {"closed": True}
+
+        e2e_drivers.register_driver("agent-browser", "orca-managed", _RecordingDriver)
+        try:
+            payload, run_json, journal = self._run({
+                "id": "browser-only", "surface_kind": "browser", "profile": "browser",
+                "actors": ["browser"],
+                "steps": [{"id": "st-1", "executor": "browser", "step_role": "verify"}],
+                "assertions": [{"id": "a1", "expected": "ok"}],
+                "required_evidence": ["metadata"],
+            })
+        finally:
+            # 레지스트리 복원은 tearDown이 일괄 수행한다.
+            pass
+
+        # 실행이 실제로 일어났다.
+>       self.assertTrue(payload["executed"], f"browser step must actually run: {payload}")
+E       AssertionError: False is not true : browser step must actually run: {'run_id': 'e2e-20260927-736', 'scenario_id': 'browser-only', 'profile': 'browser', 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpz8t5tyso/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpz8t5tyso', 'executed': False, 'urls': {'backend': 'http://127.0.0.1:57927', 'frontend': 'http://127.0.0.1:57928'}, 'project_root': '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162', 'lease_reclaimed': [], 'candidates': [{'order': 1, 'type': 'browser', 'driver': 'agent-browser', 'session_mode': 'orca-managed', 'binary_path': None, 'resolution_source': 'installed', 'version': None, 'outcome': 'selected', 'excluded_by': None, 'reason': None}, {'order': 2, 'type': 'browser', 'driver': 'cmux', 'session_mode': 'owned-surface', 'binary_path': None, 'resolution_source': None, 'version': None, 'outcome': 'provider_unavailable', 'excluded_by': None, 'reason': 'not_attempted_after_selection'}, {'order': 3, 'type': 'browser', 'driver': 'agent-browser', 'session_mode': 'standalone', 'binary_path': None, 'resolution_source': None, 'version': None, 'outcome': 'provider_unavailable', 'excluded_by': None, 'reason': 'not_attempted_after_selection'}, {'order': 4, 'type': 'browser', 'driver': 'ego-lite', 'session_mode': 'standalone', 'binary_path': None, 'resolution_source': None, 'version': None, 'outcome': 'provider_unavailable', 'excluded_by': None, 'reason': 'not_attempted_after_selection'}]}
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:515: AssertionError
+_ TestAcceptanceBrowserPathways.test_ac4_cleanup_touches_only_the_page_this_run_opened _
+
+self = <test_e2e_surface_fidelity.TestAcceptanceBrowserPathways testMethod=test_ac4_cleanup_touches_only_the_page_this_run_opened>
+
+    def test_ac4_cleanup_touches_only_the_page_this_run_opened(self):
+        """[MUST] AC-4·C-2 — run이 만든 `browserPageId`만 정리되고 사용자 탭은 남는다."""
+        if not self._orca_session_available():
+            self.skipTest("no selectable orca-managed browser candidate on this machine")
+
+        payload, art = self._run_fixture({
+            "id": "ac4-cleanup", "surface_kind": "browser", "profile": "browser",
+            "actors": ["browser"],
+            "steps": [{"id": "st-reload", "executor": "browser",
+                       "step_role": "verify", "kind": "reload"}],
+            "assertions": [{"id": "a1", "verifier": "title", "match": "equals",
+                            "expected": "OPAL Console"}],
+            "required_evidence": ["metadata"],
+        })
+        pages = art["owned.json"]["browser_pages"]
+>       self.assertEqual(len(pages), 1, f"run이 연 page 1건만 대장에 올라야 한다: {pages}")
+E       AssertionError: 0 != 1 : run이 연 page 1건만 대장에 올라야 한다: []
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:710: AssertionError
+_ TestAcceptanceBrowserPathways.test_ac4_real_browser_run_passes_with_a_semantic_assertion _
+
+self = <test_e2e_surface_fidelity.TestAcceptanceBrowserPathways testMethod=test_ac4_real_browser_run_passes_with_a_semantic_assertion>
+
+    def test_ac4_real_browser_run_passes_with_a_semantic_assertion(self):
+        """AC-4 — 실 Orca 세션에서 실제 UI 행동 + semantic assertion으로 `pass`.
+
+        assertion은 브라우저에서 **실제로 읽어 온 값**과 비교한다. `match`는 `equals`여야
+        한다 — `e2e_contract.validate_pass_requirements`가 `expected != actual`을 직접
+        비교하므로(§A.5) `contains`로 통과한 driver 판정도 계약 게이트에서 `fail`이 된다.
+        """
+        if not self._orca_session_available():
+            self.skipTest("no selectable orca-managed browser candidate on this machine")
+
+        payload, art = self._run_fixture({
+            "id": "ac4-browser", "surface_kind": "browser", "profile": "browser",
+            "actors": ["browser"], "required_fidelity": "real-usage",
+            "steps": [{"id": "st-reload", "executor": "browser",
+                       "step_role": "verify", "kind": "reload"}],
+            "assertions": [
+                {"id": "ac4-title", "verifier": "title", "match": "equals",
+                 "expected": "OPAL Console"},
+            ],
+            "required_evidence": ["metadata", "action_log", "assertions", "cleanup"],
+        })
+        run_json = art["run.json"]
+>       self.assertEqual(payload["status"], "pass", f"AC-4 must pass: {run_json.get('detail')}")
+E       AssertionError: 'infra_error' != 'pass'
+E       - infra_error
+E       + pass
+E        : AC-4 must pass: process_exited_early
+
+opal/tools/test-tool/tests/test_e2e_surface_fidelity.py:677: AssertionError
+___________________ TestSutHttpSurfaces.test_sut_brain_auth ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_auth>
+
+    def test_sut_brain_auth(self):
+        """`shutil.which("claude")`만 보는 경량 표면이다 — LLM 호출 0회.
+
+        기대값을 기계 상태에서 끌어오지 않는다: claude가 PATH에 없으면 이 표면의
+        `authenticated=true` 경로를 실측할 수 없으므로 `blocked`로 남긴다(H-2).
+        """
+        if shutil.which("claude") is None:
+            _record("sut-brain-auth", "blocked", reason={
+                "code": "claude_cli_absent_on_path",
+                "detail": "GET /api/brain/auth의 authenticated 경로는 PATH의 claude 실행파일을 "
+                          "전제한다. 대역 바이너리를 심어 pass를 만들지 않는다(H-2).",
+            })
+            self.skipTest("claude CLI not on PATH")
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+>       self._surface("sut-brain-auth", _api_scenario(
+            "w12-sut-brain-auth", "sut-brain-auth",
+            _get("/api/brain/auth"),
+            [
+                _field("a-status", "status", 200),
+                _field("a-cli", "cli_available", True),
+                _field("a-auth", "authenticated", True),
+                _field("a-message", "message", ""),
+                _state("a-state", "/api/brain/auth", "cli_available", True),
+            ],
+        ), fx.home, expect_path="/api/brain/auth")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:721:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-auth must pass: process_exited_early
+____________________ TestSutHttpSurfaces.test_sut_brain_job ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_job>
+
+    def test_sut_brain_job(self):
+        """잡 소멸·불일치 경로는 graceful error 응답이다(500 아님)."""
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        sid = f"w12-{uuid.uuid4()}"
+        job_id = f"w12-absent-{uuid.uuid4()}"
+        url = f"/api/brain/job/{job_id}?project={fx.quoted_project}&session_id={sid}"
+>       self._surface("sut-brain-job", _api_scenario(
+            "w12-sut-brain-job", "sut-brain-job",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-job-id", "job_id", job_id),
+                # 본문의 `status` 필드는 단언할 수 없다 — `executors/api.py`의 `_extract`가
+                # field "status"를 HTTP status로 특수 취급한다. 대신 같은 분기에서만
+                # 나오는 `error_msg` 원문으로 graceful error 경로를 못 박는다.
+                _field("a-error-msg", "error_msg",
+                       "잡을 찾을 수 없습니다(세션이 재시작되었을 수 있습니다)"),
+                _field("a-answer", "answer", ""),
+                _field("a-citations", "citations", []),
+                _state("a-observable", url, "job_id", job_id),
+            ],
+        ), fx.home, expect_path=f"/api/brain/job/{job_id}")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:759:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-job must pass: process_exited_early
+___________________ TestSutHttpSurfaces.test_sut_brain_prime ___________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_prime>
+
+    def test_sut_brain_prime(self):
+        """POST — run 단위 session_id namespace와 격리 HOME 안에서만 수행한다.
+
+        부수효과는 그 session_id의 인메모리 세션 1건과, 격리 HOME을 보는 백그라운드
+        claude 시도뿐이다. 사용자 세션·설정은 이름 공간이 겹치지 않는다(C-2).
+        """
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        sid = f"w12-prime-{uuid.uuid4()}"
+>       self._surface("sut-brain-prime", _api_scenario(
+            "w12-sut-brain-prime", "sut-brain-prime",
+            _post("/api/brain/prime", {"project": fx.project_path, "session_id": sid}),
+            [
+                _field("a-status", "status", 200),
+                _field("a-priming", "priming", True),
+            ],
+        ), fx.home, expect_path="/api/brain/prime", expect_method="POST")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:794:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-prime must pass: process_exited_early
+___________ TestSutHttpSurfaces.test_sut_brain_query_transport_only ____________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_query_transport_only>
+
+    def test_sut_brain_query_transport_only(self):
+        """[MUST] H-2 — `sut-brain-query`는 `blocked`다. pass로 승격하지 않는다.
+
+        선언 응답 필드 `job_id`는 난수 UUID이고 assertion 매처는 `equals`뿐이다
+        (`e2e_contract.py` C-1 동결 — `contains`는 `validate_pass_requirements`가
+        뒤집는다). 즉 이 표면이 선언한 응답 필드를 단언할 수단이 없다. 잡 완료 역시
+        인증된 claude 세션을 요구하며 격리 HOME에는 없다. 따라서 여기서는 전송 계층만
+        실측하고 표면 판정은 `blocked`로 남긴다.
+        """
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        sid = f"w12-query-{uuid.uuid4()}"
+        scenario = _api_scenario(
+            "w12-sut-brain-query", "sut-brain-query",
+            _post("/api/brain/query", {
+                "question": "w12 surface transport probe",
+                "project": fx.project_path,
+                "session_id": sid,
+            }),
+            [_field("a-status", "status", 200)],
+        )
+>       _payload, art = self._verify(
+            scenario, fx.home, expect_path="/api/brain/query", expect_method="POST"
+        )
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:835:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-query must pass: process_exited_early
+__________________ TestSutHttpSurfaces.test_sut_brain_status ___________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_brain_status>
+
+    def test_sut_brain_status(self):
+        """레지스트리 조회 표면 — 미등록 session_id는 `idle`이다. LLM 호출 0회."""
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        sid = f"w12-{uuid.uuid4()}"
+        url = f"/api/brain/status?project={fx.quoted_project}&session_id={sid}"
+>       self._surface("sut-brain-status", _api_scenario(
+            "w12-sut-brain-status", "sut-brain-status",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-state", "state", "idle"),
+                _field("a-active", "session_active", False),
+                _field("a-message", "message", ""),
+                _field("a-sid", "session_id", sid),
+                _state("a-observable", url, "state", "idle"),
+            ],
+        ), fx.home, expect_path="/api/brain/status")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:739:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-brain-status must pass: process_exited_early
+___________________ TestSutHttpSurfaces.test_sut_config_get ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_config_get>
+
+    def test_sut_config_get(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+>       self._surface("sut-config-get", _api_scenario(
+            "w12-sut-config-get", "sut-config-get",
+            _get("/api/config"),
+            [
+                _field("a-status", "status", 200),
+                _field("a-scan-root", "scan_roots.0", str(fx.scan_root)),
+                _field("a-scan-depth", "scan_depth", 2),
+                _field("a-exclude", "exclude.0", "node_modules"),
+                _field("a-prewarm", "prewarm_projects", []),
+                _state("a-state", "/api/config", "scan_depth", 2),
+            ],
+        ), fx.home, expect_path="/api/config")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:692:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-config-get must pass: process_exited_early
+_________________ TestSutHttpSurfaces.test_sut_config_prewarm __________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_config_prewarm>
+
+    def test_sut_config_prewarm(self):
+        """POST 쓰기 — 격리 HOME의 console.config.json만 바뀐다(C-2).
+
+        `enabled=false`를 쓰는 이유는 두 가지다. ① 씨앗으로 심어 둔 항목이 실제로
+        **빠지는** 것을 후속 observable state(`GET /api/config`)로 확인할 수 있어
+        쓰기가 관측 가능한 변화를 만든다. ② `newly_added`가 참일 때만 도는
+        `prewarm()`(백그라운드 claude 다중 기동)을 부르지 않는다 — 검증에 필요하지
+        않은 외부 부수효과를 만들지 않는다.
+        """
+        fx = _Isolated(prewarm_projects=["self"])
+        self.addCleanup(fx.dispose)
+        self.assertEqual(
+            fx.config_snapshot()["prewarm_projects"], [fx.project_path],
+            "씨앗 상태가 먼저 성립해야 '빠졌다'가 관측 가능한 변화가 된다",
+        )
+>       self._surface("sut-config-prewarm", _api_scenario(
+            "w12-sut-config-prewarm", "sut-config-prewarm",
+            _post("/api/config/prewarm", {"project": fx.project_path, "enabled": False}),
+            [
+                _field("a-status", "status", 200),
+                _field("a-ok", "ok", True),
+                _field("a-config", "config.prewarm_projects", []),
+                # 후속 observable state — 별도 실 호출로 쓰기가 반영됐는지 본다.
+                _state("a-state", "/api/config", "prewarm_projects", []),
+            ],
+        ), fx.home, expect_path="/api/config/prewarm", expect_method="POST")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:867:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-config-prewarm must pass: process_exited_early
+____________________ TestSutHttpSurfaces.test_sut_dashboard ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_dashboard>
+
+    def test_sut_dashboard(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+>       self._surface("sut-dashboard", _api_scenario(
+            "w12-sut-dashboard", "sut-dashboard",
+            _get("/api/dashboard"),
+            [
+                _field("a-status", "status", 200),
+                _field("a-total-projects", "total_projects", 1),
+                _field("a-total-tasks", "total_tasks", 1),
+                _field("a-recent", "recent_activities.0.task_id", _Isolated.TASK_ID),
+                _state("a-state", "/api/dashboard", "status_distribution.pending", 1),
+            ],
+        ), fx.home, expect_path="/api/dashboard")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:532:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-dashboard must pass: process_exited_early
+_____________________ TestSutHttpSurfaces.test_sut_doctor ______________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_doctor>
+
+    def test_sut_doctor(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/doctor?project={fx.quoted_project}"
+>       payload, _art = self._surface("sut-doctor", _api_scenario(
+            "w12-sut-doctor", "sut-doctor",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-opal-dir", "sections.0.items.1.status", "ok"),
+                _field("a-agent-md", "sections.0.items.2.status", "ok"),
+                _field("a-tasks", "sections.0.items.6.status", "ok"),
+                _state("a-state", url, "sections.0.items.0.status", "ok"),
+            ],
+        ), fx.home, expect_path="/api/doctor")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:667:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-doctor must pass: process_exited_early
+_____________________ TestSutHttpSurfaces.test_sut_memory ______________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_memory>
+
+    def test_sut_memory(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/memory?project={fx.quoted_project}"
+>       self._surface("sut-memory", _api_scenario(
+            "w12-sut-memory", "sut-memory",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                # fixture 프로젝트에는 메모리 인덱스가 없다 — 빈 목록이 실측값이다.
+                _field("a-rows", "rows", []),
+                _field("a-history", "history", []),
+                _field("a-warning", "warning", None),
+                _state("a-state", url, "rows", []),
+            ],
+        ), fx.home, expect_path="/api/memory")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:650:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-memory must pass: process_exited_early
+_________________ TestSutHttpSurfaces.test_sut_projects_detail _________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_projects_detail>
+
+    def test_sut_projects_detail(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/projects/detail?path={fx.quoted_project}"
+>       self._surface("sut-projects-detail", _api_scenario(
+            "w12-sut-projects-detail", "sut-projects-detail",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-name", "name", _Isolated.PROJECT_NAME),
+                _field("a-path", "path", fx.project_path),
+                _field("a-is-opal", "is_opal", True),
+                _field("a-project-md", "project_md", _Isolated.DOC_BODY),
+                _field("a-doc", "docs.0.title", _Isolated.DOC_NAME),
+                _state("a-state", url, "docs.0.path", _Isolated.DOC_NAME),
+            ],
+        ), fx.home, expect_path="/api/projects/detail")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:564:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-projects-detail must pass: process_exited_early
+__________________ TestSutHttpSurfaces.test_sut_projects_doc ___________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_projects_doc>
+
+    def test_sut_projects_doc(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/projects/doc?path={fx.quoted_project}&name={_Isolated.DOC_NAME}"
+>       self._surface("sut-projects-doc", _api_scenario(
+            "w12-sut-projects-doc", "sut-projects-doc",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-name", "name", _Isolated.DOC_NAME),
+                _field("a-content", "content", _Isolated.DOC_BODY),
+                _field("a-path", "path", str(fx.project / "docs" / _Isolated.DOC_NAME)),
+                _state("a-state", url, "content", _Isolated.DOC_BODY),
+            ],
+        ), fx.home, expect_path="/api/projects/doc")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:582:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-projects-doc must pass: process_exited_early
+__________________ TestSutHttpSurfaces.test_sut_projects_list __________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_projects_list>
+
+    def test_sut_projects_list(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+>       self._surface("sut-projects-list", _api_scenario(
+            "w12-sut-projects-list", "sut-projects-list",
+            _get("/api/projects"),
+            [
+                _field("a-status", "status", 200),
+                _field("a-name", "0.name", _Isolated.PROJECT_NAME),
+                _field("a-path", "0.path", fx.project_path),
+                _field("a-is-opal", "0.is_opal", True),
+                _field("a-task-count", "0.task_count", 1),
+                _state("a-state", "/api/projects", "0.name", _Isolated.PROJECT_NAME),
+            ],
+        ), fx.home, expect_path="/api/projects")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:547:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-projects-list must pass: process_exited_early
+_________________ TestSutHttpSurfaces.test_sut_tasks_artifact __________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_tasks_artifact>
+
+    def test_sut_tasks_artifact(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = (
+            f"/api/tasks/artifact?project={fx.quoted_project}"
+            f"&task_id={_Isolated.TASK_ID}&name={_Isolated.ARTIFACT_NAME}"
+        )
+>       self._surface("sut-tasks-artifact", _api_scenario(
+            "w12-sut-tasks-artifact", "sut-tasks-artifact",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-name", "name", _Isolated.ARTIFACT_NAME),
+                _field("a-content", "content", _Isolated.ARTIFACT_BODY),
+                _field("a-task-id", "task_id", _Isolated.TASK_ID),
+                _state("a-state", url, "content", _Isolated.ARTIFACT_BODY),
+            ],
+        ), fx.home, expect_path="/api/tasks/artifact")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:634:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-tasks-artifact must pass: process_exited_early
+__________________ TestSutHttpSurfaces.test_sut_tasks_detail ___________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_tasks_detail>
+
+    def test_sut_tasks_detail(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/tasks/detail?project={fx.quoted_project}&task_id={_Isolated.TASK_ID}"
+>       self._surface("sut-tasks-detail", _api_scenario(
+            "w12-sut-tasks-detail", "sut-tasks-detail",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-task-id", "task_id", _Isolated.TASK_ID),
+                _field("a-current-status", "current_status", "pending"),
+                _field("a-artifact", "artifacts.0", _Isolated.ARTIFACT_NAME),
+                _field("a-stats", "stats.available", False),
+                _state("a-state", url, "task_id", _Isolated.TASK_ID),
+            ],
+        ), fx.home, expect_path="/api/tasks/detail")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:614:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-tasks-detail must pass: process_exited_early
+___________________ TestSutHttpSurfaces.test_sut_tasks_list ____________________
+
+self = <test_e2e_sut_http_surfaces.TestSutHttpSurfaces testMethod=test_sut_tasks_list>
+
+    def test_sut_tasks_list(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        url = f"/api/tasks?project={fx.quoted_project}"
+>       self._surface("sut-tasks-list", _api_scenario(
+            "w12-sut-tasks-list", "sut-tasks-list",
+            _get(url),
+            [
+                _field("a-status", "status", 200),
+                _field("a-task-id", "0.task_id", _Isolated.TASK_ID),
+                _field("a-column", "0.column", "pending"),
+                _field("a-artifact-count", "0.artifact_count", 2),
+                _state("a-state", url, "0.task_id", _Isolated.TASK_ID),
+            ],
+        ), fx.home, expect_path="/api/tasks")
+
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:598:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:482: in _surface
+    payload, art = self._verify(scenario, home, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py:411: in _verify
+    self.assertEqual(payload["status"], "pass", f"{scenario['id']} must pass: {detail}")
+E   AssertionError: 'infra_error' != 'pass'
+E   - infra_error
+E   + pass
+E    : w12-sut-tasks-list must pass: process_exited_early
+--------------------------- Captured stderr teardown ---------------------------
+
+[W-12] surface ledger: /var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/w12-sut-http-surface-ledger.json
+_ TestNoRetryOrSwitchOnProductFailure.test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt _
+
+self = <test_red_s27_no_retry_on_product_failure.TestNoRetryOrSwitchOnProductFailure testMethod=test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt>
+
+    def test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt(self):
+        import os
+        env = os.environ.copy()
+        env["OPAL_E2E_AGENT_BROWSER_BIN"] = str(self.stub_bin)
+
+        with tempfile.TemporaryDirectory() as artifact_dir:
+            env["OPAL_E2E_ARTIFACT_DIR"] = artifact_dir
+            proc = subprocess.run(
+                [
+                    _PYTHON, str(_TEST_TOOL_PY),
+                    "e2e", "run",
+                    "--scenario", "s27-fixture",
+                    "--task-path", str(self.task_path),
+                    "--target", "source-worktree",
+                    "--worktree-root", str(_SOURCE_ROOT),
+                ],
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=60,
+            )
+            self.assertNotEqual(
+                proc.returncode, 2,
+                f"'e2e run' subcommand missing (RED target): {proc.stderr!r}",
+            )
+            data = json.loads(proc.stdout)
+
+            # (a) candidates[]가 비어 있으면 안 된다 — 후보 1의 시도 기록이 실재해야 한다.
+            candidates = data.get("candidates") or []
+            self.assertNotEqual(
+                candidates, [],
+                "candidates[] must not be empty — candidate 1's attempt must be recorded "
+                "(an empty list is not proof of retry/switch suppression, RED target)",
+            )
+
+            candidate1_entries = [c for c in candidates if c.get("order") == 1]
+            self.assertEqual(
+                len(candidate1_entries), 1,
+                f"exactly one order=1 (candidate 1) attempt record expected: {candidates}",
+            )
+            candidate1 = candidate1_entries[0]
+
+            # (b) candidate1의 outcome은 §A.1.2 enum 중 "selected"여야 한다 — 실제로
+            # 선택돼 실행됐다는 뜻이며, "fail"/"assertion_failed" 같은 결과값이 아니다
+            # (candidates[]는 실행 결과 기록이 아니라 후보 탐색 기록이다).
+            self.assertEqual(
+                candidate1.get("outcome"), "selected",
+                f"candidate 1 must be recorded as selected (candidates[] records discovery, "
+                f"not execution outcome): {candidate1}",
+            )
+
+            # (c)+(d-2) mode 전환 억제: order>1인 항목이 있어도 전부 "시도되지 않음" 표식
+            # (reason=not_attempted_after_selection)이어야 한다 — 실제 attempt(outcome이
+            # selected/infra_error 등 실행을 거친 값)가 있으면 안 된다.
+            later_entries = [c for c in candidates if c.get("order", 0) > 1]
+            for entry in later_entries:
+                self.assertEqual(
+                    entry.get("reason"), "not_attempted_after_selection",
+                    f"no later candidate may show a real attempt after candidate 1 was selected: {candidates}",
+                )
+
+            # (d-1) retry 억제 — PM 교정: "총 호출 횟수 상한"이 아니라 "같은 연산이
+            # 반복 호출되지 않는다"로 측정 대상을 정정한다. §B.2 프로토콜은 open·close
+            # 등 probe 이후 연산을 추가로 호출하므로(실측 5회↑), 총량 상한은 정상적인
+            # 단일 실행(각 연산 1회씩)조차 "재시도"로 오판정한다 — 그것이 이 assertion의
+            # 실제 실패 사유였다(주석이 스스로 "no internal retry loop"라고 말하면서
+            # 총량을 재고 있었다). 이제는 probe 연산(`--version`, `session list`)이든
+            # 프로토콜 연산(`open <url>`, `tab close` 등)이든 상관없이, **같은 연산
+            # 시그니처가 이 run 안에서 두 번 이상 나타나지 않는지**만 검사한다. 이는
+            # browser step 실행이 나중에 배선돼 open·act·close 호출이 늘어나도(각 연산
+            # 1회씩이라면) 계속 성립하는 형태다 — 실패 뒤 "같은 연산"이 반복될 때만
+            # retry로 판정한다.
+            if self.call_log.is_file():
+                raw_calls = [
+                    line for line in self.call_log.read_text(encoding="utf-8").splitlines() if line.strip()
+                ]
+
+                def _operation_signature(line: str) -> str:
+                    tokens = line.split()
+                    if not tokens:
+                        return line
+                    if tokens[0] == "--version":
+                        return "version"
+                    if len(tokens) >= 2 and tokens[0] == "session" and tokens[1] == "list":
+                        return "probe_session_list"
+                    if len(tokens) >= 2 and tokens[0] == "tab" and tokens[1] == "close":
+                        return "close"
+                    if tokens[0] == "open":
+                        return "open"
+                    # 알려지지 않은 §B.2 연산도 연산 이름(첫 토큰)만으로 시그니처를
+                    # 만든다 — url 같은 가변 인자로 서로 다른 호출을 분리하지 않는다.
+                    return tokens[0]
+
+                signatures = [_operation_signature(line) for line in raw_calls]
+                duplicated = sorted({sig for sig in signatures if signatures.count(sig) > 1})
+                self.assertEqual(
+                    duplicated, [],
+                    f"no single operation may be invoked more than once in this run "
+                    f"(that would be an internal retry, not the normal §B.2 protocol "
+                    f"sequence which calls each operation once): calls={raw_calls}",
+                )
+
+            # 최초 결과가 최종 verdict로 남아야 한다. 현재 구현은 assertion 판정 자체가
+            # 없어(scenario runner 부재) status가 "blocked"로 고정된다 — 이는 계약이
+            # 허용하는 최종 상태값이지만, "제품 실패가 fail로 판정된다"는 실질 동작은
+            # 아직 없다(RED 지점: 아래에서 실패해도 정상이며 사유가 이 gap을 가리켜야 한다).
+>           self.assertIn(
+                data.get("status"), ("fail", "blocked"),
+                f"first product-level failure must remain the final verdict: {data}",
+            )
+E           AssertionError: 'infra_error' not found in ('fail', 'blocked') : first product-level failure must remain the final verdict: {'run_id': 'e2e-20260927-327', 'scenario_id': 's27-fixture', 'profile': 'browser', 'status': 'infra_error', 'operational_status': None, 'error': 'e2e_infra_error', 'exit_code': 7, 'run_json_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpnbzb11ws/run.json', 'artifact_dir': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpnbzb11ws', 'executed': False, 'urls': {'backend': 'http://127.0.0.1:58237', 'frontend': 'http://127.0.0.1:58238'}, 'project_root': '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162', 'lease_reclaimed': [], 'candidates': [{'order': 1, 'type': 'browser', 'driver': 'agent-browser', 'session_mode': 'orca-managed', 'binary_path': '/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/tmpeobnnj56/product-failure-agent-browser', 'resolution_source': 'env-override', 'version': '0.27.3', 'outcome': 'selected', 'excluded_by': None, 'reason': None}, {'order': 2, 'type': 'browser', 'driver': 'cmux', 'session_mode': 'owned-surface', 'binary_path': None, 'resolution_source': None, 'version': None, 'outcome': 'provider_unavailable', 'excluded_by': None, 'reason': 'not_attempted_after_selection'}, {'order': 3, 'type': 'browser', 'driver': 'agent-browser', 'session_mode': 'standalone', 'binary_path': None, 'resolution_source': None, 'version': None, 'outcome': 'provider_unavailable', 'excluded_by': None, 'reason': 'not_attempted_after_selection'}, {'order': 4, 'type': 'browser', 'driver': 'ego-lite', 'session_mode': 'standalone', 'binary_path': None, 'resolution_source': None, 'version': None, 'outcome': 'provider_unavailable', 'excluded_by': None, 'reason': 'not_attempted_after_selection'}]}
+
+opal/tools/test-tool/tests/test_red_s27_no_retry_on_product_failure.py:269: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestBrowserRealUsage::test_browser_dashboard_call_reaches_backend
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestHybridWiring::test_a_driver_missing_an_operation_blocks_instead_of_switching_candidates
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestHybridWiring::test_a_type_with_no_selected_candidate_ends_as_executor_unavailable
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestHybridWiring::test_browser_step_runs_end_to_end_and_emits_the_a21_transitions
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestAcceptanceBrowserPathways::test_ac4_cleanup_touches_only_the_page_this_run_opened
+FAILED opal/tools/test-tool/tests/test_e2e_surface_fidelity.py::TestAcceptanceBrowserPathways::test_ac4_real_browser_run_passes_with_a_semantic_assertion
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_auth
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_job
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_prime
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_query_transport_only
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_brain_status
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_config_get
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_config_prewarm
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_dashboard
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_doctor
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_memory
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_detail
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_doc
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_projects_list
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_artifact
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_detail
+FAILED opal/tools/test-tool/tests/test_e2e_sut_http_surfaces.py::TestSutHttpSurfaces::test_sut_tasks_list
+FAILED opal/tools/test-tool/tests/test_red_s27_no_retry_on_product_failure.py::TestNoRetryOrSwitchOnProductFailure::test_product_failure_not_overwritten_by_retry_and_no_candidate2_attempt
+23 failed, 72 passed, 7 subtests passed in 96.69s (0:01:36)

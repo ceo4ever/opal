@@ -1,0 +1,76 @@
+
+==================================== ERRORS ====================================
+____ ERROR collecting opal/tools/worktree-tool/tests/test_worktree_tool.py _____
+ImportError while importing test module '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/worktree-tool/tests/test_worktree_tool.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/worktree-tool/tests/test_worktree_tool.py:28: in <module>
+    from conftest import (
+E   ImportError: cannot import name 'OPAL_DIR' from 'conftest' (/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/worktree-launcher/tests/conftest.py)
+_ ERROR collecting opal/tools/worktree-launcher/tests/test_adapter_conformance.py _
+ImportError while importing test module '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/worktree-launcher/tests/test_adapter_conformance.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/worktree-launcher/tests/test_adapter_conformance.py:26: in <module>
+    from conftest import FIXTURES_ROOT, load_launcher_fixture
+E   ImportError: cannot import name 'FIXTURES_ROOT' from 'conftest' (/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/test-tool/tests/fixtures/unit-real/conftest.py)
+___ ERROR collecting opal/tools/worktree-launcher/tests/test_adapter_orca.py ___
+ImportError while importing test module '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/worktree-launcher/tests/test_adapter_orca.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/worktree-launcher/tests/test_adapter_orca.py:20: in <module>
+    from conftest import load_launcher_fixture
+E   ImportError: cannot import name 'load_launcher_fixture' from 'conftest' (/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/test-tool/tests/fixtures/unit-real/conftest.py)
+_______ ERROR collecting opal/tools/worktree-launcher/tests/test_cli.py ________
+import file mismatch:
+imported module 'test_cli' has this __file__ attribute:
+  /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/ownership-tool/tests/test_cli.py
+which is not the same as the test file we want to collect:
+  /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/worktree-launcher/tests/test_cli.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
+__ ERROR collecting opal/tools/worktree-launcher/tests/test_codex_handoff.py ___
+ImportError while importing test module '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/worktree-launcher/tests/test_codex_handoff.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/worktree-launcher/tests/test_codex_handoff.py:21: in <module>
+    from conftest import build_launcher_hub, load_launcher_fixture, read_meta
+E   ImportError: cannot import name 'build_launcher_hub' from 'conftest' (/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/test-tool/tests/fixtures/unit-real/conftest.py)
+___ ERROR collecting opal/tools/worktree-launcher/tests/test_integration.py ____
+import file mismatch:
+imported module 'test_integration' has this __file__ attribute:
+  /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/ownership-tool/tests/test_integration.py
+which is not the same as the test file we want to collect:
+  /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/worktree-launcher/tests/test_integration.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
+__ ERROR collecting opal/tools/worktree-launcher/tests/test_launcher_core.py ___
+ImportError while importing test module '/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/worktree-launcher/tests/test_launcher_core.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opal/tools/worktree-launcher/tests/test_launcher_core.py:12: in <module>
+    from conftest import build_launcher_hub, load_launcher_fixture, read_meta
+E   ImportError: cannot import name 'build_launcher_hub' from 'conftest' (/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/test-tool/tests/fixtures/unit-real/conftest.py)
+=========================== short test summary info ============================
+ERROR opal/tools/worktree-tool/tests/test_worktree_tool.py
+ERROR opal/tools/worktree-launcher/tests/test_adapter_conformance.py
+ERROR opal/tools/worktree-launcher/tests/test_adapter_orca.py
+ERROR opal/tools/worktree-launcher/tests/test_cli.py
+ERROR opal/tools/worktree-launcher/tests/test_codex_handoff.py
+ERROR opal/tools/worktree-launcher/tests/test_integration.py
+ERROR opal/tools/worktree-launcher/tests/test_launcher_core.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 7 errors during collection !!!!!!!!!!!!!!!!!!!!
+1 deselected, 7 errors in 1.26s

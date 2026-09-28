@@ -1,0 +1,20 @@
+{
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "test_fixture.py::test_auto_a1",
+    "test_fixture.py::test_auto_a2",
+    "test_fixture.py::test_failed_scenario",
+    "test_fixture.py::test_impact_scenario",
+    "test_fixture.py::test_unknown_scenario"
+  ],
+  "cwd": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-repo",
+  "profile": "v1",
+  "exit_code": 0,
+  "stdout": ".....                                                                    [100%]\n5 passed in 0.01s\n",
+  "stderr": ""
+}

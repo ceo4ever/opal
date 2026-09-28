@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-27 07:42:05",
-  "updated_at": "2026-09-28 11:04:45",
-  "current_status": "blocked",
+  "updated_at": "2026-09-28 13:57:38",
+  "current_status": "in_progress",
   "rows": [
     {
       "row_id": 1,
@@ -103,34 +103,49 @@
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "failed",
-      "status_label": "❌",
-      "timestamp": "2026-09-28 11:04:45",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-28 13:53:16",
       "owner": "PM",
-      "note": "block: 사용자 피드백으로 수용 사항 3회 제한 제거: S-2 재검증 PASS, S-10은 최종 배포·회귀 갱신 대기. main의 태스크 163 커밋 2개 선행(behind=2) 및 163 파일 무변경 제약 예외 결정 대기"
+      "note": "독립 TEST 실행은 여러 세션에 걸쳐 진행되어 단일 워커 duration_ms 소급 불가; 10/10 PASS 증거 유지",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 9,
       "stage": "TEST",
       "item": "ownership 적재 실패 진단 수정",
       "key": "test.ownership_import_fix",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": null,
-      "note": "전체 회귀에서 선재 ownership import 실패의 잘못된 warning 판정 확인",
-      "test_change_kind": "fix"
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-28 13:53:23",
+      "owner": "PM",
+      "note": "ownership module import 실패 진단 경로 수정; 최종 ownership 167 PASS 및 core 1359 PASS",
+      "test_change_kind": "fix",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 10,
       "stage": "TEST",
+      "item": "병행 TEST 계측 갱신 유실 수정",
+      "key": "test.timing_writer_lock_fix",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-28 13:53:32",
+      "owner": "PM",
+      "note": "baseline 16개 중 2개 기록; 수정 및 설치본 16/16 보존, S-1/S-7/S-10 PASS, GC-001 해소",
+      "test_change_kind": "fix",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-28 13:53:47",
       "owner": "PM",
-      "note": null,
+      "note": "S-1~S-10 PASS; core 1359, ownership 167, launcher 161 PASS; 설치본 6/6; 보안/컨벤션 finding 0; behind 0",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md",
@@ -145,64 +160,65 @@
       }
     },
     {
-      "row_id": 11,
+      "row_id": 12,
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
-    },
-    {
-      "row_id": 12,
-      "stage": "CLOSE",
-      "item": "DONE.md 생성",
-      "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-28 13:54:55",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
     },
     {
       "row_id": 13,
       "stage": "CLOSE",
-      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
-      "key": "close.docs_sync",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-28 13:55:00",
       "owner": "PM",
-      "note": null,
-      "conditional": true
+      "note": "DONE.md 작성 및 TEST 결과·한계·merge 대기 경계 명시"
     },
     {
       "row_id": 14,
       "stage": "CLOSE",
-      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
-      "key": "close.brain_ingest",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-28 13:55:14",
       "owner": "PM",
-      "note": null,
+      "note": "docs/PROJECT.md 및 docs/CONVENTIONS.md에 TEST 실행 주기·도구·배포 경계 반영; 추가 동기화 대상 없음",
       "conditional": true
     },
     {
       "row_id": 15,
       "stage": "CLOSE",
-      "item": "회고/개선 후보 기록",
-      "key": "close.retrospective",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-28 13:57:10",
       "owner": "PM",
-      "note": null
+      "note": "읽기 전용 ingest 후보 1건 DONE.md에 선언; worktree brain 쓰기는 merge 후 허브 finalize로 유예",
+      "conditional": true,
+      "worker_duration_unknown": true
     },
     {
       "row_id": 16,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-28 13:57:38",
+      "owner": "PM",
+      "note": "개선 후보 0건: dist 사전 존재 문제는 fw-inbox의 태스크 157 제안에 이미 기록; 사용자 피드백·계측 경합은 본 태스크 소스에 반영"
+    },
+    {
+      "row_id": 17,
       "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
       "key": "close.worktree_finalize",
@@ -214,7 +230,7 @@
       "conditional": true
     },
     {
-      "row_id": 17,
+      "row_id": 18,
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",
@@ -225,7 +241,7 @@
       "note": null
     }
   ],
-  "next_action": "TEST 작업 진입",
+  "next_action": "CLOSE worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행) 진입",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162",
   "actor": "coordinator",
   "run_log": {
