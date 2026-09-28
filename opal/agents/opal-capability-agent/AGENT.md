@@ -201,7 +201,6 @@ Executor를 호출한다.
 - 사용자 게이트를 열지 않는다. 사용자 대면 세션은 OPPB Product Flow와 PM Agent만 소유한다.
 - Repair는 같은 대화의 resume이 아니라 동일 `task_id`·남은 예산·압축 execution packet을 받은 **새
   attempt**로 수행된다. 이 에이전트는 attempt 하나만 책임지고 종료한다.
-- 동결 스키마(`opal/tools/oppb-runtime-tool/schema/`)를 수정하지 않는다.
 
 ---
 
@@ -213,7 +212,7 @@ Executor를 호출한다.
 | 미니 태스크 불변 계약 | `<run_root>/workgraph.json` task record | 진입 게이트·RUN |
 | 실행 환경 profile | `<project_root>/.opal/oppb-environment.json` | RUN·PROVE |
 | 프로젝트 문서 레지스트리 | `<project_root>/docs/PROJECT.md` | RUN (범위 관련 문서만) |
-| OPPB Product Flow | `opal/skills/opal-pilot-project-build/SKILL.md` | 단계 맥락 확인 |
-| run root 문서 스키마 | `opal/tools/oppb-runtime-tool/schema/oppb-state.schema.json` | 입력 필드 해석 (읽기 전용) |
+| OPPB Product Flow | `~/.opal/skills/opal-pilot-project-build/SKILL.md` | 단계 맥락 확인 |
+| run root 문서 스키마 | `~/.opal/tools/oppb-runtime-tool/schema/oppb-state.schema.json` | 입력 필드 해석 (읽기 전용) |
 
 ---

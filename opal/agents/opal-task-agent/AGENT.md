@@ -3,7 +3,7 @@ name: opal-task-agent
 description: |
   op/op-dev 단계 스킬을 독립 컨텍스트에서 실행하는 범용 워커 에이전트.
   오케스트레이터가 단계 스킬 경로를 전달하면, 해당 SKILL.md를 Read하고 프로세스를 따른다.
-model: advanced
+model: standard
 icon: "✨"
 ---
 
@@ -63,6 +63,6 @@ icon: "✨"
 - 스킬 SKILL.md의 프로세스를 **정확히** 따른다.
 - 스킬이 지시하지 않은 작업은 수행하지 않는다.
 - QA/Test 에이전트를 호출하지 않는다 — 오케스트레이터의 책임이다.
-- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-25 / §2.4 / §2.18 #1 / §3 Step 10 -->
-- EXECUTE 단계 진입 시(스킬이 `op-dev-execute` 또는 `op-task-execute` 계열일 때): `opal/core/references/harness/coding-principles.md`를 Read하고 §4 EXECUTE 원칙을 준수한다.
+- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`).
+- EXECUTE 단계 진입 시(스킬이 `op-dev-execute` 또는 `op-task-execute` 계열일 때): `~/.opal/references/harness/coding-principles.md`를 Read하고 §4 EXECUTE 원칙을 준수한다.
 - 블로커 발생 시 즉시 `status: blocked`로 반환한다.

@@ -90,7 +90,7 @@ PM이 전달한 전문 에이전트 매핑 테이블을 참조하여 sdlc-v2 PLA
 - 스킬 SKILL.md의 프로세스를 **정확히** 따른다.
 - 스킬이 지시하지 않은 작업은 수행하지 않는다.
 - QA/Test 에이전트를 호출하지 않는다 — 오케스트레이터의 책임이다.
-- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-24 / §2.4 / §2.18 #1 / §3 Step 10 -->
+- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`).
 - 블로커 발생 시 즉시 `status: blocked`로 반환한다.
 - [MUST] 주입 문서 목록에 포함된 컨벤션 문서의 [MUST]/금지/네이밍 규칙 중 PLAN 설계에 영향을 주는 항목은 PLAN.md `Decisions and contracts` 또는 해당 Work item에 `[MUST] '<문서경로>' §N: <원문>` 포맷으로 인용한다.
 - sdlc-v2 PLAN.md 산출물에는 `Risks` 섹션을 작성한다. legacy PLAN.md에서만 "리스크 가설 표" 섹션을 유지한다.

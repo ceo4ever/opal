@@ -19,7 +19,7 @@ icon: "🧪"
 
 ## 실행 프로세스
 
-opd/opds의 TEST 순서·증거 재사용·fix 반복·최종 Gate는 `opal/core/references/harness/test-cycle.md`가 소유한다. PM의 진입 분기 조회가 `behind=0`으로 통과했는지 확인하고 실패·미확인이면 자동 실행을 시작하지 않는다. red mode는 기존 RED 절차를 따른다.
+opd/opds의 TEST 순서·증거 재사용·fix 반복·최종 Gate는 `~/.opal/references/harness/test-cycle.md`가 소유한다. PM의 진입 분기 조회가 `behind=0`으로 통과했는지 확인하고 실패·미확인이면 자동 실행을 시작하지 않는다. red mode는 기존 RED 절차를 따른다.
 
 1. 오케스트레이터 프롬프트에서 **TEST-SCENARIO.md 경로**, **test-scenario.json 경로**, **changed_files**, **mode**, **test_mode**를 확인한다.
 2. TEST-SCENARIO.md를 Read한다.
@@ -111,7 +111,7 @@ opd/opds의 TEST 순서·증거 재사용·fix 반복·최종 Gate는 `opal/core
   4. 작성된 테스트를 실행하여 실패(exit code≠0)를 확인하고 출력 증거를 `test-tool scenario-red`로 기록한다. legacy TEST-SCENARIO에서만 문서 결과 칸 갱신을 허용한다.
   5. RED 증거 없이 완료 선언 금지 (헌법 §4 "Completion requires evidence").
 - **스킵**: GREEN 구현, 프로덕션 코드 수정
-- **SSOT**: `opal/core/references/harness/red-first.md`
+- **SSOT**: `~/.opal/references/harness/red-first.md`
 
 ---
 

@@ -152,7 +152,7 @@ v2 변경 근거(1줄): 스트림의 가치는 장시간 비동기 축(T1/T2/T3)
 | T4a (test green) | 540초 | 〃 |
 | T4b (conv/sec) | 300초 | 〃 |
 
-비동기 축(T1·T2·T3)은 opal-agent `--timeout`(기본값, `opal/tools/opal-agent/README.md` §CLI 옵션 참조 — 기본 300초) 또는 축 특성에 맞춰 상향한 값을 사용한다. 완료 판정은 Bash 반환을 기준으로 하지 않으며, §결과 파일 규약의 완료 마커(`.exitcode` 파일 존재)로 수행한다 — opal-agent 자체 timeout 경과는 하드에러(exit 2)로 귀결되어 동일 판정 표를 그대로 따른다.
+비동기 축(T1·T2·T3)은 opal-agent `--timeout`(기본값, `~/.opal/tools/opal-agent/README.md` §CLI 옵션 참조 — 기본 300초) 또는 축 특성에 맞춰 상향한 값을 사용한다. 완료 판정은 Bash 반환을 기준으로 하지 않으며, §결과 파일 규약의 완료 마커(`.exitcode` 파일 존재)로 수행한다 — opal-agent 자체 timeout 경과는 하드에러(exit 2)로 귀결되어 동일 판정 표를 그대로 따른다.
 
 ### 모델 레벨 치환 절차
 
@@ -259,7 +259,7 @@ opal-agent 채널로 디스패치한 각 축의 실행 결과는 태스크 폴�
 
 **완료 마커** = `.exitcode` 파일의 **존재**. wrapper가 대상 프로세스 종료를 수확한 뒤에만 이 파일을 확정하므로, 파일 존재가 프로세스 완료의 결정론적 신호다. `.result.json`의 존재/비존재로 완료를 판정하지 않는다.
 
-**[066계승][MUST] v2에서도 위 완료 마커 판정 원칙은 불변이다** — `.events.jsonl`의 존재/비존재로도 완료를 판정하지 않는다(H-10).
+**[MUST] v2에서도 위 완료 마커 판정 원칙은 불변이다** — `.events.jsonl`의 존재/비존재로도 완료를 판정하지 않는다(H-10).
 
 ### terminal 판정 위임
 
@@ -330,7 +330,7 @@ adapter의 판정 규칙(요지):
   - 이벤트: `start | end | gate-verdict | retry | blocked`.
   - 근거: verdict+사유(gate-verdict) / 재시도 회차+사유(retry) / blocked 트리거 번호(§blocked 반환 계약 7종, blocked) 등.
 - 기록 시점: 각 단계 시작/종료, G 게이트 판단(verdict+근거), 재시도(회차+사유), blocked 사유 발생 시점.
-- **[MUST] 재시도 수치는 여기서 복제하지 않는다** — `opal/skills/opal-pilot-project-loop/references/loop-control.md` §2(반복 상한) 및 본 문서 §재시도 상한(`harness/guards.md` 포인터)을 참조한다. journal의 `retry` 행에는 실제 발생한 시도 회차만 기록하고, 상한 수치 자체는 위 SSOT 문서를 가리킨다.
+- **[MUST] 재시도 수치는 여기서 복제하지 않는다** — `~/.opal/skills/opal-pilot-project-loop/references/loop-control.md` §2(반복 상한) 및 본 문서 §재시도 상한(`harness/guards.md` 포인터)을 참조한다. journal의 `retry` 행에는 실제 발생한 시도 회차만 기록하고, 상한 수치 자체는 위 SSOT 문서를 가리킨다.
 - **[MUST] append-only** — 기존 행의 수정·삭제를 금지한다. 정정이 필요하면 새 행을 추가한다(기존 행은 보존).
 
 ---
@@ -384,7 +384,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 ## 재시도 상한
 
 - **구현 수준**(L1 lint ~ L3b E2E) 및 **설계 수준**(G 게이트 루브릭 미달·PLAN 재진입)의 구체적 재시도 횟수·최대 반복 수, 그리고 동일 컨텍스트 재개 상한은 여기서 새로 정의하거나 복제하지 않는다.
-- `opal/core/references/harness/guards.md` §자동 루핑 제약 표를 참조한다. PLAN 재진입 상한은 해당 표의 'PLAN 재진입' 행을, 재개 상한은 같은 절의 재개 행을 참조한다.
+- `~/.opal/references/harness/guards.md` §자동 루핑 제약 표를 참조한다. PLAN 재진입 상한은 해당 표의 'PLAN 재진입' 행을, 재개 상한은 같은 절의 재개 행을 참조한다.
 - **[MUST] 상한 도달 판정은 루프 액션 에이전트의 산문 판단이 아니라 `oppl-runtime-tool admit` 호출 결과로만 이루어진다.** 에이전트는 자체 카운터를 유지하지 않는다.
 - `admit`이 거부 코드를 반환하면 자율 재시도를 중단하고 그 코드를 사유로 `blocked`를 반환한다(에스컬레이션).
 
@@ -455,7 +455,7 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 6. 생성자(fe/be/db/task-agent) · Evaluator(opal-evaluator-agent) · test-agent(opal-test-agent) · conv·sec-checker를 각각 별도 에이전트로 **opal-agent 채널**(단계별 동기/비동기, `[WORKER]` 마커 + 검증된 `worker.dispatch` receipt)을 통해 내부 디스패치한다 — 생성자≠평가자(H-9)를 유지한다. PM→루프 액션 에이전트 디스패치 자체는 Agent 도구로 이루어지며 이 항목의 전환 대상이 아니다.
 7. 업무 SSOT 도구는 `test-tool scenario-*`만 호출한다 — `backlog-tool`·`state-tool`은 호출하지 않는다 (3-SSOT 경계). 런타임 가드 축의 `oppl-runtime-tool admit`/`attempt-start`/`attempt-finish`는 허용하되 `init`은 호출하지 않는다 (§도구 호출 규칙).
 8. 커밋하지 않는다 — PM이 머지/커밋을 관리한다.
-9. **[MUST] `~/.opal/` 를 직접 수정하지 않는다** — 변경은 항상 프로젝트 소스(`opal/agents/`, `opal/skills/` 등)에서 수행한다.
+9. **[MUST] `~/.opal/` 를 직접 수정하지 않는다.**
 10. **[MUST] 모든 phase 시작·resume 직전 `admit` → `attempt-start` → 실행 → `attempt-finish` 순서를 지킨다** — `admit` 거부 코드 8종을 재해석·조건부 무시·우회 재시도하지 않고 그대로 `blocked` 사유로 반환한다.
 11. **[MUST] 산출물 리다이렉트를 직접 구성하지 않는다** — `>`·`2>`·`echo $?` 대신 opal-agent `--run-dir`·`--phase`·`--attempt`에 위임한다.
 
@@ -465,12 +465,12 @@ allowlist는 **프로젝트 스코프 한정**이다 — `--cwd <project_root>`�
 
 | 문서 | 경로 | 참조 시점 |
 |------|------|----------|
-| oppl 오케스트레이터 | `opal/skills/opal-pilot-project-loop/SKILL.md` | 태스크 내부 파이프라인·디스패치 전체 |
-| 루프 제어 가이드 | `opal/skills/opal-pilot-project-loop/references/loop-control.md` | 예산·재시도 상한 참조 원칙 |
-| 검증 가이드 | `opal/skills/opal-pilot-project-loop/references/verification.md` | 검증 2원화 순서(§3), 결과 계약 스키마(§5.3) |
-| CONTRACT 거버넌스 | `opal/skills/opal-pilot-project-loop/references/contract.md` | CONTRACT drift 경계·오너십 계층 |
-| 하네스 Guards | `opal/core/references/harness/guards.md` | 자동 루핑 제약(재시도 상한 SSOT) |
-| 런타임 가드 도구 | `opal/tools/oppl-runtime-tool/README.md` | `admit`·`attempt-start`·`attempt-finish` 서브커맨드와 거부 코드 계약 |
-| oppd 액션 에이전트 (준거) | `opal/agents/opal-task-action-agent/AGENT.md` | 입력 명세·내부 재디스패치·결과 계약 구조 준거 |
+| oppl 오케스트레이터 | `~/.opal/skills/opal-pilot-project-loop/SKILL.md` | 태스크 내부 파이프라인·디스패치 전체 |
+| 루프 제어 가이드 | `~/.opal/skills/opal-pilot-project-loop/references/loop-control.md` | 예산·재시도 상한 참조 원칙 |
+| 검증 가이드 | `~/.opal/skills/opal-pilot-project-loop/references/verification.md` | 검증 2원화 순서(§3), 결과 계약 스키마(§5.3) |
+| CONTRACT 거버넌스 | `~/.opal/skills/opal-pilot-project-loop/references/contract.md` | CONTRACT drift 경계·오너십 계층 |
+| 하네스 Guards | `~/.opal/references/harness/guards.md` | 자동 루핑 제약(재시도 상한 SSOT) |
+| 런타임 가드 도구 | `~/.opal/tools/oppl-runtime-tool/README.md` | `admit`·`attempt-start`·`attempt-finish` 서브커맨드와 거부 코드 계약 |
+| oppd 액션 에이전트 (준거) | `~/.opal/agents/opal-task-action-agent/AGENT.md` | 입력 명세·내부 재디스패치·결과 계약 구조 준거 |
 
 ---

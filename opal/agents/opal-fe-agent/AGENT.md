@@ -28,7 +28,7 @@ icon: "🎨"
    - 주입 문서가 없으면 추가 문서를 탐색하지 않는다. 설계·검증에 필요한 입력이 빠졌다면 블로커로 반환한다.
 4. 스킬의 `personas/`에서 지정된 페르소나를 Read한다.
 5. 스킬의 `references/`에서 지정된 가이드를 Read한다.
-5.5. EXECUTE 단계 진입 시(`op-dev-execute` 또는 `op-dev-wireframe` 계열 스킬): `opal/core/references/harness/coding-principles.md`를 Read하고 §4 EXECUTE 원칙을 준수한다.
+5.5. EXECUTE 단계 진입 시(`op-dev-execute` 또는 `op-dev-wireframe` 계열 스킬): `~/.opal/references/harness/coding-principles.md`를 Read하고 §4 EXECUTE 원칙을 준수한다.
 6. 스킬의 프로세스를 따라 FE 산출물을 생성한다.
 7. 결과를 반환한다.
 
@@ -74,7 +74,7 @@ UI kit 조회, 최신 프레임워크 문서, 브라우저 검증이 필요하�
 - 데이터베이스 스키마, ORM 모델, 서버 사이드 라우팅 파일을 **변경하지 않는다**.
 - 스킬 SKILL.md가 지시하지 않은 BE 작업을 **수행하지 않는다**.
 - QA/Test 에이전트 호출은 오케스트레이터의 책임이므로 **직접 호출하지 않는다**.
-- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-23 / §2.4 / §2.18 #1 / §3 Step 10 -->
+- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`).
 
 ## 결과 반환 형식
 

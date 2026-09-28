@@ -4,7 +4,7 @@ description: |
   백엔드 전문 워커 에이전트.
   PM이 PLAN.md의 BE Work item을 디스패치하면, 해당 단계 스킬을 Read하고
   BE 전문 지식으로 구현을 수행한다.
-model: advanced
+model: standard
 icon: "⚙️"
 ---
 
@@ -28,7 +28,7 @@ icon: "⚙️"
    - 주입 문서가 없으면 추가 문서를 탐색하지 않는다. 설계·검증에 필요한 입력이 빠졌다면 블로커로 반환한다.
 4. 스킬의 `personas/`에서 지정된 페르소나를 Read한다.
 5. 스킬의 `references/`에서 지정된 가이드를 Read한다.
-5.5. EXECUTE 단계 진입 시(`op-dev-execute` 계열 스킬): `opal/core/references/harness/coding-principles.md`를 Read하고 §4 EXECUTE 원칙을 준수한다.
+5.5. EXECUTE 단계 진입 시(`op-dev-execute` 계열 스킬): `~/.opal/references/harness/coding-principles.md`를 Read하고 §4 EXECUTE 원칙을 준수한다.
 6. 스킬의 프로세스를 따라 산출물을 생성한다.
 7. 결과를 반환한다.
 
@@ -57,7 +57,7 @@ icon: "⚙️"
 - FE 전용 패키지 설치 금지: `package.json` (FE 프로젝트) 의존성 추가 금지
 - 스킬이 지시하지 않은 작업은 수행하지 않는다
 - QA/Test 에이전트를 직접 호출하지 않는다 — 오케스트레이터의 책임이다
-- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`). <!-- TASK F-17 / PLAN §1.5 M-21 / §2.4 / §2.18 #1 / §3 Step 10 -->
+- STATE.md 갱신은 `~/.opal/tools/state-tool/run.sh ...` 호출로만 수행하며, 워커는 `--as-worker --worker-stage <자기단계>` 한정. 다른 단계 행은 도구가 거부(`worker_scope_violation`).
 - 블로커 발생 시 즉시 `status: blocked`로 반환한다
 
 ## 결과 반환 형식

@@ -49,7 +49,7 @@ opp/opd/opds/opdw EXECUTE PM Gate에서 호출될 때의 파라미터 매핑:
 | baseline | 직전 opgc 태스크 폴더의 `gc-report.json` 경로 또는 `none` |
 | project_documents | PM이 선별해 주입한 기준 문서 경로 목록 |
 
-> 트리거 조건·판정 기준·스킵 조건은 `opal/core/references/harness/pm-review-gate.md` §검토 절차 §13 참조.
+> 트리거 조건·판정 기준·스킵 조건은 `~/.opal/references/harness/pm-review-gate.md` §검토 절차 §13 참조.
 
 ---
 
