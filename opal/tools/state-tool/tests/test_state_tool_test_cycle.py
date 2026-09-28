@@ -15,6 +15,7 @@ import pathlib
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 
 TOOL = pathlib.Path(__file__).parents[1] / "state_tool.py"
@@ -119,3 +120,37 @@ def test_s7_clock_intervals_overlap_duplicate_guards_and_legacy_unknown(tmp_path
                      __import__("datetime").datetime.fromisoformat(i["started_at"])).total_seconds()
                     for i in intervals if i["kind"] == "human")
     assert metrics["human_wait_seconds"] < human_sum
+
+
+def test_s7_concurrent_clock_writers_preserve_every_interval(tmp_path):
+    path = task(tmp_path)
+
+    def start(index):
+        return cli("test-clock", "start", path, "--kind", "human", "--id", f"h{index}")
+
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        results = list(pool.map(start, range(16)))
+    assert all(result.returncode == 0 for result, _ in results), results
+
+    state = json.loads((path / "state.json").read_text())
+    intervals = state["test_timing"]["intervals"]
+    assert {item["id"] for item in intervals} == {f"h{index}" for index in range(16)}
+
+
+def test_s7_clock_and_row_writer_keep_both_updates(tmp_path):
+    path = task(tmp_path)
+
+    def add_row():
+        return cli("add-row", path, "--after-task-step-id", "1",
+                   "--stage", "TEST", "--item", "follow-up")
+
+    def start_clock():
+        return cli("test-clock", "start", path, "--kind", "human", "--id", "login")
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        outcomes = list(pool.map(lambda fn: fn(), (add_row, start_clock)))
+    assert all(result.returncode == 0 for result, _ in outcomes), outcomes
+
+    state = json.loads((path / "state.json").read_text())
+    assert any(row["item"] == "follow-up" for row in state["rows"])
+    assert state["test_timing"]["intervals"][0]["id"] == "login"

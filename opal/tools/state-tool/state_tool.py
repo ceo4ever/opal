@@ -46,6 +46,7 @@
 
 # PLAN §2.1 구현 명세 — TASK T-11: 표준 라이브러리만 import
 import argparse
+import fcntl
 import fnmatch
 import hashlib
 import importlib.util
@@ -57,6 +58,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -925,6 +927,20 @@ def resolve_task_path(task_path_str, command):
     if not p.is_dir():
         err(command, "task_path_not_found", path=str(p))
     return p
+
+
+@contextmanager
+def state_writer_lock(task_path):
+    """Serialize state-tool writers across processes for one task."""
+    lock_path = pathlib.Path(task_path) / ".state-tool.lock"
+    flags = os.O_CREAT | os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(lock_path, flags, 0o600)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
 
 def load_state_json(task_path, command):
     """state.json 로드. 미존재 시 state_not_initialized + exit 1."""
@@ -7832,7 +7848,21 @@ def build_parser():
 def main():
     parser = build_parser()
     args   = parser.parse_args()
-    args.func(args)
+    state_writers = {
+        "advance", "mark", "block", "add-row",
+        "status", "test-clock", "run-start", "gate-pass", "log-event",
+        "gate-request", "gate-resolve", "design-gate", "design-decision",
+    }
+    resolve_mode_write = (
+        args.command == "resolve-mode" and args.mode is not None
+        and (pathlib.Path(args.task_path) / "state.json").exists()
+    )
+    if args.command in state_writers or resolve_mode_write:
+        task_path = resolve_task_path(args.task_path, args.command)
+        with state_writer_lock(task_path):
+            args.func(args)
+    else:
+        args.func(args)
 
 if __name__ == "__main__":
     main()
