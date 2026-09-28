@@ -3,11 +3,11 @@
   "module": "settings",
   "layer": "util",
   "domain": "opal-workspace",
-  "description": "launcher 설정 2-레이어 로더. `load_launcher_settings(project_root=None)`이 코드 상수 → 전역 `~/.opal/setting.json`(`GLOBAL_SETTING_PATH`) → `{project_root}/.opal/setting.local.json` 순으로 `launcher` 블록을 머지해 `{default, agents, utterance_template}` 3키 dict를 돌려준다. 머지 입도는 D-E — `agents.<name>`은 이름 단위 통째 교체(엔트리 내부를 깊게 합치지 않는다), 그 위 키는 키 단위 덮어쓰기다. 파일 부재·JSON 파싱 실패·타입 불일치는 전건 그 레이어만 무시하고 아래 레이어 값을 유지하며 예외를 전파하지 않는다(D-F — `models` 미설정은 중단이지만 launcher 미설정은 기본값이다. 블록을 쓴 적 없는 전 사용자의 `--wt`가 깨지면 안 된다). `resolve_command(settings, agent=None, task_path=…)`은 `agent` 인자 > `default` 순으로 이름을 정하고 `utterance_template`·`argv_template`을 렌더링해 실행 명령 문자열 하나를 만든다. 치환 토큰은 `{utterance}`·`{task_path}` 2종뿐이며 리터럴 치환이라 그 외 중괄호는 손대지 않는다(포맷 예외 없음). `launcher`는 `adapter`를 소유하지 않는다 — 어댑터 선택은 CLI `--adapter` 인자가 단독 소유한다. 이 모듈은 설정 파일을 읽기만 하고 쓰지 않는다.",
+  "description": "launcher 설정 2-레이어 로더. `load_launcher_settings(project_root=None)`이 코드 상수 → 전역 `~/.opal/setting.json`(`GLOBAL_SETTING_PATH`) → `{project_root}/.opal/setting.local.json` 순으로 `launcher` 블록을 머지해 `{default, agents, utterance_template}` 3키 dict를 돌려준다. 머지 입도는 D-E — `agents.<name>`은 이름 단위 통째 교체(엔트리 내부를 깊게 합치지 않는다), 그 위 키는 키 단위 덮어쓰기다. 파일 부재·JSON 파싱 실패·타입 불일치는 전건 그 레이어만 무시하고 아래 레이어 값을 유지하며 예외를 전파하지 않는다(D-F — `models` 미설정은 중단이지만 launcher 미설정은 기본값이다. 블록을 쓴 적 없는 전 사용자의 `--wt`가 깨지면 안 된다). `resolve_command(settings, agent=None, task_path=…, meta_dir=…)`은 `agent` 인자 > `default` 순으로 이름을 정하고 `utterance_template`·`argv_template`을 렌더링해 실행 명령 문자열 하나를 만든다. 치환 토큰은 `{utterance}`·`{task_path}`·`{meta_dir}` 3종뿐이며 리터럴 치환이라 그 외 중괄호는 손대지 않는다(포맷 예외 없음). `{meta_dir}`은 태스크 전용 메타 폴더 절대경로를 받아 Codex 기본 argv_template에 `--add-dir` 쓰기 권한 토큰으로 쓰인다. `resolve_argv_template(settings, agent=None)`은 치환 전 원본 `argv_template` 문자열을 공개해 CLI의 기동 전 점검(`cli._grant_option_preflight`)이 `{meta_dir}` 사용 여부·직전 옵션 토큰을 판정하게 한다. `launcher`는 `adapter`를 소유하지 않는다 — 어댑터 선택은 CLI `--adapter` 인자가 단독 소유한다. 이 모듈은 설정 파일을 읽기만 하고 쓰지 않는다.",
   "exports": [
     "GLOBAL_SETTING_PATH", "LOCAL_SETTING_RELPATH", "LAUNCHER_BLOCK_KEY",
     "DEFAULT_AGENT", "DEFAULT_AGENTS", "DEFAULT_UTTERANCE_TEMPLATE",
-    "load_launcher_settings", "resolve_command"
+    "load_launcher_settings", "resolve_command", "resolve_argv_template"
   ],
   "depends": ["opal/core/setting.default.json(launcher 블록 기본값 SSOT)"]
 }
@@ -35,16 +35,17 @@ LAUNCHER_BLOCK_KEY = "launcher"
 DEFAULT_AGENT = "claude"
 DEFAULT_AGENTS = {
     "claude": {"argv_template": 'claude "{utterance}"'},
-    "codex": {"argv_template": 'codex --no-daemon "{utterance}"'},
+    "codex": {"argv_template": 'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'},
 }
 DEFAULT_UTTERANCE_TEMPLATE = "{task_path} 이어서 수행"
 # Bounded child-lease observation limit.  Configuration uses the public camel
 # case key so the JSON setting stays consistent with the other launcher keys.
 DEFAULT_LEASE_POLL_TIMEOUT_SEC = 30
 
-# 치환 토큰은 이 2종뿐이다(D-E).
+# 치환 토큰은 이 3종뿐이다(`{meta_dir}`는 태스크 전용 메타 폴더 쓰기 경로 부여용으로 추가됐다).
 PLACEHOLDER_UTTERANCE = "{utterance}"
 PLACEHOLDER_TASK_PATH = "{task_path}"
+PLACEHOLDER_META_DIR = "{meta_dir}"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -145,11 +146,13 @@ def load_launcher_settings(project_root=None) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _render(template: str, utterance: str, task_path: str) -> str:
-    """플레이스홀더 2종만 리터럴 치환한다 — `str.format`을 쓰지 않으므로
+def _render(template: str, utterance: str, task_path: str, meta_dir: str = "") -> str:
+    """플레이스홀더 3종만 리터럴 치환한다 — `str.format`을 쓰지 않으므로
     템플릿에 다른 중괄호가 있어도 예외가 나지 않고 그대로 남는다."""
-    return template.replace(PLACEHOLDER_TASK_PATH, task_path).replace(
-        PLACEHOLDER_UTTERANCE, utterance
+    return (
+        template.replace(PLACEHOLDER_TASK_PATH, task_path)
+        .replace(PLACEHOLDER_META_DIR, meta_dir)
+        .replace(PLACEHOLDER_UTTERANCE, utterance)
     )
 
 
@@ -171,14 +174,26 @@ def _argv_template(settings: dict, agent) -> str:
     return DEFAULT_AGENTS[DEFAULT_AGENT]["argv_template"]
 
 
-def resolve_command(settings: dict, agent=None, task_path: str = "") -> str:
+def resolve_argv_template(settings: dict, agent=None) -> str:
+    """치환 전 원본 `argv_template` 문자열을 공개한다(CLI의 기동 전 점검 전용).
+
+    `resolve_command`가 내부적으로 쓰는 `_argv_template`과 같은 이름 해석 규칙을
+    쓰되, 치환은 하지 않는다 — 호출자가 `{meta_dir}` 존재 여부·직전 옵션 토큰을
+    직접 검사할 수 있게 한다."""
+    settings = settings if isinstance(settings, dict) else {}
+    return _argv_template(settings, agent)
+
+
+def resolve_command(settings: dict, agent=None, task_path: str = "", meta_dir: str = "") -> str:
     """실행 명령 문자열 하나를 만든다.
 
     `agent` 인자가 `default`를 이긴다. 발화는 `utterance_template`에 `{task_path}`를
-    넣어 만들고, 그 결과를 `argv_template`의 `{utterance}`에 넣는다.
+    넣어 만들고, 그 결과를 `argv_template`의 `{utterance}`에 넣는다. `{meta_dir}`는
+    태스크 전용 메타 폴더 절대경로를 그대로 리터럴 치환한다.
     """
     settings = settings if isinstance(settings, dict) else {}
     task_path = task_path if isinstance(task_path, str) else str(task_path)
+    meta_dir = meta_dir if isinstance(meta_dir, str) else str(meta_dir)
 
     utterance_template = settings.get("utterance_template")
     if not isinstance(utterance_template, str) or not utterance_template:
@@ -186,4 +201,6 @@ def resolve_command(settings: dict, agent=None, task_path: str = "") -> str:
 
     # 발화 템플릿이 받는 토큰은 `{task_path}` 하나다.
     utterance = utterance_template.replace(PLACEHOLDER_TASK_PATH, task_path)
-    return _render(_argv_template(settings, agent), utterance=utterance, task_path=task_path)
+    return _render(
+        _argv_template(settings, agent), utterance=utterance, task_path=task_path, meta_dir=meta_dir
+    )

@@ -70,6 +70,32 @@ canonical 값뿐이다 — 없으면 `--worktree-root`로 대체하지 않고 `t
 `close`의 스코프는 `--terminal` 또는 `--worktree-root --all` **정확히 하나**이며, 위반은 어댑터를
 호출하기 전에 거부한다(`--json`은 회수 스윕 호출 형태와의 호환용 no-op — 출력은 항상 JSON이다).
 
+### 기동 전 점검
+
+`launch`는 lease 이관·터미널 기동(`launcher_core.run`) **이전**에 아래 점검을 수행한다.
+실패하면 어댑터·lease를 한 번도 건드리지 않고 `launch_preflight_failed` + `cause`로 종료한다.
+
+1. **메타 폴더 존재·쓰기 가능** — `launcher_core.task_meta_dir_path(project_root, task)`가
+   계산한 태스크 전용 메타 폴더와 그 안의 `meta.json`이 존재해야 하고(부재는
+   `meta_dir_missing`), 허브 프로세스가 그 폴더에 쓸 수 있어야 한다
+   (`meta_dir_not_writable`). registry 조회(`--command`로 명령을 직접 줄 때도 포함)보다
+   **먼저** 독립적으로 판정하며, registry 조회 실패(`registry_unreadable` 등)와 섞이지
+   않는다.
+2. **grant 옵션 지원 확인** — 명령 확정 뒤, 확정된 `argv_template`
+   (`settings.resolve_argv_template`)에 `{meta_dir}`가 있을 때만 적용된다. 그 직전 옵션
+   토큰(예: `--add-dir`)을 뽑아 실행 파일의 `<실행 파일> --help`(10초 제한) 출력에 있는지
+   확인한다 — 실행 파일을 PATH에서 찾지 못했거나 `--help` 실행 자체가 실패·타임아웃하면
+   `agent_help_unavailable`, 실행은 됐지만 출력에 그 옵션이 없으면
+   `grant_option_unsupported`다.
+3. **비차단 경고** — `{meta_dir}`를 쓰는 에이전트(현재 Codex 기본값)는 검사 ①②를 통과하면
+   응답 `warnings` 배열에 `git_write_requires_escalation`을 싣는다 — 공유 워크트리 `.git`에
+   대한 쓰기는 별도 에스컬레이션이 필요하다는 뜻이며 기동을 막지 않는다. `{meta_dir}`를
+   쓰지 않는 에이전트(Claude 기본값)는 이 경고가 붙지 않는다.
+
+**`--command`로 직접 명령을 주면 검사 ①은 항상 적용되고, 검사 ②③은 그 명령 문자열에
+`{meta_dir}` 리터럴이 없으므로 적용되지 않는다** — `{meta_dir}` 치환은 `resolve_command`를
+거치는 registry 기반 경로에서만 일어난다.
+
 ### 오류 코드
 
 argparse usage 오류도 exit 2 + 사람용 usage로 새지 않고 구조화 JSON + exit 1로 바뀐다.
@@ -81,6 +107,7 @@ argparse usage 오류도 exit 2 + 사람용 usage로 새지 않고 구조화 JSO
 | `invalid_arguments` | 서브명령 누락·argparse usage 오류·`launch` 필수 인자 누락 |
 | `registry_unreadable` | registry meta를 읽지 못함 |
 | `task_path_unresolved` | meta에 canonical `task_path`가 없음 |
+| `launch_preflight_failed` | 기동 전 점검 실패. `cause` ∈ `meta_dir_missing`\|`meta_dir_not_writable`\|`grant_option_unsupported`\|`agent_help_unavailable` |
 | `launcher_error` | `launcher_core.LauncherError` |
 | `terminal_required` | `read`에 `--terminal` 누락 |
 | `close_scope_invalid` | `close` 스코프 배타성 위반 |
@@ -92,7 +119,8 @@ argparse usage 오류도 exit 2 + 사람용 usage로 새지 않고 구조화 JSO
 
 `launcher_core.run(adapter, hub_root=…, task=…, worktree_root=…, command=…)` 1회 호출이 아래 순서를 밟는다.
 
-1. **preflight** — registry meta(`<hub_root>/.opal-worktrees/.meta/task_{NNN}.json`)를 읽고
+1. **preflight** — registry meta(태스크 전용 폴더
+   `<hub_root>/.opal-worktrees/.meta/task_{NNN}/meta.json`, `launcher_core.registry_meta_path`)를 읽고
    등록된 `worktree_root`가 인자와 realpath 동치인지 확인한다. 상태가 `hub_owned`이면
    `session_launching`으로 전이하고, 이미 `session_launching`이면 그 소유를 이어받아
    generation을 낭비하지 않는다(멱등 재진입). 둘 다 아니면 상태를 건드리지 않고 거부한다.
@@ -181,7 +209,8 @@ adapter 선택은 이 도구가 자동으로 하지 않는다. bootstrap과 `--w
   "launcher": {
     "default": "claude",                                  // 쓸 에이전트 이름
     "agents": {
-      "claude": { "argv_template": "claude \"{utterance}\"" }  // 셸 명령 문자열
+      "claude": { "argv_template": "claude \"{utterance}\"" },              // 셸 명령 문자열
+      "codex":  { "argv_template": "codex --no-daemon --add-dir \"{meta_dir}\" \"{utterance}\"" }
     },
     "utterance_template": "{task_path} 이어서 수행"          // 첫 발화
   }
@@ -190,7 +219,16 @@ adapter 선택은 이 도구가 자동으로 하지 않는다. bootstrap과 `--w
 
 - `argv_template`은 argv 리스트가 아니라 **셸 명령 문자열**이다 — orca `--command <text>`가
   셸이 실행할 문자열 하나를 받기 때문이다.
-- 치환 토큰은 `{utterance}`·`{task_path}` **2종뿐**이며 리터럴 치환이라 다른 중괄호는 그대로 남는다.
+- 치환 토큰은 `{utterance}`·`{task_path}`·`{meta_dir}` **3종뿐**이며 리터럴 치환이라 다른
+  중괄호는 그대로 남는다.
+  - `{meta_dir}`은 태스크 전용 메타 폴더
+    (`<hub_root>/.opal-worktrees/.meta/task_{NNN}/`, `launcher_core.task_meta_dir_path`가
+    허브 루트·태스크 번호 발급값으로 계산) 절대경로다. Codex 기본값은 이 토큰을
+    `--add-dir` 뒤에 실어 Codex가 자기 태스크 메타 폴더에만 쓰기 권한을 갖게 한다 —
+    워크트리 전체나 허브 루트를 열어주지 않는다. **Claude 기본값은 이 토큰을 쓰지 않으며
+    바이트 그대로 불변이다.**
+  - `settings.resolve_argv_template(settings, agent=None)`은 치환 전 원본 `argv_template`을
+    돌려준다 — CLI의 기동 전 점검이 `{meta_dir}` 사용 여부·직전 옵션 토큰을 판정하는 데 쓴다.
 - 머지 입도: `agents.<name>`은 **이름 단위 통째 교체**(엔트리 내부를 깊게 합치지 않는다),
   그 위 키는 키 단위 덮어쓰기.
 - **`launcher`는 `adapter`를 소유하지 않는다** — 어댑터 선택은 CLI `--adapter`가 단독으로 정한다.

@@ -68,9 +68,10 @@ def build_launcher_hub(
 
     - `worktree_root` = `<hub>/.opal-worktrees/task_{task}/` — 워크트리 **안**에는
       `.opal-worktrees`를 만들지 않는다.
-    - registry v2 메타를 `<hub>/.opal-worktrees/.meta/task_{task}.json`에 직접 배치한다
-      (`worktree-tool create`의 실 git 셋업 없이 스키마만 동형으로 재현 — PLAN 138 완료 기준
-      B-2가 허용한 두 방식 중 경량 대안).
+    - registry v2 메타는 `adapter` 값과 무관하게 항상 태스크 전용 폴더
+      `<hub>/.opal-worktrees/.meta/task_{task}/meta.json`에 둔다 — worktree-tool의
+      `ownership-set` subprocess와 `launcher_core.read_registry_meta`가 같은 단일
+      경로(`registry_meta_path`)만 읽고 쓰므로, 구 구조 평면 파일 조합은 두지 않는다.
     - `attribution_state` 키는 만들지 않는다(active = 키 부재, worktree_tool.py:121).
     """
     hub = tmp_path / "hub"
@@ -79,7 +80,9 @@ def build_launcher_hub(
     worktree_root.mkdir(parents=True)
     meta_dir = wt_parent / ".meta"
     meta_dir.mkdir(parents=True)
-    meta_path = meta_dir / f"task_{task}.json"
+    task_meta_dir = meta_dir / f"task_{task}"
+    task_meta_dir.mkdir(parents=True, exist_ok=True)
+    meta_path = task_meta_dir / "meta.json"
 
     branch = f"feat/OP-TASK-{task}"
     meta = {

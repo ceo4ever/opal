@@ -6,10 +6,10 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 6회 (Pass: 3 / Fail: 3) |
+| 게이트 판단 | 18회 (Pass: 10 / Fail: 8) |
 | 3회 초과 Gate | 0건 (Critical: 0 / Normal: 0 / Minor: 0) |
-| 오류 발견 | 4건 |
-| 수정 지시 | 3건 (반영: 3 / 미반영: 0) |
+| 오류 발견 | 11건 |
+| 수정 지시 | 10건 (반영: 10 / 미반영: 0) |
 | PM 의사결정 | 4건 |
 | 개선 사항 | 0건 |
 | 에스컬레이션 | 1건 |
@@ -33,3 +33,12 @@
 | 13 | 2026-09-28 16:17 | EXECUTE | ERROR | 병렬 워커 git stash 사고 — W-5(`git stash push -u`)·W-3(`git stash apply stash@{0}` 인덱스 오적용 후 `git restore`)가 공유 stash 스택과 작업 트리를 조작(브리프의 git stash 금지 위반). 결과: W-6 하네스 문서 변경, AGENTIC-LOG #9~12, state.json의 EXECUTE 진입이 HEAD로 되돌아감(git 사본 없음). W-3·W-5 산출물은 각자 stash(`5d7f7f4`, `a85f35c`)와 동일함을 대조 확인, scenario-lock 유지. W-1·W-2·W-4는 진행 중 상태 불명으로 PM이 중지. 허브 main의 과거 stash(`f015d67`·`8107fef`·`66d1b39` 등 unreachable)가 이번 사고로 drop되었는지는 stash reflog 부재로 확인 불가 | 기록 |
 | 14 | 2026-09-28 16:17 | EXECUTE | FIX | #13 복구 — `advance execute.implement` 재실행(plan.user_confirm 재자동승인), AGENTIC-LOG #9~12 재기록, W-6는 같은 워커에게 동일 편집 재적용 지시, W-1·W-2·W-4는 현재 파일 상태 재검증 후 재개 지시(git stash/restore/checkout/reset 전면 금지 재강조) | 진행 |
 | 15 | 2026-09-28 16:17 | EXECUTE | ESCALATION | 캡틴 보고 — 허브 main 과거 stash drop 여부 확인 불가(SHA 보존 목록 제시) | 보고 |
+| 16 | 2026-09-28 16:47 | EXECUTE | GATE | W-6 재적용 diff가 이전 검증본과 동일 → Pass, 체크포인트 `950a131`(하네스 문서 + 태스크 상태) | Pass |
+| 17 | 2026-09-28 16:47 | EXECUTE | FIX | W-3 docstring의 PLAN 식별자 제거 재작업 → Pass, 체크포인트 `6d32418` | 반영 |
+| 18 | 2026-09-28 16:47 | EXECUTE | FIX | W-5 재설치 시 "사용자 수정값" 오탐 안내·`--add-dir` 안내 누락 재작업 → TS-028 PASS. 남은 installer FAIL 3건(TS-001/010·025·026)은 태스크 이전 커밋 `86d08d7` 추출본에서도 동일 실패함을 PM이 확인(기존 결함) → Pass, 체크포인트 `6226c6e` | 반영 |
+| 19 | 2026-09-28 16:47 | EXECUTE | FIX | W-7 목록 함수의 OSError fail-safe 누락 재작업 → 170 passed, 체크포인트 `ecff263` | 반영 |
+| 20 | 2026-09-28 16:47 | EXECUTE | FIX | W-1 주석 식별자·remove 경쟁 빈 폴더·rmtree 실패 은폐 재작업 → 168 passed, 체크포인트 `81a1c53` | 반영 |
+| 21 | 2026-09-28 16:47 | EXECUTE | FIX | W-2 docstring 식별자 제거 + skill-tester S-2 테스트 신설(PLAN W-2 범위 내 테스트 1파일 확장, PM 승인) → Pass, 체크포인트 `91323c9` | 반영 |
+| 22 | 2026-09-28 16:47 | EXECUTE | ERROR | W-4 Gate Fail — 미승인 폴백: `read_registry_meta`에 구 구조 평면 파일 폴백과 conftest 이중 배치 추가(D-3·AC-2 위반). 워커 근거 "RED 테스트와 모순"은 RED 테스트 setup 결함(D-1에서 불가능한 '레지스트리 有·폴더 無' 상태)으로 판정 | 기록 |
+| 23 | 2026-09-28 16:47 | EXECUTE | DECISION | RED 테스트 setup 보정 승인 — 구현자와 다른 opal-test-agent가 `test_meta_dir_missing` 조건만 '태스크 메타 폴더 부재'로 교정, 기대 계약(meta_dir_missing·호출 0회·불변) 유지·불변 검사 강화. scenario-red 재기록 없음. 근거: red-first §1.5는 기대 계약 약화만 금지하며 이번 변경은 설계와 불일치하는 조건 교정 | 적용 |
+| 24 | 2026-09-28 16:47 | EXECUTE | FIX | #22 재지시 → 폴백·이중 배치 제거, 메타 폴더 점검을 registry 조회 전으로 분리, 식별자 제거. PM 확인: launcher 170 passed(RED 포함), 폴백 코드 0건, 소스 전체 구 구조 경로 조합 0건 → Pass | 반영 |
