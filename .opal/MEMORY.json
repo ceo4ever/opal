@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 160,
+  "last_task_number": 163,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -157,6 +157,20 @@
   ],
   "history": [
     {
+      "title": "163 코덱스 워크트리 부팅 소유권 복구",
+      "date": "2026-09-28",
+      "stage": "완료",
+      "path": "tasks/163-260927-opds-코덱스-워크트리-부팅-소유권-복구/",
+      "result": "Codex 자식 세션의 lease와 registry 소유권 확정 순서를 복구하고 실패 시 허브 복귀·진단을 구현함. 필수 시나리오 10/10 통과, 실제 Codex 작업본 기동 및 checkpoint 확인, main 머지 완료."
+    },
+    {
+      "title": "161 검증도구 실행정확성 복구",
+      "date": "2026-09-27",
+      "stage": "완료",
+      "path": "tasks/161-260927-opd-검증도구-실행정확성-복구/",
+      "result": "test-tool unit의 설치 확인과 실제 검사를 분리하고 미실행·실패·범위를 구조화해 기록함. 실도구 검증 13/13 통과, 회귀 테스트 569건 통과, main 머지 완료."
+    },
+    {
       "title": "160 opst OPPB 지원",
       "date": "2026-09-26",
       "stage": "완료",
@@ -176,20 +190,6 @@
       "stage": "완료",
       "path": "tasks/157-260924-opds-PM-설계경로-단일화와-독립-설계게이트/",
       "result": "opd/opds PM 경로 6행 공용 파이프라인(pipeline-pm.json)·설계 게이트(결정론 검사+evaluator design-rubric 1회)·문서 묶음 해시 고정·반복 상한 사용자 대기 도입, TEST 14/14. 추가작업으로 opal-skill-tester(opst) 신설"
-    },
-    {
-      "title": "156 파일럿 기본실행과 PM 역할 재정의",
-      "date": "2026-09-24",
-      "stage": "완료",
-      "path": "tasks/156-260924-opds-파일럿-기본실행과-PM-역할-재정의/",
-      "result": "5개 Pilot 신규 기본값 agentic·worktree, opd/opds PM 조율 및 전문 워커 구현. main에 a752b94 fast-forward 병합, 핵심 회귀 23 passed·16 subtests passed, 완료 귀속 반영."
-    },
-    {
-      "title": "155 코덱스 세션 이관 복구",
-      "date": "2026-09-24",
-      "stage": "완료",
-      "path": "tasks/155-260924-opds-코덱스-세션-이관-복구/",
-      "result": "Codex native 신원·부모 상속 차단·lease handoff/cancel 전달 및 registry 정합성 수정. 독립 시나리오 9/9와 실제 Orca E2E 통과, main 머지 완료."
     }
   ]
 }
