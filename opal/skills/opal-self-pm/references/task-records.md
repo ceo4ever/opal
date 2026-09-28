@@ -68,5 +68,5 @@ PM 보고는 같은 계약의 `pm.report`, 사용자 확인 요청·응답은 �
 1. TASK.md와 DONE.md에 수행 범위·결과·미해결 사항이 맞게 기록되어 있는지 확인한다. PLAN.md 부재는 실패가 아니다.
 2. `testing-evidence.md`의 테스트 증거·E2E 적용 검토 기록이 있고 실제 결과와 연결되는지 확인한다. 지식 동기화는 `knowledge-sync.md`에 따라 실제 반영 후 기록한다.
 3. `run-log-tool validate-run --task <task_root> --run-id <run_id> --format json`을 실행한다. 오류가 있으면 해결하기 전 종료하지 않는다.
-4. DONE.md를 근거로 사용자 최종 확인을 요청한다. 수정 요청이면 같은 태스크에서 기록을 이어간다.
-5. 확인 발화 후 DONE.md의 확인 상태와 최종 결정 사건을 기록하고 로그를 재검증한 다음 `self-pm-tool update --status done`을 수행한다.
+4. DONE.md를 근거로 사용자 최종 확인을 요청한다. 수정 요청이면 기존 `gate.requested`에 대응하는 `gate.resolved`를 보정 요청으로 기록하고, `status: discovering`으로 돌아가 같은 태스크에서 기록을 이어간다. 수정 의견을 확인 발화로 간주하지 않는다.
+5. 보정 뒤 영향받은 검증과 8영역 지식 판정을 다시 수행하고 새 `gate.requested`를 기록한다. 새 확인 발화에 대응하는 `gate.resolved`가 생긴 뒤에만 DONE.md의 확인 상태와 최종 결정 사건을 기록하고 로그를 재검증한 다음 `self-pm-tool update --status done`을 수행한다.

@@ -66,7 +66,7 @@ PM 작업·검증  ──(범위 변경·새 결정 발생 시)──▶ 질문 
 
 ## 2. 진입
 
-1. `pm/dispatch-process.md` Steps 1~3으로 현재 실행 범위·관련 brain·코드맵을 확인하고, `docs/PROJECT.md` 레지스트리에서 기획·설계·코드 컨벤션·운영 문서를 선별해 읽는다. 현재 세션에서 이미 읽었고 변경되지 않은 내용은 재사용하며, 변경·누락·범위 확대 시 해당 원천만 다시 읽는다. 기억만으로 확인을 생략하지 않는다.
+1. `pm/dispatch-process.md` Steps 1~3으로 현재 실행 범위·관련 brain·코드맵을 확인하고, `docs/PROJECT.md` 레지스트리에서 기획·설계·코드 컨벤션·운영 문서를 선별해 읽는다. 이때 관련 지식·문서와 선별 근거를 TASK.md의 **영향 후보 집합**으로 남겨 이후 동기화 입력으로 승계한다. 현재 세션에서 이미 읽었고 변경되지 않은 내용은 재사용하며, 변경·누락·범위 확대 시 해당 원천만 다시 읽는다. 기억만으로 확인을 생략하지 않는다.
 2. `references/task-records.md`의 신규·재개 규칙으로 정식 태스크 폴더의 절대경로를 확정한다. 프로젝트 루트나 임시 폴더를 실행 기록 위치로 사용하지 않는다.
 3. 같은 참조 문서에 따라 `TASK.md`와 두 도구의 실행 기록을 준비한다. 반환·확정한 태스크 경로와 `run_id`를 이후 모든 호출에 사용한다.
 
@@ -117,6 +117,8 @@ PM 작업·검증  ──(범위 변경·새 결정 발생 시)──▶ 질문 
 
 PM이 확정 계약에 따라 직접 조회·작성·수정한다. 중요한 진행·결정·검증·재시도는 `references/task-records.md`에 따라 발생 시점에 run-log로 남기고, 검토에 필요한 과정은 TASK.md 또는 선택 문서에 기록한다. 서브에이전트에게 구현을 넘기면 그 실행 단위는 PM 직접 수행으로 기록하지 않는다(§0, `actor.md` §독립 검증 경계).
 
+작업 중 새 결정·변경 파일·소비자·범위가 초기 영향 후보에 없을 때만 후보를 증분 추가한다. 이미 확인한 PROJECT·brain·관련 문서를 전체 재탐색하지 않는다.
+
 - 파일을 바꿀 때마다 기록한다:
   ```bash
   ~/.opal/tools/self-pm-tool/run.sh update --task-root <task_root> --run-id <run_id> \
@@ -158,14 +160,14 @@ PM이 확정 계약에 따라 직접 조회·작성·수정한다. 중요한 진
 
 ## 7. 지식·산출물 동기화
 
-완료 직전 대상 프로젝트의 PROJECT 문서를 기준으로 실제 동기화 대상을 선별하고 8영역을 누락 방지 관점으로 모두 판정한다. 판정 기준·owner 문서·"무근거 생략 금지" [MUST]는 `references/knowledge-sync.md`를 따른다(이 문서에 복제하지 않는다).
+완료 직전에는 §2에서 승계한 영향 후보 집합에 실행 중 증분과 최종 `changed_files`·결정을 대조한다. PROJECT·brain·관련 문서를 처음부터 다시 검색하지 않는다. 새 범위·새 용어·새 소비자·경로 불일치가 발견된 부분만 제한적으로 추가 조회하고, 후보를 실제 동기화한 뒤 8영역을 누락 방지 관점으로 모두 판정한다. 판정 기준·owner 문서·"무근거 생략 금지" [MUST]는 `references/knowledge-sync.md`를 따른다(이 문서에 복제하지 않는다).
 
 `update` 판정은 실제 갱신·추가와 검증을 마친 뒤 기록한다. 수행 예정 표시만으로 닫지 않는다. 작업 결과·검증·지식 동기화 근거는 `DONE.md`에 작성하고, 표준 로그를 `validate-run`으로 검증한다(`references/task-records.md`).
 
-각 영역 판정을 기록한다(영역마다 1회 append, 또는 한 번에 8건을 순서대로 append):
+8영역의 현재 판정을 한 번에 기록한다. 초기 판정과 보정 판정이 충돌하지 않도록 append하지 않고 항상 전체 교체한다:
 ```bash
 ~/.opal/tools/self-pm-tool/run.sh update --task-root <task_root> --run-id <run_id> \
-  --append-field knowledge_impact "<영역>: update|no-op - <근거>"
+  --set-field knowledge_impact '["기획: ...", "설계: ...", "프로젝트 문서: ...", "CONVENTIONS: ...", "SECURITY: ...", "brain: ...", "memory: ...", "code-scan: ..."]'
 ```
 
 8영역 전부가 `update` 또는 `no-op + 근거`로 닫힌 뒤에만 `awaiting_confirmation`으로 전이한다:
@@ -178,7 +180,7 @@ PM이 확정 계약에 따라 직접 조회·작성·수정한다. 중요한 진
 **[MUST]** 사용자에게 6항목 계약 이행 결과와 8영역 판정을 제시하고 최종 확인을 요청한다. **사용자가 확인을 발화하기 전에는 완료를 선언하지 않는다** — "완료했습니다"·"끝났습니다" 류의 종결 발화를 이 시점 이전에 하지 않는다.
 
 - 사용자가 확인하면 종료로 진행한다.
-- 수정 의견이 있으면 §3 질문·조회·정리 루프로 돌아간다(§6과 동일 경로).
+- 수정 의견이 있으면 그 응답을 기존 확인 gate의 보정 요청으로 기록하고 §3 질문·조회·정리 루프로 돌아간다(§6과 동일 경로). 보정·재검증 뒤에는 새 확인 gate를 요청하며, 수정 의견 자체를 최종 확인으로 해석하지 않는다.
 
 ## 9. 종료
 
@@ -199,7 +201,7 @@ PM이 확정 계약에 따라 직접 조회·작성·수정한다. 중요한 진
 | 파일 변경 | `update --append-field changed_files` | `changed_files` |
 | 검증 수행(GC 3종 포함) | `update --append-field validation` | `validation` |
 | 범위 변경 복귀 | `update --status discovering --append-field open_questions` | `status`, `open_questions` |
-| 지식 동기화 판정 | `update --append-field knowledge_impact` (8회 또는 순차) | `knowledge_impact` |
+| 지식 동기화 판정 | `update --set-field knowledge_impact '[8건...]'` | `knowledge_impact` 전체 교체 |
 | 동기화 완료 | `update --status awaiting_confirmation` | `status` |
 | 최종 확인 후 | `update --status done` | `status` |
 

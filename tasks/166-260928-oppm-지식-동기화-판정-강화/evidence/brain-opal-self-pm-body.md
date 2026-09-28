@@ -1,26 +1,3 @@
----
-type: entity
-title: opal-self-pm
-module: <code-scan @header module>
-layer: <code-scan @header layer>
-domain: <code-scan @header domain>
-exports: []
-source_ref: '<코드 파일 경로 — 예: opal/tools/state-tool/state_tool.py>'
-header_synced: <YYYY-MM-DD>
-tags:
-- skill
-- operator
-- pm
-- task-122
-sources:
-- task:122
-- task:154
-- task:166
-related: [actor-axis-orthogonal-to-mode, self-pm-tool]
-created: '2026-09-12'
-updated: '2026-09-28'
-status: active
----
 ## 개요
 
 `opal-self-pm`(`//oppm`)은 소유자가 "대화하면서 직접 해달라"고 요청할 때 발동하는 대화형 PM 작업 루프다. 단계 파이프라인을 가진 Pilot이 아니라, `opal-brain`(`opbr`)과 같은 유형의 operator 스킬이다. 질문 1개를 던지고 조회·정리를 반복해 작업 범위를 확정한 뒤 PM이 직접 조회·작성·수정·검증하고, 완료 전 지식 영향을 전수 판정한 뒤 종료한다.

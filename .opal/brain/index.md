@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-26 18:50
+> 갱신: 2026-09-28 16:52
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -39,6 +39,7 @@
 ## 개념
 - [[070-derivation-engine-perspective-bias-lesson]] — 070 사건 근본원인 — 도출 엔진 관점 편향과 게이트 집행 #lesson-learned #testing #scenario-gate #root-cause #task-073
 - [[absence-assertion-is-enforcement-not-residue]] — 부재 단언은 잔재가 아니라 집행 장치다 — 제거 전수 검사의 명시 예외 #removal #verification #test-design #lesson
+- [[ac-core-acceptance-requirement]] — AC는 비중복 핵심 수용 요구사항이다 #task #requirements #workflow
 - [[ac-infeasible-from-start-requires-preexisting-baseline-diff]] — AC가 착수 시점부터 실현 불가일 수 있다 #verification #ac #task-114
 - [[active-platform-dir-install-target-lesson]] — 활성 Claude 플랫폼 디렉토리가 ~/.claude 기본이 아닐 수 있다 — install 타겟 정합 교훈 (032 P2) #install #deploy #platform #dispatch #lesson-learned
 - [[actor-axis-orthogonal-to-mode]] — 실행 주체(actor) 축은 모드 축과 직교한다 #actor #mode #orthogonal-axis #task-122 #task-156 #pattern

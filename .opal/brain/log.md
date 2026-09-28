@@ -467,3 +467,19 @@
 - 신규: [[oppb-run-records-follow-task-lifecycle]]
 - 출처: tasks/158-260926-oppm-OPPB-run-root-태스크귀속/TASK.md
 
+## [2026-09-28] ingest | task:165 AC 비중복 핵심 수용 요구사항 결정 반영
+- 신규: [[pages/concept/ac-core-acceptance-requirement.md]]
+- 출처: task:165
+
+## [2026-09-28] ingest | task 166: oppm PROJECT 라우팅·변경 표면 역추적·brain 판정 기준 강화
+- 갱신: [[pages/entity/opal-self-pm.md]]
+- 출처: task:166
+
+## [2026-09-28] ingest | task 166 pug 가상 실행: PROJECT 경로 실재·별칭 매핑 검증 보강
+- 갱신: [[pages/entity/opal-self-pm.md]]
+- 출처: task:166
+
+## [2026-09-28] ingest | task 166: oppm 영향 후보 승계·증분 보강·종료 정합 프로세스 반영
+- 갱신: [[pages/entity/opal-self-pm.md]]
+- 출처: task:166
+
