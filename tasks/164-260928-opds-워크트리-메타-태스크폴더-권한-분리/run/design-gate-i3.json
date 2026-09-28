@@ -1,0 +1,33 @@
+{
+  "input_bundle_hash": "d41fa6f4615671b3ce692a03aea79677b3b427083c6743f9df06f15db1f0575a",
+  "iteration": 3,
+  "design": {
+    "axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"},
+    "reasons": {
+      "completeness": "All AC/C linked in Work items; Findings direct changes and doc updates all assigned; H-1 covered by Risk and S-6; independent grep of non-test source matches the direct-change list (only extra: retired claude-hooks.retired.json).",
+      "decision_clarity": "D-1..D-8 fix file names, listing rule, cleanup order, token and Codex default, check order/timeout/error codes, migration values, git out of scope.",
+      "executability": "Each W names owner, files, change, tests; no file overlap; W-7 depends on W-1 as P2; cli.py insertion point and codex --add-dir verified.",
+      "recoverability": "Release order, verification scope, captain checkpoint for task_164 meta, rollback by redeploy since old files are untouched."
+    },
+    "gaps": [],
+    "observations_non_blocking": [
+      "D-6: behavior of checks 2/3 with --command should be stated in README.",
+      "Hub non-blocking continue on check failure stated only in W-6, consistent with task-process.md 5.5."
+    ]
+  },
+  "scenario": {
+    "scores": {"goal": 2, "adoption": 2, "boundary": 2},
+    "average": 2.0,
+    "reasons": {
+      "goal": "S-6 real Codex sandbox write/deny; S-11 repeats on installed copy.",
+      "adoption": "S-2 old-structure control ignored and unchanged; S-4 zero old path construction; S-10 default migration.",
+      "boundary": "S-3 failed remove keeps folder; S-7 four causes with no terminal/lease; S-6 denials; S-8 warning non-blocking."
+    },
+    "gaps": []
+  },
+  "verdict": "pass",
+  "rewrite_target": null,
+  "status": "completed",
+  "blockers": [],
+  "changed_files": []
+}
