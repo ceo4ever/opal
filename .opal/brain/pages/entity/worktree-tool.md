@@ -16,16 +16,10 @@ sources:
 - task:092
 - task:118
 - task:119
-related:
-- worktree-workspace-isolation-axis
-- worktree-slot-existence-to-occupancy-judgment
-- worktree-task-root-allocator-root-split
-- state-aware-path-resolution-unblocks-merge
-- switch-first-plumbing-later-verification
-- state-tool
-- git-sync-tool
+- task:164
+related: [worktree-workspace-isolation-axis, worktree-slot-existence-to-occupancy-judgment, worktree-task-root-allocator-root-split, state-aware-path-resolution-unblocks-merge, switch-first-plumbing-later-verification, state-tool, git-sync-tool]
 created: '2026-08-15'
-updated: '2026-09-12'
+updated: '2026-09-28'
 status: draft
 ---
 ## 개요
@@ -36,6 +30,8 @@ status: draft
 
 - 프로젝트가 선언한 `.opal/worktree.json`(`layout`·`repos[]`·`branchTemplate`·`baseBranch`·`copy[]`·`setup[]`·`portOffset` 7키)을 읽어 코드 레포 구성이 다중 레포(multi-repo)인지 단일 모노레포(monorepo)인지 판정한다(`load_config`/`validate_worktree_config`, `opal/tools/worktree-tool/worktree_tool.py:153,174`).
 - `create`는 대상 슬롯(`{프로젝트}/.opal-worktrees/task_{NNN}/`)에 유형별 방식(다중 `git worktree add` 또는 `sparse-checkout`)으로 작업본을 만들고, base-ref를 1회 해석해 메타에 동결 기록하며(`resolve_base_ref`/`_write_meta`, `opal/tools/worktree-tool/worktree_tool.py:256,390`), 의존성 설치는 실행하지 않고 열거만 한다(lazy setup).
+- registry 메타는 태스크마다 전용 폴더(`.opal-worktrees/.meta/task_{NNN}/meta.json`)에 두고, 메타 쓰기의 lock과 원자 쓰기 임시 파일도 그 폴더 안에서만 만든다. 경로는 도구 안의 계산 함수 하나로만 만든다(`_meta_dir`/`_meta_path`, `opal/tools/worktree-tool/worktree_tool.py:939,944`). 이전 구조의 평면 메타 파일은 읽지도 옮기지도 않는다.
+- `remove`가 성공하면 태스크 메타 폴더 전체를 회수하고 `.meta/` 루트는 남긴다. 회수에 실패하면 폴더를 보존하고, 폴더 삭제만 실패하면 회수 성공 판정은 유지한 채 경고로 보고한다.
 - `remove`는 미처리 메모리 색인 요청을 먼저 거부한 뒤 dirty→unpushed→미머지 순서의 3중 가드(`check_guards`, `opal/tools/worktree-tool/worktree_tool.py:466`)를 통과해야 슬롯을 회수하며, 브랜치는 보존한다. 정규 경로 해석기는 호출하지 않는다.
 - `.gitignore` 멱등 보장(`ensure_gitignore_entry`, `worktree_tool.py:272`), 캐시 볼륨 불일치(`diagnose_cache_volume`, `worktree_tool.py:297`), code-scan exclude 누락(`diagnose_code_scan_exclude`, `worktree_tool.py:324`), 동시 활성 슬롯 수(`diagnose_concurrent_slots`, `worktree_tool.py:343`) 4종을 비차단 경고로 진단한다.
 - `list`/`status`는 슬롯 현황을 조회 전용으로 답한다(`cmd_list`/`cmd_status`, `worktree_tool.py:630,1071`). 상태 조회는 정규 태스크 경로를 해석해 그 경로와 출처를 함께 보고한다(`worktree_tool.py:1074`).
@@ -50,6 +46,7 @@ status: draft
 - base-ref를 `remove` 시점에 재조회하지 않고 `create` 시점 1회 해석으로 동결한 것은, 재조회 시 그 사이 프로젝트 기본 브랜치가 바뀌면 미머지 판정이 뒤집혀 비결정론이 되기 때문이다(근거: task:092 PLAN §1.4 DEC-3).
 - 슬롯·브랜치 판정 기준을 "존재"에서 "점유"로 바꾼 것은 실환경 결함 대응이다 — 상세 경위와 근거는 [[worktree-slot-existence-to-occupancy-judgment]]로 분리했다.
 - 캡슐 실체화 범위를 선언하는 설정 키는 기본이 빈 목록이고 단일 레포 구성에서만 전개된다(`worktree_tool.py:255`, `:948-952`). 값이 비어 있으면 태스크 해석 루트가 허브로 탈출하므로, 이 키가 루트 소유권 계약을 켜는 유일한 스위치다 (근거: task:119 ANALYSIS Q4) — [[switch-first-plumbing-later-verification]].
+- 메타를 태스크별 폴더로 나눈 것은 워크트리 세션에 자기 태스크 메타만 쓰기 권한으로 주기 위해서다. 평면 구조에서는 lock·임시 파일이 `.meta/` 루트에 생겨 루트 전체를 열어야 했고, 그러면 다른 태스크 메타까지 쓸 수 있었다 (근거: task:164 TASK AC-1·C-1).
 - 병합 이후에도 수명주기가 닫히도록 정규 경로 해석에 귀속 상태를 더한 것은 태스크 119의 차단급 결함 대응이다 (근거: task:119 PLAN D-1).
 
 ## 관계 (HOW)
@@ -69,6 +66,7 @@ status: draft
 | `resolve_base_ref` | `opal/tools/worktree-tool/worktree_tool.py:256` | base-ref 1회 해석(우선순위 3단) |
 | `check_guards` | `opal/tools/worktree-tool/worktree_tool.py:466` | `remove` 3중 가드(dirty→unpushed→unmerged) |
 | `cmd_create` / `cmd_remove` | `opal/tools/worktree-tool/worktree_tool.py:494,709` | 서브명령 진입점 |
+| `_meta_dir` / `_meta_path` / `_list_task_meta_dirs` | `opal/tools/worktree-tool/worktree_tool.py:939,944,948` | 태스크별 메타 폴더 경로 계산 단일 지점과 새 구조 전건 조회 |
 | `_resolve_canonical_task_path` | `opal/tools/worktree-tool/worktree_tool.py:1035` | 귀속 상태 의존 정규 경로 해석(출처 동반 반환) |
 | `ATTRIBUTION_STATE_KEY` | `opal/tools/worktree-tool/worktree_tool.py:86` | 귀속 상태 메타 키 |
 | `cmd_finalize` | `opal/tools/worktree-tool/worktree_tool.py:1411` | 귀속 확정 서브명령(종결 상태 멱등 반환 `:1426`) |

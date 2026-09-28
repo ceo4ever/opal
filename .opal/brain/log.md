@@ -483,3 +483,7 @@
 - 갱신: [[pages/entity/opal-self-pm.md]]
 - 출처: task:166
 
+## [2026-09-28] ingest | CLOSE ingest — 태스크 164 워크트리 메타 태스크폴더 권한 분리 (merge 후 허브 반영)
+- 신규: [[pages/entity/worktree-tool.md]], [[pages/entity/ownership-tool.md]], [[pages/concept/worktree-session-launch-order-and-ownership.md]]
+- 출처: task:164
+
