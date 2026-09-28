@@ -351,6 +351,11 @@
       "id": "stage.test",
       "required_docs": [
         {
+          "id": "test-cycle",
+          "source": "{source_root}/opal/core/references/harness/test-cycle.md",
+          "deployed": "{deployed_root}/references/harness/test-cycle.md"
+        },
+        {
           "id": "scenario-gate",
           "source": "{source_root}/opal/core/references/harness/scenario-gate.md",
           "deployed": "{deployed_root}/references/harness/scenario-gate.md"

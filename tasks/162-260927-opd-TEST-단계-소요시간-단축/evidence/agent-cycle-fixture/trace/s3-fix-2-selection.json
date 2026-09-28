@@ -1,0 +1,22 @@
+{
+  "failed": [
+    "test_failed_scenario"
+  ],
+  "changed_files": [
+    "app.py"
+  ],
+  "impacted": [
+    "test_impact_scenario"
+  ],
+  "unknown": [
+    "test_unknown_scenario"
+  ],
+  "selected": [
+    "test_auto_a1",
+    "test_auto_a2",
+    "test_failed_scenario",
+    "test_impact_scenario",
+    "test_unknown_scenario"
+  ],
+  "reason": "unknown relation forces full scenario bundle; preserved PASS not assumed"
+}

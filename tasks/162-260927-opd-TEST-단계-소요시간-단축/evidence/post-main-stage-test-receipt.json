@@ -1,0 +1,35 @@
+{
+  "documents": [
+    {
+      "bytes": 6330,
+      "id": "test-cycle",
+      "path": "/Users/iskang/.opal/references/harness/test-cycle.md",
+      "sha256": "c67c8e8d58adf1480e6da6b4595fa2f9a9b4421c73c9cb05654839ea668dcd9a",
+      "token": "{deployed_root}/references/harness/test-cycle.md"
+    },
+    {
+      "bytes": 3275,
+      "id": "scenario-gate",
+      "path": "/Users/iskang/.opal/references/harness/scenario-gate.md",
+      "sha256": "e9a44dbd35fa5804703cbe603073ad4f75c4b4a48c755ba835eebedf9d593690",
+      "token": "{deployed_root}/references/harness/scenario-gate.md"
+    },
+    {
+      "bytes": 4825,
+      "id": "qa-standards",
+      "path": "/Users/iskang/.opal/references/harness/qa-standards.md",
+      "sha256": "767fc3c0a036b6c7efc2b6c324cb34fed8a61f7e23580c93b4a4d6228743711c",
+      "token": "{deployed_root}/references/harness/qa-standards.md"
+    }
+  ],
+  "event": "stage.test",
+  "manifest_path": "/Users/iskang/.opal/references/events.json",
+  "manifest_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+  "payload_bytes": 14430,
+  "required_document_ids": [
+    "test-cycle",
+    "scenario-gate",
+    "qa-standards"
+  ],
+  "schema_version": 1
+}

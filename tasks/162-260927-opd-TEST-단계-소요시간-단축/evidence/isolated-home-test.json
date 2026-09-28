@@ -1,0 +1,8 @@
+{
+  "test": "test_non_project_cwd_does_not_promote_parent_home_opal_to_project (event_loader_extended_isolated_final.EventLoaderExtendedContractTest.test_non_project_cwd_does_not_promote_parent_home_opal_to_project)",
+  "tests_run": 1,
+  "ok": true,
+  "failures": [],
+  "errors": [],
+  "temporary_home_for_test": "/private/tmp"
+}

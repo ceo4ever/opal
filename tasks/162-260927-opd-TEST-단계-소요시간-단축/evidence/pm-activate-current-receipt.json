@@ -1,0 +1,43 @@
+{
+  "documents": [
+    {
+      "bytes": 21650,
+      "id": "pm-process",
+      "path": "/Users/iskang/.opal/references/opal-pm.md",
+      "sha256": "634031d4d1a8540249b4e92cf89e3ae7c7b436bdb645e34e574f876123b86f43",
+      "token": "{deployed_root}/references/opal-pm.md"
+    },
+    {
+      "bytes": 1390,
+      "id": "pm-activation",
+      "path": "/Users/iskang/.opal/references/pm/activation.md",
+      "sha256": "a7a9f0792fa4fc14b4b544957a376dc065698f97789ce4b8859c80a301a966b4",
+      "token": "{deployed_root}/references/pm/activation.md"
+    },
+    {
+      "bytes": 6595,
+      "id": "project-agent",
+      "path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/.opal/AGENT.md",
+      "sha256": "b16127c1e3b8c7b7ecc33dacc124dc3993b2b854ba39290b37edf4b93eeaa492",
+      "token": "{project_root}/.opal/AGENT.md"
+    },
+    {
+      "bytes": 40150,
+      "id": "project-registry",
+      "path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/docs/PROJECT.md",
+      "sha256": "62b711e8d0fef8b2d003f6b44748dfa4387d1955426fd4f95b2c664f53f228f4",
+      "token": "{project_root}/docs/PROJECT.md"
+    }
+  ],
+  "event": "pm.activate",
+  "manifest_path": "/Users/iskang/.opal/references/events.json",
+  "manifest_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+  "payload_bytes": 69785,
+  "required_document_ids": [
+    "pm-process",
+    "pm-activation",
+    "project-agent",
+    "project-registry"
+  ],
+  "schema_version": 1
+}

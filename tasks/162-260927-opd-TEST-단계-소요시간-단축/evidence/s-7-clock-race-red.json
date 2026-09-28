@@ -1,0 +1,6 @@
+{
+  "baseline": "HEAD:opal/tools/state-tool/state_tool.py",
+  "test": "test_s7_concurrent_clock_writers_preserve_every_interval",
+  "exit_code": 1,
+  "output": "evidence/s-7-clock-race-red.txt"
+}

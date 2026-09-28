@@ -1,0 +1,10 @@
+{
+  "sha": "1549d184295c593144edcf7fd82475ba10970a45",
+  "prior_profile": "v1",
+  "target_profile": "v2",
+  "prior_signature": "ca4fcf61623e2d7a901e4b8001b8451ff55e73a66557c7ba33b2c036c41b1466",
+  "target_signature": "5cf034b5fed793b8a352eb3a08618784ee924077a8db99006ed02bc9f5922670",
+  "decision": "rerun",
+  "result_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-\ub2e8\uacc4-\uc18c\uc694\uc2dc\uac04-\ub2e8\ucd95/evidence/agent-cycle-fixture/trace/s4-env-changed-rerun.json",
+  "exit_code": 0
+}

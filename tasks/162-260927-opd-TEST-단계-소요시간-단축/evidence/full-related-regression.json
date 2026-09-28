@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "opal/tools/state-tool/tests",
+    "opal/tools/worktree-tool/tests",
+    "opal/tools/event-loader/tests",
+    "opal/tools/test-tool/tests"
+  ],
+  "exit_code": 1,
+  "elapsed_seconds": 498.116,
+  "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/full-related-regression.txt",
+  "clock_stop_ok": true
+}

@@ -1,0 +1,524 @@
+......s.........................s.s..................................... [ 43%]
+...........s...................................FFFFFFFFFFFFFFF.FF....... [ 87%]
+.....................                                                    [100%]
+=================================== FAILURES ===================================
+____ test_success_path_sets_worktree_session_owned_only_after_both_receipts ____
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_success_path_sets_worktre0')
+
+    def test_success_path_sets_worktree_session_owned_only_after_both_receipts(tmp_path):
+        """성공: launch·prompt receipt 둘 다 기록된 뒤에만 worktree_session_owned."""
+        from worktree_launcher import launcher_core
+
+        hub = build_launcher_hub(tmp_path, adapter="generic")
+        fixture = load_launcher_fixture("fake_process-success.json", hub.hub, hub.wt_parent)
+        adapter = _FakeAdapter(fixture)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+
+>       assert len(adapter.calls) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <test_launcher_core._FakeAdapter object at 0x10b1f2fd0>.calls
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:130: AssertionError
+__________________ test_launch_failed_path_reverts_atomically __________________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_launch_failed_path_revert0')
+
+    def test_launch_failed_path_reverts_atomically(tmp_path):
+        """launch 실패: failure_reason=launch_failed, generation+1, hub_owned +
+        attribution_state 키 부재로 원자 복귀."""
+        from worktree_launcher import launcher_core
+
+        hub = build_launcher_hub(
+            tmp_path, adapter="generic", prior_state="session_launching", prior_generation=1
+        )
+        fixture = load_launcher_fixture("fake_process-launch-failed.json", hub.hub, hub.wt_parent)
+        adapter = _FakeAdapter(fixture)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+>       assert result["failure_reason"] == "launch_failed"
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'failure_reason'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:162: KeyError
+__________________ test_prompt_failed_path_reverts_atomically __________________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_prompt_failed_path_revert0')
+
+    def test_prompt_failed_path_reverts_atomically(tmp_path):
+        """prompt 실패도 launch_failed 경로와 동일하게 원자 복귀한다."""
+        from worktree_launcher import launcher_core
+
+        hub = build_launcher_hub(
+            tmp_path, adapter="generic", prior_state="session_launching", prior_generation=1
+        )
+        fixture = load_launcher_fixture("fake_process-prompt-failed.json", hub.hub, hub.wt_parent)
+        adapter = _FakeAdapter(fixture)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+>       assert result["failure_reason"] == "launch_failed"
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'failure_reason'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:192: KeyError
+__________________ test_cwd_mismatch_path_reverts_atomically ___________________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_cwd_mismatch_path_reverts0')
+
+    def test_cwd_mismatch_path_reverts_atomically(tmp_path):
+        """reported_cwd 불일치도 launch_failed 경로로 원자 복귀한다 — MUST cwd 가드
+        (reported_cwd가 registry worktree_root와 불일치하면 launch_failed)."""
+        from worktree_launcher import launcher_core
+
+        hub = build_launcher_hub(
+            tmp_path, adapter="orca", prior_state="session_launching", prior_generation=1
+        )
+        fixture = load_launcher_fixture("fake_process-cwd-mismatch.json", hub.hub, hub.wt_parent)
+        # fixture의 reported_cwd는 {HUB}(허브 루트 자체)로 치환돼 worktree_root와 불일치한다.
+        assert fixture["reported_cwd"] != str(hub.worktree_root)
+        assert fixture["expected_worktree_root"] == str(hub.worktree_root)
+        adapter = _FakeAdapter(fixture)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+>       assert result["failure_reason"] == "launch_failed"
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'failure_reason'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:225: KeyError
+_______ test_no_dual_owner_or_orphan_session_launching_across_all_paths ________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_no_dual_owner_or_orphan_s0')
+
+    def test_no_dual_owner_or_orphan_session_launching_across_all_paths(tmp_path):
+        """어느 경로도 owner 2건 또는 owner 없는 session_launching 잔존을 남기지 않는다."""
+        from worktree_launcher import launcher_core
+
+        cases = (
+            ("fake_process-success.json", "generic"),
+            ("fake_process-launch-failed.json", "generic"),
+            ("fake_process-prompt-failed.json", "generic"),
+            ("fake_process-cwd-mismatch.json", "orca"),
+        )
+        for idx, (name, adapter_name) in enumerate(cases):
+            hub = build_launcher_hub(
+                tmp_path / f"case-{idx}",
+                adapter=adapter_name,
+                prior_state="session_launching",
+                prior_generation=1,
+            )
+            fixture = load_launcher_fixture(name, hub.hub, hub.wt_parent)
+            adapter = _FakeAdapter(fixture)
+            launcher_core.run(
+                adapter,
+                hub_root=hub.hub,
+                task=hub.task,
+                worktree_root=hub.worktree_root,
+                command="claude",
+            )
+            data = read_meta(hub.meta_path)
+            eo = data["execution_ownership"]
+>           assert eo["state"] != "session_launching", f"{name}: session_launching 잔존"
+E           AssertionError: fake_process-success.json: session_launching 잔존
+E           assert 'session_launching' != 'session_launching'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:263: AssertionError
+____ test_revert_closes_reported_terminal_exactly_once_on_every_handle_path ____
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_revert_closes_reported_te0')
+
+    def test_revert_closes_reported_terminal_exactly_once_on_every_handle_path(tmp_path):
+        """복귀 경로에서 launch 보고의 `adapter_handle`로 close가 **정확히 1회** 호출된다.
+
+        `launch_receipt_missing`(handle은 왔으나 receipt 불완전)·`reported_cwd_mismatch`·
+        `prompt_receipt_missing` 3경로가 같은 정리 경로를 탄다. `adapter_report_invalid`는
+        보고가 dict가 아니라 handle 원천 자체가 없으므로 별도 테스트가 소유한다."""
+        from worktree_launcher import launcher_core
+
+        cases = (
+            ("launch_receipt_missing", "fake_process-success.json", "orca", {"launched_at": None}),
+            ("reported_cwd_mismatch", "fake_process-cwd-mismatch.json", "orca", {}),
+            ("prompt_receipt_missing", "fake_process-prompt-failed.json", "generic", {}),
+        )
+        for idx, (detail, fixture_name, adapter_name, overrides) in enumerate(cases):
+            hub = _revert_hub(tmp_path / f"close-{idx}", adapter_name)
+            report = _report_with_handle(hub, fixture_name, **overrides)
+            adapter = _ClosingAdapter(report)
+
+            result = launcher_core.run(
+                adapter,
+                hub_root=hub.hub,
+                task=hub.task,
+                worktree_root=hub.worktree_root,
+                command="claude",
+            )
+
+>           assert result["detail"] == detail
+                   ^^^^^^^^^^^^^^^^
+E           KeyError: 'detail'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:352: KeyError
+__________ test_revert_without_reported_handle_does_not_attempt_close __________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_revert_without_reported_h0')
+
+    def test_revert_without_reported_handle_does_not_attempt_close(tmp_path):
+        """`adapter_handle`이 없으면 close를 **시도하지 않는다**(대상 추측 금지).
+
+        (a) `adapter_report_invalid` — 보고가 dict가 아니어서 handle 원천이 없다.
+        (b) `launch_receipt_missing` — 보고는 dict지만 `adapter_handle`이 null이다."""
+        from worktree_launcher import launcher_core
+
+        hub_a = _revert_hub(tmp_path / "no-handle-a")
+        adapter_a = _ClosingAdapter("not-a-dict")
+        result_a = launcher_core.run(
+            adapter_a,
+            hub_root=hub_a.hub,
+            task=hub_a.task,
+            worktree_root=hub_a.worktree_root,
+            command="claude",
+        )
+>       assert result_a["detail"] == "adapter_report_invalid"
+               ^^^^^^^^^^^^^^^^^^
+E       KeyError: 'detail'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:380: KeyError
+_______________ test_revert_is_performed_even_when_close_raises ________________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_revert_is_performed_even_0')
+
+    def test_revert_is_performed_even_when_close_raises(tmp_path):
+        """close가 예외를 던져도 복귀는 **반드시 수행**되고, 실패는 `terminal_close`로만 남는다
+        — 복귀가 정리 성공에 종속되면 dual owner가 남는다."""
+        from worktree_launcher import launcher_core
+
+        hub = _revert_hub(tmp_path, "orca")
+        report = load_launcher_fixture("fake_process-cwd-mismatch.json", hub.hub, hub.wt_parent)
+        adapter = _ClosingAdapter(report, close_raises=RuntimeError("orca unreachable"))
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+
+>       assert len(adapter.close_calls) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <test_launcher_core._ClosingAdapter object at 0x10b5f0410>.close_calls
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:419: AssertionError
+________ test_revert_is_performed_even_when_close_reports_non_zero_exit ________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_revert_is_performed_even_1')
+
+    def test_revert_is_performed_even_when_close_reports_non_zero_exit(tmp_path):
+        """close가 예외 대신 `exit_code != 0` 실패 dict를 돌려주는 경우(D-J)도 같다."""
+        from worktree_launcher import launcher_core
+
+        hub = _revert_hub(tmp_path, "orca")
+        report = load_launcher_fixture("fake_process-cwd-mismatch.json", hub.hub, hub.wt_parent)
+        adapter = _ClosingAdapter(report, close_exit_code=3)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+
+>       assert len(adapter.close_calls) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <test_launcher_core._ClosingAdapter object at 0x10b48e190>.close_calls
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:444: AssertionError
+______________ test_revert_is_performed_when_adapter_has_no_close ______________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_revert_is_performed_when_0')
+
+    def test_revert_is_performed_when_adapter_has_no_close(tmp_path):
+        """close 미구현(`AttributeError`) adapter도 복귀를 막지 않는다 — `_FakeAdapter`는
+        close seam이 없는 구형 대역이다."""
+        from worktree_launcher import launcher_core
+
+        hub = _revert_hub(tmp_path, "orca")
+        fixture = load_launcher_fixture("fake_process-cwd-mismatch.json", hub.hub, hub.wt_parent)
+        adapter = _FakeAdapter(fixture)
+        assert not hasattr(adapter, "close")
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+
+>       close_log = result["terminal_close"]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'terminal_close'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:468: KeyError
+_________________ test_success_path_never_closes_the_terminal __________________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_success_path_never_closes0')
+
+    def test_success_path_never_closes_the_terminal(tmp_path):
+        """성공 경로는 살아 있는 세션 터미널을 닫지 않는다 — close는 복귀 전용이다."""
+        from worktree_launcher import launcher_core
+
+        hub = _revert_hub(tmp_path)
+        report = load_launcher_fixture("fake_process-success.json", hub.hub, hub.wt_parent)
+        adapter = _ClosingAdapter(report)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+
+>       assert result["status"] == "recovery_required"
+               ^^^^^^^^^^^^^^^^
+E       KeyError: 'status'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:491: KeyError
+_ test_revert_closes_terminal_when_ownership_set_rejects_the_owned_transition __
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_revert_closes_terminal_wh0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b4a72a0>
+
+    def test_revert_closes_terminal_when_ownership_set_rejects_the_owned_transition(
+        tmp_path, monkeypatch
+    ):
+        """5번째 복귀 경로(`ownership_set_rejected`)도 같은 정리 경로를 탄다.
+
+        이 시점의 터미널은 launch receipt가 성립한 뒤라 **확실히 살아 있다** — 여기를 비워두면
+        복귀는 되는데 고아 터미널이 남는다(AC-4 미달). `ownership-set`의 거부 응답은 실제
+        `worktree-tool` 판정 규칙에 결합하지 않도록 seam에서 주입하고, 복귀 전이 자체는 실제
+        `ownership-set`에 그대로 위임한다."""
+        from worktree_launcher import launcher_core
+
+        hub = _revert_hub(tmp_path)
+        report = load_launcher_fixture("fake_process-success.json", hub.hub, hub.wt_parent)
+        adapter = _ClosingAdapter(report)
+
+        real_ownership_set = launcher_core.ownership_set
+
+        def _reject_owned_transition(hub_root, task, state, **options):
+            if state == "worktree_session_owned":
+                return {"ok": False, "error": "execution_ownership_transition_rejected"}
+            return real_ownership_set(hub_root, task, state, **options)
+
+        monkeypatch.setattr(launcher_core, "ownership_set", _reject_owned_transition)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+
+>       assert result["detail"] == "child_lease_unresolved"
+               ^^^^^^^^^^^^^^^^
+E       KeyError: 'detail'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:528: KeyError
+________ test_s8_lease_handoff_runs_exactly_once_before_adapter_launch _________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_s8_lease_handoff_runs_exa0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b4a71c0>
+
+    def test_s8_lease_handoff_runs_exactly_once_before_adapter_launch(tmp_path, monkeypatch):
+        """S-8(AC-1, C-4): 이관 호출이 `adapter.launch`보다 **먼저 정확히 1회** 발생하고,
+        전달된 task 경로·대상 루트가 registry 발급값과 일치한다. 성공 반환 dict에
+        `lease_handoff` 필드가 additive로 실린다."""
+        from worktree_launcher import launcher_core  # RED: lease_handoff 미구현
+
+        hub, task_dir = _hub_with_canonical_task(tmp_path)
+        meta = read_meta(hub.meta_path)
+        order = []
+        handoff_calls, cancel_calls = _patch_lease_seams(monkeypatch, launcher_core, order)
+
+        report = load_launcher_fixture("fake_process-success.json", hub.hub, hub.wt_parent)
+        adapter = _OrderRecordingAdapter(report, order)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+
+        assert result["ok"] is False, result
+>       assert result["status"] == "recovery_required"
+               ^^^^^^^^^^^^^^^^
+E       KeyError: 'status'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:648: KeyError
+________________ test_s8_noop_handoff_still_proceeds_to_launch _________________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_s8_noop_handoff_still_pro0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b4a6200>
+
+    def test_s8_noop_handoff_still_proceeds_to_launch(tmp_path, monkeypatch):
+        """S-8(AC-1): 이관이 `noop`(live lease 부재)이면 그것도 정상 경로다 — 기동을 막지 않는다."""
+        from worktree_launcher import launcher_core
+
+        hub, task_dir = _hub_with_canonical_task(tmp_path)
+        order = []
+        handoff_calls, cancel_calls = _patch_lease_seams(
+            monkeypatch, launcher_core, order,
+            handoff_result={"ok": True, "noop": True, "diagnostic": "no_live_lease"},
+        )
+        report = load_launcher_fixture("fake_process-success.json", hub.hub, hub.wt_parent)
+        adapter = _OrderRecordingAdapter(report, order)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+
+        assert result["ok"] is False, result
+>       assert order == ["lease_handoff", "adapter.launch"], order
+E       AssertionError: []
+E       assert [] == ['lease_hando...apter.launch']
+E
+E         Right contains 2 more items, first extra item: 'lease_handoff'
+E         Use -v to get more diff
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:678: AssertionError
+_______________ test_s8_failed_handoff_reverts_without_launching _______________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_s8_failed_handoff_reverts0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b4a5390>
+
+    def test_s8_failed_handoff_reverts_without_launching(tmp_path, monkeypatch):
+        """S-8(AC-1): 이관이 `ok`도 `noop`도 아니면 기동하지 않고 `hub_owned`로 복귀한다."""
+        from worktree_launcher import launcher_core
+
+        hub, task_dir = _hub_with_canonical_task(tmp_path)
+        order = []
+        handoff_calls, cancel_calls = _patch_lease_seams(
+            monkeypatch, launcher_core, order,
+            handoff_result={"ok": False, "error": "not_owner"},
+        )
+        report = load_launcher_fixture("fake_process-success.json", hub.hub, hub.wt_parent)
+        adapter = _OrderRecordingAdapter(report, order)
+
+        result = launcher_core.run(
+            adapter,
+            hub_root=hub.hub,
+            task=hub.task,
+            worktree_root=hub.worktree_root,
+            command="claude",
+        )
+
+        assert adapter.launch_calls == [], "이관 실패 시 터미널을 띄우지 않는다"
+        assert "adapter.launch" not in order, order
+>       assert result["detail"] == "lease_handoff_failed", result
+               ^^^^^^^^^^^^^^^^
+E       KeyError: 'detail'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:705: KeyError
+__ test_s9_all_five_launch_failure_paths_cancel_the_handoff_and_return_to_hub __
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_s9_all_five_launch_failur0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b4a7c40>
+
+    def test_s9_all_five_launch_failure_paths_cancel_the_handoff_and_return_to_hub(
+        tmp_path, monkeypatch
+    ):
+        """S-9(AC-1): launch 실패 5경로 전건에서 이관취소가 **정확히 1회** 호출되고 registry가
+        `hub_owned`로 복귀한다. 취소는 `ownership_set` 복귀 호출보다 **먼저** 일어난다."""
+        from worktree_launcher import launcher_core  # RED: lease_handoff_cancel 미구현
+
+        for index, detail in enumerate(S9_REVERT_DETAILS):
+            order = []
+            hub, task_dir, result, cancel_calls = _s9_case_runner(
+                tmp_path / "s9-{}".format(index), monkeypatch, launcher_core, detail, order
+            )
+            meta = read_meta(hub.meta_path)
+
+            expected_detail = "child_lease_unresolved" if detail == "ownership_set_rejected" else detail
+>           assert str(result["detail"]).startswith(expected_detail), (detail, result)
+                       ^^^^^^^^^^^^^^^^
+E           KeyError: 'detail'
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:798: KeyError
+___________ test_s9_failed_handoff_cancel_does_not_block_the_revert ____________
+
+tmp_path = PosixPath('/private/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/pytest-of-iskang/pytest-1747/test_s9_failed_handoff_cancel_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10b28e3c0>
+
+    def test_s9_failed_handoff_cancel_does_not_block_the_revert(tmp_path, monkeypatch):
+        """S-9(AC-1): 이관취소 자체가 실패해도 registry 복귀는 수행되고, 실패 사실은 반환
+        로그 필드(`lease_handoff_cancel`)로만 남는다 — 복귀가 취소 성공에 종속되면 dual owner가
+        남는다(기존 `terminal_close` 취급과 동일한 결)."""
+        from worktree_launcher import launcher_core
+
+        # ① 취소가 구조화 실패를 돌려주는 경우.
+        order_a = []
+        hub_a, _task_a, result_a, cancel_a = _s9_case_runner(
+            tmp_path / "cancel-not-ok", monkeypatch, launcher_core, "reported_cwd_mismatch", order_a,
+            cancel_result={"ok": False, "error": "not_handoff_owner"},
+        )
+>       assert len(cancel_a) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+opal/tools/worktree-launcher/tests/test_launcher_core.py:822: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_success_path_sets_worktree_session_owned_only_after_both_receipts
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_launch_failed_path_reverts_atomically
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_prompt_failed_path_reverts_atomically
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_cwd_mismatch_path_reverts_atomically
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_no_dual_owner_or_orphan_session_launching_across_all_paths
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_revert_closes_reported_terminal_exactly_once_on_every_handle_path
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_revert_without_reported_handle_does_not_attempt_close
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_revert_is_performed_even_when_close_raises
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_revert_is_performed_even_when_close_reports_non_zero_exit
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_revert_is_performed_when_adapter_has_no_close
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_success_path_never_closes_the_terminal
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_revert_closes_terminal_when_ownership_set_rejects_the_owned_transition
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s8_lease_handoff_runs_exactly_once_before_adapter_launch
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s8_noop_handoff_still_proceeds_to_launch
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s8_failed_handoff_reverts_without_launching
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s9_all_five_launch_failure_paths_cancel_the_handoff_and_return_to_hub
+FAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s9_failed_handoff_cancel_does_not_block_the_revert
+17 failed, 144 passed, 4 skipped in 7.18s

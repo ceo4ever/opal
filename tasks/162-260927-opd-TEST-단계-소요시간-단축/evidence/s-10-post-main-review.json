@@ -1,0 +1,126 @@
+{
+  "head": "15e53401744d6bac03d64c72d45029ba782f218b",
+  "divergence": {
+    "ok": true,
+    "error": null,
+    "command": "divergence",
+    "task": "162",
+    "project_root": "/Volumes/Data/AIStudio/workspace/ai-framework",
+    "integration_required": false,
+    "repos": [
+      {
+        "repo": "/Volumes/Data/AIStudio/workspace/ai-framework",
+        "path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162",
+        "ahead": 4,
+        "behind": 0,
+        "base_ref": "main",
+        "head_sha": "15e53401744d6bac03d64c72d45029ba782f218b"
+      }
+    ]
+  },
+  "stage_test_verify": {
+    "command": "verify",
+    "event": "stage.test",
+    "manifest_path": "/Users/iskang/.opal/references/events.json",
+    "manifest_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+    "ok": true,
+    "payload_bytes": 14430,
+    "receipt_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/post-main-stage-test-receipt.json",
+    "verified_document_count": 3,
+    "verified_documents": [
+      {
+        "bytes": 6330,
+        "id": "test-cycle",
+        "path": "/Users/iskang/.opal/references/harness/test-cycle.md",
+        "sha256": "c67c8e8d58adf1480e6da6b4595fa2f9a9b4421c73c9cb05654839ea668dcd9a",
+        "token": "{deployed_root}/references/harness/test-cycle.md"
+      },
+      {
+        "bytes": 3275,
+        "id": "scenario-gate",
+        "path": "/Users/iskang/.opal/references/harness/scenario-gate.md",
+        "sha256": "e9a44dbd35fa5804703cbe603073ad4f75c4b4a48c755ba835eebedf9d593690",
+        "token": "{deployed_root}/references/harness/scenario-gate.md"
+      },
+      {
+        "bytes": 4825,
+        "id": "qa-standards",
+        "path": "/Users/iskang/.opal/references/harness/qa-standards.md",
+        "sha256": "767fc3c0a036b6c7efc2b6c324cb34fed8a61f7e23580c93b4a4d6228743711c",
+        "token": "{deployed_root}/references/harness/qa-standards.md"
+      }
+    ]
+  },
+  "installed_file_checks": [
+    {
+      "source": "opal/core/references/events.json",
+      "installed": "references/events.json",
+      "source_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+      "installed_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+      "match": true
+    },
+    {
+      "source": "opal/core/references/harness/test-cycle.md",
+      "installed": "references/harness/test-cycle.md",
+      "source_sha256": "c67c8e8d58adf1480e6da6b4595fa2f9a9b4421c73c9cb05654839ea668dcd9a",
+      "installed_sha256": "c67c8e8d58adf1480e6da6b4595fa2f9a9b4421c73c9cb05654839ea668dcd9a",
+      "match": true
+    },
+    {
+      "source": "opal/skills/opal-pilot-dev/SKILL.md",
+      "installed": "skills/opal-pilot-dev/SKILL.md",
+      "source_sha256": "425484186a777c2300a7bcfc64236794f7adb135158308028869b58435ab6c40",
+      "installed_sha256": "425484186a777c2300a7bcfc64236794f7adb135158308028869b58435ab6c40",
+      "match": true
+    },
+    {
+      "source": "opal/tools/state-tool/state_tool.py",
+      "installed": "tools/state-tool/state_tool.py",
+      "source_sha256": "01b21ea4e1cf810834c08d456d007ad7fbfcc7b2062ea73384893881c7f3922b",
+      "installed_sha256": "01b21ea4e1cf810834c08d456d007ad7fbfcc7b2062ea73384893881c7f3922b",
+      "match": true
+    },
+    {
+      "source": "opal/tools/worktree-tool/worktree_tool.py",
+      "installed": "tools/worktree-tool/worktree_tool.py",
+      "source_sha256": "0810c75a3be6da5f8515391c38ba250d87efaef6c1e75cc51d010d8a31ec28f3",
+      "installed_sha256": "0810c75a3be6da5f8515391c38ba250d87efaef6c1e75cc51d010d8a31ec28f3",
+      "match": true
+    },
+    {
+      "source": "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+      "installed": "tools/ownership-tool/ownership_tool/codex_adapter.py",
+      "source_sha256": "5396eea631ed7f7d06edb1b2101462a55fa30ea9814b6d8ced2391392a8bfccd",
+      "installed_sha256": "5396eea631ed7f7d06edb1b2101462a55fa30ea9814b6d8ced2391392a8bfccd",
+      "match": true
+    }
+  ],
+  "post_main_core": {
+    "exit_code": 1,
+    "result": "1353 passed, 4 failed, 4 skipped, 1 deselected, 746 subtests passed",
+    "failed_cases": "four test_e2e_skeleton.py cases; each failed only because dashboard/frontend/dist already existed",
+    "output": "post-main-core-regression.txt"
+  },
+  "e2e_skeleton_retest": {
+    "exit_code": 0,
+    "result": "4 passed",
+    "precondition": "dashboard/frontend/dist isolated before run",
+    "output": "post-main-e2e-skeleton-retest.txt"
+  },
+  "ownership": {
+    "exit_code": 0,
+    "result": "167 passed",
+    "output": "post-main-ownership-regression.txt"
+  },
+  "launcher_retest": {
+    "exit_code": 0,
+    "result": "161 passed, 4 skipped",
+    "precondition": "native CODEX_SESSION_ID preserved",
+    "output": "post-main-launcher-identity-retest.txt"
+  },
+  "related_161_163_paths": {
+    "main_to_head_diff": [],
+    "working_status": []
+  },
+  "assessment": "S-10 pass by full-core run plus isolated retest of its four environment-precondition failures, ownership and launcher retests, installed SHA parity, and stage.test verification. No single full-core exit-0 run exists."
+}

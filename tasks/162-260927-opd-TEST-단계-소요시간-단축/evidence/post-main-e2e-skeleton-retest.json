@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "opal/tools/test-tool/tests/test_e2e_skeleton.py"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 23.525,
+  "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/post-main-e2e-skeleton-retest.txt",
+  "precondition": "dashboard/frontend/dist temporarily moved to /private/tmp; test asserts dist absent"
+}

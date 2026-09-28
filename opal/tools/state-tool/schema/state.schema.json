@@ -222,6 +222,10 @@
           "worker_duration_unknown": {
             "type": "boolean",
             "description": "103 강제 2단 — 워커 소요 미측정을 PM이 명시 선언했음(--worker-duration-unknown). 선택 필드이며 부재는 「침묵」(미선언)을 뜻한다. CLOSE 게이트가 선언과 침묵을 갈라 판정한다."
+          },
+          "test_change_kind": {
+            "enum": ["fix", "requirement_change"],
+            "description": "TEST 추가 행의 변경 유형. 옵션 없는 기존 행은 미분류로 유지한다."
           }
         }
       }
@@ -240,6 +244,27 @@
     "worktree": {
       "type": "string",
       "description": "worktree 코드 작업본 절대경로. --worktree 지정 시에만 존재하는 optional 필드 — 미지정 태스크의 state.json에는 키 자체가 없다 (092)"
+    },
+    "test_timing": {
+      "type": "object",
+      "required": ["intervals"],
+      "additionalProperties": false,
+      "properties": {
+        "intervals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "id", "started_at", "ended_at"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {"enum": ["auto", "human"]},
+              "id": {"type": "string", "minLength": 1},
+              "started_at": {"type": "string", "format": "date-time"},
+              "ended_at": {"type": ["string", "null"], "format": "date-time"}
+            }
+          }
+        }
+      }
     },
     "run_log": {
       "type": "object",

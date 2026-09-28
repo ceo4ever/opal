@@ -1,0 +1,14 @@
+{
+  "base_sha": "c18533493f4aee236298379ae0106ce2ff40fe27",
+  "fix1_sha": "0a55adc186474c8639a5c016b86e9d4e671e6cf3",
+  "fix2_sha": "1549d184295c593144edcf7fd82475ba10970a45",
+  "fix_count": 2,
+  "focused_retests": [
+    "s3-fix-1-focused.json",
+    "s3-fix-2-expanded.json"
+  ],
+  "final_full_regression": "s3-final-full-regression.json",
+  "same_signature_reused": true,
+  "sha_change_reran": true,
+  "environment_change_reran": true
+}

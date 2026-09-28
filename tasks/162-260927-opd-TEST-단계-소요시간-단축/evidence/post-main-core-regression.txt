@@ -1,0 +1,147 @@
+.......................................................................................................................................................................... [ 12%]
+................................................................. [ 17%]
+..................................................... [ 21%]
+................................................................ [ 25%]
+..ss.s........................... [ 28%]
+................................................. [ 31%]
+...................................................... [ 35%]
+.................................................................... [ 40%]
+..................................................................... [ 45%]
+........................................................................ [ 51%]
+........................................................................ [ 56%]
+........................................................................................ [ 62%]
+......................................... [ 65%]
+............................ [ 68%]
+.................................................... [ 71%]
+.................................................................. [ 76%]
+.......................................................................................................FFFF........................... [ 86%]
+.................................s................................................. [ 92%]
+................................................................... [ 97%]
+.................................                                                      [100%]
+=================================== FAILURES ===================================
+___ TestBackendHealthAndOpenapi.test_health_and_openapi_surfaces_return_200 ____
+
+self = <test_e2e_skeleton.TestBackendHealthAndOpenapi testMethod=test_health_and_openapi_surfaces_return_200>
+
+    def tearDown(self):
+        if self.handles:
+            report = e2e_runtime.stop_all(self.handles)
+            # D-10/A-4: leaked는 그룹 리더 1건이 아니라 SIGKILL 이후
+            # process_group_members로 재열거한 잔존 구성원 pid 전건이다.
+            assert report.leaked == [], f"leaked process group members: {report.leaked}"
+
+        after = _console_7823_baseline()
+        assert after == self._console_baseline, "7823 Console health baseline changed"
+
+        git_status_after = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=_SOURCE_ROOT,
+            capture_output=True,
+            text=True,
+        ).stdout
+        assert git_status_after == self._git_status_before, "repo dirty state changed by test run"
+
+>       assert not self._frontend_dist.exists(), f"{self._frontend_dist} must not be created"
+E       AssertionError: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist must not be created
+E       assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist').exists
+E        +      where PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist') = <test_e2e_skeleton.TestBackendHealthAndOpenapi testMethod=test_health_and_openapi_surfaces_return_200>._frontend_dist
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:115: AssertionError
+_____ TestCorsRealHttp.test_injected_origin_reflected_and_other_origin_not _____
+
+self = <test_e2e_skeleton.TestCorsRealHttp testMethod=test_injected_origin_reflected_and_other_origin_not>
+
+    def tearDown(self):
+        if self.handles:
+            report = e2e_runtime.stop_all(self.handles)
+            # D-10/A-4: leaked는 그룹 리더 1건이 아니라 SIGKILL 이후
+            # process_group_members로 재열거한 잔존 구성원 pid 전건이다.
+            assert report.leaked == [], f"leaked process group members: {report.leaked}"
+
+        after = _console_7823_baseline()
+        assert after == self._console_baseline, "7823 Console health baseline changed"
+
+        git_status_after = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=_SOURCE_ROOT,
+            capture_output=True,
+            text=True,
+        ).stdout
+        assert git_status_after == self._git_status_before, "repo dirty state changed by test run"
+
+>       assert not self._frontend_dist.exists(), f"{self._frontend_dist} must not be created"
+E       AssertionError: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist must not be created
+E       assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist').exists
+E        +      where PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist') = <test_e2e_skeleton.TestCorsRealHttp testMethod=test_injected_origin_reflected_and_other_origin_not>._frontend_dist
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:115: AssertionError
+_______ TestBrowserRealUsage.test_browser_dashboard_call_reaches_backend _______
+
+self = <test_e2e_skeleton.TestBrowserRealUsage testMethod=test_browser_dashboard_call_reaches_backend>
+
+    def tearDown(self):
+        if self.handles:
+            report = e2e_runtime.stop_all(self.handles)
+            # D-10/A-4: leaked는 그룹 리더 1건이 아니라 SIGKILL 이후
+            # process_group_members로 재열거한 잔존 구성원 pid 전건이다.
+            assert report.leaked == [], f"leaked process group members: {report.leaked}"
+
+        after = _console_7823_baseline()
+        assert after == self._console_baseline, "7823 Console health baseline changed"
+
+        git_status_after = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=_SOURCE_ROOT,
+            capture_output=True,
+            text=True,
+        ).stdout
+        assert git_status_after == self._git_status_before, "repo dirty state changed by test run"
+
+>       assert not self._frontend_dist.exists(), f"{self._frontend_dist} must not be created"
+E       AssertionError: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist must not be created
+E       assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist').exists
+E        +      where PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist') = <test_e2e_skeleton.TestBrowserRealUsage testMethod=test_browser_dashboard_call_reaches_backend>._frontend_dist
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:115: AssertionError
+_ TestCleanupAndNonInterference.test_pgid_reclaimed_and_no_leak_after_stop_all _
+
+self = <test_e2e_skeleton.TestCleanupAndNonInterference testMethod=test_pgid_reclaimed_and_no_leak_after_stop_all>
+
+    def tearDown(self):
+        if self.handles:
+            report = e2e_runtime.stop_all(self.handles)
+            # D-10/A-4: leaked는 그룹 리더 1건이 아니라 SIGKILL 이후
+            # process_group_members로 재열거한 잔존 구성원 pid 전건이다.
+            assert report.leaked == [], f"leaked process group members: {report.leaked}"
+
+        after = _console_7823_baseline()
+        assert after == self._console_baseline, "7823 Console health baseline changed"
+
+        git_status_after = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=_SOURCE_ROOT,
+            capture_output=True,
+            text=True,
+        ).stdout
+        assert git_status_after == self._git_status_before, "repo dirty state changed by test run"
+
+>       assert not self._frontend_dist.exists(), f"{self._frontend_dist} must not be created"
+E       AssertionError: /Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist must not be created
+E       assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist').exists
+E        +      where PosixPath('/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/dashboard/frontend/dist') = <test_e2e_skeleton.TestCleanupAndNonInterference testMethod=test_pgid_reclaimed_and_no_leak_after_stop_all>._frontend_dist
+
+opal/tools/test-tool/tests/test_e2e_skeleton.py:115: AssertionError
+=========================== short test summary info ============================
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestBackendHealthAndOpenapi::test_health_and_openapi_surfaces_return_200
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestCorsRealHttp::test_injected_origin_reflected_and_other_origin_not
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestBrowserRealUsage::test_browser_dashboard_call_reaches_backend
+FAILED opal/tools/test-tool/tests/test_e2e_skeleton.py::TestCleanupAndNonInterference::test_pgid_reclaimed_and_no_leak_after_stop_all
+4 failed, 1353 passed, 4 skipped, 1 deselected, 746 subtests passed in 621.36s (0:10:21)

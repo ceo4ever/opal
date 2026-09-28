@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/Users/iskang/.opal/tools/test-tool/run.sh",
+    "scenario-mark",
+    "--task-path",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축",
+    "--id",
+    "S-1",
+    "--result",
+    "pass",
+    "--evidence",
+    "evidence/agent-cycle-fixture/trace/: bundled H1/H2 request, both human intervals open during A1/A2 pytest, first verifier rejected then corrected same run/token PASS; current writer-lock change rechecked by evidence/s-7-clock-race-green.txt (6 PASS) and installed 16/16 clock preservation"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"scenario-mark\", \"scenario_id\": \"S-1\", \"result\": \"pass\"}\n",
+  "stderr": ""
+}

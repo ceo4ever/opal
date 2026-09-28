@@ -1,0 +1,20 @@
+{
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "opal/tools/state-tool/tests",
+    "opal/tools/worktree-tool/tests",
+    "opal/tools/event-loader/tests",
+    "opal/tools/test-tool/tests",
+    "--deselect=opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_non_project_cwd_does_not_promote_parent_home_opal_to_project"
+  ],
+  "excluded_home_test": "isolated PASS /private/tmp separately",
+  "exit_code": 0,
+  "clock_stop_ok": true,
+  "elapsed_seconds": 612.81,
+  "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/final-related-regression.txt"
+}

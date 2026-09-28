@@ -1,0 +1,6 @@
+{
+  "at": "2026-09-28T01:43:34.936926+00:00",
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"test-clock\", \"action\": \"start\", \"kind\": \"human\", \"id\": \"H1\", \"at\": \"2026-09-28T01:43:34.836577+00:00\"}\n",
+  "stderr": ""
+}

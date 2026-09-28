@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/Users/iskang/.opal/tools/test-tool/run.sh",
+    "scenario-mark",
+    "--task-path",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축",
+    "--id",
+    "S-10",
+    "--result",
+    "pass",
+    "--evidence",
+    "HEAD 51da96d, divergence ahead=5 behind=0; evidence/post-fix-final-core-regression.txt exit 0 1359 passed/4 skipped/1 deselected, post-fix-final-ownership.txt 167 passed, post-fix-final-launcher.txt 161 passed/4 skipped; post-fix-installed-verification.json source/install 6/6 SHA and stage.test verify PASS; GC-SECURITY-2026-09-28T13-35-41-gc001.md resolved finding 0, GC-CONVENTION-2026-09-28T13-36-15-writer-lock.md PASS finding 0; task161/163 diff/status 0"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"scenario-mark\", \"scenario_id\": \"S-10\", \"result\": \"pass\"}\n",
+  "stderr": ""
+}

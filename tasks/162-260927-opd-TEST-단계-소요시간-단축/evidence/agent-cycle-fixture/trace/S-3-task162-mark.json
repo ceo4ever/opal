@@ -1,0 +1,18 @@
+{
+  "command": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/test-tool/run.sh",
+    "scenario-mark",
+    "--task-path",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축",
+    "--id",
+    "S-3",
+    "--result",
+    "pass",
+    "--evidence",
+    "fixture trace: s3-initial-full.json 1 failed/4 pass; fix1 selection failed+impacted and focused pytest 1 failed/1 pass; fix2 unknown expands all 5, pytest 5 pass; s3-final-full-regression.json exit 0 5 pass once; source contract search old all-PASS repetition 0"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"scenario-mark\", \"scenario_id\": \"S-3\", \"result\": \"pass\"}\n",
+  "stderr": ""
+}

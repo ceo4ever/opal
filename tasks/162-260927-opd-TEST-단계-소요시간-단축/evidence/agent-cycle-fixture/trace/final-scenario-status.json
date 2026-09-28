@@ -1,0 +1,12 @@
+{
+  "command": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/test-tool/run.sh",
+    "scenario-status",
+    "--task-path",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"scenario-status\", \"locked\": true, \"total\": 4, \"red_confirmed\": 0, \"red_required\": 0, \"red_confirmed_required\": 0, \"passed\": 4, \"failed\": 0, \"blocked\": 0, \"awaiting_human\": 0, \"status_counts\": {\"pass\": 4, \"fail\": 0, \"executor_unavailable\": 0, \"infra_error\": 0, \"blocked\": 0, \"awaiting_human\": 0}}\n",
+  "stderr": ""
+}

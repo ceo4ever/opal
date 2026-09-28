@@ -1,0 +1,27 @@
+{
+  "check": "convention",
+  "status": "partial",
+  "checked_files": [
+    "app.py",
+    "test_fixture.py"
+  ],
+  "findings": [],
+  "evidence": [
+    "git rev-parse HEAD: 1549d184295c593144edcf7fd82475ba10970a45",
+    "git status --short: clean",
+    "both files read fully and AST parsed; filename/function snake_case, imported names used, EOF newline present, no tabs/trailing whitespace",
+    "parent docs/CONVENTIONS.md scope checked at lines 2 and 206-208",
+    "rg --files for pyproject.toml/ruff.toml/tox.ini/setup.cfg/.flake8/.pre-commit-config.yaml/pytest.ini/.editorconfig: no root-level Python config"
+  ],
+  "references": [
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/docs/CONVENTIONS.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/SKILL.md",
+    "/Users/iskang/.opal/skills/op-gc-convention/references/convention-categories.md"
+  ],
+  "missing_capabilities": [
+    "fixture-repo/docs/CONVENTIONS.md absent",
+    "상위 docs/CONVENTIONS.md:2,206-208은 OPAL 본체 작성 규칙으로 적용 범위를 명시하며 별도 fixture Git repo를 포함하지 않음",
+    "상위 프로젝트 루트에 Python lint/format 설정이 없음; 발견된 pyproject.toml은 다른 test-tool 단위 fixture 내부에만 존재"
+  ],
+  "report_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/trace/GC-CONVENTION-final-fixture-second.md"
+}

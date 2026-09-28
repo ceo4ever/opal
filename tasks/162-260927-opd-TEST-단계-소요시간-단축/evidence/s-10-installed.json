@@ -1,0 +1,166 @@
+{
+  "at": "2026-09-27T15:07:45.806009+00:00",
+  "installer": "scripts/install-mac.sh interactive menu 1, exit_code=0",
+  "installed_file_checks": [
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/core/references/events.json",
+      "installed": "/Users/iskang/.opal/references/events.json",
+      "source_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+      "installed_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+      "match": true
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/core/references/harness/test-cycle.md",
+      "installed": "/Users/iskang/.opal/references/harness/test-cycle.md",
+      "source_sha256": "b17810028267cef27e76d5537ab30cee7050c2c52543cfec847da0ccc1af9986",
+      "installed_sha256": "b17810028267cef27e76d5537ab30cee7050c2c52543cfec847da0ccc1af9986",
+      "match": true
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/skills/opal-pilot-dev/SKILL.md",
+      "installed": "/Users/iskang/.opal/skills/opal-pilot-dev/SKILL.md",
+      "source_sha256": "e37f46b875af8e2fff3169fe2697fc2a7d90d1712a0037a60769e3f986995ee4",
+      "installed_sha256": "e37f46b875af8e2fff3169fe2697fc2a7d90d1712a0037a60769e3f986995ee4",
+      "match": true
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/event-loader/event_loader.py",
+      "installed": "/Users/iskang/.opal/tools/event-loader/event_loader.py",
+      "source_sha256": "1cac54254ada625cab435b209908f9887c1819f0666b0749ea9776793c1d330f",
+      "installed_sha256": "1cac54254ada625cab435b209908f9887c1819f0666b0749ea9776793c1d330f",
+      "match": true
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/state-tool/state_tool.py",
+      "installed": "/Users/iskang/.opal/tools/state-tool/state_tool.py",
+      "source_sha256": "40bc0bc24948f7f10f0c0e6055cb94d17c2ff280fcde40951074035ff9c94022",
+      "installed_sha256": "40bc0bc24948f7f10f0c0e6055cb94d17c2ff280fcde40951074035ff9c94022",
+      "match": true
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/worktree-tool/worktree_tool.py",
+      "installed": "/Users/iskang/.opal/tools/worktree-tool/worktree_tool.py",
+      "source_sha256": "b8b6630d1073990db1508419252a955d86fe56f4c96c6218fcb11998c41d6f11",
+      "installed_sha256": "b8b6630d1073990db1508419252a955d86fe56f4c96c6218fcb11998c41d6f11",
+      "match": true
+    }
+  ],
+  "stage_test_load": {
+    "exit_code": 0,
+    "ok": true,
+    "document_ids": [
+      "test-cycle",
+      "scenario-gate",
+      "qa-standards"
+    ],
+    "required_document_ids": [
+      {
+        "bytes": 6376,
+        "content": "---\nmodule: test-cycle\nrole: TEST 진입·실행·반복·최종 게이트의 단일 SSOT\nload: stage.test\n---\n\n# TEST 실행 주기\n\n이 계약은 opd/opds의 TEST 단계에 적용한다. 독립 실행·판정은 `opal-test-agent`가 수행하고 PM은 증거를 검토한다. `test-tool`의 시나리오 상태와 구조화 handoff·verifier 계약은 그대로 따른다. 기존 태스크에 새 계측 값이 없으면 알 수 없음으로 보고하고 사후 행 시각으로 추정하지 않는다.\n\n## 진입과 병행 실행\n\n1. 자동 검사를 시작하기 전에 `worktree-tool divergence --project-root <허브 절대경로> --task <NNN>`으로 registry의 동결 `base_ref`와 worktree HEAD의 repo별 `ahead`·`behind`를 확인한다. 조회 실패·미확인은 통과가 아니다. `integration_required=true` 또는 어느 repo든 `behind>0`이면 통합을 요청하고 TEST 시작을 보류한다. merge 승인과 통합은 별도 권한 경계이며, 통합 뒤 다시 조회해 `behind=0`을 확인한다.\n2. PM이 TEST-SCENARIO.md의 모든 사람 전용 step과 handoff, 로그인·DDL·권한·관찰 등 선행 조치를 추출한다. 필요한 입력·실행 방법·제출 증거·기한을 **한 요청**으로 먼저 전달한다. 자동 테스트 결과를 기다렸다가 사람 조치를 순차 요청하지 않는다. 사람 항목이 없으면 요청과 human interval을 생략한다.\n3. PM은 묶음 요청 발송 시 `state-tool test-clock start <task> --kind human --id <handoff-id>`를 각 handoff ID에 대해 정확히 한 번 호출한 뒤, 요청 증거와 열린 ID 목록을 `opal-test-agent`에 주입하여 디스패치한다. test agent는 요청·시작 ID를 확인하되 사람 요청이나 human start를 반복하지 않는다. 결측·불일치면 PM에 BLOCKED로 반환한다. test agent가 `test-clock start <task> --kind auto --id <실행-id>`를 호출해 자동 시나리오를 실행하고 직후 `auto` stop을 호출한다. 자동 실행은 사람 제출 대기와 병행한다. 각 사람 제출은 같은 run-id/resume-token의 구조화 submission을 verifier가 처리한 뒤에만 PM이 해당 `human` stop을 호출한다. PM이 이 종료 호출을 test agent에 명시 위임한 경우에만 agent가 대신 호출한다. 제출자의 완료 선언만으로 PASS를 기록하지 않는다. 중복 start·열리지 않은 interval의 stop은 오류로 다룬다. 열린 interval은 `test-metrics`에 열린 상태로 남긴다.\n4. `test-tool scenario-mark`와 `scenario-status`에 실제 출력·exit code·verifier 결과를 남긴다. TEST-SCENARIO.md 명세에 결과를 덧쓰지 않는다. 사람 대기가 남으면 `awaiting_human`을 유지하고 자동 검사 결과를 먼저 보고한다.\n\n## EXECUTE 증거 재사용\n\nEXECUTE의 lint·type/build·unit PASS는 **현재 TEST 대상과 동일한 commit SHA**, 동일한 명령과 환경 서명(도구·의존성·설정·실행 환경), 읽을 수 있는 PASS 출력 증거 경로가 모두 확인될 때만 TEST에서 재사용한다. TEST 보고에 각 항목의 SHA·정확한 명령·환경 서명·PASS 증거 경로와 재사용 판정을 기록한다. 하나라도 다르거나 증거가 없으면 `opal-test-agent`가 다시 실행한다. 재사용은 독립 TEST 시나리오 실행·판정을 대체하지 않는다. 이를 위해 `test-scenario.json` 스키마에 필드를 임의로 추가하지 않는다.\n\n## 수정 반복\n\n- TEST 추가 행의 삽입 기준은 `state-tool show`에서 확인한 **마지막 TEST 추가 행의 key**다. 아직 추가 행이 없으면 `test.run_tests`를 기준으로 한다. `add-row --after-task-step <기준 key>`를 사용하고 도구가 반환한 새 `key`를 다음 반복의 기준으로 보관한다. 행 번호는 사용하지 않는다.\n- TEST 실패 수정은 `state-tool add-row <task> --stage TEST --test-change-kind fix ...`로 기록한다. `opal-test-agent`의 FAIL/BLOCKED S-ID와 변경 파일에 영향받는 S-ID를 합쳐 재실행한다. 영향 관계가 없거나 불확실하면 해당 시나리오 묶음 전체를 포함한다. 재실행하지 않은 PASS는 기존 증거를 유지하되 변경 SHA가 그 시나리오에 영향이 없다는 근거를 TEST 보고에 남긴다. 회귀가 발견되면 수정 루프를 중단하고 에스컬레이션한다. `guards.md` §자동 루핑 제약의 오류 종류별 상한을 따른다.\n- 새 요구·UX·수용 기준 변경은 실패 구현의 `fix`로 세지 않는다. `state-tool add-row <task> --stage TEST --test-change-kind requirement_change ...`로 별도 기록한다. 이 유형은 태스크당 3회까지다. 네 번째 추가 시 도구가 행을 만들지 않고 `blocked`/`await_user`/`decision_request`로 전이하면, 새 태스크 분리 또는 PLAN 재진입 중 사용자 결정을 요청한다. 결정 뒤 `state-tool`의 `additional_work` 경로를 따르며, PLAN 재진입도 기존 요구 변경 계수를 초기화하지 않는다. legacy 미분류 TEST 행은 분류를 추정하지 않는다.\n- 수정 중에는 전체 회귀·보안·컨벤션 checker를 매 반복의 필수 호출로 삼지 않는다. 실패와 영향 범위의 검증 결과를 먼저 확정하고 마지막 수정 뒤 아래 최종 게이트를 수행한다.\n\n## 최종 TEST PM Gate\n\n`opal-test-agent`가 모든 필수 S-ID의 구조화 PASS 증거를 확인하고, 마지막 수정 기준으로 **전체 회귀 1회**와 보안 검사 1회를 독립 실행한다. lint·type·unit은 위 재사용 조건을 각각 판정하고 불충족 항목을 실행한다. 컨벤션 적용 파일이 있으면 마지막 수정 뒤 `opal-convention-checker`를 **최종 1회** 호출하여 Critical/High 0건을 확인한다. 최종 검사 뒤 수정이 생기면 영향 시나리오를 다시 검증하고 변경으로 무효화된 최종 증거를 갱신한 다음 게이트를 재판정한다. PM은 독립 워커의 증거·보고서를 확인하며 직접 PASS를 대신 선언하지 않는다.\n\n`state-tool test-metrics <task>`로 실제 start/stop 사건에 기반한 `auto_seconds`, 겹친 대기 구간의 합집합인 `human_wait_seconds`, `fix_count`, `requirement_change_count`, 열린 구간과 legacy 미분류 행을 조회한다. 기록이 없는 시간은 unknown이며 행 mark 시각으로 보충하지 않는다.\n",
+        "id": "test-cycle",
+        "path": "/Users/iskang/.opal/references/harness/test-cycle.md",
+        "sha256": "b17810028267cef27e76d5537ab30cee7050c2c52543cfec847da0ccc1af9986",
+        "token": "{deployed_root}/references/harness/test-cycle.md"
+      },
+      {
+        "bytes": 3275,
+        "content": "---\nmodule: scenario-gate\nrole: TEST-SCENARIO 목표-커버리지 게이트 규칙 SSOT\nload: op-scenario-gate 호출 시\n상속: opal/core/PRINCIPLES.md §4\n---\n\n# TEST-SCENARIO 목표-커버리지 게이트\n\n## 판정 축\n\n| 축 | 확인 내용 | 판정 주체 |\n|---|---|---|\n| 목표 달성 | 사용자·운영 결과를 직접 검증하는 시나리오가 있는가 | evaluator |\n| 요구 커버 | sdlc-v2 AC/C 또는 legacy R/AC가 모두 시나리오에 연결되는가 | test-tool |\n| 기능 커버 | legacy 또는 별도 기능 ID가 모두 연결되는가 | test-tool |\n| 위험 커버 | PLAN에 H가 있으면 모두 연결되는가 | test-tool |\n| 채택·잔존 | 교체형 목표의 구형 잔존 0과 신형 채택을 검증하는가 | evaluator |\n| 경계·부정 | 실패·경계 조건을 검증하는가 | evaluator |\n\n요구·기능·위험 커버는 결정론 도구가 판정하고, 목표·채택·경계의 충분성은 독립 evaluator가 판정한다. 서로의 판정을 대신하지 않는다.\n\n## 정규화 입력\n\n```json\n{\n  \"goal\": \"목표 문장\",\n  \"requirements\": [\"AC-1\", \"C-1\"],\n  \"features\": [],\n  \"hypotheses\": [\"H-1\"],\n  \"scenarios\": [{\n    \"id\": \"S-1\",\n    \"covers_requirements\": [\"AC-1\", \"C-1\"],\n    \"covers_features\": [],\n    \"covers_hypotheses\": [\"H-1\"],\n    \"is_goal_scenario\": true,\n    \"is_adoption_scenario\": false,\n    \"is_boundary_scenario\": true\n  }]\n}\n```\n\n- sdlc-v2는 AC/C를 `requirements`, S를 `scenarios`로 변환한다.\n- PLAN에 실제 H가 있을 때만 `hypotheses`를 채운다. H가 없으면 빈 배열을 허용한다.\n- sdlc-v2 W는 실행 단위이므로 `features`에 넣지 않는다.\n- pilot별 문서를 이 입력으로 바꾸는 책임은 op-scenario-gate가 소유한다.\n\n## 게이트 흐름\n\n1. Producer인 PM이 TEST-SCENARIO를 작성한다.\n2. test-tool build/check가 정규화와 매핑 누락을 판정한다.\n3. 결정론 검사가 통과한 경우에만 독립 evaluator가 목표·채택·경계 축을 판정한다.\n4. 둘 다 통과하면 pass다. 누락이나 gaps가 있으면 PM이 해당 항목만 보완하고 같은 gate iteration을 올려 다시 실행한다.\n\nProducer와 evaluator는 매 반복 분리한다. 사용자는 현재 진행 모드의 사용자 확인 행에서 결과를 검토한다.\n\n## 종료 조건\n\n- **pass**: 커버 누락 0, evaluator 각 축 0점 없음, 평균 1.5 이상\n- **rewrite**: 보완 가능한 missing 또는 gaps가 있고 반복·무진전 상한 전\n- **escalate**: 하네스 반복 상한 초과 또는 연속 2회 개선 없음\n- **input error**: 문서 파손, 알 수 없는 참조, 필수 AC/C 부재, S 0건, 중복 S-ID. 재작성 verdict가 아니라 입력 블로커로 반환한다.\n\n반복 상한 수치는 `opal/core/references/harness/guards.md` §자동 루핑 제약이 소유한다.\n\n## 통과 증거\n\npass에는 두 증거가 모두 필요하다.\n\n- sdlc-v2 build와 coverage-check exit 0 또는 legacy 정규화 입력의 coverage-check exit 0\n- opal-evaluator-agent `scenario-rubric` verdict pass\n\n게이트 호출자는 이 증거 없이 pipeline gate 행을 mark하지 않는다.\n반복별 missing·scores·gaps·verdict는 `.scenario-gate-history.json`에 기록하며 별도 Markdown\n보고서를 만들지 않는다.\n",
+        "id": "scenario-gate",
+        "path": "/Users/iskang/.opal/references/harness/scenario-gate.md",
+        "sha256": "e9a44dbd35fa5804703cbe603073ad4f75c4b4a48c755ba835eebedf9d593690",
+        "token": "{deployed_root}/references/harness/scenario-gate.md"
+      },
+      {
+        "bytes": 4825,
+        "content": "# QA 표준\n\n> 출처: opal-harness.md §2\n> 로드 시점: PM Gate 문서검증 수행 시\n> 역할: QA 체크리스트 검증 + QA/단계별 산출물 표준 파일명 + 스킬별 검증 방식 + 갱신 의무\n>\n> 문서 QA(요구사항→설계 검토)는 별도 QA Gate 단계를 두지 않고 PM Gate가 직접 흡수한다. 본 문서의 검증·갱신은 PM이 PM Gate에서 단독으로 수행한다 (`harness/pm-review-gate.md` 검토 절차 §문서 QA 검증 참조). 동작 검증(TEST / TEST-SCENARIO / state-tool verify)은 본 문서와 독립이며 그 영역은 건드리지 않는다.\n\n---\n\n### QA 체크리스트 검증\n\n각 단계(PLAN, EXECUTE 등) 완료 후, PM Gate가 해당 단계 산출물을 검증한다. 신규 `template: sdlc-v2` 태스크에서는 체크리스트를 갱신하지 않고, 단계 상태는 `state.json`, 시나리오 결과·증거는 `test-scenario.json`이 소유한다.\n\n**PM 단독 검토·갱신**:\n\nPM Gate 문서검증 시 PM이 직접 산출물을 읽고 단계별 기준으로 Pass/Needs Revision을 판단한다. 별도 QA 에이전트 1차 갱신 단계나 재소환은 없다.\n\nlegacy 태스크 또는 pipeline artifact가 체크리스트 갱신을 명시 요구하는 경우에만 PM이 체크리스트를 `[x]` 또는 \"N/A + 사유\"로 갱신한다. 검증을 통과하지 못한 항목은 `[ ]` 유지 + 미흡 사유를 남긴다.\n\n### QA 산출물 표준 파일명\n\nPM Gate 자가 진단(interactive §3 / agentic §4)에서 확인하는 QA 산출물 파일명의 legacy 기본값.\n오케스트레이터 SKILL.md에서 오버라이드 가능하며, 명시가 없으면 이 표준을 따른다.\n\n신규 sdlc-v2 태스크는 pipeline artifact가 QA 파일을 요구할 때만 이 표를 적용한다.\n\n| 단계 | 필수 산출물 파일 | 위치 |\n|------|--------------|------|\n| PLAN QA | `QA-PLAN.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |\n| EXECUTE QA | `QA-EXECUTE.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |\n| ANALYSIS QA | `QA-ANALYSIS.md` | `tasks/{NNN}-{YYMMDD}-{name}/` (해당 단계가 있는 스킬만) |\n\n### 단계별 주요 산출물 표준 파일명\n\n파이프라인 산출물 행(`state.json` `rows[]`, 조회: `state-tool show`)에서 추적하는 파일명의 기본값.\n오케스트레이터 SKILL.md에서 오버라이드 가능하며, 명시가 없으면 이 표준을 따른다.\n\n| 단계 | 주요 산출물 | 위치 |\n|------|-----------|------|\n| TASK | `TASK.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |\n| ANALYSIS | `ANALYSIS.md` | `tasks/{NNN}-{YYMMDD}-{name}/` (해당 단계가 있는 스킬만) |\n| PLAN | `PLAN.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |\n| TEST-SCENARIO | `TEST-SCENARIO.md` | `tasks/{NNN}-{YYMMDD}-{name}/` (해당 단계가 있는 스킬만) |\n| WIREFRAME | `wireframe.md` | `tasks/{NNN}-{YYMMDD}-{name}/` (opdw 전용) |\n| DONE | `DONE.md` | `tasks/{NNN}-{YYMMDD}-{name}/` |\n\n**스킬별 산출물 오버라이드**: 각 pilot `references/pipeline.json`의 `task_steps[].gate.artifacts`가 단계별 게이트 산출물의 SSOT다 — `state-tool mark`가 이를 존재 검증하고 `gate.checklist`를 stdout으로 반환한다 (091).\n\n**스킬별 검증 방식**:\n\n| 스킬 | 검증 수단 | 체크리스트 갱신 |\n|------|----------|--------------|\n| opd/opds | TEST-SCENARIO.md 명세 + `test-scenario.json` 결과(동작 검증, 독립 영역) + PM Gate 문서검증 | sdlc-v2는 상태 JSON 갱신, legacy는 필요 시 체크리스트 갱신 |\n| opp | PM Gate 문서검증 | sdlc-v2는 상태 JSON 갱신, legacy는 필요 시 체크리스트 갱신 |\n\n**갱신 의무**: 신규 sdlc-v2는 `state.json` 행 상태와 필요한 검증 JSON을 기준으로 DONE 진입을 판단한다. legacy 또는 pipeline artifact가 QA 체크리스트를 요구하면 DONE.md 생성 전에 모든 항목이 `[x]` 또는 \"N/A + 사유\"여야 한다.\n\n### EXECUTE QA — 동작 증거 의무 (헌법 §4 집행)\n\nEXECUTE QA는 \"글자 존재 여부(grep)\"가 아니라 **실제 동작**으로 검증한다. 원칙 자체는 `PRINCIPLES.md` §4를 따른다.\n\n> 이 동작 검증의 실수행 주체는 TEST / TEST-SCENARIO / state-tool verify(독립·불변 영역)이며, PM Gate는 그 산출 증거(실행 출력·실응답)를 **확인**한다. 아래 체크리스트는 그 증거 확인용 항목으로 보존한다.\n\n- [ ] 각 AC 충족이 실행 출력(stdout/exit code) 또는 실응답으로 입증되었는가 — 문자열 grep만으로 Pass 금지\n- [ ] 지시된 실연동(API/DB 등)을 목업으로 대체하지 않았는가 — 대체 시 Fail\n- [ ] 목업·스텁이 프로덕션 경로에 잔존하지 않는가\n- [ ] 증거가 없는 항목은 Pass가 아니라 미완으로 처리했는가 (헌법: \"No evidence → not done\")\n\n> 순수 문서 태스크(코드 변경 없음)는 본 의무에서 제외한다.\n\n---\n\n",
+        "id": "qa-standards",
+        "path": "/Users/iskang/.opal/references/harness/qa-standards.md",
+        "sha256": "767fc3c0a036b6c7efc2b6c324cb34fed8a61f7e23580c93b4a4d6228743711c",
+        "token": "{deployed_root}/references/harness/qa-standards.md"
+      }
+    ],
+    "receipt_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/installed-stage-test-receipt.json"
+  },
+  "stage_test_verify": {
+    "exit_code": 0,
+    "result": {
+      "command": "verify",
+      "event": "stage.test",
+      "manifest_path": "/Users/iskang/.opal/references/events.json",
+      "manifest_sha256": "a1552221d85be1bf4e9705a65dfbd88f05278c2bd6b8394d0f1d2ebb3962d8a0",
+      "ok": true,
+      "payload_bytes": 14476,
+      "receipt_path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/installed-stage-test-receipt.json",
+      "verified_document_count": 3,
+      "verified_documents": [
+        {
+          "bytes": 6376,
+          "id": "test-cycle",
+          "path": "/Users/iskang/.opal/references/harness/test-cycle.md",
+          "sha256": "b17810028267cef27e76d5537ab30cee7050c2c52543cfec847da0ccc1af9986",
+          "token": "{deployed_root}/references/harness/test-cycle.md"
+        },
+        {
+          "bytes": 3275,
+          "id": "scenario-gate",
+          "path": "/Users/iskang/.opal/references/harness/scenario-gate.md",
+          "sha256": "e9a44dbd35fa5804703cbe603073ad4f75c4b4a48c755ba835eebedf9d593690",
+          "token": "{deployed_root}/references/harness/scenario-gate.md"
+        },
+        {
+          "bytes": 4825,
+          "id": "qa-standards",
+          "path": "/Users/iskang/.opal/references/harness/qa-standards.md",
+          "sha256": "767fc3c0a036b6c7efc2b6c324cb34fed8a61f7e23580c93b4a4d6228743711c",
+          "token": "{deployed_root}/references/harness/qa-standards.md"
+        }
+      ]
+    }
+  },
+  "installed_test_metrics": {
+    "exit_code": 0,
+    "ok": true
+  },
+  "installed_divergence": {
+    "exit_code": 0,
+    "result": {
+      "ok": true,
+      "error": null,
+      "command": "divergence",
+      "task": "162",
+      "project_root": "/Volumes/Data/AIStudio/workspace/ai-framework",
+      "integration_required": false,
+      "repos": [
+        {
+          "repo": "/Volumes/Data/AIStudio/workspace/ai-framework",
+          "path": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162",
+          "ahead": 2,
+          "behind": 0,
+          "base_ref": "main",
+          "head_sha": "43ba52b0b193ec38bb08a542054998632eb70877"
+        }
+      ]
+    }
+  },
+  "related_regression": {
+    "command": [
+      "/Users/iskang/.opal/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "opal/tools/state-tool/tests",
+      "opal/tools/worktree-tool/tests",
+      "opal/tools/event-loader/tests",
+      "opal/tools/test-tool/tests",
+      "--deselect=opal/tools/event-loader/tests/test_event_loader_extended.py::EventLoaderExtendedContractTest::test_non_project_cwd_does_not_promote_parent_home_opal_to_project"
+    ],
+    "excluded_home_test": "isolated PASS /private/tmp separately",
+    "exit_code": 0,
+    "clock_stop_ok": true,
+    "elapsed_seconds": 612.81,
+    "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/final-related-regression.txt"
+  },
+  "task_161_163_worktree_status": []
+}

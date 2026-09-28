@@ -1,0 +1,36 @@
+{
+  "suites": [
+    {
+      "name": "ownership",
+      "command": [
+        "/Users/iskang/.opal/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "opal/tools/ownership-tool/tests"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 12.205,
+      "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/post-main-ownership-regression.txt",
+      "tail": "........................................................................ [ 43%]\n........................................................................ [ 86%]\n.......................                                                  [100%]\n167 passed in 11.88s\n"
+    },
+    {
+      "name": "launcher",
+      "command": [
+        "/Users/iskang/.opal/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "opal/tools/worktree-launcher/tests"
+      ],
+      "exit_code": 1,
+      "elapsed_seconds": 7.448,
+      "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/post-main-launcher-regression.txt",
+      "tail": "y::test_revert_is_performed_even_when_close_raises\nFAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_revert_is_performed_even_when_close_reports_non_zero_exit\nFAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_revert_is_performed_when_adapter_has_no_close\nFAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_success_path_never_closes_the_terminal\nFAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_revert_closes_terminal_when_ownership_set_rejects_the_owned_transition\nFAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s8_lease_handoff_runs_exactly_once_before_adapter_launch\nFAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s8_noop_handoff_still_proceeds_to_launch\nFAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s8_failed_handoff_reverts_without_launching\nFAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s9_all_five_launch_failure_paths_cancel_the_handoff_and_return_to_hub\nFAILED opal/tools/worktree-launcher/tests/test_launcher_core.py::test_s9_failed_handoff_cancel_does_not_block_the_revert\n17 failed, 144 passed, 4 skipped in 7.18s\n"
+    }
+  ]
+}

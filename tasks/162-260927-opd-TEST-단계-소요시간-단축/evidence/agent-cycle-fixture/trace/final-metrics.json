@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/opal/tools/state-tool/run.sh",
+    "test-metrics",
+    "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/agent-cycle-fixture/fixture-task"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"ok\": true, \"command\": \"test-metrics\", \"auto_seconds\": 1.013217, \"human_wait_seconds\": 119.271576, \"fix_count\": 2, \"requirement_change_count\": 0, \"legacy_unclassified_rows\": 1, \"open_intervals\": []}\n",
+  "stderr": ""
+}

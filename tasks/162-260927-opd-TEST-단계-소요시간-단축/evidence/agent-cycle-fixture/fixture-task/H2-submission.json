@@ -1,0 +1,18 @@
+{
+  "run_id": "task162-agent-cycle-handoff-001",
+  "resume_token": "task162-H2-token-001",
+  "assertion_results": [
+    {
+      "id": "H2-approved",
+      "expected": true,
+      "actual": true
+    }
+  ],
+  "observed_executors": [
+    "human"
+  ],
+  "observed_evidence": [
+    "ddl_approval_record",
+    "H2-submission"
+  ]
+}

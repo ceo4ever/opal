@@ -117,6 +117,8 @@
 
 > **실행 지속성 계약 (Task 136)**: 모든 Pilot의 단계 경계는 `state-tool`의 `transition_action`(`continue`/`await_user`/`blocked`/`complete`), `report_type`(`progress_report`/`decision_request`), `next_action`을 소비한다. interactive/semi-agentic/agentic 차이는 `opal/core/references/harness/modes.md`와 각 pipeline `transition_contract`가 소유하고, 신규 pipeline CLOSE는 `close.done_md` 뒤 tail 행을 거쳐 `close.final`에서만 완료된다. 플랫폼별 종료 방지·재개 안내는 hook/adapter 계층이 소유한다.
 
+> **opd/opds TEST 실행 주기 (Task 162)**: 사람 조치 선요청·자동 실행 병행, EXECUTE 증거 재사용, 수정 반복 재검증, 최종 TEST Gate의 원문은 `opal/core/references/harness/test-cycle.md`다. 계측과 변경 유형은 `state-tool add-row --test-change-kind`·`test-clock`·`test-metrics`, TEST 전 기본 브랜치 분기 조회는 `worktree-tool divergence`가 제공한다. `stage.test` 이벤트가 이 절차 문서를 로드한다.
+
 ## 주요 컴포넌트 (SDD 파이프라인)
 
 | 컴포넌트 | 약어 | 유형 | 설명 |
@@ -273,6 +275,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 | `opal/core/references/harness/worktree.md` | 워크스페이스 축·실행 소유권 SSOT | `--wt`/`--no-wt` 축 정의·신규 기본 workspace·생성 실패 시 허브 폴백 금지·작업본 중첩 차단, task root와 allocator root 계약, **실행 소유권(lease) 계약**(획득·이관·해제·가드 적용 범위·저장 위치), canonical path 발급, cone 확장, multi-repo 캡슐 소유권 | Framework | `pilot.start` 이벤트. `--wt` 태스크 생성·기동·회수, lease 소유권 판단, 워크트리 세션 차단 진단 시 |
 | `opal/core/references/harness/modes.md` | 실행 모드 SSOT | Pilot별 신규 태스크 기본 mode, `resolve-start` 라우팅, interactive/semi-agentic/agentic의 단계 경계·자동 계속·사용자 대기 계약 | Framework | `pilot.start` 이벤트와 기존 태스크 재개, mode 전이 판단 시 |
 | `opal/core/references/harness/design-gate.md` | PM 경로 독립 설계 게이트 SSOT | PM 경로(`coordinator` 신규, `plan.design_gate` 행) 흐름·문서 묶음 해시·결정론 검사(`design-gate start` ⑦)·rewrite 대상·반복 상한과 reset·설계 결정 분류(`design-decision`)·실패 코드 | Framework | `stage.design` 이벤트, PM 경로 설계 게이트 판단 시 |
+| `opal/core/references/harness/test-cycle.md` | opd/opds TEST 실행 주기 SSOT | TEST 진입 시 분기 조회·사람 조치 묶음 선요청·자동 실행 병행·증거 재사용·fix/요구 변경 분리·영향 재검증·최종 Gate 및 계측 절차 | Framework | `stage.test` 이벤트, TEST 진입·수정 반복·최종 판정 시 |
 | `opal/core/references/harness/state.md` | state-tool 전이 계약 | `transition_action`/`report_type`/`next_action`, CLOSE final, 사용자 확인 자동 승인 예외 | Framework | 상태 전이·재개·CLOSE tail·사용자 확인 행 처리 시 |
 | `opal/core/references/harness/task-process.md` | TASK 단계 전이 계약 | TASK 완료 보고가 구조화 전이 출력을 소비하고, 산문 승인 질문을 전이 판정 근거로 쓰지 않도록 하는 단계 경계 규칙 | Framework | TASK 작성·완료 직후 다음 행동 판정 시 |
 | `opal/core/hooks/claude-hooks.json` | Claude Code hook source | Stop hook은 `ownership-tool`의 stop hook 어댑터에 위임한다 — 세션 소유 태스크를 registry로 판정한 뒤 `transition_action=continue`이면 종료 차단·`next_action` 재개 안내를 반환하고, 무소유·타세션 소유·판정 불능은 통과시킨다 | Framework | 설치·아카이브 검증과 Claude 플랫폼 실행 지속성 점검 시 |

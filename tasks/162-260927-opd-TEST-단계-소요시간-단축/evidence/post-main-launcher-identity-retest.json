@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/Users/iskang/.opal/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "opal/tools/worktree-launcher/tests"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 7.828,
+  "output": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_162/tasks/162-260927-opd-TEST-단계-소요시간-단축/evidence/post-main-launcher-identity-retest.txt",
+  "precondition": "native CODEX_SESSION_ID preserved for launcher identity preflight"
+}

@@ -97,7 +97,8 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - 결과: violations[] 0건이면 Pass, ≥1건이면 PM Gate Fail (재작업)
    - 근거: legacy TASK F-10 / PLAN §2.6
 13. 컨벤션 자동 진단
-   - **트리거 조건**: 단계 = EXECUTE이고 워커 반환 `changed_files` 중 docs/, .opal/, *.md, tasks/ 외 파일이 ≥1건 (legacy R-6 스킵 조건의 역)
+   - **opd/opds TEST 주기**: `harness/test-cycle.md` §최종 TEST PM Gate가 호출 시점의 SSOT다. EXECUTE 완료나 TEST fix 재작업 중간에는 이 항목을 필수 호출하지 않고, 최종 수정 뒤 TEST Gate에서 적용 파일을 대상으로 checker를 1회 호출한다. checker의 독립 판정과 아래 심각도 기준은 유지한다. 최종 호출 뒤 수정되면 기존 보고서가 무효화된 범위를 재검증하고 최종 판정을 갱신한다.
+   - **기타 경로 트리거 조건**: 단계 = EXECUTE이고 워커 반환 `changed_files` 중 docs/, .opal/, *.md, tasks/ 외 파일이 ≥1건 (legacy R-6 스킵 조건의 역)
    - **영역 분할 절차**: `docs/PROJECT.md` "## 프로젝트 구성" 섹션 prefix 매칭으로 영역별 분할 — 의사코드는 `opal/core/references/pm/context-injection.md` §PROJECT.md 프로젝트 구성 기반 라우팅을 그대로 적용 (→ D-3). 매칭 실패 시 단일 호출(`scope=all`)로 폴백 (→ D-4 예시 B)
    - **호출**: 영역별로 opal-convention-checker 워커 디스패치 — 파라미터 매핑은 `opal/agents/opal-convention-checker/AGENT.md` §입력 명세 §PM Gate 호출 시나리오 표 참조 (→ D-2)
    - **호출 입력 명세**: `target_files = changed_files ∩ 영역 prefix`, `scope = 영역명` (단일 호출 시 `scope=all`), `task_folder = 현재 태스크 폴더`, `timestamp` = 영역별 분리 (병렬 호출별 고유 ts)

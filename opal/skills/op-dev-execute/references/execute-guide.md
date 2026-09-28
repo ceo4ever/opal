@@ -81,6 +81,10 @@ sdlc-v2는 PLAN.md에 체크박스를 갱신하지 않는다. 진행 상태는 s
 
 시나리오 결과와 증거는 TEST 단계 또는 `test-scenario.json`이 소유한다. TEST-SCENARIO.md 본문에 PASS/FAIL을 복제하지 않는다.
 
+TEST에서 lint·type/build·unit PASS를 재사용할 수 있도록 실제 commit SHA, 실행 명령, 환경 서명(도구·의존성·설정·실행 환경), PASS 출력 증거 경로를 결과에 포함한다. 하나라도 없으면 TEST 워커가 재실행한다. 재사용 판정의 원문은 `opal/core/references/harness/test-cycle.md` §EXECUTE 증거 재사용이다.
+
+TEST FAIL 수정을 맡은 fix 모드에서는 배정된 실패와 변경 파일의 영향 범위를 PM에 반환한다. 현재 목표·수용 기준을 충족하기 위한 사용자 피드백과 TEST 지적은 fix로 처리하고, 합의된 목표·수용 기준 자체를 바꾸는 요청만 별도 `requirement_change` 행 결정을 요청한다. 재검증 범위와 안전 상한은 `opal/core/references/harness/test-cycle.md` §수정 반복을 따른다.
+
 ## 블로커 처리
 
 블로커가 발생하면 즉시 중단하고 아래 정보를 오케스트레이터에 반환한다.
