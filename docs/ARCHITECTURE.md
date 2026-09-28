@@ -552,4 +552,7 @@ OPAL 중립 ID 우선과 기존 Claude 우선을 보존하고 native Codex root 
 공개 session-launch가 부모 신원을 제거한다. 설치된 Codex bootstrap의 codex-start는 실제
 새 native ID를 payload로 정규화하여 등록·claim·heartbeat를 수행한다. 최종 registry 전이는
 worktree-tool ownership-set --owner-from-lease 경유이며, pending일 때 부모 ID를 owner로
-남기지 않는다. 실제 기동/lease/registry 증거가 없으면 E2E 완료로 판정하지 않는다.
+남기지 않는다. launcher는 child live lease를 유계 관측하고 expected/excluded owner를 lock 안에서
+비교해 registry를 확정한다. 종료·lease 확인이 불명인 실패는 `recovery_required`로 남기며, Orca의
+이중 부재 확인과 cancel·lease 재확인 뒤에만 복구한다. Codex 기본 argv는 `--no-daemon`을 쓰고
+설치본은 `codex --help`에서 이 옵션을 지원해야 한다. 실제 기동/lease/registry 증거가 없으면 E2E 완료로 판정하지 않는다.

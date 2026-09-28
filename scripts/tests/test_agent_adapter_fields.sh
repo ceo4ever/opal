@@ -729,6 +729,73 @@ else
          "Install-ClaudeHooks / Merge-ClaudeHooksConfig / source path / _opal_managed / main 호출 확인 필요"
 fi
 
+# ─── TS-028: Codex worktree argv migration ────────────────────────────────
+# task 163/W-4: the installer changes only the exact former default. This
+# exercises the macOS installer function in isolation; the PowerShell source
+# follows the same exact-value guard and is checked for the same literals.
+SETTING_FUNCS="$SCRATCH_DIR/setting_funcs.sh"
+{
+    cat "$SCRATCH_DIR/stubs.sh"
+    echo
+    extract_fn "$MAC_SCRIPT" "install_opal_setting"
+} > "$SETTING_FUNCS"
+
+run_setting_migration() {
+    local home="$1"
+    (
+        FRAMEWORK_ROOT="$REPO_ROOT"
+        USER_HOME="$home"
+        source "$SETTING_FUNCS"
+        install_opal_setting
+    ) >/dev/null 2>"$SCRATCH_DIR/ts028.err"
+}
+
+TS028_HOME="$SCRATCH_DIR/ts028_legacy"
+mkdir -p "$TS028_HOME/.opal"
+cat > "$TS028_HOME/.opal/setting.json" <<'EOF'
+{"launcher":{"agents":{"codex":{"argv_template":"codex \"{utterance}\""}}}}
+EOF
+run_setting_migration "$TS028_HOME"
+TS028_LEGACY_RESULT="$("$PY_BIN" - "$TS028_HOME/.opal/setting.json" <<'PYSETTING'
+import json, sys
+data = json.load(open(sys.argv[1], encoding='utf-8'))
+print(data['launcher']['agents']['codex']['argv_template'])
+PYSETTING
+)"
+
+TS028_CUSTOM_HOME="$SCRATCH_DIR/ts028_custom"
+mkdir -p "$TS028_CUSTOM_HOME/.opal"
+cp "$REPO_ROOT/opal/core/setting.default.json" "$TS028_CUSTOM_HOME/.opal/setting.json"
+"$PY_BIN" - "$TS028_CUSTOM_HOME/.opal/setting.json" <<'PYSETTING'
+import json, sys
+path = sys.argv[1]
+data = json.load(open(path, encoding='utf-8'))
+data['launcher']['agents']['codex']['argv_template'] = 'codex exec --custom "{utterance}"'
+with open(path, 'w', encoding='utf-8') as f:
+    json.dump(data, f, ensure_ascii=False, indent=2)
+    f.write('\n')
+PYSETTING
+cp "$TS028_CUSTOM_HOME/.opal/setting.json" "$SCRATCH_DIR/ts028_custom_before.json"
+run_setting_migration "$TS028_CUSTOM_HOME"
+TS028_CUSTOM_RESULT="$("$PY_BIN" - "$TS028_CUSTOM_HOME/.opal/setting.json" <<'PYSETTING'
+import json, sys
+data = json.load(open(sys.argv[1], encoding='utf-8'))
+print(data['launcher']['agents']['codex']['argv_template'])
+PYSETTING
+)"
+
+if [ "$TS028_LEGACY_RESULT" = 'codex --no-daemon "{utterance}"' ] \
+    && [ "$TS028_CUSTOM_RESULT" = 'codex exec --custom "{utterance}"' ] \
+    && cmp -s "$SCRATCH_DIR/ts028_custom_before.json" "$TS028_CUSTOM_HOME/.opal/setting.json" \
+    && grep -q -- 'codex --help' "$WIN_SCRIPT" \
+    && grep -q -- 'codex --no-daemon "{utterance}"' "$WIN_SCRIPT" \
+    && grep -q -- 'codex "{utterance}"' "$WIN_SCRIPT"; then
+    pass "TS-028: 구 Codex 기본 argv만 --no-daemon으로 이관하고 사용자 argv·Windows 정확값 가드를 보존"
+else
+    fail "TS-028: Codex argv 이관 또는 Windows 정확값 가드 불일치" \
+         "legacy=$TS028_LEGACY_RESULT custom=$TS028_CUSTOM_RESULT"
+fi
+
 # ─── 요약 ────────────────────────────────────────────────────────────────
 echo ""
 echo "=============================================="

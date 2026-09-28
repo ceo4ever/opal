@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "profile": "manual",
+  "fidelity": "real-usage",
+  "observed_executors": ["human"],
+  "assertion_results": [{
+    "id": "s9-installed-codex-owner",
+    "expected": "active child lease owner equals registry owner and its Orca terminal is live",
+    "actual": "active child lease owner equals registry owner and its Orca terminal is live"
+  }],
+  "observed_evidence": ["launch-162.json", "installed_ownership_status", "installed_registry", "installed_orca_show", "installed_orca_list"],
+  "evidence": "Fresh read-only installed status and registry checks match the launch receipt, and approved live Orca show/list confirm the launched child terminal."
+}

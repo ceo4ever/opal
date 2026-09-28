@@ -51,4 +51,9 @@
 
 프로젝트 존재만으로 PM을 활성화하지 않는다. 프로젝트 작업이나 `//` 커맨드는 로드된
 AGENT.md의 `pm.activate` 계약을 따른다.
+
+Codex worktree 기본 실행 명령은 `--no-daemon`을 사용하며, 설치본은 `codex --help`에 이 옵션이
+표시되는지 확인해야 한다. 첫 checkpoint에서 hub registry 기록이 `registry_write_denied`로 실패하면
+자식 세션은 해당 hub meta 쓰기의 권한 상승을 요청한 뒤 동일 checkpoint 명령을 재실행한다. 승인 없이
+상승하지 않으며, 승인 불가 또는 재실패는 checkpoint 실패로 보고한다.
 ```

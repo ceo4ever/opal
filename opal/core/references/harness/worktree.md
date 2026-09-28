@@ -96,7 +96,10 @@ load: pilot.start
 - 이관 상태의 lease는 소유자가 없고 대상 루트만 지정된다. **대상 루트와 같거나 그 하위에서 온 획득만 수용하고, 허브와 제3 세션의 획득은 거부한다.**
 - **[MUST] 이관 대상 루트는 registry 발급값을 명시 인자로 받는다.** cwd, task path의 조상, `.opal-worktrees` 문자열로 추론하지 않는다(§task root와 allocator root 계약).
 - 이관에는 lease TTL과 분리된 자체 만료가 있다. 만료된 이관은 무소유로 접혀 허브가 되찾는다 — 터미널이 끝내 부팅하지 않는 경로에서 태스크가 영구히 잠기지 않게 하는 장치다.
-- 이관 실패와 터미널 기동 실패는 이관을 취소하고 허브 소유로 원자 복귀한다. 취소 자체의 실패는 복귀를 막지 않고 진단으로만 남는다.
+- launcher는 자식의 **live foreign lease**를 유계 polling으로 관측한 뒤에만 `ownership-set --owner-from-lease --expected-owner <관측 owner> --exclude-owner <hub session>`로 registry를 확정한다. receipt는 명령 제출 증거일 뿐 claim 완료 증거가 아니다.
+- polling 끝의 마지막 재조회에도 child lease가 없으면 `session_boot_timeout` 실패로 처리한다. owner가 관측값과 달라져 원자 전이가 거부되면 새 owner를 재추격하지 않는다.
+- 실패 시 terminal 생성 상태를 `not_created`·`created`·`unknown`으로 분류한다. `created`는 close 성공과 `status == absent`가, `not_created`는 close 불필요가 확인되어야 한다. 실제로 시작한 handoff만 취소하고 lease를 재조회한 뒤 모든 조건이 확인될 때만 `hub_owned`로 복귀한다.
+- close·terminal status·handoff cancel·lease 재조회 중 하나라도 실패하거나 불명이고, 또는 종료 뒤 외부 live lease가 보이면 `recovery_required`로 남긴다. 이 상태에서는 새 launch를 하지 않는다.
 
 ### 해제
 
@@ -109,6 +112,12 @@ load: pilot.start
 
 - 쓰기 차단은 lease가 **타 세션 소유**로 판정될 때만 발동한다. 이관 중(무소유)과 만료는 차단 대상이 아니다.
 - 상태 전이 도구는 획득 실패를 차단이 아니라 경고로 처리한다(fail-safe). 집행자는 쓰기 가드 하나이며 판정 지점을 늘리지 않는다.
+
+### `recovery_required` 복구
+
+`recovery_required`는 terminal handle, adapter, 생성 분류, receipt와 관측 lease owner를 registry에 보존한다. 허브가 `worktree-launcher recover`를 명시 실행해 fresh terminal absence를 확인하고, handoff 취소와 lease 재조회도 확인한 경우에만 `hub_owned`로 전이하며 보존 증거를 소거한다. 조회 실패는 부재 증거가 아니다.
+
+Orca의 `status(handle)`은 `terminal_handle_stale`와 같은 worktree 목록에 handle이 없다는 두 증거가 모두 있을 때, 또는 show가 `orphaned:true`·`connected:false`·`exitCause.kind:operator_close`를 함께 보고하고 성공한 같은 worktree 목록에 같은 handle과 `ptyId`가 모두 없을 때만 `absent`다. cmux, generic, opal-agent fallback은 terminal status를 구현하지 않아 `unknown(status_unsupported)`이며, 이 adapter들의 실패 경로는 자동 복귀 대신 `recovery_required`로 끝난다.
 
 ## 실행 세션 기동과 터미널 회수 경계
 
@@ -127,6 +136,8 @@ load: pilot.start
 - **시작 발화는 기동 명령 인자가 소유한다.** 태스크 식별은 워크트리와 canonical task의 1:1 관계와 `state.json`이 이미 결정론적으로 해결하므로 별도 캡슐 파일이나 터미널 입력 채널을 만들지 않는다.
 - 어댑터가 구성되지 않은 환경에서는 워크트리만 생기고 터미널은 열리지 않는다. 허브 세션이 그 워크트리를 그대로 작업하며, 이는 축 도입 이전과 같은 동작이다.
 - 허브가 워크트리 세션의 종료를 아는 수단은 registry `attribution_state`(`completed_unmerged`) 조회 하나다. 별도 통지 채널을 만들지 않는다.
+- Codex 기본 명령은 `--no-daemon`을 사용한다. 설치·기동 전에는 `codex --help` 출력에 이 옵션이 있는지 확인해야 하며, 고정 최소 버전을 추정하지 않는다. 지원하지 않는 바이너리가 즉시 끝나면 위 lease timeout·종료 확인 경로를 적용한다.
+- 체크포인트가 hub registry 기록에서 `registry_write_denied`로 끝나면 자식 세션은 해당 hub meta 쓰기에 대한 권한 상승을 **요청**한 뒤 동일 checkpoint 명령을 다시 실행한다. 승인 없이 상승하지 않으며, 상승이 불가하거나 재실행도 실패하면 checkpoint 실패를 그대로 보고한다.
 
 ## canonical path 발급 계약
 
@@ -289,4 +300,6 @@ OPAL 중립 ID 우선과 기존 Claude 우선을 보존하고 native Codex root 
 공개 session-launch가 부모 신원을 제거한다. 설치된 Codex bootstrap의 codex-start는 실제
 새 native ID를 payload로 정규화하여 등록·claim·heartbeat를 수행한다. 최종 registry 전이는
 worktree-tool ownership-set --owner-from-lease 경유이며, pending일 때 부모 ID를 owner로
-남기지 않는다. 실제 기동/lease/registry 증거가 없으면 E2E 완료로 판정하지 않는다.
+남기지 않는다. hub가 child lease를 관측해 원자 비교를 통과한 경우에만 child ID를 registry
+owner로 확정한다. `registry_write_denied`는 lease를 가진 Codex child의 부트를 막지 않고 hub
+확정으로 넘기는 진단이며, 그 밖의 registry 실패나 foreign owner는 성공으로 감추지 않는다.

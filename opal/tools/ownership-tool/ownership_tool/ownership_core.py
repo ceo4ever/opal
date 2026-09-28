@@ -34,6 +34,7 @@
 """
 from __future__ import annotations
 
+import errno
 import fcntl
 import json
 import os
@@ -148,15 +149,32 @@ class StopReceipt:
 # D-7 lock + atomic replace
 # ─────────────────────────────────────────────────────────────────────────────
 
+_LOCK_PERMISSION_ERRNOS = frozenset((errno.EACCES, errno.EPERM, errno.EROFS))
+
+
+class _LockPermissionDenied(OSError):
+    """A lock path cannot be opened or locked because this process cannot write it."""
+
+
+def _is_lock_permission_error(exc):
+    return isinstance(exc, OSError) and exc.errno in _LOCK_PERMISSION_ERRNOS
+
 def _acquire_lock(lock_path, timeout_ms):
     """LOCK_EX|LOCK_NB 재시도 루프(run_log_core._acquire_lock 패턴). 성공 시 fd, 상한 초과 시 None."""
     lock_path = pathlib.Path(lock_path)
-    lock_path.parent.mkdir(parents=True, exist_ok=True, mode=RUNTIME_DIR_MODE)
+    try:
+        lock_path.parent.mkdir(parents=True, exist_ok=True, mode=RUNTIME_DIR_MODE)
+    except OSError as exc:
+        if _is_lock_permission_error(exc):
+            raise _LockPermissionDenied(exc.errno, str(exc), str(lock_path)) from exc
+        raise
     deadline = time.monotonic() + (timeout_ms / 1000.0)
     while True:
         try:
             fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, RUNTIME_FILE_MODE)
-        except OSError:
+        except OSError as exc:
+            if _is_lock_permission_error(exc):
+                raise _LockPermissionDenied(exc.errno, str(exc), str(lock_path)) from exc
             if time.monotonic() >= deadline:
                 return None
             time.sleep(_LOCK_POLL_INTERVAL_SEC)
@@ -170,8 +188,10 @@ def _acquire_lock(lock_path, timeout_ms):
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             return fd
-        except OSError:
+        except OSError as exc:
             os.close(fd)
+            if _is_lock_permission_error(exc):
+                raise _LockPermissionDenied(exc.errno, str(exc), str(lock_path)) from exc
             if time.monotonic() >= deadline:
                 return None
             time.sleep(_LOCK_POLL_INTERVAL_SEC)
@@ -194,7 +214,11 @@ def write_json_atomic(path, obj, *, timeout_ms=DEFAULT_LOCK_TIMEOUT_MS):
     target = pathlib.Path(path)
     if hasattr(obj, "to_dict"):
         obj = obj.to_dict()
-    lock_fd = _acquire_lock(str(target) + ".lock", timeout_ms)
+    try:
+        lock_fd = _acquire_lock(str(target) + ".lock", timeout_ms)
+    except _LockPermissionDenied as exc:
+        return {"ok": False, "error": "registry_write_denied", "path": str(target),
+                "detail": str(exc)}
     if lock_fd is None:
         return {"ok": False, "error": "lock_timeout", "path": str(target), "timeout_ms": timeout_ms}
     tmp_path = target.with_name(target.name + f".tmp.{os.getpid()}")

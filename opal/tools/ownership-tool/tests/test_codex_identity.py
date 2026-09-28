@@ -96,3 +96,17 @@ def test_s9_codex_start_claims_native_id_and_rejects_inherited_parent(tmp_path):
     repeated = cli('codex-start', '--cwd', root, extra_env={'CODEX_SESSION_ID': CHILD})
     assert repeated.returncode == 0, repeated.stdout + repeated.stderr
     assert json.loads(owner.read_text())['heartbeat_at'] >= heartbeat_before
+
+
+def test_task163_s6_codex_start_defers_only_registry_write_denied(tmp_path, monkeypatch):
+    """S-6: an EPERM-style registry failure keeps the native lease and asks the hub to finalize ownership."""
+    from ownership_tool import codex_adapter, heartbeat_hook, session_start_hook
+
+    root = tmp_path / "root"
+    (root / ".opal").mkdir(parents=True)
+    (root / ".opal" / "AGENT.md").write_text("fixture")
+    monkeypatch.setattr(session_start_hook, "handle", lambda *a, **k: {"registered": False, "task_path": str(root / "tasks" / "x"), "lease_claimed": True, "classification": "unowned", "diagnostics": ["registry_write_denied"]})
+    monkeypatch.setattr(heartbeat_hook, "handle", lambda *a, **k: {"ok": True})
+    result = codex_adapter.start(root, {"CODEX_SESSION_ID": CHILD})
+    assert result["ok"] is True
+    assert result["diagnostic"] == "registry_owner_deferred_to_hub"

@@ -11,23 +11,27 @@
 #   각 adapter의 최하위 프로세스 실행 seam(`_run_subprocess`)뿐이다 — 실제 터미널을 띄우지
 #   않는다는 뜻이지 adapter의 응답 파싱·receipt 조립 로직을 건너뛴다는 뜻이 아니다. 아울러
 #   launcher_core.run()을 같은 hub에 두 번 호출하는 재진입 경로(이미 worktree_session_owned인
-#   태스크를 다시 launch)도 검증한다 — 기존 단위 테스트는 hub마다 1회만 run()을 호출한다. T1은
-#   registry meta의 launch_receipt·prompt_receipt가 dict임을 launcher_core.LAUNCH_RECEIPT_FIELDS/
-#   PROMPT_RECEIPT_FIELDS로 집행한다 — worktree-tool ownership-set CLI에 type=json.loads
-#   변환자가 없어(worktree_tool.py:2677-2678) 이 단언은 현재 구현에서 RED다(T2·T3은 GREEN).
+#   태스크를 다시 launch)도 검증한다 — 기존 단위 테스트는 hub마다 1회만 run()을 호출한다.
+#   T1은 실제 ownership-tool lease handoff 뒤 자식 claim을 만들어 registry owner가 같은
+#   자식 ID인지, receipt가 registry에서 객체로 보존되는지 함께 집행한다.
 # exports: (none — pytest module)
 # depends: worktree_launcher.launcher_core, worktree_launcher.adapters.generic,
 #   worktree_launcher.adapters.orca, conftest.build_launcher_hub/read_meta,
 #   opal/tools/worktree-tool/worktree_tool.py(ownership-set, subprocess 경유·미수정)
 """통합 회귀 — 실 adapter 모듈 + 실 `ownership-set` subprocess + registry 파일을 잇는
 경로만 검증한다. 각 테스트가 대체하는 것은 adapter의 최하위 프로세스 실행 seam뿐이다.
-T1의 receipt 타입 단언은 CLI의 json.loads 변환자 부재로 현재 RED다."""
+T1은 실제 lease handoff·child claim·ownership-set 전이를 함께 통과시킨다."""
 from __future__ import annotations
 
 import datetime
 import json
+import sys
+from pathlib import Path
 
 from conftest import build_launcher_hub, read_meta
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "ownership-tool"))
+from ownership_tool import lease
 
 
 def _now_iso() -> str:
@@ -64,6 +68,23 @@ class _FakeAdapter:
         return self._fixture
 
 
+def _canonical_task(hub, *, owner="hub-session"):
+    """Give the registry a canonical task and a live hub lease.
+
+    The launcher must consume this issued path for both the public handoff and
+    the later `ownership-set --owner-from-lease` subprocess.  Keeping this as
+    a real ownership-tool lease makes these source integration tests cover the
+    cross-tool transition rather than injecting a launcher-only status dict.
+    """
+    task_path = hub.worktree_root / "tasks" / "220-integration"
+    task_path.mkdir(parents=True)
+    meta = read_meta(hub.meta_path)
+    meta.update(task_folder=task_path.name, task_path=str(task_path))
+    hub.meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    assert lease.claim(task_path, session_id=owner, claim_source="state_transition")["ok"]
+    return task_path
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # T1 — generic adapter 실물 launch() → launcher_core.run() → 실 ownership-set
 # subprocess → registry 파일. generic.launch()의 template 렌더링·subprocess 실행·
@@ -76,12 +97,22 @@ def test_generic_adapter_real_launch_through_launcher_core_updates_registry(tmp_
     from worktree_launcher.adapters import generic
 
     hub = build_launcher_hub(tmp_path, adapter="generic", prior_state="hub_owned", prior_generation=0)
+    task_path = _canonical_task(hub)
 
     recorded = {}
 
     def fake_run_subprocess(args, **kwargs):
         recorded["args"] = args
         recorded["cwd"] = kwargs.get("cwd")
+        # This is the child-side codex-start equivalent: a child may claim only
+        # after the real launcher handoff put the lease into handoff_pending.
+        claimed = lease.claim(
+            task_path,
+            session_id="codex-child-001",
+            claimant_root=hub.worktree_root,
+            claim_source="session_start",
+        )
+        assert claimed["ok"], claimed
         response = {
             "terminal": {
                 "handle": "generic-term-0001",
@@ -103,7 +134,12 @@ def test_generic_adapter_real_launch_through_launcher_core_updates_registry(tmp_
     adapter = _AdapterModuleWrapper(generic, template="some-term --cwd {cwd} --run {command}")
 
     result = launcher_core.run(
-        adapter, hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root, command="claude"
+        adapter,
+        hub_root=hub.hub,
+        task=hub.task,
+        worktree_root=hub.worktree_root,
+        command="codex",
+        owner_session_id="hub-session",
     )
 
     # adapter seam이 실제로 1회 호출됐고, launcher_core가 넘긴 worktree_root가 그대로
@@ -111,7 +147,7 @@ def test_generic_adapter_real_launch_through_launcher_core_updates_registry(tmp_
     assert len(adapter.calls) == 1
     assert adapter.calls[0][0] == hub.worktree_root
     import shlex
-    assert shlex.split(adapter.calls[0][1])[-3:] == ["session-launch", "--command", "claude"]
+    assert shlex.split(adapter.calls[0][1])[-3:] == ["session-launch", "--command", "codex"]
     assert recorded["cwd"] == str(hub.worktree_root)
     assert "--cwd" in recorded["args"] or any(str(hub.worktree_root) in a for a in recorded["args"])
 
@@ -124,13 +160,13 @@ def test_generic_adapter_real_launch_through_launcher_core_updates_registry(tmp_
     data = read_meta(hub.meta_path)
     eo = data["execution_ownership"]
     assert eo["state"] == "worktree_session_owned"
+    assert eo["owner_session_id"] == "codex-child-001"
     assert eo["adapter"] == "generic"
     assert eo["adapter_handle"] == "generic-term-0001"
     # registry SSOT 충실도(PLAN W-11) — receipt는 객체여야 한다. 필드는 하드코딩하지 않고
     # launcher_core의 SSOT 상수(LAUNCH_RECEIPT_FIELDS/PROMPT_RECEIPT_FIELDS)로 대조한다.
-    # [MUST RED] worktree-tool ownership-set CLI(worktree_tool.py:2677-2678)는
-    # --launch-receipt/--prompt-receipt에 type=json.loads 변환자가 없어 registry meta에
-    # JSON 문자열이 그대로 저장된다 — 아래 dict 단언은 그 결함이 고쳐질 때까지 RED다.
+    # Receipts cross the public ownership-set CLI and remain JSON objects in
+    # the registry, so consumers do not need to decode a second time.
     stored_launch_receipt = eo["launch_receipt"]
     stored_prompt_receipt = eo["prompt_receipt"]
     assert isinstance(stored_launch_receipt, dict), (
@@ -152,16 +188,16 @@ def test_generic_adapter_real_launch_through_launcher_core_updates_registry(tmp_
 
 # ─────────────────────────────────────────────────────────────────────────────
 # T2 — orca adapter 실물 launch()가 실패(orca 비-0 종료)를 보고하면 launcher_core가
-# 실 ownership-set subprocess로 원자 복귀(hub_owned + failure_reason=launch_failed +
-# generation+1)하는지 확인한다. orca.launch()의 argv 조립·실패 판정 로직이 그대로
-# 실행되고, launcher_core는 그 실패 dict를 build_launch_receipt(None)으로 소비한다.
+# 실 ownership-set subprocess로 recovery_required를 기록하는지 확인한다. handle이 없어서
+# terminal absence를 입증할 수 없으므로 hub_owned로 추정 복귀하지 않는다.
 # ─────────────────────────────────────────────────────────────────────────────
 
-def test_orca_adapter_real_launch_failure_reverts_registry_atomically(tmp_path, monkeypatch):
+def test_orca_adapter_real_launch_failure_preserves_recovery_state(tmp_path, monkeypatch):
     from worktree_launcher import launcher_core
     from worktree_launcher.adapters import orca
 
     hub = build_launcher_hub(tmp_path, adapter="orca", prior_state="hub_owned", prior_generation=0)
+    task_path = _canonical_task(hub)
 
     def fake_run_subprocess(argv, **kwargs):
         class _Completed:
@@ -175,21 +211,30 @@ def test_orca_adapter_real_launch_failure_reverts_registry_atomically(tmp_path, 
     adapter = _AdapterModuleWrapper(orca)
 
     result = launcher_core.run(
-        adapter, hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root, command="claude"
+        adapter,
+        hub_root=hub.hub,
+        task=hub.task,
+        worktree_root=hub.worktree_root,
+        command="codex",
+        owner_session_id="hub-session",
     )
 
     assert len(adapter.calls) == 1
     assert adapter.calls[0][0] == hub.worktree_root
     import shlex
-    assert shlex.split(adapter.calls[0][1])[-3:] == ["session-launch", "--command", "claude"]
+    assert shlex.split(adapter.calls[0][1])[-3:] == ["session-launch", "--command", "codex"]
     assert result["ok"] is False
     assert result["failure_reason"] == "launch_failed"
 
     data = read_meta(hub.meta_path)
     eo = data["execution_ownership"]
-    assert eo["state"] == "hub_owned"
+    # A launch command can fail before it yields a terminal handle.  The
+    # launcher cannot prove absence, so it must retain recovery_required
+    # instead of guessing that hub ownership is safe.
+    assert eo["state"] == "recovery_required"
     assert eo["failure_reason"] == "launch_failed"
     assert eo["owner_session_id"] is None
+    assert eo["terminal_creation"] == "unknown"
     assert eo["launch_receipt"] is None
     assert eo["prompt_receipt"] is None
     # generation은 ownership-set 호출마다 단조 증가한다(worktree_tool.py:1820-1828) —
@@ -207,16 +252,34 @@ def test_orca_adapter_real_launch_failure_reverts_registry_atomically(tmp_path, 
 # hub마다 run()을 1회만 호출해 이 재진입 자체를 검증하지 않는다).
 # ─────────────────────────────────────────────────────────────────────────────
 
-def test_second_run_on_already_owned_hub_is_rejected_without_touching_adapter(tmp_path):
+def test_second_run_on_child_owned_hub_is_rejected_without_touching_adapter(tmp_path):
     from conftest import load_launcher_fixture
     from worktree_launcher import launcher_core
 
     hub = build_launcher_hub(tmp_path, adapter="generic", prior_state="hub_owned", prior_generation=0)
+    task_path = _canonical_task(hub)
     fixture = load_launcher_fixture("fake_process-success.json", hub.hub, hub.wt_parent)
-    first_adapter = _FakeAdapter(fixture)
+
+    class _ClaimingAdapter(_FakeAdapter):
+        def launch(self, worktree_root, command):
+            claimed = lease.claim(
+                task_path,
+                session_id="codex-child-002",
+                claimant_root=hub.worktree_root,
+                claim_source="session_start",
+            )
+            assert claimed["ok"], claimed
+            return super().launch(worktree_root, command)
+
+    first_adapter = _ClaimingAdapter(fixture)
 
     first_result = launcher_core.run(
-        first_adapter, hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root, command="claude"
+        first_adapter,
+        hub_root=hub.hub,
+        task=hub.task,
+        worktree_root=hub.worktree_root,
+        command="codex",
+        owner_session_id="hub-session",
     )
     assert first_result["ok"] is True
     assert first_result["status"] == "worktree_session_owned"
@@ -224,15 +287,19 @@ def test_second_run_on_already_owned_hub_is_rejected_without_touching_adapter(tm
 
     second_adapter = _FakeAdapter(fixture)
     second_result = launcher_core.run(
-        second_adapter, hub_root=hub.hub, task=hub.task, worktree_root=hub.worktree_root, command="claude"
+        second_adapter,
+        hub_root=hub.hub,
+        task=hub.task,
+        worktree_root=hub.worktree_root,
+        command="codex",
+        owner_session_id="hub-session",
     )
 
     # 두 번째 호출은 adapter.launch()를 아예 부르지 않는다 — hub_owned/session_launching
     # 둘 다 아니므로 launch 이전 가드에서 거부된다.
     assert second_adapter.calls == []
     assert second_result["ok"] is False
-    assert second_result["error"] == "ownership_not_launchable"
-    assert second_result["status"] == "worktree_session_owned"
+    assert second_result["error"] == "foreign_session_owned"
 
     data_after_second = read_meta(hub.meta_path)
     assert data_after_second == data_after_first

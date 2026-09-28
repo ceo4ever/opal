@@ -1,0 +1,84 @@
+{
+  "backup": "/var/folders/fc/w424kvjn3mxfk6nyzkw_8b740000gn/T/task163-opal-backup-q3dioo4d",
+  "setting_sha256_unchanged": "78c543c044677d914817a0d352c6c18d5068f8a712a62e08546d9a8248110184",
+  "files": [
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/worktree-tool/worktree_tool.py",
+      "installed": "/Users/iskang/.opal/tools/worktree-tool/worktree_tool.py",
+      "before_sha256": "dd043d314f374f694770aa6d5a1e23336977e45f9f921213ad14b544123f2dc9",
+      "after_sha256": "1745a6097e37bc50745eb3e440729bd760150733684e31d0306dabce2befeed2"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/worktree-tool/schema/worktree.schema.json",
+      "installed": "/Users/iskang/.opal/tools/worktree-tool/schema/worktree.schema.json",
+      "before_sha256": "4376d3a56b770dd970c2a23352ec384f8227212a58fde2f768e2205e107a1c94",
+      "after_sha256": "6527046939ea9945fb8a33d0de64d306e82d67f94272e8730268e412fce9bd38"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/worktree-tool/README.md",
+      "installed": "/Users/iskang/.opal/tools/worktree-tool/README.md",
+      "before_sha256": "185aed80af4f53911244c52de54b67454ef1aaee2d3c05248d9c4149c484d3a5",
+      "after_sha256": "7c05582b2ce333821171f1423ed4be4422c3d627423ae6a3245e45e46c1c8fc9"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+      "installed": "/Users/iskang/.opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+      "before_sha256": "aac52c4f94c3935d8a081de8754c1d0d39c235ffabc72a07d58dee462bde71e4",
+      "after_sha256": "e7fad52d830320e0cc78734db5daf3fd602ab79d648b1a2aa19f352753eac946"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+      "installed": "/Users/iskang/.opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+      "before_sha256": "1ed749e72ba86012bb976bbba6af88add91301fd552c57aeeac8bd5477280086",
+      "after_sha256": "90f1e5c6d46a86f7a064e3995037170e38c51bc3093fd10a59bb70f4c31a7278"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+      "installed": "/Users/iskang/.opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+      "before_sha256": "4cff8906ddee276c4cc4f4cd6b083ef77739c0af65990eafd4f9a829f39656d6",
+      "after_sha256": "5396eea631ed7f7d06edb1b2101462a55fa30ea9814b6d8ced2391392a8bfccd"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/ownership-tool/README.md",
+      "installed": "/Users/iskang/.opal/tools/ownership-tool/README.md",
+      "before_sha256": "67171719547fe765412d3e91f60db5e3342ea657cc91f223b433b86ed7b98bde",
+      "after_sha256": "844ffa04cb05eb64cbdab13106e00d3ca1cd43216ac4932aacf11a0ed4229daf"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+      "installed": "/Users/iskang/.opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+      "before_sha256": "565adfc57c599d013488bd2baf2f8110afae2b06fb25d6730976ccf99a18e3e5",
+      "after_sha256": "c60a1136bef40ea40f895a4d1c4246d1da5adb50ca6c4c76a1533440ab06f041"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/worktree-launcher/worktree_launcher/cli.py",
+      "installed": "/Users/iskang/.opal/tools/worktree-launcher/worktree_launcher/cli.py",
+      "before_sha256": "c1f25a0d5a4976e49fa80370237500760576d34fe0edd260f7517974fc911a27",
+      "after_sha256": "1a410d70777bbbee88be2d47a7add6da01a3329e49cfcff9e0ba51a4e50db589"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/worktree-launcher/worktree_launcher/settings.py",
+      "installed": "/Users/iskang/.opal/tools/worktree-launcher/worktree_launcher/settings.py",
+      "before_sha256": "5f19b41156607b113babd67c14df7fff25e905de6fa9d66c4dff9d2ab8394daf",
+      "after_sha256": "449a8a2ca746fd137225468e9b5e7e4ad660a5fda46b6a1cb65f2fd76021ee01"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py",
+      "installed": "/Users/iskang/.opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py",
+      "before_sha256": "ae71164998be218c2a31250ef482c57828813d8617e1a1bea6b620e363ce7416",
+      "after_sha256": "8c880420482ecda2a93a9dad7419ce3d25f6ec44306ee9611c4282e94ae6e44d"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/tools/worktree-launcher/README.md",
+      "installed": "/Users/iskang/.opal/tools/worktree-launcher/README.md",
+      "before_sha256": "5c3101801a671d077c95e066e6765efa4f59258931539a1559585cb1de3ede4d",
+      "after_sha256": "30193836faeff0e0dbdbf1d736e908921366e8e6392189fb5241d151d2f50438"
+    },
+    {
+      "source": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_163/opal/core/references/harness/worktree.md",
+      "installed": "/Users/iskang/.opal/references/harness/worktree.md",
+      "before_sha256": "bb5f7f79b7fbf5957e3595531d3ffef5be22f461f936c1d24643dc6d88c51426",
+      "after_sha256": "597f2bfb8be50e71345105791fc94e458377889aab7b37738d4c696d7fe05d8a"
+    }
+  ]
+}

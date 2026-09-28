@@ -3202,6 +3202,8 @@ class TestOwnershipSetRed:
                 "worktree_session_owned",
                 "--attribution-state",
                 "active",
+                "--owner-session-id",
+                "s14-explicit-owner",
                 "--launch-receipt",
                 self._launch_receipt_json("s14-allowed"),
                 "--prompt-receipt",
@@ -3320,6 +3322,8 @@ class TestOwnershipSetRed:
                 "worktree_session_owned",
                 "--attribution-state",
                 "active",
+                "--owner-session-id",
+                "s14-type-owner",
                 "--launch-receipt",
                 self._launch_receipt_json("s14-type"),
                 "--prompt-receipt",
@@ -3389,6 +3393,144 @@ class TestOwnershipSetRed:
         result = run_worktree_cli(["status", "--task-path", str(wt_root)])
         payload = parse_json_stdout(result, "status(S-14 legacy)")
         assert payload.get("ok") is True
+
+
+class TestTask163LeaseOwnerRed:
+    """Task 163 S-1/S-2: final registry ownership comes only from a live child lease."""
+
+    @staticmethod
+    def _receipt(flag: str) -> str:
+        return json.dumps({"adapter": "orca", "adapter_handle": "term-red", "reported_cwd": "/tmp/wt", "launched_at": "2026-09-27T00:00:00+00:00"} if flag == "launch" else {"prompt_id": "prompt-red", "submitted_at": "2026-09-27T00:00:00+00:00"})
+
+    def _launching(self, project_b, task: str) -> pathlib.Path:
+        created = run_worktree_cli(["create", "--project-root", str(project_b.root), "--task", task, "--task-folder", f"task163-{task}"])
+        assert parse_json_stdout(created, "task163 create")["ok"]
+        start = run_worktree_cli(["ownership-set", "--project-root", str(project_b.root), "--task", task, "--execution-ownership", "session_launching", "--attribution-state", "active"])
+        assert parse_json_stdout(start, "task163 launching")["ok"]
+        return project_b.root / ".opal-worktrees" / ".meta" / f"task_{task}.json"
+
+    def test_s1_owner_from_absent_lease_rejects_without_changing_registry(self, project_b):
+        """S-1: no lease must be `owner_lease_unresolved`, never an owner=None transition."""
+        meta_path = self._launching(project_b, "1631")
+        before = meta_path.read_bytes()
+        result = run_worktree_cli(["ownership-set", "--project-root", str(project_b.root), "--task", "1631", "--execution-ownership", "worktree_session_owned", "--attribution-state", "active", "--owner-from-lease", "--expected-owner", "child-session", "--exclude-owner", "hub-session", "--launch-receipt", self._receipt("launch"), "--prompt-receipt", self._receipt("prompt")])
+        payload = parse_json_stdout(result, "ownership-set(S-1 absent lease)")
+        assert payload["ok"] is False
+        assert payload["error"] == "owner_lease_unresolved"
+        assert meta_path.read_bytes() == before
+
+    def test_s2_live_child_succeeds_and_changed_child_is_rejected_atomically(self, project_b):
+        """S-2: a live observed child may win once; a later different owner cannot be chased."""
+        ownership_dir = pathlib.Path(__file__).resolve().parents[2] / "ownership-tool"
+        sys.path.insert(0, str(ownership_dir))
+        from ownership_tool import lease
+
+        success_meta = self._launching(project_b, "1632")
+        success_task = json.loads(success_meta.read_text())["task_path"]
+        assert lease.claim(success_task, session_id="child-session", claim_source="session_start")["ok"]
+        success = run_worktree_cli(["ownership-set", "--project-root", str(project_b.root), "--task", "1632", "--execution-ownership", "worktree_session_owned", "--attribution-state", "active", "--owner-from-lease", "--expected-owner", "child-session", "--exclude-owner", "hub-session", "--launch-receipt", self._receipt("launch"), "--prompt-receipt", self._receipt("prompt")])
+        success_payload = parse_json_stdout(success, "ownership-set(S-2 live child)")
+        assert success_payload["ok"] is True
+        assert success_payload["execution_ownership"]["owner_session_id"] == "child-session"
+
+        mismatch_meta = self._launching(project_b, "1633")
+        mismatch_task = json.loads(mismatch_meta.read_text())["task_path"]
+        assert lease.claim(mismatch_task, session_id="other-child", claim_source="session_start")["ok"]
+        before = mismatch_meta.read_bytes()
+        mismatch = run_worktree_cli(["ownership-set", "--project-root", str(project_b.root), "--task", "1633", "--execution-ownership", "worktree_session_owned", "--attribution-state", "active", "--owner-from-lease", "--expected-owner", "child-session", "--exclude-owner", "hub-session", "--launch-receipt", self._receipt("launch"), "--prompt-receipt", self._receipt("prompt")])
+        mismatch_payload = parse_json_stdout(mismatch, "ownership-set(S-2 changed child)")
+        assert mismatch_payload["ok"] is False
+        assert mismatch_payload["error"] == "owner_lease_mismatch"
+        assert mismatch_meta.read_bytes() == before
+
+
+class TestTask163OwnershipTransitions:
+    """W-1 regressions for the recovery-only exit and non-empty final owner rules."""
+
+    @staticmethod
+    def _receipt(flag: str) -> str:
+        return TestTask163LeaseOwnerRed._receipt(flag)
+
+    def _launching(self, project_b, task: str) -> pathlib.Path:
+        return TestTask163LeaseOwnerRed()._launching(project_b, task)
+
+    def test_worktree_session_owned_requires_explicit_or_live_lease_owner(self, project_b):
+        meta_path = self._launching(project_b, "1634")
+        before = meta_path.read_bytes()
+        result = run_worktree_cli(
+            [
+                "ownership-set", "--project-root", str(project_b.root), "--task", "1634",
+                "--execution-ownership", "worktree_session_owned", "--attribution-state", "active",
+                "--launch-receipt", self._receipt("launch"),
+                "--prompt-receipt", self._receipt("prompt"),
+            ]
+        )
+        payload = parse_json_stdout(result, "ownership-set(ownerless owned transition)")
+        assert payload["ok"] is False
+        assert payload["error"] == "ownership_state_invalid"
+        assert payload["reason"] == "worktree_session_owned_requires_owner_session_id"
+        assert meta_path.read_bytes() == before
+
+    def test_recovery_required_only_exits_to_confirmed_hub_owned(self, project_b):
+        meta_path = self._launching(project_b, "1635")
+        recovery = run_worktree_cli(
+            [
+                "ownership-set", "--project-root", str(project_b.root), "--task", "1635",
+                "--execution-ownership", "recovery_required", "--attribution-state", "active",
+                "--failure-reason", "session_boot_timeout", "--adapter", "orca",
+                "--adapter-handle", "term-1635", "--terminal-creation", "unknown",
+                "--observed-lease-owner", "late-child",
+            ]
+        )
+        recovery_payload = parse_json_stdout(recovery, "ownership-set(recovery required)")
+        assert recovery_payload["ok"] is True
+        retained = recovery_payload["execution_ownership"]
+        assert retained["owner_session_id"] is None
+        assert retained["adapter"] == "orca"
+        assert retained["adapter_handle"] == "term-1635"
+        assert retained["terminal_creation"] == "unknown"
+        assert retained["observed_lease_owner"] == "late-child"
+
+        before = meta_path.read_bytes()
+        for state, extra in (
+            ("session_launching", []),
+            (
+                "worktree_session_owned",
+                [
+                    "--owner-session-id", "late-child", "--launch-receipt", self._receipt("launch"),
+                    "--prompt-receipt", self._receipt("prompt"),
+                ],
+            ),
+            ("hub_owned", []),
+        ):
+            blocked = run_worktree_cli(
+                [
+                    "ownership-set", "--project-root", str(project_b.root), "--task", "1635",
+                    "--execution-ownership", state, "--attribution-state", "active", *extra,
+                ]
+            )
+            payload = parse_json_stdout(blocked, f"ownership-set(recovery to {state})")
+            assert payload["ok"] is False
+            assert payload["error"] == "ownership_state_invalid"
+            assert meta_path.read_bytes() == before
+
+        confirmed = run_worktree_cli(
+            [
+                "ownership-set", "--project-root", str(project_b.root), "--task", "1635",
+                "--execution-ownership", "hub_owned", "--attribution-state", "active",
+                "--failure-reason", "session_boot_timeout",
+            ]
+        )
+        confirmed_payload = parse_json_stdout(confirmed, "ownership-set(recovery confirmed)")
+        assert confirmed_payload["ok"] is True
+        cleared = confirmed_payload["execution_ownership"]
+        assert cleared["owner_session_id"] is None
+        assert cleared["adapter"] is None
+        assert cleared["adapter_handle"] is None
+        assert cleared["launch_receipt"] is None
+        assert cleared["prompt_receipt"] is None
+        assert cleared["terminal_creation"] is None
+        assert cleared["observed_lease_owner"] is None
 
 
 class TestCreateSettingsProvisioningRed:

@@ -126,6 +126,79 @@ def test_parse_response_splits_worktree_id_only_once(tmp_path):
     assert report["reported_cwd"] == f"{worktree_root}::extra"
 
 
+def test_task163_s4_status_requires_stale_show_and_empty_list_for_absence(monkeypatch, tmp_path):
+    """S-4: Orca only reports absent after both stale-handle and empty-worktree observations."""
+    from worktree_launcher.adapters import orca
+
+    root = _worktree_root(tmp_path)
+    monkeypatch.setattr(orca, "_run_subprocess", _stub_run({}, {"ok": False, "error": "stale"}, returncode=1))
+    report = orca.status_worktree(root)
+    assert report["status"] == "unknown"
+
+
+def test_task163_s4_status_non_object_json_is_unknown(monkeypatch, tmp_path):
+    """A syntactically valid JSON scalar or list cannot prove terminal state."""
+    from worktree_launcher.adapters import orca
+
+    root = _worktree_root(tmp_path)
+    monkeypatch.setattr(orca, "_run_subprocess", _stub_run({}, []))
+    report = orca.status("term-unknown", worktree_root=root)
+    assert report["status"] == "unknown"
+    assert report["reason"] == "response_invalid"
+
+
+def test_status_closed_orphan_requires_list_to_lack_handle_and_pty(monkeypatch, tmp_path):
+    from worktree_launcher.adapters import orca
+
+    root = _worktree_root(tmp_path)
+    responses = iter([
+        {"ok": True, "result": {"terminal": {
+            "handle": "term-closed", "ptyId": "pty-closed", "orphaned": True,
+            "connected": False, "exitCause": {"kind": "operator_close"},
+        }}},
+        {"ok": True, "result": {"terminals": []}},
+    ])
+    monkeypatch.setattr(orca, "_run_subprocess", lambda _argv: type("P", (), {
+        "returncode": 0, "stdout": json.dumps(next(responses)), "stderr": "",
+    })())
+    assert orca.status("term-closed", worktree_root=root)["status"] == "absent"
+
+
+def test_status_closed_orphan_with_listed_same_pty_is_unknown(monkeypatch, tmp_path):
+    from worktree_launcher.adapters import orca
+
+    root = _worktree_root(tmp_path)
+    responses = iter([
+        {"ok": True, "result": {"terminal": {
+            "handle": "term-closed", "ptyId": "pty-closed", "orphaned": True,
+            "connected": False, "exitCause": {"kind": "operator_close"},
+        }}},
+        {"ok": True, "result": {"terminals": [{"handle": "other", "ptyId": "pty-closed"}]}},
+    ])
+    monkeypatch.setattr(orca, "_run_subprocess", lambda _argv: type("P", (), {
+        "returncode": 0, "stdout": json.dumps(next(responses)), "stderr": "",
+    })())
+    assert orca.status("term-closed", worktree_root=root)["status"] == "unknown"
+
+
+def test_status_closed_orphan_list_error_is_unknown(monkeypatch, tmp_path):
+    from worktree_launcher.adapters import orca
+
+    root = _worktree_root(tmp_path)
+    calls = 0
+    def fake_run(_argv):
+        nonlocal calls
+        calls += 1
+        payload = {"ok": True, "result": {"terminal": {
+            "handle": "term-closed", "ptyId": "pty-closed", "orphaned": True,
+            "connected": False, "exitCause": {"kind": "operator_close"},
+        }}} if calls == 1 else {"ok": False, "error": {"code": "runtime_failed"}}
+        return type("P", (), {"returncode": 0 if calls == 1 else 1,
+                                "stdout": json.dumps(payload), "stderr": "failed"})()
+    monkeypatch.setattr(orca, "_run_subprocess", fake_run)
+    assert orca.status("term-closed", worktree_root=root)["status"] == "unknown"
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # S-2 — prompt receipt 원천은 launch argv이고 구형 토큰은 0건이다
 # ─────────────────────────────────────────────────────────────────────────────
