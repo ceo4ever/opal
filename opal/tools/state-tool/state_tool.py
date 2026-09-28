@@ -5058,6 +5058,28 @@ def _boot_anomaly(code, detail=""):
     return anomaly
 
 
+def _registry_meta_files(meta_root):
+    """`.meta/task_*/meta.json`만 이름순으로 반환한다.
+
+    구 구조 파일(`.meta/task_{NNN}.json`)은 읽지도 옮기지도 않는다. 이 함수가
+    이 파일 안의 유일한 경로 계산 지점이며, 모든 소비 지점은 이 함수를 거친다.
+    """
+    if not meta_root.is_dir():
+        return []
+    try:
+        entries = sorted(meta_root.iterdir(), key=lambda p: p.name)
+    except OSError:
+        return []
+    result = []
+    for entry in entries:
+        if not entry.is_dir() or not entry.name.startswith("task_"):
+            continue
+        meta_file = entry / "meta.json"
+        if meta_file.is_file() and not meta_file.is_symlink():
+            result.append(meta_file)
+    return result
+
+
 def _collect_boot_summary_details(project_root, include_mode=False):
     """Collect direct and registry-issued canonical candidates read-only."""
     root = pathlib.Path(project_root).resolve()
@@ -5078,45 +5100,43 @@ def _collect_boot_summary_details(project_root, include_mode=False):
     anomalies = []
     registry_rows = []
     meta_root = root / ".opal-worktrees" / ".meta"
-    try:
-        meta_files = sorted(meta_root.glob("task_*.json")) if meta_root.is_dir() else []
-    except OSError:
-        meta_files = []
+    meta_files = _registry_meta_files(meta_root)
     required = {"task_path", "task_folder", "allocator_root"}
     for meta_file in meta_files:
+        meta_label = meta_file.parent.name
         try:
             meta = json.loads(meta_file.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError):
-            anomalies.append(_boot_anomaly("registry_meta_corrupt", meta_file.name))
+            anomalies.append(_boot_anomaly("registry_meta_corrupt", meta_label))
             continue
         if not isinstance(meta, dict) or any(
                 key not in meta or not isinstance(meta[key], str) or not meta[key]
                 for key in required):
-            anomalies.append(_boot_anomaly("registry_meta_missing_fields", meta_file.name))
+            anomalies.append(_boot_anomaly("registry_meta_missing_fields", meta_label))
             continue
         attribution_state = meta.get("attribution_state")
         if "attribution_state" in meta and (
                 not isinstance(attribution_state, str) or not attribution_state):
-            anomalies.append(_boot_anomaly("registry_attribution_state_invalid", meta_file.name))
+            anomalies.append(_boot_anomaly("registry_attribution_state_invalid", meta_label))
             continue
         if attribution_state == "closed":
             continue
         if (attribution_state is not None
                 and attribution_state not in ACTIVE_ATTRIBUTION_STATES):
-            anomalies.append(_boot_anomaly("registry_attribution_state_invalid", meta_file.name))
+            anomalies.append(_boot_anomaly("registry_attribution_state_invalid", meta_label))
             continue
         task_folder = meta["task_folder"]
         if pathlib.PurePath(task_folder).name != task_folder or task_folder in {".", ".."}:
-            anomalies.append(_boot_anomaly("registry_task_folder_invalid", meta_file.name))
+            anomalies.append(_boot_anomaly("registry_task_folder_invalid", meta_label))
             continue
         try:
             task_path = pathlib.Path(meta["task_path"])
             allocator_root = pathlib.Path(meta["allocator_root"])
             if not task_path.is_absolute() or not allocator_root.is_absolute():
-                anomalies.append(_boot_anomaly("registry_meta_path_not_absolute", meta_file.name))
+                anomalies.append(_boot_anomaly("registry_meta_path_not_absolute", meta_label))
                 continue
             if allocator_root.resolve() != root:
-                anomalies.append(_boot_anomaly("registry_allocator_root_mismatch", meta_file.name))
+                anomalies.append(_boot_anomaly("registry_allocator_root_mismatch", meta_label))
                 continue
             if not task_path.is_dir() or task_path.is_symlink():
                 anomalies.append(_boot_anomaly("registry_task_path_missing", task_folder))
@@ -5131,7 +5151,7 @@ def _collect_boot_summary_details(project_root, include_mode=False):
         registry_rows.append({
             "task_folder": task_folder,
             "task_path": canonical_path,
-            "meta_name": meta_file.name,
+            "meta_name": meta_label,
         })
 
     folder_counts = {}
