@@ -10,11 +10,11 @@
     "cursor": { "light": "inherit", "standard": "inherit", "advanced": "inherit" }
   },
   "launcher": {
-    "_help": "워크트리 전용 터미널 런처(`--wt`)가 새 세션에 띄울 명령. `default`는 쓸 에이전트 이름, `agents.<name>.argv_template`은 그 에이전트의 실행 argv, `utterance_template`은 첫 발화다. 치환 토큰은 `{utterance}`·`{task_path}` 2종뿐이다. 어댑터(터미널 종류) 선택은 이 블록이 소유하지 않는다 — CLI `--adapter` 인자가 단독으로 정하며 자동 폴백은 없다. 프로젝트별로 다르게 쓰려면 {프로젝트}/.opal/setting.local.json 최상위 launcher에 바꿀 것만 덮어쓴다(로컬 우선): `agents.<name>`은 이름 단위 통째 교체, 그 위 키는 키 단위 덮어쓰기다. `models` 미설정은 디스패치를 중단하지만 `launcher` 미설정은 코드 기본값으로 폴백한다 — 모델은 비용·품질 결정이라 잘못된 추측이 산출물을 조용히 바꾸는 반면, launcher는 OPAL 설치본에서 올바른 동작이 하나뿐이고 중단을 택하면 이 블록을 쓴 적 없는 전 사용자의 `--wt`가 깨지기 때문이다.",
+    "_help": "워크트리 전용 터미널 런처(`--wt`)가 새 세션에 띄울 명령. `default`는 쓸 에이전트 이름, `agents.<name>.argv_template`은 그 에이전트의 실행 argv, `utterance_template`은 첫 발화다. 치환 토큰은 `{utterance}`·`{task_path}`·`{meta_dir}` 3종이다. `{meta_dir}`는 해당 태스크의 registry 메타 폴더 절대경로다. 어댑터(터미널 종류) 선택은 이 블록이 소유하지 않는다 — CLI `--adapter` 인자가 단독으로 정하며 자동 폴백은 없다. 프로젝트별로 다르게 쓰려면 {프로젝트}/.opal/setting.local.json 최상위 launcher에 바꿀 것만 덮어쓴다(로컬 우선): `agents.<name>`은 이름 단위 통째 교체, 그 위 키는 키 단위 덮어쓰기다. `models` 미설정은 디스패치를 중단하지만 `launcher` 미설정은 코드 기본값으로 폴백한다 — 모델은 비용·품질 결정이라 잘못된 추측이 산출물을 조용히 바꾸는 반면, launcher는 OPAL 설치본에서 올바른 동작이 하나뿐이고 중단을 택하면 이 블록을 쓴 적 없는 전 사용자의 `--wt`가 깨지기 때문이다.",
     "default": "claude",
     "agents": {
       "claude": { "argv_template": "claude \"{utterance}\"" },
-      "codex":  { "argv_template": "codex --no-daemon \"{utterance}\"" }
+      "codex":  { "argv_template": "codex --no-daemon --add-dir \"{meta_dir}\" \"{utterance}\"" }
     },
     "utterance_template": "{task_path} 이어서 수행"
   },

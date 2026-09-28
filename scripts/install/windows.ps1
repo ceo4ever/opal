@@ -513,7 +513,12 @@ function Install-OpalCore {
                 $settingChanged = $true
                 Write-OpalInfo 'setting.json에 launcher scaffold 병합 완료'
             } else {
-                # Migrate only the former shipped argv. Any other value is a user customization.
+                # Migrate only the former shipped argv values. Any other value is a user customization.
+                $legacyLauncherCodexArgvs = @(
+                    'codex "{utterance}"',
+                    'codex --no-daemon "{utterance}"'
+                )
+                $newLauncherCodexArgv = 'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'
                 $existingLauncher = $existing.PSObject.Properties['launcher'].Value
                 if ($null -ne $existingLauncher -and $existingLauncher -is [psobject]) {
                     $agentsProperty = $existingLauncher.PSObject.Properties['agents']
@@ -521,10 +526,13 @@ function Install-OpalCore {
                         $codexProperty = $agentsProperty.Value.PSObject.Properties['codex']
                         if ($null -ne $codexProperty -and $codexProperty.Value -is [psobject]) {
                             $argvProperty = $codexProperty.Value.PSObject.Properties['argv_template']
-                            if ($null -ne $argvProperty -and $argvProperty.Value -ceq 'codex "{utterance}"') {
-                                $argvProperty.Value = 'codex --no-daemon "{utterance}"'
+                            if ($null -ne $argvProperty -and ($legacyLauncherCodexArgvs -ccontains $argvProperty.Value)) {
+                                $argvProperty.Value = $newLauncherCodexArgv
                                 $migrated += 'launcher.agents.codex.argv_template'
                                 $settingChanged = $true
+                            } elseif ($null -ne $argvProperty -and $argvProperty.Value -is [string] -and
+                                      -not ($argvProperty.Value -ceq $newLauncherCodexArgv)) {
+                                Write-OpalInfo 'setting.json의 launcher.agents.codex.argv_template이 사용자 수정값이라 보존합니다(이전 기본값 아님).'
                             }
                         }
                     }
@@ -543,7 +551,7 @@ function Install-OpalCore {
             Write-OpalInfo 'setting.json models 병합/승격 실패 — 기존 파일 유지'
         }
     }
-    Write-OpalInfo 'Codex 워크트리 런처는 codex --help에 --no-daemon이 표시되는 Codex CLI가 필요합니다.'
+    Write-OpalInfo 'Codex 워크트리 런처는 codex --help에 --no-daemon과 --add-dir이 모두 표시되는 Codex CLI가 필요합니다.'
 
     # ── 스킬: skills/ + opal/skills/ 합쳐서 ~/.opal/skills/ ──
     $skillsDst = Join-Path $OpalHome 'skills'

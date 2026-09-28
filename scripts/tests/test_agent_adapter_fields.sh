@@ -760,10 +760,19 @@ else
          "Install-ClaudeHooks / Merge-ClaudeHooksConfig / source path / _opal_managed / main 호출 확인 필요"
 fi
 
-# ─── TS-028: Codex worktree argv migration ────────────────────────────────
-# task 163/W-4: the installer changes only the exact former default. This
-# exercises the macOS installer function in isolation; the PowerShell source
-# follows the same exact-value guard and is checked for the same literals.
+# ─── TS-028: Codex worktree argv migration (task 164/W-5 확장) ─────────────
+# task 163/W-4는 구 기본값 1종만 이관했다. task 164/D-7은 이전 기본값 2종
+# (`codex "{utterance}"`, `codex --no-daemon "{utterance}"`) 모두를 새 기본값
+# (`codex --no-daemon --add-dir "{meta_dir}" "{utterance}"`)으로 이관하도록
+# 확장한다. 이 테스트는 macOS 설치 함수를 없음/구 기본값 2종/이미 새 기본값/
+# 사용자 수정값 5조건으로 실행 검증하고, Windows 소스는 정적 검사(같은 리터럴
+# 존재)로 검증한다 — PowerShell 실행 환경이 없기 때문이다. "이미 새 기본값"
+# 조건은 재설치 때 잘못된 "사용자 수정값 보존" 안내가 나오지 않는지도 함께
+# 검증한다(PM Gate 재작업 지적).
+NEW_LAUNCHER_CODEX_ARGV='codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'
+LEGACY_LAUNCHER_CODEX_ARGV_1='codex "{utterance}"'
+LEGACY_LAUNCHER_CODEX_ARGV_2='codex --no-daemon "{utterance}"'
+
 SETTING_FUNCS="$SCRATCH_DIR/setting_funcs.sh"
 {
     cat "$SCRATCH_DIR/stubs.sh"
@@ -773,27 +782,57 @@ SETTING_FUNCS="$SCRATCH_DIR/setting_funcs.sh"
 
 run_setting_migration() {
     local home="$1"
+    local err_file="${2:-$SCRATCH_DIR/ts028.err}"
     (
         FRAMEWORK_ROOT="$REPO_ROOT"
         USER_HOME="$home"
         source "$SETTING_FUNCS"
         install_opal_setting
-    ) >/dev/null 2>"$SCRATCH_DIR/ts028.err"
+    ) >/dev/null 2>"$err_file"
 }
 
-TS028_HOME="$SCRATCH_DIR/ts028_legacy"
-mkdir -p "$TS028_HOME/.opal"
-cat > "$TS028_HOME/.opal/setting.json" <<'EOF'
-{"launcher":{"agents":{"codex":{"argv_template":"codex \"{utterance}\""}}}}
-EOF
-run_setting_migration "$TS028_HOME"
-TS028_LEGACY_RESULT="$("$PY_BIN" - "$TS028_HOME/.opal/setting.json" <<'PYSETTING'
+read_codex_argv() {
+    "$PY_BIN" - "$1" <<'PYSETTING'
 import json, sys
 data = json.load(open(sys.argv[1], encoding='utf-8'))
 print(data['launcher']['agents']['codex']['argv_template'])
 PYSETTING
-)"
+}
 
+# 조건 1: setting.json 없음 (최초 설치) — scaffold로 새 기본값이 심어져야 함
+TS028_NONE_HOME="$SCRATCH_DIR/ts028_none"
+mkdir -p "$TS028_NONE_HOME/.opal"
+run_setting_migration "$TS028_NONE_HOME"
+TS028_NONE_RESULT="$(read_codex_argv "$TS028_NONE_HOME/.opal/setting.json")"
+
+# 조건 2: 구 기본값 1 (`codex "{utterance}"`)
+TS028_LEGACY1_HOME="$SCRATCH_DIR/ts028_legacy1"
+mkdir -p "$TS028_LEGACY1_HOME/.opal"
+cat > "$TS028_LEGACY1_HOME/.opal/setting.json" <<'EOF'
+{"launcher":{"agents":{"codex":{"argv_template":"codex \"{utterance}\""}}}}
+EOF
+run_setting_migration "$TS028_LEGACY1_HOME"
+TS028_LEGACY1_RESULT="$(read_codex_argv "$TS028_LEGACY1_HOME/.opal/setting.json")"
+
+# 조건 3: 구 기본값 2 (`codex --no-daemon "{utterance}"`, task 163 이관 결과값)
+TS028_LEGACY2_HOME="$SCRATCH_DIR/ts028_legacy2"
+mkdir -p "$TS028_LEGACY2_HOME/.opal"
+cat > "$TS028_LEGACY2_HOME/.opal/setting.json" <<'EOF'
+{"launcher":{"agents":{"codex":{"argv_template":"codex --no-daemon \"{utterance}\""}}}}
+EOF
+run_setting_migration "$TS028_LEGACY2_HOME"
+TS028_LEGACY2_RESULT="$(read_codex_argv "$TS028_LEGACY2_HOME/.opal/setting.json")"
+
+# 조건 4: 이미 새 기본값 — 바이트 보존 + "사용자 수정값 보존" 오탐 안내 없어야 함
+TS028_ALREADY_HOME="$SCRATCH_DIR/ts028_already"
+mkdir -p "$TS028_ALREADY_HOME/.opal"
+cp "$REPO_ROOT/opal/core/setting.default.json" "$TS028_ALREADY_HOME/.opal/setting.json"
+cp "$TS028_ALREADY_HOME/.opal/setting.json" "$SCRATCH_DIR/ts028_already_before.json"
+TS028_ALREADY_ERR="$SCRATCH_DIR/ts028_already.err"
+run_setting_migration "$TS028_ALREADY_HOME" "$TS028_ALREADY_ERR"
+TS028_ALREADY_RESULT="$(read_codex_argv "$TS028_ALREADY_HOME/.opal/setting.json")"
+
+# 조건 5: 사용자 수정값 — 바이트 보존이어야 함
 TS028_CUSTOM_HOME="$SCRATCH_DIR/ts028_custom"
 mkdir -p "$TS028_CUSTOM_HOME/.opal"
 cp "$REPO_ROOT/opal/core/setting.default.json" "$TS028_CUSTOM_HOME/.opal/setting.json"
@@ -808,23 +847,26 @@ with open(path, 'w', encoding='utf-8') as f:
 PYSETTING
 cp "$TS028_CUSTOM_HOME/.opal/setting.json" "$SCRATCH_DIR/ts028_custom_before.json"
 run_setting_migration "$TS028_CUSTOM_HOME"
-TS028_CUSTOM_RESULT="$("$PY_BIN" - "$TS028_CUSTOM_HOME/.opal/setting.json" <<'PYSETTING'
-import json, sys
-data = json.load(open(sys.argv[1], encoding='utf-8'))
-print(data['launcher']['agents']['codex']['argv_template'])
-PYSETTING
-)"
+TS028_CUSTOM_RESULT="$(read_codex_argv "$TS028_CUSTOM_HOME/.opal/setting.json")"
 
-if [ "$TS028_LEGACY_RESULT" = 'codex --no-daemon "{utterance}"' ] \
+if [ "$TS028_NONE_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
+    && [ "$TS028_LEGACY1_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
+    && [ "$TS028_LEGACY2_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
+    && [ "$TS028_ALREADY_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
+    && cmp -s "$SCRATCH_DIR/ts028_already_before.json" "$TS028_ALREADY_HOME/.opal/setting.json" \
+    && ! grep -q '사용자 수정값이라 보존' "$TS028_ALREADY_ERR" \
     && [ "$TS028_CUSTOM_RESULT" = 'codex exec --custom "{utterance}"' ] \
     && cmp -s "$SCRATCH_DIR/ts028_custom_before.json" "$TS028_CUSTOM_HOME/.opal/setting.json" \
     && grep -q -- 'codex --help' "$WIN_SCRIPT" \
-    && grep -q -- 'codex --no-daemon "{utterance}"' "$WIN_SCRIPT" \
-    && grep -q -- 'codex "{utterance}"' "$WIN_SCRIPT"; then
-    pass "TS-028: 구 Codex 기본 argv만 --no-daemon으로 이관하고 사용자 argv·Windows 정확값 가드를 보존"
+    && grep -q -F -- "$LEGACY_LAUNCHER_CODEX_ARGV_1" "$WIN_SCRIPT" \
+    && grep -q -F -- "$LEGACY_LAUNCHER_CODEX_ARGV_2" "$WIN_SCRIPT" \
+    && grep -q -F -- "$NEW_LAUNCHER_CODEX_ARGV" "$WIN_SCRIPT" \
+    && grep -q -F -- '-ccontains $argvProperty.Value' "$WIN_SCRIPT" \
+    && grep -q -F -- '-ceq $newLauncherCodexArgv' "$WIN_SCRIPT"; then
+    pass "TS-028: 이전 Codex 기본값 2종만 새 기본값으로 이관하고, 이미 새 기본값·사용자 수정값은 안내 오탐 없이 보존"
 else
-    fail "TS-028: Codex argv 이관 또는 Windows 정확값 가드 불일치" \
-         "legacy=$TS028_LEGACY_RESULT custom=$TS028_CUSTOM_RESULT"
+    fail "TS-028: Codex argv 이관 또는 오탐 안내·Windows 정적 가드 불일치" \
+         "none=$TS028_NONE_RESULT legacy1=$TS028_LEGACY1_RESULT legacy2=$TS028_LEGACY2_RESULT already=$TS028_ALREADY_RESULT custom=$TS028_CUSTOM_RESULT"
 fi
 
 # ─── 요약 ────────────────────────────────────────────────────────────────
