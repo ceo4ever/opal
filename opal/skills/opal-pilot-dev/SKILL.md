@@ -319,7 +319,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
    **checklist_source**: PLAN.md 실행 체크리스트 (실패 항목 집중)
    **하네스 Guards**: fix 범위를 실패·변경 영향 항목으로 한정하고, 영향 불명 시 해당 묶음을 확대한다. 재검증·요구 변경 분리는 `harness/test-cycle.md`를 따른다.
    ```
-3. fix 완료 → `state-tool add-row ... --stage TEST --test-change-kind fix`로 행을 기록하고 mark → opal-test-agent를 실패·영향 S-ID로 재호출 (루프). 요구·UX 변경은 `--test-change-kind requirement_change`로 별도 기록하고 3회 초과 시 도구의 결정 요청에 따라 새 태스크 또는 PLAN 재진입을 사용자에게 묻는다.
+3. 현재 목표·수용 기준을 충족하기 위한 사용자 피드백이나 TEST 지적은 fix로 기록한다. fix 완료 → `state-tool add-row ... --stage TEST --test-change-kind fix`로 행을 기록하고 mark → opal-test-agent를 실패·영향 S-ID로 재호출 (루프). 합의된 목표·수용 기준 자체의 변경만 `--test-change-kind requirement_change`로 별도 기록한다. 이 행의 횟수만으로 수용을 거부하지 않으며, 범위 밖 요청이 계획·일정·외부 계약을 바꿀 때 새 태스크 또는 PLAN 재진입을 사용자와 결정한다.
 4. 3회 초과 시 사용자 에스컬레이션:
    "TEST {N}회 FAIL — 수동 개입 필요. 실패 항목: {목록}"
 

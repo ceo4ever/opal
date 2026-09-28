@@ -430,7 +430,6 @@ DESIGN_GATE_ERROR_CODES = {
 # TEST cycle errors are kept separate from the frozen legacy ERROR_CODES catalog.
 TEST_CYCLE_ERROR_CODES = {
     "test_change_kind_requires_test": "--test-change-kind is valid only for TEST rows",
-    "test_requirement_change_limit": "TEST requirement changes reached the limit of 3",
     "test_clock_already_open": "TEST interval is already open: {kind}/{id}",
     "test_clock_not_open": "No open TEST interval exists: {kind}/{id}",
 }
@@ -841,6 +840,18 @@ def _claim_task_lease_if_needed(task_path):
     반환값은 관측용 dict(`{"claimed": bool, "warning": str|None}`)이며 응답 JSON에
     싣지 않는다 — advance/mark 응답 키 집합을 바꾸지 않기 위해서다(C-3 취지).
     """
+    # Distinguish an unavailable ownership module from a genuinely absent
+    # session ID.  _current_session_id() is fail-safe and returns None for
+    # both, so loading the module first preserves the actionable warning.
+    try:
+        lease = _import_ownership_lease()
+    except Exception as exc:                      # noqa: BLE001 — fail-safe 경계
+        warning = "ownership_claim_failed"
+        _ownership_warn(warning,
+                        f"task lease claim 실패({exc.__class__.__name__}: {exc}). "
+                        "상태 전이는 그대로 진행됩니다.")
+        return {"claimed": False, "warning": warning}
+
     session_id = _current_session_id()
     if session_id is None:
         warning = "ownership_session_id_missing"
@@ -849,7 +860,6 @@ def _claim_task_lease_if_needed(task_path):
                         "상태 전이는 그대로 진행됩니다.")
         return {"claimed": False, "warning": warning}
     try:
-        lease = _import_ownership_lease()
         result = lease.claim(str(task_path), session_id=session_id,
                              claim_source="state_transition",
                              claimant_root=os.getcwd())
@@ -4704,28 +4714,6 @@ def cmd_add_row(args):
     change_kind = getattr(args, "test_change_kind", None)
     if change_kind and args.stage != "TEST":
         err(command, "test_change_kind_requires_test")
-    if change_kind == "requirement_change" and sum(
-        row.get("stage") == "TEST" and row.get("test_change_kind") == "requirement_change"
-        for row in state["rows"]
-    ) >= 3:
-        now_str = get_kst_datetime(command)
-        previous = state["current_status"]
-        state["current_status"] = "blocked"
-        state["updated_at"] = now_str
-        _rl_fields = run_log_commit(
-            task_path, state, command,
-            event=build_state_changed_event(
-                state, task_id=task_path.name, command=command,
-                from_status=previous, to_status="blocked", row_key="current_status"))
-        _jw = sync_state_md(
-            task_path, state, now_str, command,
-            decision="TEST requirement_change limit exceeded (3 rows)",
-            reason="Fourth requirement change requires a new task or PLAN re-entry")
-        err(command, "test_requirement_change_limit",
-            current_status="blocked", transition_action="await_user",
-            report_type="decision_request", next_action="새 태스크 또는 PLAN 재진입 선택",
-            **(_jw or {}), **(_rl_fields or {}))
-
     # 기존 행 식별 (070 F-003 R-4: --after-task-step/--after-task-step-id/--after(deprecated))
     after_index = resolve_row_index(state, command,
                                     getattr(args, "after_task_step", None),

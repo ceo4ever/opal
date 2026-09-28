@@ -23,7 +23,7 @@ EXECUTE의 lint·type/build·unit PASS는 **현재 TEST 대상과 동일한 comm
 
 - TEST 추가 행의 삽입 기준은 `state-tool show`에서 확인한 **마지막 TEST 추가 행의 key**다. 아직 추가 행이 없으면 `test.run_tests`를 기준으로 한다. `add-row --after-task-step <기준 key>`를 사용하고 도구가 반환한 새 `key`를 다음 반복의 기준으로 보관한다. 행 번호는 사용하지 않는다.
 - TEST 실패 수정은 `state-tool add-row <task> --stage TEST --test-change-kind fix ...`로 기록한다. `opal-test-agent`의 FAIL/BLOCKED S-ID와 변경 파일에 영향받는 S-ID를 합쳐 재실행한다. 영향 관계가 없거나 불확실하면 해당 시나리오 묶음 전체를 포함한다. 재실행하지 않은 PASS는 기존 증거를 유지하되 변경 SHA가 그 시나리오에 영향이 없다는 근거를 TEST 보고에 남긴다. 회귀가 발견되면 수정 루프를 중단하고 에스컬레이션한다. `guards.md` §자동 루핑 제약의 오류 종류별 상한을 따른다.
-- 새 요구·UX·수용 기준 변경은 실패 구현의 `fix`로 세지 않는다. `state-tool add-row <task> --stage TEST --test-change-kind requirement_change ...`로 별도 기록한다. 이 유형은 태스크당 3회까지다. 네 번째 추가 시 도구가 행을 만들지 않고 `blocked`/`await_user`/`decision_request`로 전이하면, 새 태스크 분리 또는 PLAN 재진입 중 사용자 결정을 요청한다. 결정 뒤 `state-tool`의 `additional_work` 경로를 따르며, PLAN 재진입도 기존 요구 변경 계수를 초기화하지 않는다. legacy 미분류 TEST 행은 분류를 추정하지 않는다.
+- 현재 목표·수용 기준을 충족하기 위한 사용자 피드백과 TEST 지적은 정상적인 수정으로 받아 `fix`에 기록한다. 합의된 목표·수용 기준 자체를 새로 바꾸는 요청만 `requirement_change`로 별도 기록한다. 이 계수는 소요 분석용이며 횟수로 수용을 거부하지 않는다. 새 요청이 현재 범위를 벗어나 계획·일정·외부 계약을 바꿔야 할 때만 내용을 기준으로 사용자와 새 태스크 또는 PLAN 재진입을 결정한다. legacy 미분류 TEST 행은 분류를 추정하지 않는다.
 - 수정 중에는 전체 회귀·보안·컨벤션 checker를 매 반복의 필수 호출로 삼지 않는다. 실패와 영향 범위의 검증 결과를 먼저 확정하고 마지막 수정 뒤 아래 최종 게이트를 수행한다.
 
 ## 최종 TEST PM Gate

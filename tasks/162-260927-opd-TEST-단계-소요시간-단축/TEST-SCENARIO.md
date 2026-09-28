@@ -17,7 +17,7 @@ template: sdlc-v2
 | ID | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
 |---|---|---|---|---|---|---|
 | S-1 | AC-1, C-2 | L3 로그인·DDL 두 건과 자동 검사 두 건 | TEST 시작 절차·agent 고정 사례 실행 | 사람 조치 두 건이 한 요청으로 자동 완료 전에 제시되고, 대기 중 자동 검사가 실행되며 사람 제출은 verifier만 PASS 판정 | 절차 계약 검사와 CLI 실행 기록 | 구현 후 |
-| S-2 | AC-2, C-5, C-6 | TEST의 fix 두 행과 요구 변경 세 행, legacy 행 | state-tool 추가 행 명령으로 종류별 계수 후 네 번째 요구 변경 시도 | 별도 계수·상한 초과 거부와 분리 결정 요청, legacy 재개 유지 | state-tool 공개 CLI 통합 | 구현 전 RED, 구현 후 |
+| S-2 | AC-2, C-5, C-6 | TEST의 fix 두 행과 요구 변경 네 행, legacy 행 | state-tool 추가 행 명령으로 종류별 계수하고 네 번째 변경도 기록 | 별도 계수·피드백 수용 유지, legacy 재개 유지 | state-tool 공개 CLI 통합 | 구현 전 RED, 구현 후 |
 | S-3 | AC-3, C-3, C-4, H-1 | 실패 S-ID, 변경 파일 영향 S-ID, 관계 불명 S-ID | fix 반복과 최종 Gate 계약·실행 로그 확인 | 반복은 실패+영향만, 불명은 확대, Gate는 필수 전건 PASS·전체 회귀 1회. 구형 전 PASS 재실행 문구 0건 | 계약 검사·실행 fixture | 구현 후 |
 | S-4 | AC-4, C-2, C-3 | 동일 SHA·환경·PASS 증거와 SHA/환경 변경 사례 | TEST 증거 재사용 판정 | 같은 서명은 경로를 보고에 기록하고 재실행 생략, 다르면 실행 | agent 계약·실행 fixture | 구현 후 |
 | S-5 | AC-5, C-2 | TEST 재작업 2회 후 최종 수정 | GC 호출 순서 확인 | 중간 컨벤션 검사 필수 호출 0회, 최종 Gate에서 checker 1회·Critical/High 0건 판정 | pilot·PM Gate 계약 검사 | 구현 후 |

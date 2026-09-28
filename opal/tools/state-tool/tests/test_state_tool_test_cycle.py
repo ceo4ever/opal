@@ -1,4 +1,13 @@
-"""Task 162 S-2/S-7: TEST row kinds and event-time metrics through the CLI."""
+"""
+@header {
+  "module": "test_state_tool_test_cycle",
+  "layer": "test",
+  "domain": "opal-tools",
+  "description": "Task 162 S-2/S-7: TEST 추가 행 유형과 실행 사건 기반 시간을 공개 CLI로 검증",
+  "exports": [],
+  "depends": ["state_tool"]
+}
+"""
 
 import json
 import importlib.util
@@ -17,7 +26,7 @@ def test_error_catalog_keeps_legacy_keys_frozen():
     spec.loader.exec_module(module)
     assert len(module.ERROR_CODES) == 59
     assert set(module.TEST_CYCLE_ERROR_CODES) == {
-        "test_change_kind_requires_test", "test_requirement_change_limit",
+        "test_change_kind_requires_test",
         "test_clock_already_open", "test_clock_not_open",
     }
     for code, message in module.TEST_CYCLE_ERROR_CODES.items():
@@ -43,9 +52,9 @@ def task(tmp_path):
     return path
 
 
-def test_s2_distinct_fix_and_requirement_counts_and_fourth_change_blocked(tmp_path):
+def test_s2_distinct_fix_and_requirement_counts_do_not_block_feedback(tmp_path):
     path = task(tmp_path)
-    for kind, count in (("fix", 2), ("requirement_change", 3)):
+    for kind, count in (("fix", 2), ("requirement_change", 4)):
         for index in range(count):
             result, payload = cli("add-row", path, "--after-task-step-id", "1",
                                   "--stage", "TEST", "--item", f"{kind}-{index}",
@@ -53,22 +62,8 @@ def test_s2_distinct_fix_and_requirement_counts_and_fourth_change_blocked(tmp_pa
             assert result.returncode == 0, payload
     result, metrics = cli("test-metrics", path)
     assert result.returncode == 0, metrics
-    assert (metrics["fix_count"], metrics["requirement_change_count"]) == (2, 3)
-
-    before = json.loads((path / "state.json").read_text())
-    result, denied = cli("add-row", path, "--after-task-step-id", "1", "--stage", "TEST",
-                         "--item", "fourth", "--test-change-kind", "requirement_change")
-    after = json.loads((path / "state.json").read_text())
-    assert result.returncode != 0, denied
-    assert len(after["rows"]) == len(before["rows"])
-    assert denied["transition_action"] == "await_user"
-    assert denied["report_type"] == "decision_request"
-    assert denied["next_action"] == "새 태스크 또는 PLAN 재진입 선택"
-    assert after["current_status"] == "blocked"
-    assert "requirement_change limit exceeded" in (path / "STATE.md").read_text()
-    result, resumed = cli("status", path, "--set", "additional_work", "--note", "PLAN 재진입")
-    assert result.returncode == 0, resumed
-    assert resumed["to"] == "additional_work"
+    assert (metrics["fix_count"], metrics["requirement_change_count"]) == (2, 4)
+    assert json.loads((path / "state.json").read_text())["current_status"] != "blocked"
 
 
 def test_s2_kind_only_on_test_rows_and_legacy_rows_unclassified(tmp_path):

@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-27 07:42:05",
-  "updated_at": "2026-09-27 22:23:33",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-28 11:04:45",
+  "current_status": "blocked",
   "rows": [
     {
       "row_id": 1,
@@ -103,14 +103,26 @@
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "failed",
+      "status_label": "❌",
+      "timestamp": "2026-09-28 11:04:45",
       "owner": "PM",
-      "note": null
+      "note": "block: 사용자 피드백으로 수용 사항 3회 제한 제거: S-2 재검증 PASS, S-10은 최종 배포·회귀 갱신 대기. main의 태스크 163 커밋 2개 선행(behind=2) 및 163 파일 무변경 제약 예외 결정 대기"
     },
     {
       "row_id": 9,
+      "stage": "TEST",
+      "item": "ownership 적재 실패 진단 수정",
+      "key": "test.ownership_import_fix",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": null,
+      "note": "전체 회귀에서 선재 ownership import 실패의 잘못된 warning 판정 확인",
+      "test_change_kind": "fix"
+    },
+    {
+      "row_id": 10,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
@@ -133,7 +145,7 @@
       }
     },
     {
-      "row_id": 10,
+      "row_id": 11,
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
@@ -144,7 +156,7 @@
       "note": null
     },
     {
-      "row_id": 11,
+      "row_id": 12,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
@@ -155,7 +167,7 @@
       "note": null
     },
     {
-      "row_id": 12,
+      "row_id": 13,
       "stage": "CLOSE",
       "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
       "key": "close.docs_sync",
@@ -167,7 +179,7 @@
       "conditional": true
     },
     {
-      "row_id": 13,
+      "row_id": 14,
       "stage": "CLOSE",
       "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
       "key": "close.brain_ingest",
@@ -179,7 +191,7 @@
       "conditional": true
     },
     {
-      "row_id": 14,
+      "row_id": 15,
       "stage": "CLOSE",
       "item": "회고/개선 후보 기록",
       "key": "close.retrospective",
@@ -190,7 +202,7 @@
       "note": null
     },
     {
-      "row_id": 15,
+      "row_id": 16,
       "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
       "key": "close.worktree_finalize",
@@ -202,7 +214,7 @@
       "conditional": true
     },
     {
-      "row_id": 16,
+      "row_id": 17,
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",
@@ -260,6 +272,46 @@
         "bundle_hash": "7ee6ecf3364d3d5488d6e4668e84f1685090a4950b2ea10cb3ae1a6b68d75c5b",
         "reason": null,
         "at": "2026-09-27 22:08:26"
+      }
+    ]
+  },
+  "test_timing": {
+    "intervals": [
+      {
+        "kind": "auto",
+        "id": "full-related-regression",
+        "started_at": "2026-09-27T13:39:01.480408+00:00",
+        "ended_at": "2026-09-27T13:47:19.610544+00:00"
+      },
+      {
+        "kind": "auto",
+        "id": "scenario-s-2",
+        "started_at": "2026-09-27T13:58:47.461562+00:00",
+        "ended_at": "2026-09-27T13:58:53.401135+00:00"
+      },
+      {
+        "kind": "auto",
+        "id": "scenario-s-6",
+        "started_at": "2026-09-27T13:58:53.597843+00:00",
+        "ended_at": "2026-09-27T13:58:57.733018+00:00"
+      },
+      {
+        "kind": "auto",
+        "id": "scenario-s-7",
+        "started_at": "2026-09-27T13:58:58.003765+00:00",
+        "ended_at": "2026-09-27T13:59:00.327790+00:00"
+      },
+      {
+        "kind": "auto",
+        "id": "scenario-s-8",
+        "started_at": "2026-09-27T13:59:00.517489+00:00",
+        "ended_at": "2026-09-27T13:59:01.064293+00:00"
+      },
+      {
+        "kind": "auto",
+        "id": "final-related-regression",
+        "started_at": "2026-09-27T14:00:52.681093+00:00",
+        "ended_at": "2026-09-27T14:11:05.503782+00:00"
       }
     ]
   }

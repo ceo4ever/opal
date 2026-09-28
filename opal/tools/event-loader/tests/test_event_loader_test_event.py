@@ -1,4 +1,13 @@
-"""Task 162 S-8: stage.test must load and verify the TEST execution contract."""
+"""
+@header {
+  "module": "test_event_loader_test_event",
+  "layer": "test",
+  "domain": "opal-tools",
+  "description": "Task 162 S-8: stage.test가 TEST 실행 계약을 로드하고 receipt를 검증하는 공개 CLI 회귀",
+  "exports": [],
+  "depends": ["event_loader"]
+}
+"""
 
 import json
 import pathlib

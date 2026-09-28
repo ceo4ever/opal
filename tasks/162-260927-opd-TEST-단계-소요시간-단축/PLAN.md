@@ -31,9 +31,9 @@ H-1, H-2.
 
 | 결정 | 변경 후 계약 | 선택 이유·근거 |
 |---|---|---|
-| TEST 실행 절차의 단일 원천 | `test-cycle.md`가 사람 협업 선요청, 증거 재사용, 반복 범위, 최종 Gate, 요구 변경 상한을 소유하고 pilot·agent·PM Gate는 참조한다. | `events.json`의 현재 `stage.test`는 실행 규칙을 로드하지 않는다. `REQUEST.md` §3.4, `opal/core/references/events.json:351-364`. |
+| TEST 실행 절차의 단일 원천 | `test-cycle.md`가 사람 협업 선요청, 증거 재사용, 반복 범위, 최종 Gate, 피드백과 범위 변경의 구분을 소유하고 pilot·agent·PM Gate는 참조한다. | `events.json`의 현재 `stage.test`는 실행 규칙을 로드하지 않는다. `REQUEST.md` §3.4, `opal/core/references/events.json:351-364`. |
 | 사람 협업 선요청 | TEST 진입 직후 TEST-SCENARIO의 human step/handoff를 모두 모아 한 번 요청하고 기다리는 동안 자동 항목을 실행한다. 제출은 기존 verifier가 판정한다. | `REQUEST.md` §3.1, `opal/skills/op-dev-test-scenario/references/test-scenario-guide.md` §Scenarios. |
-| 변경 종류 분리 | state-tool의 TEST 추가 행에 `fix`와 `requirement_change` 유형을 명시한다. 요구 변경은 독립 상한 3회로 관리하며 초과 시 새 태스크 또는 PLAN 재진입의 사용자 결정을 요청한다. legacy 행은 종전 의미를 유지한다. | `REQUEST.md` §3.2, `opal/tools/state-tool/state_tool.py:4664`. 상한 3은 기존 fix 반복 상한과 같은 예측 가능한 경계로 두되 별도 카운터다. |
+| 변경 종류 분리 | state-tool의 TEST 추가 행에 `fix`와 `requirement_change` 유형을 명시한다. 현재 수용 기준을 충족하기 위한 피드백은 fix, 기준 자체의 변경은 requirement_change로 기록하되 후자는 횟수 제한 없이 계측한다. 범위 밖 요청의 분리 여부는 내용으로 결정한다. legacy 행은 종전 의미를 유지한다. | 사용자 피드백(2026-09-28): 정상적인 수용 사항을 횟수로 차단하면 TEST 단축 목표에 역행한다. `REQUEST.md` §3.2의 반복 사례는 분석 근거로 유지한다. |
 | 반복 재검증 | 실패 S-ID와 변경 파일 영향 S-ID만 재실행한다. 영향 계산이 불명확하면 해당 묶음 전체를 재실행한다. 최종 Gate에서는 필수 시나리오 전부 PASS와 전체 회귀 1회를 요구한다. | `TASK.md` C-3, `opal/core/references/harness/guards.md:101`, `opal/skills/opal-pilot-dev/SKILL.md:307-320`. |
 | 실행 증거 재사용 | 동일 commit SHA, 동일 명령·환경 서명, PASS 증거 경로가 있는 EXECUTE lint/type/unit 결과만 TEST에서 재사용하고 TEST 보고에 원천을 남긴다. 변경 또는 증거 부재 시 재실행한다. | `REQUEST.md` §3.3, `opal/agents/opal-test-agent/AGENT.md:65-68`. |
 | 기본 브랜치 선행 확인 | TEST 진입 전에 worktree-tool 읽기 전용 명령으로 동결 base-ref와 HEAD의 ahead/behind를 확인한다. behind가 있으면 통합 후 TEST를 재개한다. 통합 merge는 사용자 승인 경계에 둔다. | `REQUEST.md` §3.3, `opal/core/references/harness/worktree.md` §merge 경로, `TASK.md` AC-6. |
@@ -42,7 +42,7 @@ H-1, H-2.
 
 ### W-1 공개 CLI와 저장 계약
 
-- `add-row ... --stage TEST --test-change-kind fix|requirement_change`를 확장한다. 이 옵션은 TEST 행에서만 허용하고 새 행에 `test_change_kind`를 저장한다. 옵션 없는 기존 호출·행은 그대로 두며 신규 카운터에서 제외한다. 요구 변경 상한은 같은 태스크의 `requirement_change` 행 3건이다. 네 번째 시도는 행을 만들지 않고 `current_status=blocked`, `transition_action=await_user`, `report_type=decision_request`, `next_action=새 태스크 또는 PLAN 재진입 선택`을 반환한다. 초과 사건은 STATE.md 결정 로그에 남긴다. 사용자가 경로를 고른 뒤 `status --set additional_work --note <사용자 결정>`으로 재개하고, 새 태스크 경로를 택하면 이 태스크에 네 번째 행을 추가하지 않는다. PLAN 재진입 경로는 PLAN 추가 행을 도구로 만들고 새 계획부터 재승인한다. 기본 3회 상한은 reset하지 않는다.
+- `add-row ... --stage TEST --test-change-kind fix|requirement_change`를 확장한다. 이 옵션은 TEST 행에서만 허용하고 새 행에 `test_change_kind`를 저장한다. 옵션 없는 기존 호출·행은 그대로 두며 신규 카운터에서 제외한다. 두 유형의 행은 횟수와 관계없이 기록한다. 현재 목표·수용 기준을 충족하기 위한 피드백은 fix로, 기준 자체의 변경은 requirement_change로 분류한다. 범위 밖 요청의 새 태스크 또는 PLAN 재진입은 횟수가 아니라 영향에 따라 결정한다.
 - `test-clock start|stop <task> --kind auto|human --id <시나리오 또는 실행 식별자>`를 추가한다. `state.json.test_timing.intervals[]`의 각 원소는 `kind`, `id`, `started_at` UTC ISO 8601, `ended_at` UTC ISO 8601 또는 null을 가진다. `(kind,id)` 열린 interval은 하나만 허용하고, 중복 start와 열린 interval 없는 stop은 오류로 거부한다. 각 호출은 호출 시점의 UTC를 도구가 찍고 상태 파일에 원자 기록하며, 행 mark 시각을 추정 입력으로 사용하지 않는다. 사람 대기는 묶음 요청 발송 시 start, 해당 제출의 verifier 최종 처리 시 stop한다. 여러 사람 항목이 동시에 열려도 `human_wait_seconds`는 interval 합산이 아니라 시간축 합집합 길이로 계산한다.
 - `test-metrics <task>`는 읽기 전용 JSON으로 `auto_seconds`, `human_wait_seconds`, `fix_count`, `requirement_change_count`, `open_intervals`를 반환한다. 종류별 완료 interval이 없으면 초 값은 null이고 `open_intervals`에 진행 중 항목을 남긴다. 횟수는 유형을 가진 TEST 행에서만 계산하며, legacy 행의 미분류 가능성을 `legacy_unclassified_rows`로 명시한다. 기존 state에는 `test_timing`이 없어도 조회가 성공해야 한다.
 
