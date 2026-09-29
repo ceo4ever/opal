@@ -418,6 +418,7 @@
         "iteration": {"type": "integer", "minimum": 0},
         "limit": {"type": "integer", "minimum": 1},
         "limit_from": {"type": "integer", "minimum": 0},
+        "refinement_pending": {"type": "boolean", "description": "advisory apply 기록 뒤 다음 start를 refinement 회차로 여는 선택 필드 (167)"},
         "task_confirm_req_hash": {"type": ["string", "null"]},
         "current_attempt": {
           "type": ["object", "null"],
@@ -425,7 +426,8 @@
             "iteration": {"type": "integer"},
             "bundle_hash": {"type": "string"},
             "files": {"type": "object", "additionalProperties": {"type": "string"}},
-            "started_at": {"type": "string"}
+            "started_at": {"type": "string"},
+            "refinement": {"type": "boolean", "description": "refinement 회차 시도 여부 선택 필드 (167)"}
           }
         },
         "passed_bundle_hash": {"type": ["string", "null"]},
@@ -441,7 +443,21 @@
               "rewrite_target": {"type": ["string", "null"]},
               "bundle_hash": {"type": ["string", "null"]},
               "reason": {"type": ["string", "null"]},
-              "at": {"type": "string"}
+              "at": {"type": "string"},
+              "advisories": {"type": "array", "items": {"type": "object"}, "description": "evaluator advisories[] 기록 선택 필드 (167, refinement 회차는 빈 배열)"},
+              "advisory_responses": {
+                "type": "array",
+                "description": "PM advisory 응답 기록 선택 필드 (167)",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "string"},
+                    "response": {"type": "string", "enum": ["apply", "retain"]},
+                    "reason": {"type": ["string", "null"]}
+                  }
+                }
+              },
+              "refinement": {"type": "boolean", "description": "refinement 회차 시도 여부 선택 필드 (167)"}
             }
           }
         }

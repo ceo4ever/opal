@@ -20,7 +20,7 @@ PM 경로 태스크에만 적용한다. PM 경로 판정은 `state.json` `rows`�
    2. evaluator `design-rubric` phase를 1회 디스패치 — 입력에 `start` 응답의 `bundle_hash`를 `input_bundle_hash`로 함께 전달한다.
    3. `state-tool design-gate record <task> --iteration N --verdict <verdict> --evaluator-result <json> [--rewrite-target ...] [--advisory-responses <json>]` — evaluator 결과 JSON 최상위는 전달받은 `input_bundle_hash`와 `iteration`을 그대로 반환해야 한다(ADD-1, verdict pass|rewrite 전용, input_error 제외). evaluator 결과의 `advisories[]`가 1건 이상이고 이번 회차가 refinement가 아니면 `--verdict pass` 기록에 `--advisory-responses`(PM이 쓴 `[{id, response: apply|retain, reason}]`, 파일은 `run/design-gate-i<N>-responses.json`)가 필요하다.
 4. `record`가 `pass`를 반환하면 설계 확인(`plan.user_confirm`)을 진행하고 EXECUTE로 넘어간다. 응답에 `apply`가 1건 이상이면 도구가 이를 history `verdict: rewrite`·`reason: advisory_apply`로 자동 변환해 기록하므로(`--rewrite-target` 필수), 이 경우 4가 아니라 아래 §advisory 반영과 refinement를 따른다.
-5. `record`가 `pass`가 아니면(advisory_apply 포함) `rewrite-target` 문서를 고쳐 다시 1부터 반복한다. 단 `reason: advisory_apply`는 문서를 고치지 않고 refinement 회차로 재호출한다.
+5. `record`가 `pass`가 아니고 `reason: advisory_apply`가 아니면 `rewrite-target` 문서를 고쳐 다시 1부터 반복한다. `reason: advisory_apply`면 apply한 advisory 전부를 `rewrite_target` 문서에 한 번에 반영한 뒤 다음 `start`를 호출한다 — 그 `start`가 refinement 회차(`refinement: true`)다. 대상 문서가 바뀌지 않았으면 기존 `rewrite_target_unchanged`로 거부된다.
 
 ### 열린 시도와 문서 묶음 변경 (`start` ③-0)
 
@@ -47,8 +47,11 @@ refinement 회차가 아니며 advisories가 1건 이상일 때만 `--advisory-r
 `status`는 `fail`, `design_gate.refinement_pending`은 `true`가 된다. 이 회차는 반복 상한
 계산에서 제외한다(`limit_from`을 1 올린다 — 새 상태 값을 만들지 않는다).
 
-`refinement_pending`인 상태의 다음 `start`는 그 attempt와 evaluator 입력·응답에 `refinement:
-true`를 싣는다(평소에는 `false`). 그 회차(refinement 회차)의 결과는 다음과 같다.
+PM은 apply한 advisory 전부를 `rewrite_target` 문서에 한 번에 반영한 뒤(제안서 §6.3 — 반영은
+한 묶음, 재판정도 한 번) 다음 `start`를 호출한다. 대상 문서 hash가 바뀌지 않았으면 기존
+`rewrite_target_unchanged`로 거부된다. `refinement_pending`인 상태의 이 `start`는 그
+attempt와 evaluator 입력·응답에 `refinement: true`를 싣는다(평소에는 `false`). 그
+회차(refinement 회차)의 결과는 다음과 같다.
 
 - ⓐ `record`가 `pass` → 기존 pass 전이, `refinement_pending`을 `false`로 되돌린다.
 - ⓑ `record`가 비-pass(`rewrite`·`input_error`) → history의 해당 verdict에 `reason:

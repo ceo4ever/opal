@@ -9,6 +9,31 @@
 """
 
 from state_tool_test_support import *  # noqa: F401,F403
+from pathlib import Path
+
+
+# [T167] 목표-커버 게이트 mark 가드(state-tool apply_scenario_gate_mark_guard) fixture 준비 —
+#   게이트 행 mark 전에 형제 test-tool scenario-gate-record로 현재 문서 묶음의 pass 이력을 만든다.
+_T167_TEST_TOOL_PY = Path(__file__).resolve().parents[2] / "test-tool" / "test_tool.py"
+
+
+def _t167_record_scenario_gate_pass(task_dir):
+    task_dir = Path(task_dir)
+    history_path = task_dir / ".scenario-gate-history.json"
+    history = json.loads(history_path.read_text(encoding="utf-8")) if history_path.exists() else []
+    eval_path = task_dir / ".t167-scenario-gate-eval.json"
+    eval_path.write_text(json.dumps({
+        "scores": {"goal": 2, "adoption": 2, "boundary": 2}, "average": 2.0,
+        "gaps": [], "verdict": "pass", "advisories": [],
+    }), encoding="utf-8")
+    completed = subprocess.run(
+        [sys.executable, str(_T167_TEST_TOOL_PY), "scenario-gate-record",
+         "--task-folder", str(task_dir), "--iteration", str(len(history) + 1),
+         "--evaluator-result", str(eval_path)],
+        capture_output=True, text=True, check=False,
+    )
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    assert json.loads(completed.stdout).get("verdict") == "pass", completed.stdout
 
 class TestT093AutoNaRemoval(_T093Base):
     """F-001 — init 시점 agentic auto-na 분기 제거 (TEST-SCENARIO S-2/S-3/S-4)."""
@@ -117,6 +142,7 @@ class TestT093AutoApproveHook(_T093Base):
             json.dumps({"version": 1, "scenarios": []}, ensure_ascii=False),
             encoding="utf-8",
         )
+        _t167_record_scenario_gate_pass(d)
         return d
 
     def test_pipeline_traversal_auto_approves_T093_L2_GOAL(self):
@@ -967,6 +993,7 @@ class TestR11DerivedSignals(_T093Base):
             json.dumps({"version": 1, "scenarios": []}, ensure_ascii=False),
             encoding="utf-8",
         )
+        _t167_record_scenario_gate_pass(d)
         return d
 
     def _next_action(self, d):

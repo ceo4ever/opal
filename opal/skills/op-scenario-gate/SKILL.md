@@ -234,10 +234,12 @@ evaluator 결과의 `advisories[]`가 1건 이상이고 refinement 회차가 아
 ```
 
 `rewrite`(`reason` 그 외 값)면 PM이 `rewrite_target` 문서만 보완해 N+1로 다시 호출한다.
-`rewrite`(`reason: advisory_apply`)면 문서를 고치지 않고 다음 `start`가 `refinement: true`로
-재판정한다. refinement 회차의 결과가 `rewrite`(`reason: advisory_refinement_failed`)이면
-`record` 응답이 `status=retry_limit`이므로 `escalate`로 반환한다. `record` 응답이
-`status=retry_limit`이면 그 외 경우도 `escalate`로 반환한다.
+`rewrite`(`reason: advisory_apply`)면 PM이 apply한 advisory 전부를 `rewrite_target` 문서에
+한 번에 반영한 뒤(제안서 §6.3 — 한 묶음 반영, 한 번 재판정) 다음 `start`를 호출한다. 그
+`start`가 `refinement: true` 회차다. 대상 문서 hash가 바뀌지 않았으면 기존
+`rewrite_target_unchanged`로 거부된다. refinement 회차의 결과가 `rewrite`(`reason:
+advisory_refinement_failed`)이면 `record` 응답이 `status=retry_limit`이므로 `escalate`로
+반환한다. `record` 응답이 `status=retry_limit`이면 그 외 경우도 `escalate`로 반환한다.
 
 이 경로에서는 §1~§5의 절차·이력·evidence 제출을 수행하지 않는다.
 

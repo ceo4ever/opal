@@ -22,6 +22,30 @@ import unittest
 REPO_ROOT = Path(__file__).resolve().parents[4]
 STATE_TOOL = REPO_ROOT / "opal" / "tools" / "state-tool" / "state_tool.py"
 STATE_TOOL_RUN = REPO_ROOT / "opal" / "tools" / "state-tool" / "run.sh"
+
+
+# [T167] 목표-커버 게이트 mark 가드(state-tool apply_scenario_gate_mark_guard) fixture 준비 —
+#   게이트 행 mark 전에 형제 test-tool scenario-gate-record로 현재 문서 묶음의 pass 이력을 만든다.
+_T167_TEST_TOOL_PY = Path(__file__).resolve().parents[2] / "test-tool" / "test_tool.py"
+
+
+def _t167_record_scenario_gate_pass(task_dir):
+    task_dir = Path(task_dir)
+    history_path = task_dir / ".scenario-gate-history.json"
+    history = json.loads(history_path.read_text(encoding="utf-8")) if history_path.exists() else []
+    eval_path = task_dir / ".t167-scenario-gate-eval.json"
+    eval_path.write_text(json.dumps({
+        "scores": {"goal": 2, "adoption": 2, "boundary": 2}, "average": 2.0,
+        "gaps": [], "verdict": "pass", "advisories": [],
+    }), encoding="utf-8")
+    completed = subprocess.run(
+        [sys.executable, str(_T167_TEST_TOOL_PY), "scenario-gate-record",
+         "--task-folder", str(task_dir), "--iteration", str(len(history) + 1),
+         "--evaluator-result", str(eval_path)],
+        capture_output=True, text=True, check=False,
+    )
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    assert json.loads(completed.stdout).get("verdict") == "pass", completed.stdout
 MODES = ("interactive", "semi-agentic", "agentic")
 TRANSITION_ACTIONS = {"continue", "await_user", "blocked", "complete"}
 PRE_EXECUTE_STAGES = {
@@ -268,6 +292,8 @@ class ModeTransitionCliContractTest(unittest.TestCase):
                         for row in initial["rows"][:first_close_index]:
                             if confirmation is not None and row["row_id"] == confirmation["row_id"]:
                                 continue
+                            if row["key"] in ("test_scenario.scenario_gate", "plan.scenario_gate"):
+                                _t167_record_scenario_gate_pass(task)
                             args = ["mark", str(task), "--task-step", row["key"], "--done"]
                             if row["item"] == "사용자 확인":
                                 args.extend(("--owner", "user"))
