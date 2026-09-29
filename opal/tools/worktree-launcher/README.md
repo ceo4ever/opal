@@ -62,6 +62,45 @@ OS·터미널 종류를 자동 탐지하는 경로는 없다(설정도 adapter�
 `settings.resolve_command()`가 명령을 결정하며, 이때 쓰는 `task_path`는 registry meta가 발급한
 canonical 값뿐이다 — 없으면 `--worktree-root`로 대체하지 않고 `task_path_unresolved`로 거부한다.
 
+### builder 모델 기동 시점 주입
+
+`--command` 없이 설정으로 명령을 정할 때, launcher는 워크트리 세션(PM·builder)이 쓸 모델을
+`models.<provider>.standard`(전역 `~/.opal/setting.json` → 프로젝트 `setting.local.json` 셀 단위
+머지)에서 읽어 실행 파일 바로 뒤에 넣는다. 검증기(evaluator·security 등)는 각 에이전트
+frontmatter 레벨을 그대로 따르므로 이 주입과 무관하다.
+
+| 에이전트 | provider | 주입 옵션 | 이미 지정된 것으로 보는 옵션 |
+| --- | --- | --- | --- |
+| `claude` | `claude` | `--model <값>` | `--model` |
+| `codex` | `codex` | `-m <값>` | `-m`, `--model` |
+
+- `argv_template`에 이미 모델 옵션이 있으면 주입하지 않는다 — 사용자 지정이 우선이다.
+- 셀 값이 `inherit`이거나 표 밖 에이전트(gemini·cursor-agent 등)면 주입하지 않는다.
+- 주입 대상인데 셀이 전역·로컬 둘 다 없으면 `builder_model_unresolved`(`missing` 동봉)로
+  멈춘다. 모델을 추정하거나 폴백하지 않는다.
+- `--command`로 명령을 직접 주면 주입하지 않는다. 호출자가 명령 전체를 책임진다.
+- 설정 파일(`argv_template`)이 아니라 코드가 주입하므로, 기존 설치도 install로 도구만 갱신되면
+  별도 설정 이관 없이 적용된다.
+
+### builder effort 기동 시점 주입
+
+`launcher.builderEffort.<에이전트>`에 값이 있으면 모델 옵션 뒤에 effort 옵션을 넣는다. 모델과
+달리 **선택값**이다 — 미설정이면 주입하지 않고 각 CLI의 기본 effort로 폴백한다(오류 아님).
+전역 `~/.opal/setting.json` 위에 프로젝트 `setting.local.json`이 에이전트 키 단위로 덮어쓴다.
+
+```json
+{ "launcher": { "builderEffort": { "claude": "high", "codex": "medium" } } }
+```
+
+| 에이전트 | 주입 인자 | 이미 지정된 것으로 보는 조각 |
+| --- | --- | --- |
+| `claude` | `--effort <값>` | `--effort` |
+| `codex` | `-c model_reasoning_effort="<값>"` | `model_reasoning_effort` |
+
+- 템플릿에 이미 effort 지정이 있거나 값이 `inherit`이거나 표 밖 에이전트면 주입하지 않는다.
+- 값의 유효성은 각 CLI가 판정한다(claude: `low|medium|high|xhigh|max`). launcher는 목록을 복제하지 않는다.
+- `--command`로 명령을 직접 주면 주입하지 않는다.
+
 `launcher.leasePollTimeoutSec`은 child lease claim을 기다리는 bounded polling 상한(초)이다.
 코드 기본값은 **30초**이며, 양의 숫자만 전역 설정과 프로젝트 `setting.local.json`에서 이를
 덮어쓸 수 있다. 이 대기는 child가 bootstrap을 처리해 lease를 claim할 시간을 주는 것이며,
@@ -107,6 +146,7 @@ argparse usage 오류도 exit 2 + 사람용 usage로 새지 않고 구조화 JSO
 | `invalid_arguments` | 서브명령 누락·argparse usage 오류·`launch` 필수 인자 누락 |
 | `registry_unreadable` | registry meta를 읽지 못함 |
 | `task_path_unresolved` | meta에 canonical `task_path`가 없음 |
+| `builder_model_unresolved` | 주입 대상 에이전트의 `models.<provider>.standard` 셀이 전역·로컬 둘 다 없음 |
 | `launch_preflight_failed` | 기동 전 점검 실패. `cause` ∈ `meta_dir_missing`\|`meta_dir_not_writable`\|`grant_option_unsupported`\|`agent_help_unavailable` |
 | `launcher_error` | `launcher_core.LauncherError` |
 | `terminal_required` | `read`에 `--terminal` 누락 |

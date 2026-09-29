@@ -374,3 +374,147 @@ def test_default_constants_match_setting_default_json():
     assert settings.DEFAULT_UTTERANCE_TEMPLATE == block["utterance_template"]
     for name, entry in settings.DEFAULT_AGENTS.items():
         assert entry["argv_template"] == block["agents"][name]["argv_template"]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# builder 모델 기동 시점 주입 — `models.<provider>.standard`를 실행 파일 뒤에 넣는다
+# ─────────────────────────────────────────────────────────────────────────────
+
+MODELS = {"claude": {"standard": "sonnet"}, "codex": {"standard": "gpt-5.6-terra"}}
+
+
+def _builder(layers, agent=None):
+    from worktree_launcher import settings
+
+    return settings.resolve_builder_model(layers.load(), agent=agent, project_root=layers.project_root)
+
+
+def test_builder_model_injected_for_claude_and_codex(layers):
+    from worktree_launcher import settings
+
+    layers.write_global({"models": MODELS})
+    loaded = layers.load()
+
+    assert _builder(layers) == ("sonnet", None)
+    assert settings.resolve_command(loaded, task_path=TASK_PATH, model="sonnet") == (
+        f'claude --model sonnet "{TASK_PATH} 이어서 수행"'
+    )
+    assert _builder(layers, "codex") == ("gpt-5.6-terra", None)
+    assert settings.resolve_command(
+        loaded, agent="codex", task_path=TASK_PATH, meta_dir="/m", model="gpt-5.6-terra"
+    ) == f'codex -m gpt-5.6-terra --no-daemon --add-dir "/m" "{TASK_PATH} 이어서 수행"'
+
+
+def test_builder_model_local_cell_overrides_global(layers):
+    layers.write_global({"models": MODELS})
+    layers.write_local({"models": {"claude": {"standard": "haiku"}}})
+
+    assert _builder(layers) == ("haiku", None)
+    assert _builder(layers, "codex") == ("gpt-5.6-terra", None)
+
+
+@pytest.mark.parametrize(
+    "agent,template",
+    [
+        ("claude", 'claude --model opus "{utterance}"'),
+        ("claude", 'claude --model=opus "{utterance}"'),
+        ("codex", 'codex -m gpt-5.6-sol "{utterance}"'),
+        ("codex", 'codex --model gpt-5.6-sol "{utterance}"'),
+    ],
+)
+def test_builder_model_skipped_when_template_already_sets_model(layers, agent, template):
+    layers.write_global({"models": MODELS, "launcher": {"agents": {agent: {"argv_template": template}}}})
+
+    assert _builder(layers, agent) == (None, None)
+
+
+def test_builder_model_skipped_for_inherit_and_unknown_agent(layers):
+    layers.write_global({
+        "models": {"claude": {"standard": "inherit"}},
+        "launcher": {"agents": {"gemini": {"argv_template": 'gemini "{utterance}"'}}},
+    })
+
+    assert _builder(layers) == (None, None)
+    assert _builder(layers, "gemini") == (None, None)
+
+
+def test_builder_model_missing_cell_is_error_not_guess(layers):
+    layers.write_global({"models": {"claude": {"advanced": "opus"}}})
+
+    assert _builder(layers) == (None, "models.claude.standard")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# builder effort 주입 — 선택값. 미설정이면 주입하지 않고 CLI 기본값으로 폴백한다
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _effort(layers, agent=None):
+    from worktree_launcher import settings
+
+    return settings.resolve_builder_effort(layers.load(), agent=agent)
+
+
+def test_builder_effort_unset_falls_back_to_cli_default(layers):
+    from worktree_launcher import settings
+
+    layers.write_global({"models": MODELS})
+
+    assert _effort(layers) is None
+    assert _effort(layers, "codex") is None
+    assert settings.resolve_command(layers.load(), task_path=TASK_PATH, model="sonnet", effort=None) == (
+        f'claude --model sonnet "{TASK_PATH} 이어서 수행"'
+    )
+
+
+def test_builder_effort_injected_after_model(layers):
+    from worktree_launcher import settings
+
+    layers.write_global({"launcher": {"builderEffort": {"claude": "high", "codex": "medium"}}})
+    loaded = layers.load()
+
+    assert _effort(layers) == "high"
+    assert settings.resolve_command(loaded, task_path=TASK_PATH, model="sonnet", effort="high") == (
+        f'claude --model sonnet --effort high "{TASK_PATH} 이어서 수행"'
+    )
+    assert _effort(layers, "codex") == "medium"
+    assert settings.resolve_command(
+        loaded, agent="codex", task_path=TASK_PATH, meta_dir="/m", model="gpt-5.6-terra", effort="medium"
+    ) == (
+        "codex -m gpt-5.6-terra -c 'model_reasoning_effort=\"medium\"' "
+        f'--no-daemon --add-dir "/m" "{TASK_PATH} 이어서 수행"'
+    )
+
+
+def test_builder_effort_local_overrides_per_agent(layers):
+    layers.write_global({"launcher": {"builderEffort": {"claude": "high", "codex": "medium"}}})
+    layers.write_local({"launcher": {"builderEffort": {"claude": "max"}}})
+
+    assert _effort(layers) == "max"
+    assert _effort(layers, "codex") == "medium"
+
+
+@pytest.mark.parametrize(
+    "agent,template",
+    [
+        ("claude", 'claude --effort low "{utterance}"'),
+        ("codex", "codex -c model_reasoning_effort=low \"{utterance}\""),
+    ],
+)
+def test_builder_effort_skipped_when_template_already_sets_it(layers, agent, template):
+    layers.write_global({"launcher": {
+        "builderEffort": {agent: "high"},
+        "agents": {agent: {"argv_template": template}},
+    }})
+
+    assert _effort(layers, agent) is None
+
+
+def test_builder_effort_skipped_for_inherit_and_unknown_agent(layers):
+    layers.write_global({"launcher": {
+        "builderEffort": {"claude": "inherit", "gemini": "high"},
+        "agents": {"gemini": {"argv_template": 'gemini "{utterance}"'}},
+    }})
+
+    assert _effort(layers) is None
+    assert _effort(layers, "gemini") is None

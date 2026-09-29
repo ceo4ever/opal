@@ -7,7 +7,10 @@
   "exports": [
     "GLOBAL_SETTING_PATH", "LOCAL_SETTING_RELPATH", "LAUNCHER_BLOCK_KEY",
     "DEFAULT_AGENT", "DEFAULT_AGENTS", "DEFAULT_UTTERANCE_TEMPLATE",
-    "load_launcher_settings", "resolve_command", "resolve_argv_template"
+    "load_launcher_settings", "resolve_command", "resolve_argv_template",
+    "resolve_agent_name", "load_model_mapping", "resolve_builder_model",
+    "MODEL_INJECTION", "BUILDER_MODEL_LEVEL",
+    "resolve_builder_effort", "EFFORT_INJECTION", "BUILDER_EFFORT_KEY"
   ],
   "depends": ["opal/core/setting.default.json(launcher 블록 기본값 SSOT)"]
 }
@@ -18,6 +21,7 @@ from __future__ import annotations
 import copy
 import json
 import pathlib
+import shlex
 
 # 전역 base 레이어. 테스트는 이 모듈 속성을 교체해 tmp 경로로 돌린다 —
 # 실제 `~/.opal/`을 읽기 외로 건드리지 않는다.
@@ -46,6 +50,32 @@ DEFAULT_LEASE_POLL_TIMEOUT_SEC = 30
 PLACEHOLDER_UTTERANCE = "{utterance}"
 PLACEHOLDER_TASK_PATH = "{task_path}"
 PLACEHOLDER_META_DIR = "{meta_dir}"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# builder 모델 기동 시점 주입 — 워크트리 세션(PM·builder)은 `models.<provider>.standard`로
+# 뜬다. 검증기는 각 에이전트 frontmatter 레벨(advanced 등)을 그대로 따르므로 여기서 다루지
+# 않는다. 모델 값은 `models` 매핑(전역+로컬 셀 단위 머지)만 원천으로 쓴다 — 하드코딩 없음.
+# ─────────────────────────────────────────────────────────────────────────────
+
+MODELS_BLOCK_KEY = "models"
+BUILDER_MODEL_LEVEL = "standard"
+# 에이전트 이름 → (models provider, 주입 옵션, 이미 지정된 것으로 볼 옵션들).
+# 목록 밖 에이전트(gemini·cursor-agent 등)는 주입하지 않는다.
+MODEL_INJECTION = {
+    "claude": ("claude", "--model", ("--model",)),
+    "codex": ("codex", "-m", ("-m", "--model")),
+}
+# 이 값이면 IDE/CLI 자체 설정에 위임한 것으로 보고 주입하지 않는다.
+MODEL_INHERIT = "inherit"
+
+# builder effort 주입 — `launcher.builderEffort.<에이전트>`(전역→로컬 에이전트 키 단위 덮어쓰기).
+# 모델과 달리 선택값이다: 미설정·`inherit`이면 주입하지 않고 각 CLI의 기본 effort로 폴백한다.
+# 에이전트 이름 → (주입 인자 생성기, 이미 지정된 것으로 볼 토큰 조각).
+BUILDER_EFFORT_KEY = "builderEffort"
+EFFORT_INJECTION = {
+    "claude": (lambda value: ["--effort", value], ("--effort",)),
+    "codex": (lambda value: ["-c", f'model_reasoning_effort="{value}"'], ("model_reasoning_effort",)),
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -108,6 +138,12 @@ def _apply_layer(resolved: dict, block: dict) -> None:
     if isinstance(lease_poll_timeout, (int, float)) and not isinstance(lease_poll_timeout, bool) and lease_poll_timeout > 0:
         resolved["leasePollTimeoutSec"] = lease_poll_timeout
 
+    builder_effort = block.get(BUILDER_EFFORT_KEY)
+    if isinstance(builder_effort, dict):
+        for name, value in builder_effort.items():
+            if isinstance(name, str) and isinstance(value, str) and value:
+                resolved[BUILDER_EFFORT_KEY][name] = value
+
     agents = block.get("agents")
     if isinstance(agents, dict):
         for name, entry in agents.items():
@@ -130,6 +166,7 @@ def load_launcher_settings(project_root=None) -> dict:
         "agents": copy.deepcopy(DEFAULT_AGENTS),
         "utterance_template": DEFAULT_UTTERANCE_TEMPLATE,
         "leasePollTimeoutSec": DEFAULT_LEASE_POLL_TIMEOUT_SEC,
+        BUILDER_EFFORT_KEY: {},
     }
 
     _apply_layer(resolved, _launcher_block(_read_json_object(GLOBAL_SETTING_PATH)))
@@ -156,8 +193,9 @@ def _render(template: str, utterance: str, task_path: str, meta_dir: str = "") -
     )
 
 
-def _argv_template(settings: dict, agent) -> str:
-    """이름 → `argv_template`. 요청 이름이 없으면 `default`, 그래도 없으면 기본 상수."""
+def _agent_and_template(settings: dict, agent) -> tuple:
+    """이름 → `(실제로 쓰인 에이전트 이름, argv_template)`.
+    요청 이름이 없으면 `default`, 그래도 없으면 기본 상수."""
     agents = settings.get("agents")
     agents = agents if isinstance(agents, dict) else {}
 
@@ -166,12 +204,112 @@ def _argv_template(settings: dict, agent) -> str:
             continue
         entry = _valid_agent_entry(agents.get(candidate))
         if entry is not None:
-            return entry["argv_template"]
+            return candidate, entry["argv_template"]
         fallback = DEFAULT_AGENTS.get(candidate)
         if fallback is not None:
-            return fallback["argv_template"]
+            return candidate, fallback["argv_template"]
 
-    return DEFAULT_AGENTS[DEFAULT_AGENT]["argv_template"]
+    return DEFAULT_AGENT, DEFAULT_AGENTS[DEFAULT_AGENT]["argv_template"]
+
+
+def _argv_template(settings: dict, agent) -> str:
+    return _agent_and_template(settings, agent)[1]
+
+
+def resolve_agent_name(settings: dict, agent=None) -> str:
+    """`resolve_command`가 실제로 고르는 에이전트 이름을 공개한다."""
+    settings = settings if isinstance(settings, dict) else {}
+    return _agent_and_template(settings, agent)[0]
+
+
+def _models_block(document: dict) -> dict:
+    block = document.get(MODELS_BLOCK_KEY)
+    return block if isinstance(block, dict) else {}
+
+
+def load_model_mapping(project_root=None) -> dict:
+    """`models` 블록을 전역 → 로컬 순으로 provider×level 셀 단위 머지한다
+    (`opal-model-mapping.md` §5.1과 같은 입도). 표 폴백·기본 상수는 없다."""
+    merged: dict = {}
+    layers = [_read_json_object(GLOBAL_SETTING_PATH)]
+    if project_root is not None:
+        layers.append(_read_json_object(pathlib.Path(project_root) / LOCAL_SETTING_RELPATH))
+    for document in layers:
+        for provider, cells in _models_block(document).items():
+            if not isinstance(provider, str) or not isinstance(cells, dict):
+                continue
+            target = merged.setdefault(provider, {})
+            for level, value in cells.items():
+                if isinstance(level, str) and isinstance(value, str) and value:
+                    target[level] = value
+    return merged
+
+
+def _template_has_model_flag(template: str, flags) -> bool:
+    for token in template.split():
+        for flag in flags:
+            if token == flag or token.startswith(flag + "="):
+                return True
+    return False
+
+
+def resolve_builder_effort(settings: dict, agent=None):
+    """주입할 builder effort를 돌려준다. 주입하지 않으면 `None` — CLI 기본값 폴백.
+
+    미설정·`inherit`·주입 표 밖 에이전트·템플릿에 이미 effort 지정이 있는 경우는
+    모두 `None`이다. 값의 유효성은 각 CLI가 판정한다(여기서 목록을 복제하지 않는다).
+    """
+    settings = settings if isinstance(settings, dict) else {}
+    name, template = _agent_and_template(settings, agent)
+    injection = EFFORT_INJECTION.get(name)
+    if injection is None:
+        return None
+    if any(marker in template for marker in injection[1]):
+        return None
+    efforts = settings.get(BUILDER_EFFORT_KEY)
+    value = efforts.get(name) if isinstance(efforts, dict) else None
+    if not isinstance(value, str) or not value or value == MODEL_INHERIT:
+        return None
+    return value
+
+
+def resolve_builder_model(settings: dict, agent=None, project_root=None) -> tuple:
+    """주입할 builder 모델을 결정한다. `(model, error)`를 돌려준다.
+
+    - 주입 대상이 아닌 에이전트, 템플릿에 이미 모델 옵션이 있는 경우, 매핑 값이
+      `inherit`인 경우는 `(None, None)` — 주입하지 않는다(사용자 지정 우선).
+    - 주입 대상인데 `models.<provider>.standard` 셀이 전역·로컬 둘 다 없으면
+      `(None, "models.<provider>.standard")` — 추정·폴백하지 않는다.
+    """
+    settings = settings if isinstance(settings, dict) else {}
+    name, template = _agent_and_template(settings, agent)
+    injection = MODEL_INJECTION.get(name)
+    if injection is None:
+        return None, None
+    provider, _flag, detect_flags = injection
+    if _template_has_model_flag(template, detect_flags):
+        return None, None
+    model = load_model_mapping(project_root).get(provider, {}).get(BUILDER_MODEL_LEVEL)
+    if not model:
+        return None, f"{MODELS_BLOCK_KEY}.{provider}.{BUILDER_MODEL_LEVEL}"
+    if model == MODEL_INHERIT:
+        return None, None
+    return model, None
+
+
+def _inject_options(template: str, name: str, model, effort) -> str:
+    """실행 파일 토큰 바로 뒤에 모델·effort 옵션을 넣는다(모델 → effort 순)."""
+    injected: list = []
+    model_injection = MODEL_INJECTION.get(name)
+    if model and model_injection is not None:
+        injected += [model_injection[1], model]
+    effort_injection = EFFORT_INJECTION.get(name)
+    if effort and effort_injection is not None:
+        injected += effort_injection[0](effort)
+    if not injected:
+        return template
+    executable, sep, rest = template.partition(" ")
+    return f"{executable} {' '.join(shlex.quote(arg) for arg in injected)}{sep}{rest}"
 
 
 def resolve_argv_template(settings: dict, agent=None) -> str:
@@ -184,12 +322,16 @@ def resolve_argv_template(settings: dict, agent=None) -> str:
     return _argv_template(settings, agent)
 
 
-def resolve_command(settings: dict, agent=None, task_path: str = "", meta_dir: str = "") -> str:
+def resolve_command(
+    settings: dict, agent=None, task_path: str = "", meta_dir: str = "", model=None, effort=None
+) -> str:
     """실행 명령 문자열 하나를 만든다.
 
     `agent` 인자가 `default`를 이긴다. 발화는 `utterance_template`에 `{task_path}`를
     넣어 만들고, 그 결과를 `argv_template`의 `{utterance}`에 넣는다. `{meta_dir}`는
-    태스크 전용 메타 폴더 절대경로를 그대로 리터럴 치환한다.
+    태스크 전용 메타 폴더 절대경로를 그대로 리터럴 치환한다. `model`이 주어지면
+    (`resolve_builder_model` 결과) 실행 파일 바로 뒤에 에이전트별 모델 옵션을 넣고,
+    `effort`(`resolve_builder_effort` 결과)가 있으면 그 뒤에 effort 옵션을 넣는다.
     """
     settings = settings if isinstance(settings, dict) else {}
     task_path = task_path if isinstance(task_path, str) else str(task_path)
@@ -201,6 +343,10 @@ def resolve_command(settings: dict, agent=None, task_path: str = "", meta_dir: s
 
     # 발화 템플릿이 받는 토큰은 `{task_path}` 하나다.
     utterance = utterance_template.replace(PLACEHOLDER_TASK_PATH, task_path)
+    name, template = _agent_and_template(settings, agent)
     return _render(
-        _argv_template(settings, agent), utterance=utterance, task_path=task_path, meta_dir=meta_dir
+        _inject_options(template, name, model, effort),
+        utterance=utterance,
+        task_path=task_path,
+        meta_dir=meta_dir,
     )
