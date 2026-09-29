@@ -1,6 +1,6 @@
 # STATE: 테스트 시나리오 작성 기준 개선
 
-> 최종 갱신: 2026-09-29 11:47:19
+> 최종 갱신: 2026-09-29 13:07:01
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
@@ -12,6 +12,7 @@
 | 3 | 2026-09-29 09:51:38 | design gate retry limit reset at i3 (owner=user) | 캡틴: i3 지적 반영 확인, i4 진행 |
 | 4 | 2026-09-29 09:54:58 | design-decision(detail): 구형 이력 원소(counted 필드 없음)는 counted:true로 간주해 상한·no_progress 계산에 포함, opal-pilot-dev STEP 3.5 정합 확인은 W-2 확인 항목 | i4 evaluator 비차단 지적, 보수적 해석(상한 우회 방지) |
 | 5 | 2026-09-29 11:37:47 | additional row inserted after row 8: stage=TEST, item=GC-001 미사용 오명 상수 _GATE_HISTORY_NAME 제거 후 S-2·S-4·S-6·test-tool 회귀·컨벤션 재확인, key=test.gc_1, new_row_id=9 | additional work entry |
+| 6 | 2026-09-29 13:07:01 | current_status changed: completed_unmerged → done | (none) |
 
 ## 블로커
 없음

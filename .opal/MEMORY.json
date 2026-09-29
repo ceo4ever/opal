@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 166,
+  "last_task_number": 167,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -153,9 +153,24 @@
       "status": "candidate",
       "file": "memory/디스패치_프롬프트의_외부_CLI_플래그는_실측으로_확인하고_적는다.md",
       "summary": "145에서 PM이 워커 프롬프트에 'orca terminal read --scrollback/--lines'라고 적었으나 실제 플래그는 --c…"
+    },
+    {
+      "title": "RED 테스트 디스패치 시 PLAN 불변식 위반 fixture 점검",
+      "date": "2026-09-29",
+      "type": "improvement",
+      "status": "candidate",
+      "file": "memory/RED_테스트_디스패치_시_PLAN_불변식_위반_fixture_점검.md",
+      "summary": "태스크 167에서 RED 테스트가 advisory apply 직후 문서를 고치지 않고 start하는 fixture를 썼다. 구현 워커와 문서…"
     }
   ],
   "history": [
+    {
+      "title": "167 테스트 시나리오 작성 기준 개선",
+      "date": "2026-09-29",
+      "stage": "완료",
+      "path": "tasks/167-260928-opd-테스트-시나리오-작성-기준-개선/",
+      "result": "TEST-SCENARIO 유형 열·Check 구분·정확 중복 거부, evaluator advisory와 apply/retain 응답 게이트, 반영 재판정 1회(상한 비소비), 목표-커버 게이트 기록·mark 가드 도입. 시나리오 7/7 PASS"
+    },
     {
       "title": "164 워크트리 메타 태스크폴더 권한 분리",
       "date": "2026-09-28",
@@ -183,13 +198,6 @@
       "stage": "완료",
       "path": "tasks/161-260927-opd-검증도구-실행정확성-복구/",
       "result": "test-tool unit의 설치 확인과 실제 검사를 분리하고 미실행·실패·범위를 구조화해 기록함. 실도구 검증 13/13 통과, 회귀 테스트 569건 통과, main 머지 완료."
-    },
-    {
-      "title": "160 opst OPPB 지원",
-      "date": "2026-09-26",
-      "stage": "완료",
-      "path": "tasks/160-260926-opst-OPPB-지원/",
-      "result": "opst OPPB 판정 프로필·TODO CRUD 시나리오 추가, 실실행에서 OPPB worktree 미회수 검출"
     }
   ]
 }
