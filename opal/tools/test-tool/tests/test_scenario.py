@@ -1741,5 +1741,624 @@ class TestScenarioStatusCountsCorrection(BaseScenarioTestCase):
         return json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# [T167] S-2/S-4/S-6: 유형 열 전환·check+RED 모순·정확 중복·목표-커버 advisory 기록
+# RED-first — 태스크 167 PLAN.md Decisions and contracts SSOT
+# ─────────────────────────────────────────────────────────────────────────────
+
+_T167_TYPE_VALUES = ("unit", "integration", "contract", "regression", "e2e", "check")
+
+
+def _t167_type_table(rows):
+    """rows: [(id, 유형, 검증대상, 조건, 행동, 기대결과, 방법환경, 시점), ...]"""
+    header = "| ID | 유형 | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |"
+    sep = "|---|---|---|---|---|---|---|---|"
+    lines = [header, sep]
+    for row in rows:
+        lines.append("| " + " | ".join(row) + " |")
+    return "\n".join(lines)
+
+
+def _t167_scenario_body(rows):
+    return f"""---
+template: sdlc-v2
+---
+# TEST-SCENARIO: T167 유형 열 fixture
+
+## Setup
+
+- 환경: 임시 태스크 폴더
+
+## Scenarios
+
+{_t167_type_table(rows)}
+"""
+
+
+class TestS167_S2TypeColumn(BaseScenarioTestCase):
+    """[T167/S-2] 유형 열 선언값이 builder payload·test-scenario.json에 그대로 전달된다 (AC-2).
+    현재 builder는 `유형` 헤더를 해석하지 않고 scenario-init의 `type` 검증에는 `check`가
+    허용값에 없다 — 두 계약 모두 미구현이라 RED다."""
+
+    def test_normal_six_types_propagate_to_payload_and_spec(self):
+        """① payload scenarios[].type이 행별 선언값과 같다. ② 생성된 test-scenario.json의
+        type도 같다(check 포함)."""
+        rows = [
+            (f"S-{i}", t, "AC-1, C-1, H-1", f"조건{i}", f"행동{i}", f"기대{i}", "CLI", "구현 후")
+            for i, t in enumerate(_T167_TYPE_VALUES, start=1)
+        ]
+        _write_sdlc_v2_docs(self.task_path, scenario_body=_t167_scenario_body(rows))
+
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+        self.assertEqual(code, 0, f"기대 exit 0, 실제 stdout={stdout!r}")
+        output_path = pathlib.Path(data.get("coverage_input"))
+        payload = json.loads(output_path.read_text(encoding="utf-8"))
+        got_types = [s.get("type") for s in payload.get("scenarios", [])]
+        self.assertEqual(
+            got_types, list(_T167_TYPE_VALUES),
+            "① payload scenarios[].type이 유형 열 선언값과 같아야 한다",
+        )
+
+        init_scenarios = [
+            {
+                "id": f"S-{i}", "acceptance_ref": "AC-1", "type": t,
+                "expected": f"기대{i}", "red_required": False,
+            }
+            for i, t in enumerate(_T167_TYPE_VALUES, start=1)
+        ]
+        code2, stdout2, _data2 = _scenario_init(self.task_path, init_scenarios)
+        self.assertEqual(code2, 0, f"scenario-init 기대 exit 0, 실제 stdout={stdout2!r}")
+        spec = json.loads((self.task_path / "test-scenario.json").read_text(encoding="utf-8"))
+        spec_types = [s.get("type") for s in spec.get("scenarios", [])]
+        self.assertEqual(
+            spec_types, list(_T167_TYPE_VALUES),
+            "② test-scenario.json의 type도 선언값과 같아야 한다(check 포함)",
+        )
+
+    def test_blank_type_rejected_with_sid_in_detail(self):
+        """③ 빈 유형은 exit 17 coverage_input_invalid이고 detail에 해당 S-ID가 있다."""
+        rows = [
+            ("S-1", "", "AC-1, C-1, H-1", "조건", "행동", "기대", "CLI", "구현 후"),
+        ]
+        _write_sdlc_v2_docs(self.task_path, scenario_body=_t167_scenario_body(rows))
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+        self.assertEqual(code, 17, f"빈 유형은 exit 17이어야 한다, 실제 stdout={stdout!r}")
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("S-1", str(data.get("detail")), "detail에 S-1이 있어야 한다")
+
+    def test_unknown_type_value_rejected_with_sid_in_detail(self):
+        """③ 허용 6값 밖(smoke)은 exit 17 coverage_input_invalid이고 detail에 해당 S-ID가 있다."""
+        rows = [
+            ("S-1", "smoke", "AC-1, C-1, H-1", "조건", "행동", "기대", "CLI", "구현 후"),
+        ]
+        _write_sdlc_v2_docs(self.task_path, scenario_body=_t167_scenario_body(rows))
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+        self.assertEqual(code, 17, f"smoke는 exit 17이어야 한다, 실제 stdout={stdout!r}")
+        self.assertEqual(data.get("error"), "coverage_input_invalid")
+        self.assertIn("S-1", str(data.get("detail")), "detail에 S-1이 있어야 한다")
+
+
+class TestS167_S4CheckRedContradiction(BaseScenarioTestCase):
+    """[T167/S-4] check 유형과 구현 전 RED 모순, 정확 중복(6셀 동일) 거부 (AC-3).
+    현재 builder는 유형 열 검증도 6셀 중복 검증도 하지 않고, scenario-init은 `check`를
+    허용값 밖으로 취급한다 — 둘 다 미구현이라 RED다."""
+
+    def _fresh_task(self, suffix):
+        path = self.tmpdir / f"056-dryrun-{suffix}"
+        path.mkdir()
+        return path
+
+    def test_check_type_with_pre_red_timing_rejected_by_builder(self):
+        """(a) check 행의 시점이 `구현 전 RED`이면 builder가 exit 17이고 detail에 S-ID가 있다."""
+        rows = [
+            ("S-1", "check", "AC-1, C-1, H-1", "조건", "행동", "기대", "CLI", "구현 전 RED"),
+        ]
+        _write_sdlc_v2_docs(self.task_path, scenario_body=_t167_scenario_body(rows))
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+        self.assertEqual(code, 17, f"check+구현 전 RED는 exit 17이어야 한다, 실제 stdout={stdout!r}")
+        self.assertIn("S-1", str(data.get("detail")), "detail에 S-1이 있어야 한다")
+
+    def test_identical_six_cells_duplicate_rejected_by_builder(self):
+        """(b) 여섯 셀이 모두 같은 두 행은 exit 17(duplicate scenario content)이고
+        detail에 두 S-ID가 있다."""
+        rows = [
+            ("S-1", "unit", "AC-1, C-1, H-1", "같은 조건", "같은 행동", "같은 기대", "CLI", "구현 후"),
+            ("S-2", "unit", "AC-1, C-1, H-1", "같은 조건", "같은 행동", "같은 기대", "CLI", "구현 후"),
+        ]
+        _write_sdlc_v2_docs(self.task_path, scenario_body=_t167_scenario_body(rows))
+        code, stdout, data = _scenario_coverage_build(self.task_path)
+        self.assertEqual(code, 17, f"6셀 동일 중복은 exit 17이어야 한다, 실제 stdout={stdout!r}")
+        detail = str(data.get("detail"))
+        self.assertIn("S-1", detail)
+        self.assertIn("S-2", detail)
+
+    def test_expected_only_difference_passes(self):
+        """(c) 기대 결과만 다른 두 행은 exit 0이다(정확 중복 아님)."""
+        rows = [
+            ("S-1", "unit", "AC-1, C-1, H-1", "같은 조건", "같은 행동", "기대A", "CLI", "구현 후"),
+            ("S-2", "unit", "AC-1, C-1, H-1", "같은 조건", "같은 행동", "기대B", "CLI", "구현 후"),
+        ]
+        _write_sdlc_v2_docs(self.task_path, scenario_body=_t167_scenario_body(rows))
+        code, stdout, _data = _scenario_coverage_build(self.task_path)
+        self.assertEqual(code, 0, f"기대 결과만 다르면 exit 0이어야 한다, 실제 stdout={stdout!r}")
+
+    def test_scenario_init_check_red_required_contradiction(self):
+        """init `type=check`+`red_required=true`, `type=check`+`red_required` 없음은
+        scenario_contract_invalid exit 17이고 test-scenario.json이 생기지 않는다.
+        `type=check`+`red_required=false`는 성공한다."""
+        task_a = self._fresh_task("a")
+        code_a, stdout_a, data_a = _scenario_init(task_a, [
+            {"id": "S-1", "acceptance_ref": "AC-1", "type": "check", "expected": "x", "red_required": True},
+        ])
+        self.assertEqual(code_a, 17, f"check+red_required=true는 exit 17이어야 한다, 실제={stdout_a!r}")
+        self.assertEqual(data_a.get("error"), "scenario_contract_invalid")
+        self.assertIn(
+            "red_required", str(data_a.get("detail")).lower() + str(data_a.get("error")),
+            "detail 또는 error가 check+red_required 모순을 가리켜야 한다",
+        )
+        self.assertFalse((task_a / "test-scenario.json").exists())
+
+        task_b = self._fresh_task("b")
+        code_b, stdout_b, data_b = _scenario_init(task_b, [
+            {"id": "S-1", "acceptance_ref": "AC-1", "type": "check", "expected": "x"},
+        ])
+        self.assertEqual(code_b, 17, f"check+red_required 미지정(기본 true)은 exit 17이어야 한다, 실제={stdout_b!r}")
+        self.assertEqual(data_b.get("error"), "scenario_contract_invalid")
+        self.assertFalse((task_b / "test-scenario.json").exists())
+
+        task_c = self._fresh_task("c")
+        code_c, stdout_c, _data_c = _scenario_init(task_c, [
+            {"id": "S-1", "acceptance_ref": "AC-1", "type": "check", "expected": "x", "red_required": False},
+        ])
+        self.assertEqual(code_c, 0, f"check+red_required=false는 성공해야 한다, 실제={stdout_c!r}")
+        self.assertTrue((task_c / "test-scenario.json").exists())
+
+
+def _t167_scenario_gate_record(task_path, iteration, **kwargs):
+    args = ["scenario-gate-record", "--task-folder", str(task_path), "--iteration", str(iteration)]
+    for flag, value in kwargs.items():
+        if value is None:
+            continue
+        args += [f"--{flag.replace('_', '-')}", str(value)]
+    return _run(args)
+
+
+def _t167_scenario_gate_verify(task_path, **kwargs):
+    args = ["scenario-gate-verify", "--task-folder", str(task_path)]
+    for flag, value in kwargs.items():
+        if value is None:
+            continue
+        args += [f"--{flag.replace('_', '-')}", str(value)]
+    return _run(args)
+
+
+def _t167_write_evaluator_result(task_path, name, *, verdict="pass", advisories=None):
+    payload = {
+        "scores": {"goal": 2, "adoption": 2, "boundary": 2},
+        "average": 2.0,
+        "gaps": [],
+        "verdict": verdict,
+        "advisories": advisories if advisories is not None else [],
+    }
+    path = task_path / name
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+_T167_ADVISORY_OK = {
+    "id": "A-1", "kind": "mergeable", "targets": ["S-1"],
+    "basis": "두 시나리오가 같은 축을 다룬다", "recommendation": "S-2를 S-1에 통합",
+}
+
+
+class TestS167_S6ScenarioGateRecord(BaseScenarioTestCase):
+    """[T167/S-6] test-tool scenario-gate-record/scenario-gate-verify — advisory 형식 검사,
+    응답 완전성 검사, apply→refinement 전이, --input-error/--evidence-error 모드 (AC-4, AC-5,
+    AC-6, C-4, H-2). 두 서브명령이 아직 없어 RED다."""
+
+    def setUp(self):
+        super().setUp()
+        _write_sdlc_v2_docs(self.task_path)
+
+    def _history(self):
+        history_path = self.task_path / ".scenario-gate-history.json"
+        if not history_path.exists():
+            return None
+        return json.loads(history_path.read_text(encoding="utf-8"))
+
+    def test_malformed_advisories_rejected_exit18(self):
+        """① advisory 형식 오류는 exit 18(scenario_gate_record_invalid)이다."""
+        _t167_write_evaluator_result(
+            self.task_path, "eval-i1.json",
+            advisories=[{"id": "A-1"}],  # kind/targets/basis/recommendation 누락
+        )
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 1, evaluator_result=str(self.task_path / "eval-i1.json"),
+        )
+        self.assertEqual(code, 18, f"advisory 형식 오류는 exit 18이어야 한다, 실제 stdout={stdout!r}")
+        self.assertEqual(data.get("error"), "scenario_gate_record_invalid")
+
+    def test_pass_with_incomplete_response_rejected_exit19_history_unchanged(self):
+        """② pass에 응답이 불완전하면 exit 19(advisory_response_invalid)이고 이력 파일이
+        바이트 단위로 불변이다."""
+        _t167_write_evaluator_result(
+            self.task_path, "eval-i1.json", verdict="pass", advisories=[_T167_ADVISORY_OK],
+        )
+        history_path = self.task_path / ".scenario-gate-history.json"
+        before = history_path.read_bytes() if history_path.exists() else None
+
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 1,
+            evaluator_result=str(self.task_path / "eval-i1.json"),
+            advisory_responses=None,  # 응답 없이 호출
+        )
+        self.assertEqual(code, 19, f"불완전 응답은 exit 19여야 한다, 실제 stdout={stdout!r}")
+        self.assertEqual(data.get("error"), "advisory_response_invalid")
+        after = history_path.read_bytes() if history_path.exists() else None
+        self.assertEqual(before, after, "이력 파일이 바이트 단위로 불변이어야 한다")
+
+    def test_apply_response_records_rewrite_advisory_apply_counted_false(self):
+        """③ apply는 verdict: rewrite·reason: advisory_apply·counted: false다. 그 직후
+        scenario-gate-verify는 exit 20(not_passed)이다."""
+        _t167_write_evaluator_result(
+            self.task_path, "eval-i1.json", verdict="pass", advisories=[_T167_ADVISORY_OK],
+        )
+        responses_path = self.task_path / "i1-responses.json"
+        responses_path.write_text(
+            json.dumps([{"id": "A-1", "response": "apply", "reason": "통합 채택"}], ensure_ascii=False),
+            encoding="utf-8",
+        )
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 1,
+            evaluator_result=str(self.task_path / "eval-i1.json"),
+            advisory_responses=str(responses_path),
+        )
+        self.assertEqual(code, 0, f"완전한 apply 응답은 exit 0이어야 한다, 실제 stdout={stdout!r}")
+        self.assertEqual(data.get("verdict"), "rewrite")
+        self.assertEqual(data.get("reason"), "advisory_apply")
+
+        history = self._history()
+        self.assertIsNotNone(history, "이력 파일이 생성되어야 한다")
+        last = history[-1]
+        self.assertEqual(last.get("verdict"), "rewrite")
+        self.assertEqual(last.get("reason"), "advisory_apply")
+        self.assertIs(last.get("counted"), False, "apply 원소는 counted: false여야 한다")
+
+        verify_code, verify_stdout, verify_data = _t167_scenario_gate_verify(self.task_path)
+        self.assertEqual(verify_code, 20, f"apply 직후 verify는 exit 20이어야 한다, 실제={verify_stdout!r}")
+        self.assertEqual(verify_data.get("error"), "scenario_gate_not_passed")
+
+    def test_refinement_round_pass_converges(self):
+        """④ apply 다음 회차(refinement)가 evaluator pass·누락 0이면 verdict: pass·
+        reason: converged다. verify는 exit 0이 된다."""
+        _t167_write_evaluator_result(
+            self.task_path, "eval-i1.json", verdict="pass", advisories=[_T167_ADVISORY_OK],
+        )
+        responses_path = self.task_path / "i1-responses.json"
+        responses_path.write_text(
+            json.dumps([{"id": "A-1", "response": "apply", "reason": "통합 채택"}], ensure_ascii=False),
+            encoding="utf-8",
+        )
+        self.assertEqual(
+            _t167_scenario_gate_record(
+                self.task_path, 1,
+                evaluator_result=str(self.task_path / "eval-i1.json"),
+                advisory_responses=str(responses_path),
+            )[0], 0,
+        )
+
+        _t167_write_evaluator_result(self.task_path, "eval-i2.json", verdict="pass", advisories=[])
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 2, evaluator_result=str(self.task_path / "eval-i2.json"),
+        )
+        self.assertEqual(code, 0, f"refinement pass는 exit 0이어야 한다, 실제 stdout={stdout!r}")
+        self.assertEqual(data.get("verdict"), "pass")
+        self.assertEqual(data.get("reason"), "converged")
+
+        history = self._history()
+        self.assertEqual(history[-1].get("verdict"), "pass")
+        self.assertEqual(history[-1].get("reason"), "converged")
+
+        verify_code, verify_stdout, _verify_data = _t167_scenario_gate_verify(self.task_path)
+        self.assertEqual(verify_code, 0, f"refinement pass 뒤 verify는 exit 0이어야 한다, 실제={verify_stdout!r}")
+
+    def test_refinement_round_fail_escalates_and_ignores_advisories(self):
+        """⑤ apply 다음 회차(refinement)가 evaluator rewrite면 verdict: escalate·
+        reason: advisory_refinement_failed다. 그 결과의 비어 있지 않은 advisories는
+        응답 없이 무시되고 이력에는 advisories: []로 남는다."""
+        _t167_write_evaluator_result(
+            self.task_path, "eval-i1.json", verdict="pass", advisories=[_T167_ADVISORY_OK],
+        )
+        responses_path = self.task_path / "i1-responses.json"
+        responses_path.write_text(
+            json.dumps([{"id": "A-1", "response": "apply", "reason": "통합 채택"}], ensure_ascii=False),
+            encoding="utf-8",
+        )
+        self.assertEqual(
+            _t167_scenario_gate_record(
+                self.task_path, 1,
+                evaluator_result=str(self.task_path / "eval-i1.json"),
+                advisory_responses=str(responses_path),
+            )[0], 0,
+        )
+
+        _t167_write_evaluator_result(
+            self.task_path, "eval-i2.json", verdict="rewrite",
+            advisories=[_T167_ADVISORY_OK],  # refinement에서는 응답 없이 무시되어야 함
+        )
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 2, evaluator_result=str(self.task_path / "eval-i2.json"),
+        )
+        self.assertEqual(code, 0, f"refinement 실패 기록 자체는 exit 0이어야 한다, 실제 stdout={stdout!r}")
+        self.assertEqual(data.get("verdict"), "escalate")
+        self.assertEqual(data.get("reason"), "advisory_refinement_failed")
+
+        last = self._history()[-1]
+        self.assertEqual(last.get("advisories"), [], "refinement 회차의 advisories는 무시되고 []로 기록된다")
+
+    def test_input_error_mode_records_escalate_counted_true(self):
+        """⑦(일부) builder exit 17 뒤 --input-error는 evaluator·응답 검사 없이
+        verdict: escalate·reason: input_error·counted: true 원소를 남긴다."""
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 1, input_error="유형 오값: S-1",
+        )
+        self.assertEqual(code, 0, f"--input-error 모드는 exit 0이어야 한다, 실제 stdout={stdout!r}")
+        self.assertEqual(data.get("verdict"), "escalate")
+        self.assertEqual(data.get("reason"), "input_error")
+
+        last = self._history()[-1]
+        self.assertEqual(last.get("verdict"), "escalate")
+        self.assertEqual(last.get("reason"), "input_error")
+        self.assertIs(last.get("counted"), True, "input-error 원소는 counted: true여야 한다")
+
+    def test_evidence_error_mode_appends_field_and_switches_to_escalate(self):
+        """⑪ `--evidence-error <code>`는 마지막 원소에 evidence_error를 붙이고
+        escalate·input_error로 바꾼다. 회차가 다르면 exit 18이다."""
+        _t167_write_evaluator_result(self.task_path, "eval-i1.json", verdict="pass", advisories=[])
+        self.assertEqual(
+            _t167_scenario_gate_record(
+                self.task_path, 1, evaluator_result=str(self.task_path / "eval-i1.json"),
+            )[0], 0,
+        )
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 1, evidence_error="EXECUTE_EVIDENCE_MISSING",
+        )
+        self.assertEqual(code, 0, f"--evidence-error 모드는 exit 0이어야 한다, 실제 stdout={stdout!r}")
+        last = self._history()[-1]
+        self.assertEqual(last.get("evidence_error"), "EXECUTE_EVIDENCE_MISSING")
+        self.assertEqual(last.get("verdict"), "escalate")
+        self.assertEqual(last.get("reason"), "input_error")
+
+        # 회차 불일치는 exit 18
+        code2, stdout2, data2 = _t167_scenario_gate_record(
+            self.task_path, 99, evidence_error="EXECUTE_EVIDENCE_MISSING",
+        )
+        self.assertEqual(code2, 18, f"회차 불일치는 exit 18이어야 한다, 실제 stdout={stdout2!r}")
+
+    def test_input_error_and_evidence_error_mutually_exclusive_exit18(self):
+        """`--input-error`와 `--evidence-error`를 함께 주면 exit 18이다."""
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 1, input_error="x", evidence_error="y",
+        )
+        self.assertEqual(code, 18, f"두 옵션 동시 지정은 exit 18이어야 한다, 실제 stdout={stdout!r}")
+
+    def test_pass_with_empty_advisories_records_pass_without_response(self):
+        """⑩(끝) advisories가 빈 pass 회차는 응답 없이 pass다."""
+        _t167_write_evaluator_result(self.task_path, "eval-i1.json", verdict="pass", advisories=[])
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 1, evaluator_result=str(self.task_path / "eval-i1.json"),
+        )
+        self.assertEqual(code, 0, f"advisories가 빈 pass는 exit 0이어야 한다, 실제 stdout={stdout!r}")
+        self.assertEqual(data.get("verdict"), "pass")
+        self.assertEqual(data.get("reason"), "converged")
+
+
+def _t167_write_coverage_input(task_path, *, complete):
+    """coverage-check 재판정용 `.scenario-coverage-input.json` fixture. complete=False는
+    requirements 중 하나가 어떤 scenario에도 커버되지 않아 missing이 발생한다."""
+    requirements = ["AC-1"] if complete else ["AC-1", "AC-2"]
+    payload = {
+        "goal": "T167 목표-커버 기록 명령 회귀",
+        "requirements": requirements,
+        "features": [],
+        "hypotheses": [],
+        "scenarios": [
+            {
+                "id": "S-1",
+                "covers_requirements": ["AC-1"],
+                "covers_features": [],
+                "covers_hypotheses": [],
+            },
+        ],
+    }
+    (task_path / ".scenario-coverage-input.json").write_text(
+        json.dumps(payload, ensure_ascii=False), encoding="utf-8",
+    )
+
+
+class TestS167_S6ExtraGateRecordCoverage(BaseScenarioTestCase):
+    """[T167/S-6 보강] RED 테스트가 다루지 않은 판정 갈래 — 누락 있는 coverage 입력의
+    evaluator-없는 rewrite/recoverable, 누락 없는데 evaluator 없으면 exit 18, coverage
+    입력 파손 시 escalate/input_error(⑦). retry_limit 3회째·no_progress 연속 무개선(⑧).
+    회차 건너뛰기 exit 18(⑨)."""
+
+    def setUp(self):
+        super().setUp()
+        _write_sdlc_v2_docs(self.task_path)
+
+    def _history(self):
+        history_path = self.task_path / ".scenario-gate-history.json"
+        if not history_path.exists():
+            return None
+        return json.loads(history_path.read_text(encoding="utf-8"))
+
+    def test_legacy_history_elements_without_counted_key_are_treated_as_counted_true(self):
+        """(STATE.md 결정 로그) `counted` 키가 없는 구형 이력 원소는 counted:true로
+        간주한다. 구형 원소 2개가 이미 있는 상태에서 새 회차가 counted 3회째가 되어
+        상한(3)에 도달, escalate/retry_limit이어야 한다."""
+        legacy_history = [
+            {
+                "iteration": 1, "missing": {"requirements": ["AC-2"], "features": [], "hypotheses": []},
+                "scores": None, "gaps": [], "verdict": "rewrite", "reason": "recoverable",
+                "advisories": [], "advisory_responses": [], "refinement": False,
+                "bundle_hash": "legacy", "files": [], "at": "2026-01-01T00:00:00+09:00",
+                # counted 키 없음 — 구형 원소
+            },
+            {
+                "iteration": 2, "missing": {"requirements": ["AC-2"], "features": [], "hypotheses": []},
+                "scores": None, "gaps": [], "verdict": "rewrite", "reason": "recoverable",
+                "advisories": [], "advisory_responses": [], "refinement": False,
+                "bundle_hash": "legacy", "files": [], "at": "2026-01-01T00:01:00+09:00",
+                # counted 키 없음 — 구형 원소
+            },
+        ]
+        (self.task_path / ".scenario-gate-history.json").write_text(
+            json.dumps(legacy_history, ensure_ascii=False), encoding="utf-8",
+        )
+        _t167_write_coverage_input(self.task_path, complete=False)
+        code, stdout, data = _t167_scenario_gate_record(self.task_path, 3)
+        self.assertEqual(code, 0, f"실제={stdout!r}")
+        self.assertEqual(
+            data.get("verdict"), "escalate",
+            "구형 원소 2개 + 이번 회차 = counted 3회째이므로 escalate여야 한다",
+        )
+        self.assertEqual(
+            data.get("reason"), "retry_limit",
+            f"구형 counted 키 부재 원소를 counted:true로 간주해야 retry_limit이 된다: {data!r}",
+        )
+        last = self._history()[-1]
+        self.assertIs(last.get("counted"), True)
+
+    def test_missing_present_without_evaluator_records_rewrite_recoverable(self):
+        """⑦ 누락이 있는 coverage 입력에서는 evaluator 결과 없이 rewrite/recoverable이
+        기록된다."""
+        _t167_write_coverage_input(self.task_path, complete=False)
+        code, stdout, data = _t167_scenario_gate_record(self.task_path, 1)
+        self.assertEqual(code, 0, f"누락 있는 입력에서 evaluator 없이도 exit 0이어야 한다, 실제={stdout!r}")
+        self.assertEqual(data.get("verdict"), "rewrite")
+        self.assertEqual(data.get("reason"), "recoverable")
+        last = self._history()[-1]
+        self.assertIs(last.get("counted"), True)
+
+    def test_missing_absent_without_evaluator_rejected_exit18(self):
+        """⑦ 누락이 없는데 evaluator 결과가 없으면 exit 18이다."""
+        _t167_write_coverage_input(self.task_path, complete=True)
+        code, stdout, data = _t167_scenario_gate_record(self.task_path, 1)
+        self.assertEqual(code, 18, f"누락 없고 evaluator 없으면 exit 18이어야 한다, 실제={stdout!r}")
+        self.assertEqual(data.get("error"), "scenario_gate_record_invalid")
+
+    def test_broken_coverage_input_without_evaluator_records_escalate_input_error(self):
+        """⑦ coverage 입력이 파손되면 evaluator 없이도 escalate/input_error가 기록된다."""
+        (self.task_path / ".scenario-coverage-input.json").write_text("{not-valid-json", encoding="utf-8")
+        code, stdout, data = _t167_scenario_gate_record(self.task_path, 1)
+        self.assertEqual(code, 0, f"파손 입력의 자동 escalate 기록은 exit 0이어야 한다, 실제={stdout!r}")
+        self.assertEqual(data.get("verdict"), "escalate")
+        self.assertEqual(data.get("reason"), "input_error")
+        last = self._history()[-1]
+        self.assertIs(last.get("counted"), True)
+
+    def test_no_progress_after_two_unimproved_counted_rounds(self):
+        """⑧ 연속 2회 개선 없음(누락 수 그대로·점수 없음=0)은 no_progress다(retry_limit
+        상한 3에 도달하기 전, 2번째 counted 원소에서 판정)."""
+        _t167_write_coverage_input(self.task_path, complete=False)
+        code1, stdout1, data1 = _t167_scenario_gate_record(self.task_path, 1)
+        self.assertEqual(code1, 0)
+        self.assertEqual(data1.get("reason"), "recoverable")
+
+        code2, stdout2, data2 = _t167_scenario_gate_record(self.task_path, 2)
+        self.assertEqual(code2, 0, f"실제={stdout2!r}")
+        self.assertEqual(data2.get("verdict"), "escalate")
+        self.assertEqual(data2.get("reason"), "no_progress")
+
+    def test_retry_limit_at_third_counted_round_with_progress(self):
+        """⑧ `retry_limit`은 counted:true 3회째에만 나온다(개선이 있어도 상한 도달 시
+        escalate/retry_limit)."""
+        _t167_write_coverage_input(self.task_path, complete=False)
+        code1, _stdout1, data1 = _t167_scenario_gate_record(self.task_path, 1)
+        self.assertEqual(code1, 0)
+        self.assertEqual(data1.get("reason"), "recoverable")
+
+        # 2회차: missing이 1건으로 줄어 개선 있음 → no_progress 아님, recoverable 유지
+        payload = json.loads((self.task_path / ".scenario-coverage-input.json").read_text(encoding="utf-8"))
+        payload["scenarios"][0]["covers_requirements"] = ["AC-1", "AC-2"]
+        (self.task_path / ".scenario-coverage-input.json").write_text(
+            json.dumps(payload, ensure_ascii=False), encoding="utf-8",
+        )
+        # 완전 커버가 되면 missing이 사라져 pass 갈래로 빠지므로, 다시 미커버 유지하되
+        # 점수만 붙는 evaluator 결과로 "개선"을 표시한다.
+        _t167_write_coverage_input(self.task_path, complete=False)
+        _t167_write_evaluator_result(self.task_path, "eval-i2.json", verdict="rewrite", advisories=[])
+        code2, stdout2, data2 = _t167_scenario_gate_record(
+            self.task_path, 2, evaluator_result=str(self.task_path / "eval-i2.json"),
+        )
+        self.assertEqual(code2, 0, f"실제={stdout2!r}")
+        self.assertEqual(data2.get("reason"), "recoverable", f"점수 개선이 있으면 no_progress가 아니어야 한다: {data2!r}")
+
+        code3, stdout3, data3 = _t167_scenario_gate_record(self.task_path, 3)
+        self.assertEqual(code3, 0, f"실제={stdout3!r}")
+        self.assertEqual(data3.get("verdict"), "escalate")
+        self.assertEqual(data3.get("reason"), "retry_limit")
+        last = self._history()[-1]
+        self.assertIs(last.get("counted"), True)
+
+    def test_skipping_iteration_rejected_exit18(self):
+        """⑨ 회차를 건너뛰면(마지막 iteration+1이 아니면) exit 18이다."""
+        _t167_write_coverage_input(self.task_path, complete=False)
+        code1, _stdout1, _data1 = _t167_scenario_gate_record(self.task_path, 1)
+        self.assertEqual(code1, 0)
+
+        code2, stdout2, data2 = _t167_scenario_gate_record(self.task_path, 3)
+        self.assertEqual(code2, 18, f"회차 건너뛰기는 exit 18이어야 한다, 실제={stdout2!r}")
+        self.assertEqual(data2.get("error"), "scenario_gate_record_invalid")
+
+
+class TestS167_S6ExtraBuilderCleanupAndHistoryShape(BaseScenarioTestCase):
+    """[T167/S-6 보강] ⑩ builder exit 17 시 이전 `.scenario-coverage-input.json` 삭제.
+    ⑫ 이력은 JSON 배열을 유지한다. ⑬ 저장 뒤 임시 파일이 남지 않는다."""
+
+    def test_builder_failure_deletes_stale_coverage_input_then_input_error_records_counted_true(self):
+        rows = [("S-1", "unit", "AC-1, C-1, H-1", "조건", "행동", "기대", "CLI", "구현 후")]
+        _write_sdlc_v2_docs(self.task_path, scenario_body=_t167_scenario_body(rows))
+        build_code, build_stdout, _build_data = _scenario_coverage_build(self.task_path)
+        self.assertEqual(build_code, 0, f"정상 문서 build는 exit 0이어야 한다, 실제={build_stdout!r}")
+        coverage_input = self.task_path / ".scenario-coverage-input.json"
+        self.assertTrue(coverage_input.exists())
+
+        bad_rows = [("S-1", "smoke", "AC-1, C-1, H-1", "조건", "행동", "기대", "CLI", "구현 후")]
+        _write_sdlc_v2_docs(self.task_path, scenario_body=_t167_scenario_body(bad_rows))
+        fail_code, fail_stdout, _fail_data = _scenario_coverage_build(self.task_path)
+        self.assertEqual(fail_code, 17, f"허용 밖 유형은 exit 17이어야 한다, 실제={fail_stdout!r}")
+        self.assertFalse(
+            coverage_input.exists(),
+            "builder exit 17 뒤에는 이전 회차의 .scenario-coverage-input.json이 지워져야 한다",
+        )
+
+        code, stdout, data = _t167_scenario_gate_record(
+            self.task_path, 1, input_error="유형 오값: S-1",
+        )
+        self.assertEqual(code, 0, f"--input-error 모드는 exit 0이어야 한다, 실제={stdout!r}")
+        self.assertEqual(data.get("verdict"), "escalate")
+        self.assertEqual(data.get("reason"), "input_error")
+        history_path = self.task_path / ".scenario-gate-history.json"
+        history = json.loads(history_path.read_text(encoding="utf-8"))
+        self.assertIsInstance(history, list, "⑫ 이력은 JSON 배열을 유지해야 한다")
+        self.assertIs(history[-1].get("counted"), True)
+
+    def test_history_stays_array_and_no_tmp_file_left_after_multiple_records(self):
+        _write_sdlc_v2_docs(self.task_path)
+        _t167_write_coverage_input(self.task_path, complete=False)
+        self.assertEqual(_t167_scenario_gate_record(self.task_path, 1)[0], 0)
+        _t167_write_coverage_input(self.task_path, complete=False)
+        self.assertEqual(_t167_scenario_gate_record(self.task_path, 2)[0], 0)
+
+        history_path = self.task_path / ".scenario-gate-history.json"
+        history = json.loads(history_path.read_text(encoding="utf-8"))
+        self.assertIsInstance(history, list, "⑫ 이력은 JSON 배열을 유지해야 한다")
+        self.assertEqual(len(history), 2)
+
+        tmp_path = history_path.with_name(history_path.name + ".tmp")
+        self.assertFalse(tmp_path.exists(), "⑬ 저장 뒤 임시 파일이 남지 않아야 한다")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

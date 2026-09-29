@@ -37,6 +37,7 @@ tools: [Read, Grep, Glob, Bash]
 | project_root | O | 프로젝트 루트 경로 |
 | iteration | `phase==scenario-rubric`일 때 O | op-scenario-gate 루프 회차(N) — 이력 레코드 식별에 사용 |
 | scenario_source | `phase==scenario-rubric`일 때 O | 정규화 커버리지 페이로드 또는 `TEST-SCENARIO.md` 경로 |
+| refinement | `phase==scenario-rubric`·`phase==design-rubric`일 때 O | 직전 `scenario-gate-record`/`design-gate start` 응답의 refinement 플래그. `true`면 결과의 `advisories[]`를 빈 배열로만 반환한다 |
 | iteration (design-rubric) | `phase==design-rubric`일 때 O | 설계 게이트 회차(N) — `design-gate start`의 `--iteration`과 같다 |
 | scenario_source (design-rubric) | `phase==design-rubric`일 때 O | 정규화 커버리지 페이로드 또는 `TEST-SCENARIO.md` 경로 — Phase 1-S 3축 채점 대상 |
 | acceptance_path | `phase==acceptance`일 때 O | OPPB run root의 `acceptance.json` 경로 — 완료조건(`criteria[]`: `id`·`description`·`contributing_tasks`·`satisfied`·`evidence[]`)과 증거 역인덱스(`evidence_index`)의 원천 |
@@ -85,6 +86,8 @@ tools: [Read, Grep, Glob, Bash]
 | ⑥ 경계/부정 | 0~2 | ≥1 | 0: 적용 가능한 실패·경계가 있는데 정상 경로만 있음 / 1: 제약 시나리오로 경계를 확인하거나 적용 가능한 별도 경계가 없음 / 2: 실패·경계 경로를 직접 검증 |
 
 > **[MUST] verdict 규칙(scenario-rubric 전용)**: 세 축 각 ≥1점(0점 축 없음) **AND** 평균 ≥1.5 → `verdict: pass`, 아니면 `verdict: fail` + 미달 축별 `gaps[]` 반환. (근거: `~/.opal/references/harness/scenario-gate.md` §2 6축 정의·§5-1 종료조건 임계)
+
+> **[MUST] advisory(scenario-rubric·design-rubric 공통)**: verdict 점수와 분리된 최상위 `advisories[]`를 반환한다. 원소는 `{id: "A-N", kind: "subsumed"|"mergeable"|"cheaper_layer"|"misclassified", targets: ["S-ID", ...] (1건 이상), basis, recommendation}`다. `kind`는 다른 시나리오에 완전히 포함됨(`subsumed`), 합칠 수 있음(`mergeable`), 더 저렴한 계층으로 충분함(`cheaper_layer`), Check·행동 시나리오 분류가 틀림(`misclassified`) 중 하나다. 문장 스타일·표현 선호만으로 advisory를 만들지 않는다 — 근거(`basis`)가 검증 신호의 중복·계층 과잉·분류 오류를 실제로 가리킬 때만 만든다. 입력 `refinement: true`에서는 `advisories: []`만 반환한다.
 
 #### Phase 1-A: acceptance 전용 판정 규칙 (`phase == "acceptance"`)
 
@@ -164,10 +167,10 @@ Phase 3의 판정 레코드를 결과 계약 형식으로 정리한다:
 **`phase == "scenario-rubric"` 결과 계약 (전용, Base 결과 계약과 분리)**:
 
 ```json
-{"scores": {"goal": 0-2, "adoption": 0-2, "boundary": 0-2}, "average": "(goal+adoption+boundary)/3", "gaps": ["미달 축 설명 (해당 축 <1점일 때만)"], "verdict": "pass|fail"}
+{"scores": {"goal": 0-2, "adoption": 0-2, "boundary": 0-2}, "average": "(goal+adoption+boundary)/3", "gaps": ["미달 축 설명 (해당 축 <1점일 때만)"], "verdict": "pass|fail", "advisories": [{"id": "A-1", "kind": "subsumed|mergeable|cheaper_layer|misclassified", "targets": ["S-2"], "basis": "...", "recommendation": "..."}]}
 ```
 
-verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)을 그대로 적용한다.
+verdict은 Phase 1-S의 `[MUST]` 규칙(세 축 각 ≥1점 AND 평균 ≥1.5)을 그대로 적용한다. `refinement: true` 입력에서는 `advisories: []`만 반환한다.
 
 **`phase == "acceptance"` 결과 계약 (전용, Base·scenario-rubric 결과 계약과 분리)**:
 
@@ -180,10 +183,10 @@ verdict은 Phase 1-A의 `[MUST]` 규칙(완료조건별 ⓐ~ⓓ 전부 yes AND �
 **`phase == "design-rubric"` 결과 계약 (전용, 다른 트랙과 분리)**:
 
 ```json
-{"input_bundle_hash": "<입력받은 값 그대로>", "iteration": "<입력받은 값 그대로>", "design": {"axes": {"completeness": "PASS|FAIL", "decision_clarity": "PASS|FAIL", "executability": "PASS|FAIL", "recoverability": "PASS|FAIL"}, "gaps": []}, "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []}, "verdict": "pass|fail", "rewrite_target": "plan|scenario|both|null"}
+{"input_bundle_hash": "<입력받은 값 그대로>", "iteration": "<입력받은 값 그대로>", "design": {"axes": {"completeness": "PASS|FAIL", "decision_clarity": "PASS|FAIL", "executability": "PASS|FAIL", "recoverability": "PASS|FAIL"}, "gaps": []}, "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []}, "verdict": "pass|fail", "rewrite_target": "plan|scenario|both|null", "advisories": [{"id": "A-1", "kind": "subsumed|mergeable|cheaper_layer|misclassified", "targets": ["S-2"], "basis": "...", "recommendation": "..."}]}
 ```
 
-verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용한다. `input_bundle_hash`·`iteration`은 입력받은 값을 그대로 최상위에 반환한다(가공·재계산 금지) — `state-tool design-gate record`의 stale 검사 대상이다.
+verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용한다. `input_bundle_hash`·`iteration`은 입력받은 값을 그대로 최상위에 반환한다(가공·재계산 금지) — `state-tool design-gate record`의 stale 검사 대상이다. `refinement: true` 입력에서는 `advisories: []`만 반환한다.
 
 ### Phase 5: 자기완결 보고서 생성
 
@@ -230,6 +233,7 @@ verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용�
   "scores": {"goal": 0, "adoption": 0, "boundary": 0},
   "average": 0,
   "gaps": [],
+  "advisories": [],
   "blockers": [],
   "changed_files": []
 }
@@ -263,6 +267,7 @@ verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용�
   "design": {"axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"}, "gaps": []},
   "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []},
   "rewrite_target": null,
+  "advisories": [],
   "blockers": [],
   "changed_files": []
 }

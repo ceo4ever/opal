@@ -93,7 +93,7 @@
             "type": ["string", "null"]
           },
           "type": {
-            "enum": ["unit", "integration", "contract", "regression", "e2e"]
+            "enum": ["unit", "integration", "contract", "regression", "e2e", "check", null]
           },
           "expected": {
             "type": ["string", "null"]

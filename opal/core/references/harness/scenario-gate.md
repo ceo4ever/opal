@@ -71,5 +71,25 @@ pass에는 두 증거가 모두 필요하다.
 - opal-evaluator-agent `scenario-rubric` verdict pass
 
 게이트 호출자는 이 증거 없이 pipeline gate 행을 mark하지 않는다.
-반복별 missing·scores·gaps·verdict는 `.scenario-gate-history.json`에 기록하며 별도 Markdown
-보고서를 만들지 않는다.
+반복별 missing·scores·gaps·verdict·advisories는 `test-tool scenario-gate-record`가 매 회차
+1회 `.scenario-gate-history.json`에 기록한다. `op-scenario-gate` 스킬은 이 파일을 직접
+append하지 않는다. 별도 Markdown 보고서는 만들지 않는다.
+
+`state-tool mark`가 `test_scenario.scenario_gate`·`plan.scenario_gate` 행을 완료로 바꿀 때는
+형제 `test-tool scenario-gate-verify`로 마지막 기록이 pass이고 현재 문서 묶음과 일치하는지
+확인한다. 불일치·부재는 `scenario_gate_record_required`로 거부되며 `--force`로 우회할 수 없다.
+
+## advisory와 refinement
+
+evaluator 결과의 `advisories[]`는 pass 판정 점수와 분리된 권고다 — 시나리오가 다른 시나리오에
+완전히 포함되거나(`subsumed`), 합칠 수 있거나(`mergeable`), 더 저렴한 계층으로 충분하거나
+(`cheaper_layer`), Check·행동 시나리오 분류가 틀렸음(`misclassified`)을 가리킨다. advisory는
+판정을 바꾸지 않으며, pass 회차에 advisories가 1건 이상이면 PM의 응답(`apply`|`retain`, retain은
+사유 필수)을 요구한다.
+
+응답에 `apply`가 1건 이상이면 그 회차는 `rewrite`/`reason: advisory_apply`로 기록되고 상한을
+소비하지 않는다. PM은 advisory를 문서에 반영한 뒤 **refinement 회차**(다음 회차, 도구가 이력으로
+판정)를 1회만 거친다. refinement 회차는 상한을 소비하지 않지만 실패하면(`reason:
+advisory_refinement_failed`) 반복 상한 도달과 동일하게 사용자 대기로 전이하며 재시도하지 않는다.
+refinement 회차의 evaluator 결과에 비어 있지 않은 `advisories[]`가 와도 응답 없이 무시하고
+이력에는 `advisories: []`로 기록한다.

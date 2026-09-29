@@ -28,15 +28,16 @@ Producer(PM이 작성한 시나리오 산출물)와 evaluator(`opal-evaluator-ag
 ```json
 {
   "verdict": "pass | rewrite | escalate",
-  "reason": "converged | recoverable | retry_limit | no_progress | input_error",
+  "reason": "converged | recoverable | retry_limit | no_progress | input_error | advisory_apply | advisory_refinement_failed",
   "missing": {"requirements": [], "features": [], "hypotheses": []},
   "scores": {"goal": 0, "adoption": 0, "boundary": 0},
   "gaps": [],
-  "iteration": 1
+  "iteration": 1,
+  "next_refinement": false
 }
 ```
 
-이력은 `<task_folder>/.scenario-gate-history.json`에 회차마다 추가됩니다. `pass`는 coverage-check exit 0과 evaluator pass가 모두 있을 때만 가능하며, `rewrite`면 PM이 missing/gaps만 보완해 다음 회차를 다시 호출하고, `escalate`면 호출자가 루프를 중단하고 사용자에게 보고합니다.
+이력은 `test-tool scenario-gate-record`가 매 회차 `<task_folder>/.scenario-gate-history.json`에 기록합니다(스킬이 직접 append하지 않음). `pass`는 coverage-check exit 0과 evaluator pass가 모두 있을 때만 가능하며, `rewrite`(`reason: advisory_apply`)는 advisory 응답을 반영해 다음 회차를 refinement로 재호출하고, 그 외 `rewrite`는 PM이 missing/gaps만 보완해 다음 회차를 다시 호출하며, `escalate`면 호출자가 루프를 중단하고 사용자에게 보고합니다. advisory가 있으면 `run/scenario-gate-i<N>-responses.json` 응답 파일을 `--advisory-responses`로 넘깁니다.
 
 ## 호출 시점
 

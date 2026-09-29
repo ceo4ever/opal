@@ -19,6 +19,10 @@ load: stage.test
 
 EXECUTE의 lint·type/build·unit PASS는 **현재 TEST 대상과 동일한 commit SHA**, 동일한 명령과 환경 서명(도구·의존성·설정·실행 환경), 읽을 수 있는 PASS 출력 증거 경로가 모두 확인될 때만 TEST에서 재사용한다. TEST 보고에 각 항목의 SHA·정확한 명령·환경 서명·PASS 증거 경로와 재사용 판정을 기록한다. 하나라도 다르거나 증거가 없으면 `opal-test-agent`가 다시 실행한다. 재사용은 독립 TEST 시나리오 실행·판정을 대체하지 않는다. 이를 위해 `test-scenario.json` 스키마에 필드를 임의로 추가하지 않는다.
 
+같은 commit SHA·같은 명령·같은 환경 서명의 증거 경로는 여러 S-ID가 함께 참조할 수 있다. 판정은
+S-ID별 assertion의 `expected`/`actual`로 개별 기록하며, 증거를 공유한다고 해서
+`test-scenario.json`에 필드를 추가하지 않는다.
+
 ## 수정 반복
 
 - TEST 추가 행의 삽입 기준은 `state-tool show`에서 확인한 **마지막 TEST 추가 행의 key**다. 아직 추가 행이 없으면 `test.run_tests`를 기준으로 한다. `add-row --after-task-step <기준 key>`를 사용하고 도구가 반환한 새 `key`를 다음 반복의 기준으로 보관한다. 행 번호는 사용하지 않는다.

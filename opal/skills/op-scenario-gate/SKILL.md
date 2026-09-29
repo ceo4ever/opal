@@ -33,7 +33,11 @@ Producer는 PM이고 evaluator는 `opal-evaluator-agent`다. 두 역할을 같�
 
 - 그 외에는 `references/legacy-adapters.md`에서 현재 pilot 절만 읽어
   `<task_folder>/.scenario-coverage-input.json`을 만든다.
-- 지원하지 않는 pilot, 경로 이탈, builder exit 17은 입력 오류로 중단한다.
+- 지원하지 않는 pilot과 경로 이탈은 입력 오류로 중단한다. builder exit 17은 evaluator를 부르지 않고 다음을 호출한 뒤 `verdict: escalate`, `reason: input_error`로 반환한다.
+
+```bash
+~/.opal/tools/test-tool/run.sh scenario-gate-record --task-folder <task_folder> --iteration <iteration> --input-error <builder detail>
+```
 
 ## 2. 결정론 검사
 
@@ -56,30 +60,42 @@ target_artifacts:
   - <producer_artifact>
 iteration: <iteration>
 scenario_source: <producer_artifact>
+refinement: <직전 scenario-gate-record 응답의 next_refinement. 없으면 false>
 ```
 
-evaluator는 `scores`, `gaps`, `verdict`만 반환한다. 반복별 Markdown 보고서는 만들지 않는다.
+evaluator는 `scores`, `gaps`, `verdict`, `advisories[]`만 반환한다. 반복별 Markdown 보고서는 만들지 않는다.
 
 ## 4. 종료와 반환
 
-`scenario-gate.md`의 우선순위대로 pass, 반복 상한, 무진전, rewrite를 판정한다.
-매 회차의 `{iteration, missing, scores, gaps, verdict}`는
-`<task_folder>/.scenario-gate-history.json`에 추가한다.
+매 회차(evaluator 디스패치 여부와 무관하게) 1회 다음을 호출해 이력을 기록한다. 이 스킬은
+`.scenario-gate-history.json`을 직접 append하지 않는다.
+
+```bash
+~/.opal/tools/test-tool/run.sh scenario-gate-record --task-folder <task_folder> --iteration <iteration> [--evaluator-result <evaluator 결과 JSON 경로>] [--advisory-responses <run/scenario-gate-i<iteration>-responses.json>] --producer-artifact <producer_artifact>
+```
+
+advisory가 1건 이상이고 refinement 회차가 아니면 응답을 요구한다. PM은 응답을
+`<task_folder>/run/scenario-gate-i<iteration>-responses.json`에 `[{id, response: apply|retain, reason}]`로
+써서 `--advisory-responses`로 넘긴다.
+
+판정은 `scenario-gate-record`가 반환한 값을 그대로 쓴다.
 
 ```json
 {
   "verdict": "pass | rewrite | escalate",
-  "reason": "converged | recoverable | retry_limit | no_progress | input_error",
+  "reason": "converged | recoverable | retry_limit | no_progress | input_error | advisory_apply | advisory_refinement_failed",
   "missing": {"requirements": [], "features": [], "hypotheses": []},
   "scores": {"goal": 0, "adoption": 0, "boundary": 0},
   "gaps": [],
-  "iteration": 1
+  "iteration": 1,
+  "next_refinement": false
 }
 ```
 
 `pass`는 coverage-check exit 0과 evaluator pass가 모두 있을 때만 가능하다.
-`rewrite`면 PM이 missing/gaps만 보완해 다음 회차로 다시 호출한다.
-`escalate`면 호출자가 루프를 중단하고 사용자에게 보고한다.
+`rewrite`(`reason: advisory_apply`)면 응답에서 `apply`한 advisory를 반영해 다음 회차를
+`refinement` 입력으로 재호출한다. 그 외 `rewrite`면 PM이 missing/gaps만 보완해 다음 회차로
+다시 호출한다. `escalate`면 호출자가 루프를 중단하고 사용자에게 보고한다.
 
 ## 5. OPPB 확장 — acceptance cluster normalizer
 
@@ -153,8 +169,12 @@ builder를 쓰지 않는다. `<run_root>/acceptance.json`을 읽어 §2가 그�
 - **evidence_id를 재사용하지 않는다.** 색인은 CREATE 전용 원자 연산이라 같은
   `scope`·`evidence_id` 재제출은 `evidence_already_indexed`로 실패한다. 회차마다 새 id를 쓴다.
 - **거부는 색인보다 먼저 끝난다.** schema·code head·scope hash·독립성 중 하나라도
-  실패하면 색인 파일이 하나도 생기지 않는다. 실패 코드를 `.scenario-gate-history.json`의
-  해당 회차에 기록하고 `verdict: escalate`, `reason: input_error`로 반환한다.
+  실패하면 색인 파일이 하나도 생기지 않는다. 이력 편집은 스킬이 직접 하지 않고 다음을 호출해
+  기록하며, 도구가 해당 회차를 `verdict: escalate`, `reason: input_error`로 바꿔 반환한다.
+
+```bash
+~/.opal/tools/test-tool/run.sh scenario-gate-record --task-folder <task_folder> --iteration <iteration> --evidence-error <실패 코드>
+```
 
 `verdict: pass` 회차의 evidence 색인이 성공한 뒤에만 호출자가
 `task accept --run-root <run_root> --task-id <scope>`로 전이를 시도할 수 있다.
@@ -178,6 +198,8 @@ builder를 쓰지 않는다. `<run_root>/acceptance.json`을 읽어 §2가 그�
 - `design_gate_retry_limit`, `task_reconfirm_required`: 사용자에게 에스컬레이션한다.
 - 그 외 입력 오류: 중단한다.
 
+start 응답의 `refinement`(bool)를 그대로 보관한다 — ②의 evaluator 입력으로 넘긴다.
+
 ② `worker.dispatch`로 `opal-evaluator-agent`를 로드·검증한 뒤 다음 입력으로 1회 디스패치한다.
 
 ```yaml
@@ -188,21 +210,34 @@ plan_md: <task_folder>/PLAN.md
 scenario_source: <producer_artifact 또는 TEST-SCENARIO.md>
 iteration: <N>
 input_bundle_hash: <①start 응답의 bundle_hash>
+refinement: <①start 응답의 refinement>
 ```
 
 ③ evaluator 반환 JSON을 `<task_folder>/run/design-gate-i<N>.json`에 저장하기 전에, 그 JSON 최상위 `input_bundle_hash`·`iteration`이 ②에서 전달한 값과 같은지 확인한다. 다르거나 없으면(evaluator가 값을 누락·오기했다는 뜻이므로) `--verdict input_error`로 기록한다(`state-tool`이 이 stale 결과를 `design_gate_result_stale`로 다시 거부하지 않도록 사전에 걸러낸다). 그 외 인자 매핑: evaluator `verdict: pass` → `--verdict pass`, `verdict: fail` → `--verdict rewrite --rewrite-target <evaluator rewrite_target>`, evaluator `status: blocked` 또는 결과 JSON이 계약 형식이 아니면 `--verdict input_error`로 기록한다.
 
+evaluator 결과의 `advisories[]`가 1건 이상이고 refinement 회차가 아니면 pass 기록 전에 응답을
+요구한다. PM은 `<task_folder>/run/design-gate-i<N>-responses.json`에 `[{id, response: apply|retain, reason}]`를
+써서 `--advisory-responses`로 넘긴다.
+
 ```bash
-~/.opal/tools/state-tool/run.sh design-gate record <task_folder> --iteration <N> --verdict <pass|rewrite|input_error> --evaluator-result <run/design-gate-i<N>.json> [--rewrite-target <plan|scenario|both>]
+~/.opal/tools/state-tool/run.sh design-gate record <task_folder> --iteration <N> --verdict <pass|rewrite|input_error> --evaluator-result <run/design-gate-i<N>.json> [--rewrite-target <plan|scenario|both>] [--advisory-responses <run/design-gate-i<N>-responses.json>]
 ```
+
+`--verdict pass`이고 응답에 `apply`가 1건 이상이면 도구가 history를 `verdict: rewrite`·
+`reason: advisory_apply`로 자동 변환해 기록한다(스킬이 verdict를 직접 바꾸지 않는다). 이때
+`--rewrite-target`은 필수다.
 
 ④ 반환
 
 ```json
-{"verdict": "pass | rewrite | escalate", "reason": "...", "rewrite_target": "plan|scenario|both|null", "iteration": 1}
+{"verdict": "pass | rewrite | escalate", "reason": "... | advisory_apply | advisory_refinement_failed", "rewrite_target": "plan|scenario|both|null", "iteration": 1, "refinement": false}
 ```
 
-`rewrite`면 PM이 `rewrite_target` 문서만 보완해 N+1로 다시 호출한다. `record` 응답이 `status=retry_limit`이면 `escalate`로 반환한다.
+`rewrite`(`reason` 그 외 값)면 PM이 `rewrite_target` 문서만 보완해 N+1로 다시 호출한다.
+`rewrite`(`reason: advisory_apply`)면 문서를 고치지 않고 다음 `start`가 `refinement: true`로
+재판정한다. refinement 회차의 결과가 `rewrite`(`reason: advisory_refinement_failed`)이면
+`record` 응답이 `status=retry_limit`이므로 `escalate`로 반환한다. `record` 응답이
+`status=retry_limit`이면 그 외 경우도 `escalate`로 반환한다.
 
 이 경로에서는 §1~§5의 절차·이력·evidence 제출을 수행하지 않는다.
 

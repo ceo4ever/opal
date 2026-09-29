@@ -18,9 +18,9 @@ PM 경로 태스크에만 적용한다. PM 경로 판정은 `state.json` `rows`�
 3. `op-scenario-gate`를 `gate: design` 입력으로 호출한다. 내부에서 다음 순서로 진행한다.
    1. `state-tool design-gate start <task> --iteration N`
    2. evaluator `design-rubric` phase를 1회 디스패치 — 입력에 `start` 응답의 `bundle_hash`를 `input_bundle_hash`로 함께 전달한다.
-   3. `state-tool design-gate record <task> --iteration N --verdict <verdict> --evaluator-result <json> [--rewrite-target ...]` — evaluator 결과 JSON 최상위는 전달받은 `input_bundle_hash`와 `iteration`을 그대로 반환해야 한다(ADD-1, verdict pass|rewrite 전용, input_error 제외).
-4. `record`가 `pass`를 반환하면 설계 확인(`plan.user_confirm`)을 진행하고 EXECUTE로 넘어간다.
-5. `record`가 `pass`가 아니면 `rewrite-target` 문서를 고쳐 다시 1부터 반복한다.
+   3. `state-tool design-gate record <task> --iteration N --verdict <verdict> --evaluator-result <json> [--rewrite-target ...] [--advisory-responses <json>]` — evaluator 결과 JSON 최상위는 전달받은 `input_bundle_hash`와 `iteration`을 그대로 반환해야 한다(ADD-1, verdict pass|rewrite 전용, input_error 제외). evaluator 결과의 `advisories[]`가 1건 이상이고 이번 회차가 refinement가 아니면 `--verdict pass` 기록에 `--advisory-responses`(PM이 쓴 `[{id, response: apply|retain, reason}]`, 파일은 `run/design-gate-i<N>-responses.json`)가 필요하다.
+4. `record`가 `pass`를 반환하면 설계 확인(`plan.user_confirm`)을 진행하고 EXECUTE로 넘어간다. 응답에 `apply`가 1건 이상이면 도구가 이를 history `verdict: rewrite`·`reason: advisory_apply`로 자동 변환해 기록하므로(`--rewrite-target` 필수), 이 경우 4가 아니라 아래 §advisory 반영과 refinement를 따른다.
+5. `record`가 `pass`가 아니면(advisory_apply 포함) `rewrite-target` 문서를 고쳐 다시 1부터 반복한다. 단 `reason: advisory_apply`는 문서를 고치지 않고 refinement 회차로 재호출한다.
 
 ### 열린 시도와 문서 묶음 변경 (`start` ③-0)
 
@@ -33,7 +33,34 @@ PM 경로 태스크에만 적용한다. PM 경로 판정은 `state.json` `rows`�
 
 `start` 통과 시 gate.requested, `record` 시 gate.resolved를 상태 변경과 같은 커밋으로 남긴다. `gate_id=design-gate-i{N}`을 사용하고, `data.verdict`는 run-log 폐쇄 enum(`approved`/`rejected`/`auto`)을 따라 pass→`approved`, 그 외→`rejected`로 쓴다. 설계 게이트 verdict 원문(pass/rewrite/input_error 등)은 run-log `data.verdict`에 담지 않고 `summary`와 `design_gate.history`에 남긴다.
 
-`design_gate.history[].verdict`는 `pass`·`rewrite`·`input_error`·`deterministic_fail`·`superseded` 5값만 쓴다. `deterministic_fail`은 `start` ⑦ 결정론 검사 실패 시도, `superseded`는 위 ③-0에서 record 없이 닫힌 시도를 기록한다.
+`design_gate.history[].verdict`는 `pass`·`rewrite`·`input_error`·`deterministic_fail`·`superseded` 5값만 쓴다(변경 없음). `deterministic_fail`은 `start` ⑦ 결정론 검사 실패 시도, `superseded`는 위 ③-0에서 record 없이 닫힌 시도를 기록한다. `reason` 필드에 `advisory_apply`(advisory 응답 반영을 위한 `rewrite`)·`advisory_refinement_failed`(refinement 회차 실패)가 추가된다 — verdict 값 자체는 늘지 않는다.
+
+## advisory 반영과 refinement
+
+evaluator `design-rubric` 결과의 `advisories[]`는 pass 판정 점수와 분리된 권고다. pass이고
+refinement 회차가 아니며 advisories가 1건 이상일 때만 `--advisory-responses` 응답을 요구한다.
+응답 ID 집합은 advisory ID 집합과 정확히 같아야 하고 중복이 없어야 하며, `retain`은 공백이
+아닌 `reason`이 필요하다. 위반하면 `advisory_response_invalid`로 거부하고 상태를 바꾸지 않는다.
+
+응답에 `apply`가 1건 이상이면 도구가 history에 `verdict: rewrite`·`reason: advisory_apply`·
+`advisory_responses`를 기록한다(`--rewrite-target` 필수, 없으면 `design_gate_result_invalid`).
+`status`는 `fail`, `design_gate.refinement_pending`은 `true`가 된다. 이 회차는 반복 상한
+계산에서 제외한다(`limit_from`을 1 올린다 — 새 상태 값을 만들지 않는다).
+
+`refinement_pending`인 상태의 다음 `start`는 그 attempt와 evaluator 입력·응답에 `refinement:
+true`를 싣는다(평소에는 `false`). 그 회차(refinement 회차)의 결과는 다음과 같다.
+
+- ⓐ `record`가 `pass` → 기존 pass 전이, `refinement_pending`을 `false`로 되돌린다.
+- ⓑ `record`가 비-pass(`rewrite`·`input_error`) → history의 해당 verdict에 `reason:
+  advisory_refinement_failed`를 붙이고 `status=retry_limit`·`await_user`·`decision_request`로
+  전이한다(이 회차도 상한을 소비하지 않는다).
+- ⓒ `start` ⑦ 결정론 검사 실패 → history `verdict: deterministic_fail`, reason 앞에
+  `advisory_refinement_failed: `를 붙이고 같은 `retry_limit` 전이를 탄다.
+- ⓓ `record` 전에 문서가 바뀌어 다음 `start`가 이 시도를 `superseded`로 닫으면 refinement
+  결과로 보지 않는다 — `refinement_pending`을 유지하므로 다음 `start`도 refinement 회차다.
+
+ⓑⓒ 뒤 `design-gate reset --owner user`는 `refinement_pending`을 `false`로 되돌리고 일반
+회차부터 다시 시작한다.
 
 ## 결정론 검사 항목 (`design-gate start` ⑦)
 
@@ -92,7 +119,7 @@ PM 경로 설계 구간(`plan.plan_md`~`plan.user_confirm`)은 agentic 대행 �
 
 ## 실패 코드
 
-아래 15종은 `DESIGN_GATE_ERROR_CODES`(ERROR_CODES와 물리 분리된 별도 테이블) 소속이다. `design_gate_iteration_invalid`는 `--iteration N`이 `iteration+1`이 아닐 때와, 열린 시도 없이 `record`를 호출했을 때(먼저 `start` 필요) 두 경우 모두에 쓴다.
+아래 17종은 `DESIGN_GATE_ERROR_CODES`(ERROR_CODES와 물리 분리된 별도 테이블) 소속이다. `design_gate_iteration_invalid`는 `--iteration N`이 `iteration+1`이 아닐 때와, 열린 시도 없이 `record`를 호출했을 때(먼저 `start` 필요) 두 경우 모두에 쓴다.
 
 | 코드 | 의미 |
 |---|---|
@@ -111,6 +138,8 @@ PM 경로 설계 구간(`plan.plan_md`~`plan.user_confirm`)은 agentic 대행 �
 | `design_gate_verdict_mismatch` | `--verdict pass`인데 설계 4축·시나리오 기준 미충족 |
 | `design_gate_not_passed` | `status≠pass`인 상태에서 `plan.design_gate`를 done 처리 시도 |
 | `design_bundle_mismatch` | 현재 묶음 hash가 `passed_bundle_hash`/`approved_bundle_hash`와 불일치 |
+| `advisory_response_invalid` | advisory 응답 ID 집합 불일치·중복, `retain` 사유 공백, 또는 pass인데 advisories가 있는데 응답 누락 |
+| `scenario_gate_record_required` | `state-tool mark`가 `test_scenario.scenario_gate`/`plan.scenario_gate` 행을 완료로 바꾸기 전 목표-커버 경로 mark 가드 — `test-tool scenario-gate-verify`가 exit 0이 아니면 거부한다(design_gate 코드 표에는 속하지 않지만 같은 가드 계열이므로 여기 함께 기록) |
 
 아래 2종은 이 태스크가 신설한 코드가 아니라 기존 `ERROR_CODES`를 재사용한다.
 

@@ -1,6 +1,6 @@
 # test-tool
 
-> OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration) + scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check/scenario-coverage-build)
+> OPAL 테스트 단계별 도구 결정론적 집행기 — 4서브명령(resolve/check/unit/integration) + scenario-* 서브명령(scenario-init/scenario-lock/scenario-mark/scenario-status/scenario-red/scenario-fidelity-check/scenario-conformance/scenario-coverage-check/scenario-coverage-build/scenario-gate-record/scenario-gate-verify)
 > 소스: `opal/tools/test-tool/` | 배포: `~/.opal/tools/test-tool/`
 
 ## 개요
@@ -595,6 +595,60 @@ bash run.sh scenario-coverage-check --coverage-input <PATH>
 
 ---
 
+### `scenario-gate-record` (167)
+
+목표-커버 게이트 이력(`.scenario-gate-history.json`, JSON 배열)에 회차별 판정 1건을 원자
+저장(tmp→`os.replace`)으로 추가한다. `.scenario-coverage-input.json`을
+`scenario-coverage-check`와 같은 로직으로 재판정하고, evaluator `scenario-rubric` 결과의
+`scores`(`goal`/`adoption`/`boundary`)로 pass를 재계산해 evaluator `verdict`와 대조한다.
+`advisories[]`(`{id, kind, targets, basis, recommendation}`, kind는
+`subsumed`/`mergeable`/`cheaper_layer`/`misclassified`)가 있는 pass 회차는
+`--advisory-responses`(`[{id, response: apply|retain, reason}]`)가 필요하다. `apply` 응답이
+1건 이상이면 `verdict: rewrite`·`reason: advisory_apply`(`counted: false`)로 기록되고, 다음
+회차(refinement)는 응답 없이 판정되어 `pass/converged` 또는
+`escalate/advisory_refinement_failed`로 닫힌다.
+
+```bash
+bash run.sh scenario-gate-record --task-folder <PATH> --iteration <N> \
+  [--evaluator-result <PATH>] [--advisory-responses <PATH>] \
+  [--producer-artifact TEST-SCENARIO.md]
+```
+
+builder(`scenario-coverage-build`)가 실패한 회차는 evaluator·응답 검사 없이 기록한다.
+
+```bash
+bash run.sh scenario-gate-record --task-folder <PATH> --iteration <N> --input-error <상세>
+```
+
+oppb evidence 실패 코드는 이력 마지막 원소(같은 iteration)에 `evidence_error`를 붙이고
+`escalate`/`input_error`로 바꾼다(`--input-error`와 배타적, 다른 옵션과 병용 불가).
+
+```bash
+bash run.sh scenario-gate-record --task-folder <PATH> --iteration <N> --evidence-error <CODE>
+```
+
+counted:true 원소가 상한(3)에 도달하면 `escalate`/`retry_limit`, 직전 counted 원소 대비
+개선(누락 감소 또는 점수 합 상승)이 없으면 `escalate`/`no_progress`다.
+
+**exit code**: `0` / `scenario_gate_record_invalid(18)` / `advisory_response_invalid(19)`
+
+---
+
+### `scenario-gate-verify` (167)
+
+이력 마지막 원소가 `verdict: pass`이고 그 `bundle_hash`(TASK.md·PLAN.md·producer 산출물
+sha256 결정론 결합, `scenario-gate-record`와 같은 함수)가 현재 문서 상태와 같을 때만
+exit 0이다.
+
+```bash
+bash run.sh scenario-gate-verify --task-folder <PATH> [--producer-artifact TEST-SCENARIO.md]
+```
+
+**exit code**: `0` / `scenario_gate_not_passed(20)`(`detail.reason`:
+`history_missing`/`history_invalid`/`not_passed`/`bundle_changed`)
+
+---
+
 ## 에러 코드
 
 | 코드 | exit | 원인 | 처리 |
@@ -617,6 +671,9 @@ bash run.sh scenario-coverage-check --coverage-input <PATH>
 | `surfaces_file_not_found` | 15 | (정보용 배정) surfaces.json 부재 — 069/M-5 결정에 따라 실제로는 오류가 아닌 `applicable:false` 스킵으로 처리됨 | 해당 없음(스킵 정상 동작) |
 | `coverage_unmet` | 16 | scenario-coverage-check 시 요구/기능/가설 미커버 존재 | TEST-SCENARIO 매핑 보강 후 재시도 |
 | `coverage_input_invalid` | 17 | scenario-coverage-build/check 입력 문서·JSON 파싱/스키마 실패 | TASK/PLAN/TEST-SCENARIO 또는 coverage input 수정 후 재시도 |
+| `scenario_gate_record_invalid` | 18 | scenario-gate-record 회차·advisory 형식·evaluator 결과 계약 위반(167) | 회차·evaluator 결과·advisories 형식 수정 후 재시도 |
+| `advisory_response_invalid` | 19 | scenario-gate-record advisory 응답 ID 집합/중복/retain 사유 위반(167) | `--advisory-responses` 수정 후 재시도 |
+| `scenario_gate_not_passed` | 20 | scenario-gate-verify 이력 마지막 원소가 pass가 아니거나 묶음 hash 불일치(167) | `scenario-gate-record`로 pass 회차를 기록 후 재시도 |
 | `scenario_contract_invalid` | 17 | test-scenario.json v2 profile/executor/status/schema 계약 위반 | scenario spec/result 계약 수정 후 재시도 |
 | `executor_unavailable` | 18 | 필수 E2E executor 또는 허용 후보 소진 | executor 설정·설치·capability 확인 |
 | `e2e_blocked` | 19 | 인증·외부 승인·사람 입력 등 자동 진행 불가 | 필요한 외부 조치 후 재개 |

@@ -49,6 +49,7 @@ opd/opds의 TEST 순서·증거 재사용·fix 반복·최종 Gate는 `~/.opal/r
    - `acceptance_ref`: 검증 대상
    - `expected`: 기대 결과
    - `red_required`: 시점에 `구현 전 RED`가 있으면 `true`, 그 외 `false`
+   - `type`: `유형` 열 값 그대로(`unit`·`integration`·`contract`·`regression`·`e2e`·`check`). `유형` 열이 없는 문서는 `type`을 생략한다. `type: check`는 `red_required: false`다
 2. 파일이 있으면 `scenario-status`와 시나리오 ID를 확인한다. 문서와 ID가 다르거나 이미 잠긴 명세를 바꿔야 하면 덮어쓰지 않고 PM에 BLOCKED로 반환한다.
 3. red mode는 `red_required: true`인 행만 실패 테스트로 실행하고, 실제 실패 출력마다 `scenario-red`를 호출한다. 모든 대상이 확인되면 `scenario-lock`을 호출한다.
 4. 일반 TEST는 잠기지 않은 파일에 `scenario-lock`을 호출한다. RED 대상 증거가 부족해 잠금이 거부되면 테스트를 진행하지 않고 BLOCKED로 반환한다. RED 대상이 없으면 즉시 잠긴다.

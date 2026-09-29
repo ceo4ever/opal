@@ -33,3 +33,9 @@
 | 13 | 2026-09-29 09:52 | PLAN | DECISION | 캡틴이 허브 세션에서 `design-gate reset --owner user` 실행(09:51, STATE.md 결정 로그 #3 직접 확인) 후 i4 진행 | i4 start |
 | 14 | 2026-09-29 09:58 | PLAN | GATE | 설계 게이트 i4 evaluator pass(설계 4축 PASS, 시나리오 1·2·2 평균 1.67). 비차단 2건은 detail 결정으로 기록(구형 이력 원소 counted:true 간주, STEP 3.5 정합 확인은 W-2 소속) | Pass — plan.design_gate done |
 | 15 | 2026-09-29 09:58 | PLAN | GATE | TEST-SCENARIO 최종본 실측: 행동 시나리오 6건(S-2~S-7), RED 대상 5건, Check 1건(S-1) — 최초본과 같음. 설계 게이트를 설치본(advisory 계약 이전) evaluator로 수행해 advisory가 0건이었고, 통합·삭제된 항목 없음. 최초 작성 때 새 기준(같은 실행 통합, 문서 확인 Check 1건 통합)을 이미 적용해 AC-1·AC-4·C-4·C-5 정적 확인을 S-1 하나로 합쳤음 | 기록 |
+| 16 | 2026-09-29 10:15 | EXECUTE | GATE | RED 완료: S-2·S-4·S-5·S-6·S-7 실패 관찰·`scenario-red` 기록, `scenario-lock` locked=true. 기존 테스트 유지. RED 테스트 미포함 assertion(S-5 ⑦, S-6 ⑦⑧⑨⑫⑬, S-7 opd key·완료 행·PM 경로 불변)은 구현 자가 점검과 TEST에서 검증하도록 이관 | Pass |
+| 17 | 2026-09-29 10:24 | EXECUTE | GATE | W-2 PM Gate: 배정 8개 파일만 변경(+212/-34), 수기 변경이력 행 추가 없음, 스킬·scenario-gate.md의 이력 직접 append 지시 제거 확인, 가이드 `유형` 열·Check 기준 반영 확인. STEP 3.5 회귀 정합(워커 보고, 수정 없음) | Pass |
+| 18 | 2026-09-29 10:40 | EXECUTE | ERROR | W-1 PM Gate: ① 구형 이력 원소 `counted` 누락을 falsy로 처리 — detail 결정(counted:true 간주)과 불일치 ② 워커 보고 frozen-module 가드(`test_e2e_human_executor.py::TestScenarioModuleUnchanged`) 충돌 ③ test-tool 전체 24 failed | ①만 재작업 대상 |
+| 19 | 2026-09-29 10:41 | EXECUTE | DECISION | ② 가드는 `git diff HEAD`로 미커밋 변경만 검사하므로 체크포인트 커밋 뒤 통과한다. 태스크 125 C-1의 한시 제약이 테스트로 남은 것이라 범위 변경 없이 유지. ③ 나머지 23건은 HEAD 소스 사본과 비교해 워크트리 고유 실패 0건(E2E 브라우저·백엔드 기동 의존, 기존 실패)으로 확인 | 범위 불변 |
+| 20 | 2026-09-29 10:42 | EXECUTE | FIX | (#18 참조) W-1 워커에 `counted` 기본값 true 재작업과 구형 원소 테스트 추가 지시 | 대기 |
+| 21 | 2026-09-29 10:50 | EXECUTE | GATE | W-1 재검토: `counted` 기본값 true 반영과 구형 원소 테스트 추가 확인. PM 재실행 `pytest -q opal/tools/test-tool/tests/test_scenario.py` 84 passed, `scenario-gate-verify` 부재 이력 exit 20·history_missing 확인. 변경 5개 파일(+1289/-7) 범위 내 | Pass |

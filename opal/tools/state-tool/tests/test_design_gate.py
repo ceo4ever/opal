@@ -1076,5 +1076,387 @@ class DesignGateCliContractTest(unittest.TestCase):
         )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# [T167] S-5/S-7: design-gate advisory 응답·refinement 전이, scenario_gate mark 가드
+# RED-first — 태스크 167 PLAN.md Decisions and contracts SSOT. 기존 클래스를 상속하면
+# 상속된 test_s1~s9가 이 클래스에서도 재실행되므로, 필요한 헬퍼만 독립 함수로 복제한다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+TEST_TOOL_RUN = REPO_ROOT / "opal" / "tools" / "test-tool" / "run.sh"
+
+
+def _t167_dg_run(*args):
+    completed = subprocess.run(
+        [sys.executable, str(STATE_TOOL), *args],
+        cwd=REPO_ROOT, capture_output=True, text=True, check=False,
+    )
+    try:
+        payload = json.loads(completed.stdout)
+    except (json.JSONDecodeError, TypeError):
+        payload = None
+    return completed, payload
+
+
+def _t167_assert_ok(result):
+    completed, payload = result
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+    assert isinstance(payload, dict), completed.stdout
+    assert payload.get("ok"), payload
+    return payload
+
+
+def _t167_assert_err(result, code):
+    completed, payload = result
+    assert completed.returncode == 1, completed.stderr or completed.stdout
+    assert isinstance(payload, dict), completed.stdout
+    assert not payload.get("ok"), payload
+    assert payload.get("error") == code, payload
+    return payload
+
+
+def _t167_write_pm_docs(task, *, plan_refs="AC-1, AC-2, AC-3, C-1", scenario_refs="AC-1, AC-2, AC-3, C-1, H-1"):
+    task.mkdir(parents=True, exist_ok=True)
+    (task / "TASK.md").write_text(TASK_MD_SDLC_V2, encoding="utf-8")
+    (task / "PLAN.md").write_text(PLAN_MD_TEMPLATE.format(plan_refs=plan_refs), encoding="utf-8")
+    (task / "TEST-SCENARIO.md").write_text(
+        TEST_SCENARIO_MD_TEMPLATE.format(scenario_refs=scenario_refs), encoding="utf-8"
+    )
+
+
+def _t167_make_pm_task(root, name):
+    task = root / name
+    _t167_write_pm_docs(task)
+    resolved = _t167_assert_ok(
+        _t167_dg_run("resolve-start", str(task), "--skill", "opd", "--new-task")
+    )
+    init_args = list(resolved.get("init_args") or [])
+    completed, payload = _t167_dg_run("init", str(task), *init_args, "--worktree", str(task))
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+    for key in ("task.task_md", "task.user_confirm", "plan.plan_md", "plan.test_scenario_md"):
+        args = ["mark", str(task), "--task-step", key, "--done"]
+        if key in ("plan.plan_md", "plan.test_scenario_md"):
+            args.append("--worker-duration-unknown")
+        completed, payload = _t167_dg_run(*args)
+        assert completed.returncode == 0, completed.stderr or completed.stdout
+    return task
+
+
+def _t167_record(task, iteration, *, verdict, advisories=None, rewrite_target=None, advisory_responses=None):
+    payload = json.loads(json.dumps(EVALUATOR_PASS_JSON, ensure_ascii=False))
+    payload["verdict"] = verdict
+    payload["advisories"] = advisories if advisories is not None else []
+    state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+    attempt = (state.get("design_gate") or {}).get("current_attempt") or {}
+    payload["input_bundle_hash"] = attempt.get("bundle_hash")
+    payload["iteration"] = attempt.get("iteration")
+    eval_path = task / f"t167-evaluator-i{iteration}.json"
+    eval_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    args = [
+        "design-gate", "record", str(task),
+        "--iteration", str(iteration), "--verdict", verdict,
+        "--evaluator-result", str(eval_path),
+    ]
+    if rewrite_target:
+        args += ["--rewrite-target", rewrite_target]
+    if advisory_responses is not None:
+        resp_path = task / f"t167-responses-i{iteration}.json"
+        resp_path.write_text(json.dumps(advisory_responses, ensure_ascii=False), encoding="utf-8")
+        args += ["--advisory-responses", str(resp_path)]
+    return _t167_dg_run(*args)
+
+
+_T167_ADVISORY = {
+    "id": "A-1", "kind": "mergeable", "targets": ["S-1"],
+    "basis": "동일 축 검증", "recommendation": "통합",
+}
+
+
+class TestS167_S5DesignGateAdvisory(unittest.TestCase):
+    """[T167/S-5] design-gate record의 advisory 형식 검사·응답 완전성·apply→refinement
+    전이 (AC-4, AC-5, AC-6, C-3). `--advisory-responses`가 아직 없어 RED다."""
+
+    def setUp(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.root = Path(self.tempdir.name)
+
+    def tearDown(self):
+        self.tempdir.cleanup()
+
+    def test_malformed_advisory_result_rejected_state_unchanged(self):
+        """① advisory 필드 누락 결과는 design_gate_result_invalid이고 state가 바뀌지 않는다."""
+        task = _t167_make_pm_task(self.root, "s5-malformed")
+        _t167_assert_ok(_t167_dg_run("design-gate", "start", str(task), "--iteration", "1"))
+        before = _sha256(task / "state.json")
+        _t167_assert_err(
+            _t167_record(task, 1, verdict="pass", advisories=[{"id": "A-1"}]),
+            "design_gate_result_invalid",
+        )
+        after = _sha256(task / "state.json")
+        self.assertEqual(before, after, "state.json이 바이트 단위로 불변이어야 한다")
+
+    def test_pass_with_incomplete_advisory_response_rejected_attempt_open(self):
+        """② pass에 응답 없음·ID 불일치·사유 없는 retain은 advisory_response_invalid이고
+        시도가 열린 채 state가 바뀌지 않는다. ③ 전부 retain(사유 포함)이면 pass다."""
+        task = _t167_make_pm_task(self.root, "s5-incomplete")
+        _t167_assert_ok(_t167_dg_run("design-gate", "start", str(task), "--iteration", "1"))
+        before = _sha256(task / "state.json")
+        _t167_assert_err(
+            _t167_record(task, 1, verdict="pass", advisories=[_T167_ADVISORY], advisory_responses=None),
+            "advisory_response_invalid",
+        )
+        after = _sha256(task / "state.json")
+        self.assertEqual(before, after)
+        state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        self.assertEqual(state.get("design_gate", {}).get("status"), "evaluating", state)
+
+        # 전부 retain(사유 포함) → pass
+        result = _t167_assert_ok(
+            _t167_record(
+                task, 1, verdict="pass", advisories=[_T167_ADVISORY],
+                advisory_responses=[{"id": "A-1", "response": "retain", "reason": "현행 유지"}],
+            )
+        )
+        self.assertEqual(result.get("status"), "pass", result)
+
+    def test_apply_then_refinement_pass_flow_without_consuming_retry_limit(self):
+        """④ iteration 3의 apply는 history verdict: rewrite·reason: advisory_apply이고
+        status는 retry_limit이 아닌 fail이다. 다음 start의 attempt와 응답은 refinement:
+        true다. ⑤ 그 record 결과에 비어 있지 않은 advisories가 있어도 응답 없이 기록되고
+        pass면 status가 pass다. ⑧ apply·refinement 회차는 상한을 소비하지 않는다 —
+        i1 rewrite → i2 apply → i3 refinement pass 흐름에서 retry_limit이 나오지 않는다."""
+        task = _t167_make_pm_task(self.root, "s5-apply-refine")
+
+        # i1: 일반 rewrite (advisory 없음, 상한 소비)
+        _t167_assert_ok(_t167_dg_run("design-gate", "start", str(task), "--iteration", "1"))
+        _t167_assert_ok(_t167_record(task, 1, verdict="rewrite", rewrite_target="plan"))
+
+        # i2: apply
+        (task / "PLAN.md").write_text(
+            PLAN_MD_TEMPLATE.format(plan_refs="AC-1, AC-2, AC-3, C-1") + "\n<!-- t167-apply -->\n",
+            encoding="utf-8",
+        )
+        _t167_assert_ok(_t167_dg_run("design-gate", "start", str(task), "--iteration", "2"))
+        result = _t167_assert_ok(
+            _t167_record(
+                task, 2, verdict="pass", advisories=[_T167_ADVISORY], rewrite_target="plan",
+                advisory_responses=[{"id": "A-1", "response": "apply", "reason": "통합 채택"}],
+            )
+        )
+        self.assertEqual(result.get("status"), "fail", result)
+        state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        history = state.get("design_gate", {}).get("history", [])
+        self.assertEqual(history[-1].get("verdict"), "rewrite", state)
+        self.assertEqual(history[-1].get("reason"), "advisory_apply", state)
+        self.assertNotEqual(result.get("status"), "retry_limit", result)
+
+        # i3: refinement(도구가 refinement_pending으로 자동 판정) — start 응답에 refinement: true
+        started = _t167_assert_ok(_t167_dg_run("design-gate", "start", str(task), "--iteration", "3"))
+        state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        attempt = state.get("design_gate", {}).get("current_attempt", {})
+        self.assertIs(attempt.get("refinement"), True, state)
+
+        result3 = _t167_assert_ok(
+            _t167_record(task, 3, verdict="pass", advisories=[_T167_ADVISORY])
+        )
+        self.assertEqual(result3.get("status"), "pass", result3)
+        self.assertNotEqual(result3.get("status"), "retry_limit", result3)
+
+    def test_refinement_fail_hits_retry_limit_then_reset_clears_refinement(self):
+        """⑥ 별도 흐름에서 refinement record가 rewrite면 history reason:
+        advisory_refinement_failed, status retry_limit, await_user·decision_request다.
+        다음 start는 design_gate_retry_limit이고, reset --owner user 뒤에는
+        refinement: false로 start가 허용된다."""
+        task = _t167_make_pm_task(self.root, "s5-refine-fail")
+        _t167_assert_ok(_t167_dg_run("design-gate", "start", str(task), "--iteration", "1"))
+        _t167_assert_ok(_t167_record(task, 1, verdict="rewrite", rewrite_target="plan"))
+
+        (task / "PLAN.md").write_text(
+            PLAN_MD_TEMPLATE.format(plan_refs="AC-1, AC-2, AC-3, C-1") + "\n<!-- t167-apply -->\n",
+            encoding="utf-8",
+        )
+        _t167_assert_ok(_t167_dg_run("design-gate", "start", str(task), "--iteration", "2"))
+        _t167_assert_ok(
+            _t167_record(
+                task, 2, verdict="pass", advisories=[_T167_ADVISORY], rewrite_target="plan",
+                advisory_responses=[{"id": "A-1", "response": "apply", "reason": "통합 채택"}],
+            )
+        )
+
+        _t167_assert_ok(_t167_dg_run("design-gate", "start", str(task), "--iteration", "3"))
+        result = _t167_assert_ok(_t167_record(task, 3, verdict="rewrite", rewrite_target="plan"))
+        self.assertEqual(result.get("status"), "retry_limit", result)
+        self.assertEqual(result.get("transition_action"), "await_user", result)
+        self.assertEqual(result.get("report_type"), "decision_request", result)
+        state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        history = state.get("design_gate", {}).get("history", [])
+        self.assertEqual(history[-1].get("reason"), "advisory_refinement_failed", state)
+
+        _t167_assert_err(
+            _t167_dg_run("design-gate", "start", str(task), "--iteration", "4"),
+            "design_gate_retry_limit",
+        )
+        _t167_assert_ok(
+            _t167_dg_run("design-gate", "reset", str(task), "--owner", "user", "--note", "재시도 승인")
+        )
+        (task / "PLAN.md").write_text(
+            PLAN_MD_TEMPLATE.format(plan_refs="AC-1, AC-2, AC-3, C-1") + "\n<!-- t167-reset -->\n",
+            encoding="utf-8",
+        )
+        _t167_assert_ok(_t167_dg_run("design-gate", "start", str(task), "--iteration", "4"))
+        state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        attempt = state.get("design_gate", {}).get("current_attempt", {})
+        self.assertIs(attempt.get("refinement"), False, state)
+
+
+# ------------------------------------------------------------------
+# S-7 (T167) — 목표-커버 게이트 mark 가드 (AC-7, C-1, H-1)
+# ------------------------------------------------------------------
+
+def _t167_short_make_worker_task(root, name):
+    """opds(pipeline-short.json) --no-pm 경로로 plan.plan_md까지 완료한다."""
+    task = root / name
+    _t167_write_pm_docs(task)
+    resolved = _t167_assert_ok(
+        _t167_dg_run("resolve-start", str(task), "--skill", "opds", "--new-task", "--no-pm")
+    )
+    init_args = list(resolved.get("init_args") or [])
+    completed, _payload = _t167_dg_run("init", str(task), *init_args, "--worktree", str(task))
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+    for args in (
+        ["mark", str(task), "--task-step", "task.task_md", "--done"],
+        ["mark", str(task), "--task-step", "task.user_confirm", "--done"],
+        ["mark", str(task), "--task-step", "plan.plan_md", "--done", "--worker-duration-unknown"],
+    ):
+        completed, _payload = _t167_dg_run(*args)
+        assert completed.returncode == 0, completed.stderr or completed.stdout
+    return task
+
+
+def _t167_test_tool_run(*args):
+    completed = subprocess.run(
+        ["bash", str(TEST_TOOL_RUN), *args], capture_output=True, text=True, check=False,
+    )
+    try:
+        payload = json.loads(completed.stdout) if completed.stdout.strip() else None
+    except json.JSONDecodeError:
+        payload = None
+    return completed.returncode, completed.stdout, payload
+
+
+def _t167_write_gate_eval(task, name, *, verdict="pass", advisories=None):
+    payload = {
+        "scores": {"goal": 2, "adoption": 2, "boundary": 2}, "average": 2.0,
+        "gaps": [], "verdict": verdict, "advisories": advisories if advisories is not None else [],
+    }
+    path = task / name
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+class TestS167_S7ScenarioGateMarkGuard(unittest.TestCase):
+    """[T167/S-7] state-tool mark가 plan.scenario_gate(opds)·test_scenario.scenario_gate
+    (opd) 행을 완료로 바꿀 때 test-tool scenario-gate-verify를 거치지 않으면 거부한다
+    (AC-7, C-1, H-1). scenario-gate-verify가 아직 없고 mark에 가드도 없어 RED다."""
+
+    def setUp(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.root = Path(self.tempdir.name)
+
+    def tearDown(self):
+        self.tempdir.cleanup()
+
+    def _mark_scenario_gate(self, task, *extra_args):
+        return _t167_dg_run(
+            "mark", str(task), "--task-step", "plan.scenario_gate", "--done", *extra_args
+        )
+
+    def test_no_history_rejected_required_action_mentions_record(self):
+        """(a) 이력 없음 → scenario_gate_record_required, state.json 바이트 불변,
+        required_action에 scenario-gate-record 재실행 안내."""
+        task = _t167_short_make_worker_task(self.root, "s7-a")
+        before = _sha256(task / "state.json")
+        completed, payload = self._mark_scenario_gate(task)
+        self.assertEqual(completed.returncode, 1, completed.stdout)
+        self.assertEqual(payload.get("error"), "scenario_gate_record_required", payload)
+        after = _sha256(task / "state.json")
+        self.assertEqual(before, after, "state.json이 바이트 단위로 불변이어야 한다")
+        required_action = str(payload.get("required_action") or "")
+        self.assertIn("scenario-gate-record", required_action, payload)
+
+    def test_last_round_rewrite_rejected(self):
+        """(b) 마지막 회차 rewrite 이력 → scenario_gate_record_required."""
+        task = _t167_short_make_worker_task(self.root, "s7-b")
+        _t167_write_gate_eval(task, "eval-i1.json", verdict="pass", advisories=[_T167_ADVISORY])
+        responses = task / "responses-i1.json"
+        responses.write_text(
+            json.dumps([{"id": "A-1", "response": "apply", "reason": "통합"}], ensure_ascii=False),
+            encoding="utf-8",
+        )
+        _t167_test_tool_run(
+            "scenario-gate-record", "--task-folder", str(task), "--iteration", "1",
+            "--evaluator-result", str(task / "eval-i1.json"),
+            "--advisory-responses", str(responses),
+        )
+        completed, payload = self._mark_scenario_gate(task)
+        self.assertEqual(completed.returncode, 1, completed.stdout)
+        self.assertEqual(payload.get("error"), "scenario_gate_record_required", payload)
+
+    def test_bypass_flags_do_not_skip_guard(self):
+        """(d) 이력 없는 상태에서 --force --note·--auto-pass·--step 1/1로도 우회할 수 없다."""
+        task = _t167_short_make_worker_task(self.root, "s7-d")
+        for extra in (
+            ["--force", "--note", "우회 시도"],
+            ["--auto-pass"],
+            ["--step", "1/1"],
+        ):
+            with self.subTest(extra=extra):
+                completed, payload = self._mark_scenario_gate(task, *extra)
+                self.assertEqual(completed.returncode, 1, completed.stdout)
+                self.assertEqual(payload.get("error"), "scenario_gate_record_required", payload)
+
+    def test_pass_then_doc_change_rejected_by_hash_mismatch(self):
+        """(c) pass 뒤 TEST-SCENARIO 수정 → 다음 mark는 scenario_gate_record_required로
+        거부된다(bundle_hash 변경)."""
+        task = _t167_short_make_worker_task(self.root, "s7-c")
+        _t167_write_gate_eval(task, "eval-i1.json", verdict="pass", advisories=[])
+        record_code, record_stdout, _record_data = _t167_test_tool_run(
+            "scenario-gate-record", "--task-folder", str(task), "--iteration", "1",
+            "--evaluator-result", str(task / "eval-i1.json"),
+        )
+        self.assertEqual(record_code, 0, f"pass 기록 자체는 exit 0이어야 한다, 실제={record_stdout!r}")
+
+        (task / "TEST-SCENARIO.md").write_text(
+            (task / "TEST-SCENARIO.md").read_text(encoding="utf-8") + "\n<!-- t167-changed -->\n",
+            encoding="utf-8",
+        )
+        completed, payload = self._mark_scenario_gate(task)
+        self.assertEqual(completed.returncode, 1, completed.stdout)
+        self.assertEqual(payload.get("error"), "scenario_gate_record_required", payload)
+
+    def test_normal_pass_allows_mark_done(self):
+        """(e) 정상 pass 이력 뒤 mark는 done이 된다. 이미 완료된 게이트 행 외 다른 행 mark는
+        가드 없이 성공한다."""
+        task = _t167_short_make_worker_task(self.root, "s7-e")
+        _t167_write_gate_eval(task, "eval-i1.json", verdict="pass", advisories=[])
+        record_code, record_stdout, _record_data = _t167_test_tool_run(
+            "scenario-gate-record", "--task-folder", str(task), "--iteration", "1",
+            "--evaluator-result", str(task / "eval-i1.json"),
+        )
+        self.assertEqual(record_code, 0, f"pass 기록은 exit 0이어야 한다, 실제={record_stdout!r}")
+
+        completed, payload = self._mark_scenario_gate(task)
+        self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+        self.assertTrue(payload.get("ok"), payload)
+        state = json.loads((task / "state.json").read_text(encoding="utf-8"))
+        rows = {row.get("key"): row for row in state.get("rows", [])}
+        self.assertEqual(rows.get("plan.scenario_gate", {}).get("status"), "done", state)
+
+        # 이미 완료된 게이트 행 외 다른 행(plan.pm_gate)의 mark는 가드 없이 성공해야 한다.
+        completed2, payload2 = _t167_dg_run(
+            "mark", str(task), "--task-step", "plan.pm_gate", "--done",
+        )
+        self.assertEqual(completed2.returncode, 0, completed2.stderr or completed2.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

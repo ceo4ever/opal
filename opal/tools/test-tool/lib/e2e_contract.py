@@ -429,8 +429,10 @@ def _validate_v2_scenario(scenario: Mapping[str, Any]) -> Optional[str]:
     missing_keys = [key for key in required_keys if key not in scenario]
     if missing_keys:
         return f"{scenario_id}: missing required scenario keys {missing_keys}"
-    if scenario.get("type") is not None and scenario.get("type") not in ("unit", "integration", "contract", "regression", "e2e"):
+    if scenario.get("type") is not None and scenario.get("type") not in ("unit", "integration", "contract", "regression", "e2e", "check"):
         return f"{scenario_id}: invalid type {scenario.get('type')!r}"
+    if scenario.get("type") == "check" and bool(scenario.get("red_required", True)):
+        return f"{scenario_id}: check type cannot have red_required=true (check+RED contradiction)"
     if scenario.get("required_fidelity") is not None and scenario.get("required_fidelity") not in ("mock", "real-http", "real-usage"):
         return f"{scenario_id}: invalid required_fidelity {scenario.get('required_fidelity')!r}"
     if scenario.get("result") not in (None, "pass", "fail", "blocked", "infra_error", "executor_unavailable"):
