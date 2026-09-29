@@ -1,0 +1,4 @@
+{"input_bundle_hash": "820086fbb86f92bd26c116e4633f5a3144946bdfa97b89b16e9879fbc37f9138", "iteration": 2, "verdict": "fail", "rewrite_target": "plan",
+ "design": {"axes": {"completeness": "PASS", "decision_clarity": "FAIL", "executability": "PASS", "recoverability": "PASS"},
+  "gaps": ["decision_clarity-1: evaluator 미디스패치 회차(coverage exit 16/17)의 record 처리 미정", "decision_clarity-2: op-scenario-gate §5.2 oppb evidence 실패 코드의 이력 직접 기록과 C-4 충돌 처리 미정", "decision_clarity-3: refinement 신호 전달(start 응답·evaluator 입력·목표-커버 판정 기준), refinement 회차 advisories 처리, 설계 경로 refinement 회차 deterministic_fail·superseded 처리 미정", "decision_clarity-4: 목표-커버 경로 apply 원소 verdict 미정(pass로 기록 시 mark 가드 조기 통과)"]},
+ "scenario": {"scores": {"goal": 1, "adoption": 2, "boundary": 2}, "average": 1.67, "gaps": ["(비차단) S-1에 test-agent type 변환 확인 추가, S-6에 exit 16 회차·apply 원소 verdict 기대 결과 반영"]}}

@@ -1,0 +1,116 @@
+{
+  "goal": "TEST-SCENARIO 작성자는 별도 행동 시나리오를 만들지, assertion으로 합칠지, Check로 적을지를 가이드 기준으로 판단한다. 선언한 유형은 Markdown부터 `test-scenario.json`까지 추측 없이 그대로 전달된다. 도구는 확실히 판정할 수 있는 정확 중복과 모순만 차단한다. 의미상 중복은 evaluator가 advisory로 권고하고, PM이 각 advisory에 응답해야 PM 기본 경로(설계 게이트)와 목표-커버 게이트 경로의 게이트를 모두 완료할 수 있다. advisory를 반영한 뒤의 재판정은 기존 반복 상한을 소비하지 않고 한 번만 수행한다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "AC-6",
+    "AC-7",
+    "C-1",
+    "C-2",
+    "C-3",
+    "C-4",
+    "C-5"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "covers_requirements": [
+        "AC-1",
+        "AC-2",
+        "AC-4",
+        "C-4",
+        "C-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "covers_requirements": [
+        "AC-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "covers_requirements": [
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "covers_requirements": [
+        "AC-4",
+        "AC-5",
+        "AC-6",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "covers_requirements": [
+        "AC-4",
+        "AC-5",
+        "AC-6",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "covers_requirements": [
+        "AC-7",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

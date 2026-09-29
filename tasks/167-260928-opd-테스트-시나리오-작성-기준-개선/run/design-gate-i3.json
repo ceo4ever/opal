@@ -1,0 +1,4 @@
+{"input_bundle_hash": "5bdf3234c22684fa60206c4caffb2bc0706324af40cf16424237c966729c6e3f", "iteration": 3, "verdict": "fail", "rewrite_target": "plan",
+ "design": {"axes": {"completeness": "PASS", "decision_clarity": "FAIL", "executability": "PASS", "recoverability": "PASS"},
+  "gaps": ["decision_clarity-1: 목표-커버 경로 builder exit 17 회차의 record 처리 미정(이전 coverage 입력 잔존 시 재판정 오류, 스킬 §1 input_error 중단과 충돌, refinement 회차 reason 미정)", "(비차단) advisories 빈 배열 pass 회차의 --advisory-responses 생략 허용 여부 명시"]},
+ "scenario": {"scores": {"goal": 1, "adoption": 2, "boundary": 2}, "average": 1.67, "gaps": ["(비차단) S-6에 builder exit 17 회차 기대 결과 추가"]}}

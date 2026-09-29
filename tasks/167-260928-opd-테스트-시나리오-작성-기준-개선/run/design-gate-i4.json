@@ -1,0 +1,4 @@
+{"input_bundle_hash": "6d4f0078dcfe3a67a3baa6aef91e883ec11a39f2d9204454434bb648a0d5d80a", "iteration": 4, "verdict": "pass", "rewrite_target": null,
+ "design": {"axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"},
+  "gaps": ["(비차단) 구형 이력 원소(counted 필드 없음)의 상한·no_progress 계산 해석 명시", "(비차단) 회귀 확인 opal-pilot-dev/SKILL.md STEP 3.5 정합 확인의 Work item 귀속"]},
+ "scenario": {"scores": {"goal": 1, "adoption": 2, "boundary": 2}, "average": 1.67, "gaps": ["(비차단) 설치본 evaluator advisory 확인 결과를 DONE.md 증거로 연결"]}}
