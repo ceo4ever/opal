@@ -1214,9 +1214,6 @@ def cmd_scenario_coverage_check(args: argparse.Namespace) -> None:
 # (167) 목표-커버 게이트 기록·검증 — scenario-gate-record / scenario-gate-verify
 # ─────────────────────────────────────────────────────────────────────────────
 
-_GATE_HISTORY_NAME = ".scenario-coverage-input.json"
-
-
 def _gate_history_path(task_folder: pathlib.Path) -> pathlib.Path:
     return task_folder / ".scenario-gate-history.json"
 

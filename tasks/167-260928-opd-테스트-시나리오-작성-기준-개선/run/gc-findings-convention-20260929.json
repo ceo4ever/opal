@@ -1,0 +1,82 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/test-tool/lib/scenario.py",
+    "opal/tools/test-tool/lib/e2e_contract.py",
+    "opal/tools/test-tool/schema/test-scenario.schema.json",
+    "opal/tools/test-tool/tests/test_scenario.py",
+    "opal/tools/test-tool/README.md",
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/schema/state.schema.json",
+    "opal/tools/state-tool/tests/test_design_gate.py",
+    "opal/tools/state-tool/tests/test_mode_transition_contract.py",
+    "opal/tools/state-tool/tests/test_state_tool_mode_contracts.py",
+    "opal/skills/op-dev-test-scenario/references/test-scenario-guide.md",
+    "opal/skills/op-scenario-gate/SKILL.md",
+    "opal/skills/op-scenario-gate/README.md",
+    "opal/agents/opal-evaluator-agent/AGENT.md",
+    "opal/agents/opal-test-agent/AGENT.md",
+    "opal/core/references/harness/scenario-gate.md",
+    "opal/core/references/harness/design-gate.md",
+    "opal/core/references/harness/test-cycle.md",
+    "docs/PROJECT.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "0000000000000001",
+      "category": "dead-code",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "adjacent-code-observed",
+      "source_tier": "T2",
+      "location": {"file": "opal/tools/test-tool/lib/scenario.py", "line": 1217, "symbol": "_GATE_HISTORY_NAME"},
+      "evidence": "_GATE_HISTORY_NAME = \".scenario-coverage-input.json\" — 정의만 있고 참조 없음(grep 결과 1건). 실제 게이트 이력 경로는 _gate_history_path()가 별도 리터럴 \".scenario-gate-history.json\"으로 반환.",
+      "impact": "이름(GATE_HISTORY)과 값(coverage-input.json)이 불일치해 유지보수 시 혼동을 유발하고, 미사용 상수가 코드베이스에 남는다.",
+      "remediation": {
+        "guidance": "상수를 삭제하거나, 의도한 대상이 coverage-input 파일명이면 이름을 정정하고 기존 하드코딩 리터럴을 이 상수로 치환해 SSOT화한다.",
+        "reference": null,
+        "auto_fixable": false
+      },
+      "verification": "grep -n \"_GATE_HISTORY_NAME\\|.scenario-coverage-input.json\" opal/tools/test-tool/lib/scenario.py 결과 상수가 참조되거나 이름·값이 정합함을 확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "0000000000000002",
+      "category": "documentation",
+      "severity": "info",
+      "confidence": "medium",
+      "disposition": "informational",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {"file": "opal/tools/state-tool/state_tool.py", "line": 9},
+      "evidence": "이번 diff가 @header.description 단일 문자열 끝에 '167 advisory 응답 게이트: ...' 문장을 추가로 누적. baseline에 이미 존재하던 누적 패턴의 연장이며 code-scan validate의 header_history 비차단 경고가 이 패턴을 별도로 관측 중.",
+      "impact": "§5 취지(현재 사실만 기재)와 계속 멀어지며 description 필드가 사실상 변경이력화된다. 단, §5가 금지하는 '별도 이력 절'은 아니라서 이번 변경만으로 blocking 사유는 아니다.",
+      "remediation": {
+        "guidance": "향후 리팩터에서 description을 현재 동작 요약으로 재작성하고 태스크별 근거는 code-scan target 판정에 따라 인라인 주석/code-map으로 분리한다.",
+        "reference": "opal/core/references/header-standard.md §2.1, §7",
+        "auto_fixable": false
+      },
+      "verification": "state_tool.py @header.description이 현재 동작 요약 중심으로 축소되고 code-scan validate header_history 경고가 해소되는지 확인",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git diff 61b6a25..HEAD --stat -- <19 target_files>",
+    "python3 -m py_compile opal/tools/test-tool/lib/scenario.py opal/tools/test-tool/lib/e2e_contract.py opal/tools/state-tool/state_tool.py",
+    "grep -n \"_GATE_HISTORY_NAME\" opal/tools/test-tool/lib/scenario.py",
+    "git diff 61b6a25..HEAD | grep -nE '^\\+.* $' (trailing whitespace 검사, 0건)",
+    "git diff 61b6a25..HEAD -- opal/tools/test-tool/lib/scenario.py opal/tools/state-tool/state_tool.py | grep -nE '^\\+.*print\\(' (0건)"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    ".opal/AGENT.md §금지사항",
+    "opal/core/references/opal-doc-standard.md §5",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/167-260928-opd-테스트-시나리오-작성-기준-개선/run/GC-CONVENTION-20260929.md"
+}
