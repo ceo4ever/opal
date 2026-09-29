@@ -764,14 +764,16 @@ fi
 # task 163/W-4는 구 기본값 1종만 이관했다. task 164/D-7은 이전 기본값 2종
 # (`codex "{utterance}"`, `codex --no-daemon "{utterance}"`) 모두를 새 기본값
 # (`codex --no-daemon --add-dir "{meta_dir}" "{utterance}"`)으로 이관하도록
-# 확장한다. 이 테스트는 macOS 설치 함수를 없음/구 기본값 2종/이미 새 기본값/
+# 확장했다. 이후 기본값이 승인·샌드박스 우회로 바뀌면서 직전 `--add-dir` 기본값도
+# 이관 대상(3종)에 넣었다. 이 테스트는 macOS 설치 함수를 없음/구 기본값 3종/이미 새 기본값/
 # 사용자 수정값 5조건으로 실행 검증하고, Windows 소스는 정적 검사(같은 리터럴
 # 존재)로 검증한다 — PowerShell 실행 환경이 없기 때문이다. "이미 새 기본값"
 # 조건은 재설치 때 잘못된 "사용자 수정값 보존" 안내가 나오지 않는지도 함께
 # 검증한다(PM Gate 재작업 지적).
-NEW_LAUNCHER_CODEX_ARGV='codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'
+NEW_LAUNCHER_CODEX_ARGV='codex --dangerously-bypass-approvals-and-sandbox --no-daemon --add-dir "{meta_dir}" "{utterance}"'
 LEGACY_LAUNCHER_CODEX_ARGV_1='codex "{utterance}"'
 LEGACY_LAUNCHER_CODEX_ARGV_2='codex --no-daemon "{utterance}"'
+LEGACY_LAUNCHER_CODEX_ARGV_3='codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'
 
 SETTING_FUNCS="$SCRATCH_DIR/setting_funcs.sh"
 {
@@ -823,6 +825,15 @@ EOF
 run_setting_migration "$TS028_LEGACY2_HOME"
 TS028_LEGACY2_RESULT="$(read_codex_argv "$TS028_LEGACY2_HOME/.opal/setting.json")"
 
+# 조건 3b: 구 기본값 3 (승인·샌드박스 우회 도입 이전 기본값)
+TS028_LEGACY3_HOME="$SCRATCH_DIR/ts028_legacy3"
+mkdir -p "$TS028_LEGACY3_HOME/.opal"
+cat > "$TS028_LEGACY3_HOME/.opal/setting.json" <<'EOF'
+{"launcher":{"agents":{"codex":{"argv_template":"codex --no-daemon --add-dir \"{meta_dir}\" \"{utterance}\""}}}}
+EOF
+run_setting_migration "$TS028_LEGACY3_HOME"
+TS028_LEGACY3_RESULT="$(read_codex_argv "$TS028_LEGACY3_HOME/.opal/setting.json")"
+
 # 조건 4: 이미 새 기본값 — 바이트 보존 + "사용자 수정값 보존" 오탐 안내 없어야 함
 TS028_ALREADY_HOME="$SCRATCH_DIR/ts028_already"
 mkdir -p "$TS028_ALREADY_HOME/.opal"
@@ -852,6 +863,7 @@ TS028_CUSTOM_RESULT="$(read_codex_argv "$TS028_CUSTOM_HOME/.opal/setting.json")"
 if [ "$TS028_NONE_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
     && [ "$TS028_LEGACY1_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
     && [ "$TS028_LEGACY2_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
+    && [ "$TS028_LEGACY3_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
     && [ "$TS028_ALREADY_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
     && cmp -s "$SCRATCH_DIR/ts028_already_before.json" "$TS028_ALREADY_HOME/.opal/setting.json" \
     && ! grep -q '사용자 수정값이라 보존' "$TS028_ALREADY_ERR" \
@@ -860,13 +872,14 @@ if [ "$TS028_NONE_RESULT" = "$NEW_LAUNCHER_CODEX_ARGV" ] \
     && grep -q -- 'codex --help' "$WIN_SCRIPT" \
     && grep -q -F -- "$LEGACY_LAUNCHER_CODEX_ARGV_1" "$WIN_SCRIPT" \
     && grep -q -F -- "$LEGACY_LAUNCHER_CODEX_ARGV_2" "$WIN_SCRIPT" \
+    && grep -q -F -- "$LEGACY_LAUNCHER_CODEX_ARGV_3" "$WIN_SCRIPT" \
     && grep -q -F -- "$NEW_LAUNCHER_CODEX_ARGV" "$WIN_SCRIPT" \
     && grep -q -F -- '-ccontains $argvProperty.Value' "$WIN_SCRIPT" \
     && grep -q -F -- '-ceq $newLauncherCodexArgv' "$WIN_SCRIPT"; then
-    pass "TS-028: 이전 Codex 기본값 2종만 새 기본값으로 이관하고, 이미 새 기본값·사용자 수정값은 안내 오탐 없이 보존"
+    pass "TS-028: 이전 Codex 기본값 3종만 새 기본값으로 이관하고, 이미 새 기본값·사용자 수정값은 안내 오탐 없이 보존"
 else
     fail "TS-028: Codex argv 이관 또는 오탐 안내·Windows 정적 가드 불일치" \
-         "none=$TS028_NONE_RESULT legacy1=$TS028_LEGACY1_RESULT legacy2=$TS028_LEGACY2_RESULT already=$TS028_ALREADY_RESULT custom=$TS028_CUSTOM_RESULT"
+         "none=$TS028_NONE_RESULT legacy1=$TS028_LEGACY1_RESULT legacy2=$TS028_LEGACY2_RESULT legacy3=$TS028_LEGACY3_RESULT already=$TS028_ALREADY_RESULT custom=$TS028_CUSTOM_RESULT"
 fi
 
 # ─── 요약 ────────────────────────────────────────────────────────────────

@@ -516,9 +516,10 @@ function Install-OpalCore {
                 # Migrate only the former shipped argv values. Any other value is a user customization.
                 $legacyLauncherCodexArgvs = @(
                     'codex "{utterance}"',
-                    'codex --no-daemon "{utterance}"'
+                    'codex --no-daemon "{utterance}"',
+                    'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'
                 )
-                $newLauncherCodexArgv = 'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'
+                $newLauncherCodexArgv = 'codex --dangerously-bypass-approvals-and-sandbox --no-daemon --add-dir "{meta_dir}" "{utterance}"'
                 $existingLauncher = $existing.PSObject.Properties['launcher'].Value
                 if ($null -ne $existingLauncher -and $existingLauncher -is [psobject]) {
                     $agentsProperty = $existingLauncher.PSObject.Properties['agents']
