@@ -1,0 +1,69 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/test-tool/lib/scenario.py",
+    "opal/tools/test-tool/lib/e2e_contract.py",
+    "opal/tools/test-tool/schema/test-scenario.schema.json",
+    "opal/tools/test-tool/tests/test_scenario.py",
+    "opal/tools/test-tool/README.md",
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/schema/state.schema.json",
+    "opal/tools/state-tool/tests/test_design_gate.py",
+    "opal/tools/state-tool/tests/test_mode_transition_contract.py",
+    "opal/tools/state-tool/tests/test_state_tool_mode_contracts.py",
+    "opal/skills/op-dev-test-scenario/references/test-scenario-guide.md",
+    "opal/skills/op-scenario-gate/SKILL.md",
+    "opal/skills/op-scenario-gate/README.md",
+    "opal/agents/opal-evaluator-agent/AGENT.md",
+    "opal/agents/opal-test-agent/AGENT.md",
+    "opal/core/references/harness/scenario-gate.md",
+    "opal/core/references/harness/design-gate.md",
+    "opal/core/references/harness/test-cycle.md",
+    "docs/PROJECT.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-002",
+      "fingerprint": "0000000000000002",
+      "category": "documentation",
+      "severity": "info",
+      "confidence": "medium",
+      "disposition": "informational",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {"file": "opal/tools/state-tool/state_tool.py", "line": 9},
+      "evidence": "직전 실행(20260929) 이후 state_tool.py @header.description 변경 없음 — 재검사(git diff 3cd2a87^..HEAD -- opal/tools/state-tool/state_tool.py 결과 diff 없음)로 동일 상태 확인. baseline에 이미 존재하던 누적 패턴의 연장이며 blocking 사유 아님.",
+      "impact": "§5 취지(현재 사실만 기재)와 계속 멀어지며 description 필드가 사실상 변경이력화된다.",
+      "remediation": {
+        "guidance": "향후 리팩터에서 description을 현재 동작 요약으로 재작성하고 태스크별 근거는 code-scan target 판정에 따라 인라인 주석/code-map으로 분리한다.",
+        "reference": "opal/core/references/header-standard.md §2.1, §7",
+        "auto_fixable": false
+      },
+      "verification": "state_tool.py @header.description이 현재 동작 요약 중심으로 축소되고 code-scan validate header_history 경고가 해소되는지 확인",
+      "suppression": null
+    }
+  ],
+  "baseline_delta": {
+    "baseline_path": "tasks/167-260928-opd-테스트-시나리오-작성-기준-개선/run/gc-findings-convention-20260929.json",
+    "new": [],
+    "persisting": ["0000000000000002"],
+    "resolved": ["0000000000000001"],
+    "suppressed": []
+  },
+  "evidence": [
+    "git log --oneline 61b6a25..HEAD (3cd2a87 fix(167): 미사용 오명 상수 제거(GC-001) 확인)",
+    "git show 3cd2a87 -- opal/tools/test-tool/lib/scenario.py (해당 3줄 삭제 diff 확인)",
+    "grep -n \"_GATE_HISTORY_NAME\" opal/tools/test-tool/lib/scenario.py → 결과 없음(해소 확인)",
+    "git diff 3cd2a87^..HEAD --stat -- <19 target_files 중 scenario.py 제외 18개> → 변경 없음",
+    "python3 -m py_compile opal/tools/test-tool/lib/scenario.py opal/tools/test-tool/lib/e2e_contract.py opal/tools/state-tool/state_tool.py → 통과"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    ".opal/AGENT.md §금지사항",
+    "opal/core/references/opal-doc-standard.md §5",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/167-260928-opd-테스트-시나리오-작성-기준-개선/run/GC-CONVENTION-20260929-r2.md"
+}

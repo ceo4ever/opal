@@ -6,13 +6,13 @@
 
 | 항목 | 건수 |
 |------|------|
-| 게이트 판단 | 0회 (Pass: 0 / Fail: 0) |
-| 3회 초과 Gate | 0건 |
-| 오류 발견 | 0건 |
-| 수정 지시 | 0건 |
-| PM 의사결정 | 0건 |
-| 개선 사항 | 0건 |
-| 에스컬레이션 | 0건 |
+| 게이트 판단 | 18회 (Pass: 16 / Fail: 2 — 설계 게이트 i2·i3) |
+| 3회 초과 Gate | 1건 (설계 게이트 반복 상한 도달 → 캡틴 reset, Critical 아님·사용자 전용 해제) |
+| 오류 발견 | 5건 |
+| 수정 지시 | 7건 (반영: 7 / 미반영: 0) |
+| PM 의사결정 | 6건 |
+| 개선 사항 | 1건 (회고 후보 3건 기록) |
+| 에스컬레이션 | 2건 (TASK 재확인, 설계 게이트 reset) |
 
 ## 대행 일지
 
@@ -50,3 +50,8 @@
 | 30 | 2026-09-29 11:35 | TEST | GATE | opal-test-agent 결과: S-1~S-7 7/7 pass(`scenario-status` passed 7, red_confirmed 5/5 PM 확인). 최종 회귀 `pytest -q opal/tools/test-tool/tests opal/tools/state-tool/tests`(HEAD b8c3a85) 25 failed·1194 passed — 25건 전부 기존 환경 의존 실패(E2E 23, T138 세션 env 2), 신규 0. 보안 grep PASS, py_compile 7파일 OK, ruff F405는 baseline 동일(프로젝트 python lint 게이트 없음). auto clock 02:22:23Z~02:33:11Z | Pass — 컨벤션 checker 대기 |
 | 31 | 2026-09-29 11:45 | TEST | ERROR | 최종 컨벤션 checker: PASS_WITH_ADVISORIES(Critical/High 0). GC-001 Low — `scenario.py` 신설 미사용 상수 `_GATE_HISTORY_NAME`의 이름·값 불일치. GC-002 Info — state_tool @header description 누적(baseline 유래) | GC-001 수정 결정, GC-002 기록만 |
 | 32 | 2026-09-29 11:50 | TEST | FIX | (#31 참조) fix 행 `test.gc_1` 추가, W-1 워커가 상수 3줄 삭제(동작 불변), test_scenario.py 84 passed | 영향 재검증 대기 |
+| 33 | 2026-09-29 11:58 | TEST | GATE | fix 1회차 재검증(HEAD 3cd2a87): S-2·S-3·S-4·S-6 영향 테스트 30 passed, test-tool 전체 회귀 23 failed(기존 목록과 일치)·1 error — PM이 `test_e2e_skeleton.py` 단독 재실행해 error 미재현(기존 실패 1건만) 확인, teardown 일시 현상. S-7은 verify 호출 경로라 PM 직접 재실행 10 passed. 컨벤션 재검사 PASS_WITH_ADVISORIES(GC-001 해소, 신규 0, Info GC-002 지속) | Pass |
+| 34 | 2026-09-29 11:59 | TEST | GATE | TEST PM Gate: test-scenario.json 7/7 pass·RED 5/5, 최종 회귀 신규 실패 0, 보안 PASS, 구문 검사 OK, 최종 컨벤션 checker Critical/High 0, 설계 피드백 미해결 없음 | Pass |
+| 35 | 2026-09-29 11:44 | CLOSE | GATE | DONE.md 작성. CLOSE 진입 시 PLAN 행 워커 소요 미선언으로 차단 → PM 직접 작성 행이라 `--worker-duration-unknown` 선언 후 진입 | Pass |
+| 36 | 2026-09-29 11:45 | CLOSE | FIX | 이관 제안서 상태 `채택·구현 완료` → proposal-lifecycle 어휘 `적용완료`로 정정, 잔여 인용 0건 | 반영 |
+| 37 | 2026-09-29 11:46 | CLOSE | IMPROVE | 회고 후보 3건: FW(PLAN 가이드 새 CLI 입력별 실패 처리 표), FW(한시 frozen-module 가드 테스트 정리), 로컬(RED fixture의 PLAN 불변식 점검). brain ingest는 워크트리라 skipped, 후보 5건 finalize 지연 | 기록 |

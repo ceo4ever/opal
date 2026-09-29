@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-28 18:27:18",
-  "updated_at": "2026-09-29 11:37:47",
+  "updated_at": "2026-09-29 11:46:45",
   "current_status": "in_progress",
   "rows": [
     {
@@ -36,9 +36,10 @@
       "key": "plan.plan_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-09-28 18:46:16",
+      "timestamp": "2026-09-29 11:44:46",
       "owner": "PM",
-      "note": null
+      "note": null,
+      "worker_duration_unknown": true
     },
     {
       "row_id": 4,
@@ -113,21 +114,22 @@
       "stage": "TEST",
       "item": "GC-001 미사용 오명 상수 _GATE_HISTORY_NAME 제거 후 S-2·S-4·S-6·test-tool 회귀·컨벤션 재확인",
       "key": "test.gc_1",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-29 11:43:14",
+      "owner": "PM",
       "note": null,
-      "test_change_kind": "fix"
+      "test_change_kind": "fix",
+      "worker_duration_minutes": 5
     },
     {
       "row_id": 10,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-29 11:43:15",
       "owner": "PM",
       "note": null,
       "gate": {
@@ -148,20 +150,20 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-29 11:44:46",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
     },
     {
       "row_id": 12,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-29 11:44:46",
       "owner": "PM",
       "note": null
     },
@@ -170,11 +172,11 @@
       "stage": "CLOSE",
       "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
       "key": "close.docs_sync",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-29 11:44:54",
       "owner": "PM",
-      "note": null,
+      "note": "PROJECT.md는 W-4에서 동기화 완료. 이관 제안서 상태를 proposal-lifecycle 어휘 '적용완료'로 정정, 잔여 인용 0건, 레지스트리 개별 행 없음",
       "conditional": true
     },
     {
@@ -182,23 +184,24 @@
       "stage": "CLOSE",
       "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
       "key": "close.brain_ingest",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-29 11:46:25",
       "owner": "PM",
-      "note": null,
-      "conditional": true
+      "note": "op-brain-ingest 워커 status skipped: 워크트리 brain snapshot 쓰기 금지, DONE.md 후보 5건(기준 부합 확인)을 merge 후 허브 finalize로 지연",
+      "conditional": true,
+      "worker_duration_minutes": 1
     },
     {
       "row_id": 15,
       "stage": "CLOSE",
       "item": "회고/개선 후보 기록",
       "key": "close.retrospective",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-29 11:46:45",
       "owner": "PM",
-      "note": null
+      "note": "회고 후보 3건 기록: FW 2건 fw-inbox(PLAN 가이드 실패 처리 표, 한시 frozen-module 가드 정리), 로컬 1건 improve-tool→memory-tool(허브 .opal/MEMORY.json, RED fixture의 PLAN 불변식 점검)"
     },
     {
       "row_id": 16,
@@ -224,7 +227,7 @@
       "note": null
     }
   ],
-  "next_action": "TEST PM Gate 진입",
+  "next_action": "CLOSE worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행) 진입",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_167",
   "actor": "coordinator",
   "run_log": {
@@ -304,6 +307,12 @@
         "id": "t167-auto-1",
         "started_at": "2026-09-29T02:22:23.641262+00:00",
         "ended_at": "2026-09-29T02:33:11.928457+00:00"
+      },
+      {
+        "kind": "auto",
+        "id": "t167-auto-2",
+        "started_at": "2026-09-29T02:39:31.153286+00:00",
+        "ended_at": "2026-09-29T02:42:13.035780+00:00"
       }
     ]
   }
