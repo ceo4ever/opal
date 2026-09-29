@@ -346,12 +346,12 @@ def test_codex_default_uses_no_daemon(layers):
 
     resolved = layers.load()
     assert resolved["agents"]["codex"]["argv_template"] == (
-        'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'
+        'codex --dangerously-bypass-approvals-and-sandbox --no-daemon --add-dir "{meta_dir}" "{utterance}"'
     )
     assert settings.resolve_command(
         resolved, agent="codex", task_path=TASK_PATH, meta_dir="/hub/.opal-worktrees/.meta/task_220"
     ) == (
-        f'codex --no-daemon --add-dir "/hub/.opal-worktrees/.meta/task_220" "{TASK_PATH} 이어서 수행"'
+        f'codex --dangerously-bypass-approvals-and-sandbox --no-daemon --add-dir "/hub/.opal-worktrees/.meta/task_220" "{TASK_PATH} 이어서 수행"'
     )
 
 
@@ -402,7 +402,7 @@ def test_builder_model_injected_for_claude_and_codex(layers):
     assert _builder(layers, "codex") == ("gpt-5.6-terra", None)
     assert settings.resolve_command(
         loaded, agent="codex", task_path=TASK_PATH, meta_dir="/m", model="gpt-5.6-terra"
-    ) == f'codex -m gpt-5.6-terra --no-daemon --add-dir "/m" "{TASK_PATH} 이어서 수행"'
+    ) == f'codex -m gpt-5.6-terra --dangerously-bypass-approvals-and-sandbox --no-daemon --add-dir "/m" "{TASK_PATH} 이어서 수행"'
 
 
 def test_builder_model_local_cell_overrides_global(layers):
@@ -482,7 +482,7 @@ def test_builder_effort_injected_after_model(layers):
         loaded, agent="codex", task_path=TASK_PATH, meta_dir="/m", model="gpt-5.6-terra", effort="medium"
     ) == (
         "codex -m gpt-5.6-terra -c 'model_reasoning_effort=\"medium\"' "
-        f'--no-daemon --add-dir "/m" "{TASK_PATH} 이어서 수행"'
+        f'--dangerously-bypass-approvals-and-sandbox --no-daemon --add-dir "/m" "{TASK_PATH} 이어서 수행"'
     )
 
 
@@ -518,3 +518,65 @@ def test_builder_effort_skipped_for_inherit_and_unknown_agent(layers):
 
     assert _effort(layers) is None
     assert _effort(layers, "gemini") is None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 같은 CLI의 다른 계정 — 엔트리 `provider`로 주입 규칙을, `env`로 계정 홈을 정한다
+# ─────────────────────────────────────────────────────────────────────────────
+
+ACCT2_ENTRY = {
+    "provider": "codex",
+    "env": {"CODEX_HOME": "~/.codex_acct2"},
+    "argv_template": 'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"',
+}
+
+
+def test_second_account_agent_gets_provider_injection_and_env_prefix(layers):
+    from worktree_launcher import settings
+
+    layers.write_global({"models": MODELS, "launcher": {"agents": {"acct2": ACCT2_ENTRY}}})
+    loaded = layers.load()
+
+    assert settings.resolve_agent_provider(loaded, "acct2") == "codex"
+    model, error = _builder(layers, "acct2")
+    assert (model, error) == ("gpt-5.6-terra", None)
+    home = str(Path("~/.codex_acct2").expanduser())
+    assert settings.resolve_command(
+        loaded, agent="acct2", task_path=TASK_PATH, meta_dir="/m", model=model
+    ) == f'CODEX_HOME={home} codex -m gpt-5.6-terra --no-daemon --add-dir "/m" "{TASK_PATH} 이어서 수행"'
+    # 기동 전 점검은 env 없는 원본 템플릿을 본다 — 실행 파일이 첫 토큰으로 남는다.
+    assert settings.resolve_argv_template(loaded, "acct2").startswith("codex ")
+
+
+def test_provider_falls_back_to_executable_basename(layers):
+    from worktree_launcher import settings
+
+    layers.write_global({"launcher": {"agents": {"acct2": {"argv_template": '/opt/bin/claude "{utterance}"'}}}})
+
+    assert settings.resolve_agent_provider(layers.load(), "acct2") == "claude"
+
+
+def test_second_account_effort_name_key_beats_provider_key(layers):
+    layers.write_global({"launcher": {
+        "agents": {"acct2": ACCT2_ENTRY},
+        "builderEffort": {"codex": "medium"},
+    }})
+    assert _effort(layers, "acct2") == "medium"
+
+    layers.write_local({"launcher": {"builderEffort": {"acct2": "high"}}})
+    assert _effort(layers, "acct2") == "high"
+    assert _effort(layers, "codex") == "medium"
+
+
+def test_env_prefix_skips_invalid_names_and_quotes_values(layers):
+    from worktree_launcher import settings
+
+    layers.write_global({"launcher": {"agents": {"x": {
+        "provider": "claude",
+        "env": {"BAD-NAME": "1", "GOOD": "a b", "NUM": 3},
+        "argv_template": 'claude "{utterance}"',
+    }}}})
+
+    assert settings.resolve_command(layers.load(), agent="x", task_path=TASK_PATH) == (
+        f"GOOD='a b' claude \"{TASK_PATH} 이어서 수행\""
+    )

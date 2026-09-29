@@ -82,6 +82,30 @@ frontmatter 레벨을 그대로 따르므로 이 주입과 무관하다.
 - 설정 파일(`argv_template`)이 아니라 코드가 주입하므로, 기존 설치도 install로 도구만 갱신되면
   별도 설정 이관 없이 적용된다.
 
+### 같은 CLI의 다른 계정 — 엔트리 `provider`·`env`
+
+`agents.<name>` 엔트리는 `argv_template` 외에 선택 필드 2개를 받는다.
+
+| 필드 | 뜻 |
+| --- | --- |
+| `provider` | 모델·effort 주입 규칙과 `models.<provider>` 셀을 고르는 키. 없으면 에이전트 이름(주입 표에 있을 때) → 실행 파일 basename 순으로 정한다 |
+| `env` | 기동 명령 앞에 붙일 환경변수(이름→값). 값의 `~`는 홈으로 펼치고 셸 인용한다. 셸 변수 이름 규칙을 벗어나거나 값이 문자열이 아니면 그 항목만 건너뛴다 |
+
+셸 alias는 launcher가 넘기는 비대화형 명령에서 풀리지 않으므로, alias 대신 이 두 필드로
+같은 효과를 낸다.
+
+```json
+{ "launcher": { "agents": { "acct2": {
+  "provider": "codex",
+  "env": { "CODEX_HOME": "~/.codex_acct2" },
+  "argv_template": "codex -c 'cli_auth_credentials_store=\"file\"' --no-daemon --add-dir \"{meta_dir}\" \"{utterance}\""
+} } } }
+```
+
+`--agent acct2`로 기동하면 `CODEX_HOME=<홈>/.codex_acct2 codex -m <models.codex.standard> …`가 된다.
+기동 전 점검은 `env`를 붙이기 전 원본 템플릿을 보므로 실행 파일이 첫 토큰으로 남는다.
+`builderEffort`는 에이전트 이름 키(`acct2`)가 provider 키(`codex`)를 이긴다.
+
 ### builder effort 기동 시점 주입
 
 `launcher.builderEffort.<에이전트>`에 값이 있으면 모델 옵션 뒤에 effort 옵션을 넣는다. 모델과
@@ -250,7 +274,7 @@ adapter 선택은 이 도구가 자동으로 하지 않는다. bootstrap과 `--w
     "default": "claude",                                  // 쓸 에이전트 이름
     "agents": {
       "claude": { "argv_template": "claude \"{utterance}\"" },              // 셸 명령 문자열
-      "codex":  { "argv_template": "codex --no-daemon --add-dir \"{meta_dir}\" \"{utterance}\"" }
+      "codex":  { "argv_template": "codex --dangerously-bypass-approvals-and-sandbox --no-daemon --add-dir \"{meta_dir}\" \"{utterance}\"" }
     },
     "utterance_template": "{task_path} 이어서 수행"          // 첫 발화
   }

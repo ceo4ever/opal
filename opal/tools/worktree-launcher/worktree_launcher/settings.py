@@ -10,7 +10,8 @@
     "load_launcher_settings", "resolve_command", "resolve_argv_template",
     "resolve_agent_name", "load_model_mapping", "resolve_builder_model",
     "MODEL_INJECTION", "BUILDER_MODEL_LEVEL",
-    "resolve_builder_effort", "EFFORT_INJECTION", "BUILDER_EFFORT_KEY"
+    "resolve_builder_effort", "EFFORT_INJECTION", "BUILDER_EFFORT_KEY",
+    "resolve_agent_provider"
   ],
   "depends": ["opal/core/setting.default.json(launcher 블록 기본값 SSOT)"]
 }
@@ -20,7 +21,9 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import pathlib
+import re
 import shlex
 
 # 전역 base 레이어. 테스트는 이 모듈 속성을 교체해 tmp 경로로 돌린다 —
@@ -39,7 +42,7 @@ LAUNCHER_BLOCK_KEY = "launcher"
 DEFAULT_AGENT = "claude"
 DEFAULT_AGENTS = {
     "claude": {"argv_template": 'claude "{utterance}"'},
-    "codex": {"argv_template": 'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'},
+    "codex": {"argv_template": 'codex --dangerously-bypass-approvals-and-sandbox --no-daemon --add-dir "{meta_dir}" "{utterance}"'},
 }
 DEFAULT_UTTERANCE_TEMPLATE = "{task_path} 이어서 수행"
 # Bounded child-lease observation limit.  Configuration uses the public camel
@@ -193,8 +196,8 @@ def _render(template: str, utterance: str, task_path: str, meta_dir: str = "") -
     )
 
 
-def _agent_and_template(settings: dict, agent) -> tuple:
-    """이름 → `(실제로 쓰인 에이전트 이름, argv_template)`.
+def _agent_entry(settings: dict, agent) -> tuple:
+    """이름 → `(실제로 쓰인 에이전트 이름, 엔트리 dict)`.
     요청 이름이 없으면 `default`, 그래도 없으면 기본 상수."""
     agents = settings.get("agents")
     agents = agents if isinstance(agents, dict) else {}
@@ -204,12 +207,17 @@ def _agent_and_template(settings: dict, agent) -> tuple:
             continue
         entry = _valid_agent_entry(agents.get(candidate))
         if entry is not None:
-            return candidate, entry["argv_template"]
+            return candidate, entry
         fallback = DEFAULT_AGENTS.get(candidate)
         if fallback is not None:
-            return candidate, fallback["argv_template"]
+            return candidate, copy.deepcopy(fallback)
 
-    return DEFAULT_AGENT, DEFAULT_AGENTS[DEFAULT_AGENT]["argv_template"]
+    return DEFAULT_AGENT, copy.deepcopy(DEFAULT_AGENTS[DEFAULT_AGENT])
+
+
+def _agent_and_template(settings: dict, agent) -> tuple:
+    name, entry = _agent_entry(settings, agent)
+    return name, entry["argv_template"]
 
 
 def _argv_template(settings: dict, agent) -> str:
@@ -220,6 +228,42 @@ def resolve_agent_name(settings: dict, agent=None) -> str:
     """`resolve_command`가 실제로 고르는 에이전트 이름을 공개한다."""
     settings = settings if isinstance(settings, dict) else {}
     return _agent_and_template(settings, agent)[0]
+
+
+def _entry_provider(name: str, entry: dict) -> str:
+    """주입 규칙을 고를 provider. 엔트리 `provider` → 에이전트 이름(주입 표에 있으면)
+    → 실행 파일 basename 순이다. 같은 CLI의 다른 계정 엔트리가 이름과 무관하게
+    같은 주입 규칙을 받게 한다."""
+    provider = entry.get("provider")
+    if isinstance(provider, str) and provider:
+        return provider
+    if name in MODEL_INJECTION:
+        return name
+    tokens = entry["argv_template"].split()
+    return os.path.basename(tokens[0]) if tokens else name
+
+
+def resolve_agent_provider(settings: dict, agent=None) -> str:
+    settings = settings if isinstance(settings, dict) else {}
+    name, entry = _agent_entry(settings, agent)
+    return _entry_provider(name, entry)
+
+
+_ENV_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _env_prefix(entry: dict) -> str:
+    """엔트리 `env`(이름→값)를 셸 대입 접두사로 만든다. 값의 `~`는 홈으로 펼친다.
+    이름이 셸 변수 규칙을 벗어나거나 값이 문자열이 아니면 그 항목만 건너뛴다."""
+    env = entry.get("env")
+    if not isinstance(env, dict):
+        return ""
+    parts = [
+        f"{key}={shlex.quote(os.path.expanduser(value))}"
+        for key, value in sorted(env.items())
+        if isinstance(key, str) and _ENV_NAME_RE.match(key) and isinstance(value, str)
+    ]
+    return " ".join(parts) + " " if parts else ""
 
 
 def _models_block(document: dict) -> dict:
@@ -260,14 +304,17 @@ def resolve_builder_effort(settings: dict, agent=None):
     모두 `None`이다. 값의 유효성은 각 CLI가 판정한다(여기서 목록을 복제하지 않는다).
     """
     settings = settings if isinstance(settings, dict) else {}
-    name, template = _agent_and_template(settings, agent)
-    injection = EFFORT_INJECTION.get(name)
+    name, entry = _agent_entry(settings, agent)
+    provider = _entry_provider(name, entry)
+    injection = EFFORT_INJECTION.get(provider)
     if injection is None:
         return None
-    if any(marker in template for marker in injection[1]):
+    if any(marker in entry["argv_template"] for marker in injection[1]):
         return None
     efforts = settings.get(BUILDER_EFFORT_KEY)
-    value = efforts.get(name) if isinstance(efforts, dict) else None
+    efforts = efforts if isinstance(efforts, dict) else {}
+    # 에이전트 이름 키가 provider 키를 이긴다 — 다른 계정 엔트리는 따로 적지 않으면 provider 값을 따른다.
+    value = efforts.get(name) or efforts.get(provider)
     if not isinstance(value, str) or not value or value == MODEL_INHERIT:
         return None
     return value
@@ -282,12 +329,12 @@ def resolve_builder_model(settings: dict, agent=None, project_root=None) -> tupl
       `(None, "models.<provider>.standard")` — 추정·폴백하지 않는다.
     """
     settings = settings if isinstance(settings, dict) else {}
-    name, template = _agent_and_template(settings, agent)
-    injection = MODEL_INJECTION.get(name)
+    name, entry = _agent_entry(settings, agent)
+    injection = MODEL_INJECTION.get(_entry_provider(name, entry))
     if injection is None:
         return None, None
     provider, _flag, detect_flags = injection
-    if _template_has_model_flag(template, detect_flags):
+    if _template_has_model_flag(entry["argv_template"], detect_flags):
         return None, None
     model = load_model_mapping(project_root).get(provider, {}).get(BUILDER_MODEL_LEVEL)
     if not model:
@@ -297,13 +344,13 @@ def resolve_builder_model(settings: dict, agent=None, project_root=None) -> tupl
     return model, None
 
 
-def _inject_options(template: str, name: str, model, effort) -> str:
+def _inject_options(template: str, provider: str, model, effort) -> str:
     """실행 파일 토큰 바로 뒤에 모델·effort 옵션을 넣는다(모델 → effort 순)."""
     injected: list = []
-    model_injection = MODEL_INJECTION.get(name)
+    model_injection = MODEL_INJECTION.get(provider)
     if model and model_injection is not None:
         injected += [model_injection[1], model]
-    effort_injection = EFFORT_INJECTION.get(name)
+    effort_injection = EFFORT_INJECTION.get(provider)
     if effort and effort_injection is not None:
         injected += effort_injection[0](effort)
     if not injected:
@@ -343,9 +390,10 @@ def resolve_command(
 
     # 발화 템플릿이 받는 토큰은 `{task_path}` 하나다.
     utterance = utterance_template.replace(PLACEHOLDER_TASK_PATH, task_path)
-    name, template = _agent_and_template(settings, agent)
-    return _render(
-        _inject_options(template, name, model, effort),
+    name, entry = _agent_entry(settings, agent)
+    provider = _entry_provider(name, entry)
+    return _env_prefix(entry) + _render(
+        _inject_options(entry["argv_template"], provider, model, effort),
         utterance=utterance,
         task_path=task_path,
         meta_dir=meta_dir,

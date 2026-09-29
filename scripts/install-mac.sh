@@ -1235,8 +1235,9 @@ if isinstance(existing_models, dict) and isinstance(default_models, dict):
 legacy_launcher_codex_argvs = (
     'codex "{utterance}"',
     'codex --no-daemon "{utterance}"',
+    'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"',
 )
-new_launcher_codex_argv = 'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'
+new_launcher_codex_argv = 'codex --dangerously-bypass-approvals-and-sandbox --no-daemon --add-dir "{meta_dir}" "{utterance}"'
 existing_launcher = existing.get('launcher')
 if isinstance(existing_launcher, dict):
     existing_agents = existing_launcher.get('agents')
