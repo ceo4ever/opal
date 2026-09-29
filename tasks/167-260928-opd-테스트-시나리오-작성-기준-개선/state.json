@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-28 18:27:18",
-  "updated_at": "2026-09-29 11:46:45",
-  "current_status": "in_progress",
+  "updated_at": "2026-09-29 11:47:19",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -208,11 +208,11 @@
       "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
       "key": "close.worktree_finalize",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-29 11:47:18",
       "owner": "PM",
-      "note": null,
+      "note": "worktree-tool finalize task167 ok: closed, declared brain 후보 5개(+index·log·MEMORY)·observed 0·violations 0·memory request 0; status dirty=false, unpushed 6, merged false. merge·push 미실행",
       "conditional": true
     },
     {
@@ -220,14 +220,14 @@
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-29 11:47:19",
       "owner": "PM",
       "note": null
     }
   ],
-  "next_action": "CLOSE worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행) 진입",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AIStudio/workspace/ai-framework/.opal-worktrees/task_167",
   "actor": "coordinator",
   "run_log": {

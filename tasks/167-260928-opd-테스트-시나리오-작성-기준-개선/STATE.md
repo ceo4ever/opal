@@ -1,6 +1,6 @@
 # STATE: 테스트 시나리오 작성 기준 개선
 
-> 최종 갱신: 2026-09-29 11:46:45
+> 최종 갱신: 2026-09-29 11:47:19
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
