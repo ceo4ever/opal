@@ -193,11 +193,25 @@ def _resolve_launch_command(args) -> tuple:
         )
 
     meta_dir = launcher_core.task_meta_dir_path(args.project_root, args.task)
+    loaded_settings = settings.load_launcher_settings(project_root=args.project_root)
+    model, missing_cell = settings.resolve_builder_model(
+        loaded_settings, agent=args.agent, project_root=args.project_root
+    )
+    if missing_cell is not None:
+        return None, (
+            "builder_model_unresolved",
+            {
+                "missing": missing_cell,
+                "message": f"setting.json {missing_cell} 미설정 — 모델을 추정하지 않습니다.",
+            },
+        )
     resolved = settings.resolve_command(
-        settings.load_launcher_settings(project_root=args.project_root),
+        loaded_settings,
         agent=args.agent,
         task_path=str(task_path),
         meta_dir=str(meta_dir),
+        model=model,
+        effort=settings.resolve_builder_effort(loaded_settings, agent=args.agent),
     )
     return resolved, None
 

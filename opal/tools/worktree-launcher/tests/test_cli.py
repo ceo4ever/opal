@@ -99,10 +99,19 @@ def test_closed_adapter_list_contains_orca_and_cmux():
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+TEST_MODELS = {"claude": {"standard": "sonnet-test"}, "codex": {"standard": "terra-test"}}
+
+
 @pytest.fixture
-def captured_run(monkeypatch):
-    """`launcher_core.run` 호출 인자를 가로채는 seam — 실제 orca·registry 전이는 없다."""
-    from worktree_launcher import cli  # RED
+def captured_run(monkeypatch, tmp_path):
+    """`launcher_core.run` 호출 인자를 가로채는 seam — 실제 orca·registry 전이는 없다.
+    전역 설정은 tmp로 돌려 실제 `~/.opal/setting.json`의 launcher·models 값에 기대지 않는다."""
+    from worktree_launcher import cli, settings  # RED
+
+    global_path = tmp_path / "opal_home" / "setting.json"
+    global_path.parent.mkdir(parents=True, exist_ok=True)
+    global_path.write_text(json.dumps({"models": TEST_MODELS}), encoding="utf-8")
+    monkeypatch.setattr(settings, "GLOBAL_SETTING_PATH", global_path)
 
     calls = []
 
@@ -174,8 +183,10 @@ def test_launch_without_command_resolves_from_settings(capsys, tmp_path, capture
         settings.load_launcher_settings(project_root=str(hub.hub)),
         agent=None,
         task_path=task_path,
+        model="sonnet-test",
     )
     assert captured_run[0]["command"] == expected
+    assert captured_run[0]["command"].startswith("claude --model sonnet-test ")
     assert task_path in captured_run[0]["command"]
 
 
@@ -213,11 +224,15 @@ def test_launch_agent_selects_argv_template(capsys, tmp_path, captured_run):
     )
 
     assert code == 0
+    meta_dir = hub.hub / ".opal-worktrees" / ".meta" / f"task_{hub.task}"
     assert captured_run[0]["command"] == settings.resolve_command(
         settings.load_launcher_settings(project_root=str(hub.hub)),
         agent="codex",
         task_path=task_path,
+        meta_dir=str(meta_dir),
+        model="terra-test",
     )
+    assert captured_run[0]["command"].startswith("codex -m terra-test ")
 
 
 def test_launch_explicit_command_is_passed_verbatim(capsys, tmp_path, captured_run):
@@ -496,3 +511,45 @@ def test_run_sh_delegates_to_cli():
     assert result.returncode == 1
     payload = json.loads(result.stdout.strip())
     assert payload["error"] == "adapter_unsupported"
+
+
+def test_launch_stops_when_builder_model_cell_missing(capsys, tmp_path, captured_run, monkeypatch):
+    """주입 대상 에이전트의 `models.<provider>.standard`가 없으면 추정하지 않고 멈춘다."""
+    from worktree_launcher import settings
+
+    empty_global = tmp_path / "empty_home" / "setting.json"
+    empty_global.parent.mkdir(parents=True, exist_ok=True)
+    empty_global.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(settings, "GLOBAL_SETTING_PATH", empty_global)
+    hub, _ = _hub_with_task_path(tmp_path)
+
+    code, payload = _invoke(capsys, [
+        "launch", "--adapter", "orca", "--project-root", str(hub.hub),
+        "--task", hub.task, "--worktree-root", str(hub.worktree_root),
+    ])
+
+    assert code == 1
+    assert payload["error"] == "builder_model_unresolved"
+    assert payload["missing"] == "models.claude.standard"
+    assert captured_run == []
+
+
+def test_launch_injects_builder_effort_when_configured(capsys, tmp_path, captured_run):
+    """`launcher.builderEffort`가 있으면 모델 뒤에 effort를 넣고, 없으면 넣지 않는다."""
+    hub, _ = _hub_with_task_path(tmp_path)
+    argv = [
+        "launch", "--adapter", "orca", "--project-root", str(hub.hub),
+        "--task", hub.task, "--worktree-root", str(hub.worktree_root),
+    ]
+
+    code, _ = _invoke(capsys, argv)
+    assert code == 0
+    assert "--effort" not in captured_run[0]["command"]
+
+    setting_path = hub.hub / ".opal" / "setting.local.json"
+    setting_path.parent.mkdir(parents=True, exist_ok=True)
+    setting_path.write_text('{"launcher":{"builderEffort":{"claude":"high"}}}', encoding="utf-8")
+
+    code, _ = _invoke(capsys, argv)
+    assert code == 0
+    assert captured_run[1]["command"].startswith("claude --model sonnet-test --effort high ")
