@@ -1,0 +1,22 @@
+{
+  "change_id": "CHANGE-ID",
+  "source_sha256": "spec 결합 해시",
+  "files": [
+    "src/example.py"
+  ],
+  "builder": "builder-session",
+  "verifier": "verifier-session",
+  "reviewer": "reviewer-session",
+  "checks": [
+    [
+      "python3",
+      "-m",
+      "unittest"
+    ]
+  ],
+  "rollback": "실제 복구 절차",
+  "risk": "normal",
+  "open_questions": [
+    "변경 파일과 테스트를 확정"
+  ]
+}

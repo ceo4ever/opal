@@ -1,0 +1,16 @@
+{
+  "change_id": "CHANGE-ID",
+  "problem": "실제 문제",
+  "outcome": "기대 결과",
+  "acceptance": [
+    "관찰 가능한 완료 기준"
+  ],
+  "non_goals": [],
+  "constraints": [
+    "실제 제약"
+  ],
+  "risk": "normal",
+  "open_questions": [
+    "요구를 확정한 후 해결 결과를 기록"
+  ]
+}

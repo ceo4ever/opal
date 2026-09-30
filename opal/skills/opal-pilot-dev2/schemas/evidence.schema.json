@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "role",
+    "actor",
+    "argv",
+    "exit_code",
+    "fingerprint",
+    "stable",
+    "log",
+    "log_sha256",
+    "time"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "red",
+        "builder",
+        "verifier",
+        "deployment",
+        "observation"
+      ]
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "argv": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "fingerprint": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stable": {
+      "type": "boolean"
+    },
+    "log": {
+      "type": "string",
+      "minLength": 1
+    },
+    "log_sha256": {
+      "type": "string",
+      "minLength": 1
+    },
+    "time": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
