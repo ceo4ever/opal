@@ -21,7 +21,7 @@ load: pilot.start
 
 | Pilot | 무플래그 신규 태스크 mode |
 |---|---|
-| `opd`·`opds`·`oppd`·`oppl`·`oppb` | `agentic` |
+| `opd`·`opds`·`opd2`·`oppd`·`oppl`·`oppb` | `agentic` |
 | 그 외 Pilot(`opp`·`opdw`·`opwt`·`opsdd`·`opdd`·`opgc` 등) | `semi-agentic` |
 
 agentic 기본값은 기존 agentic 모드를 기본으로 고르는 것일 뿐이다. 실제 미해결 결정, 권한 경계, 독립 검증, 재시도·예산 상한, OPPB P5 사용자 전용 merge 게이트, merge·push·배포 승인 경계는 그대로다(`harness/guards.md`). 이 표의 기계 사본은 `state-tool`의 `NEW_TASK_DEFAULTS`다.

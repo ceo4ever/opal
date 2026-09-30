@@ -73,8 +73,11 @@
 | `opal-pilot-write-tech` | opwt | 오케스트레이터 | 기획 산출물 네트워크 (PRD·TRD·정책서·IA) — TASK → ANALYSIS → PLAN → EXECUTE → QA → CLOSE. 워커 병렬 디스패치 + 교차 논리 검토·정합성 검증 |
 | `opal-pilot-project-dev` | oppd | 오케스트레이터 | 프로젝트 개발 라이프사이클 3 Phase — PLAN → WBS → EXECUTE. 기획은 opwt, 코드 실행은 opal-task-action-agent에 위임하고 PM이 조율 |
 | `opal-pilot-project-build` | oppb | 오케스트레이터 | 프로젝트 빌드 — 이미 확정된 실행 계약을 capability 단위 미니 태스크로 소화. P0~P5 6단계·사용자 게이트 6종, 프로젝트 worktree 1개·실행 계약 `INTENT.md` 1개. P0~P2·P5는 대화형 Product Flow가, P3~P4는 `oppb-runtime-tool start` 1회로 Runtime Supervisor가 headless 무인 실행 |
+| `opal-pilot-dev2` | opd2 | 오케스트레이터 | AI-native SDLC — intent/spec/plan부터 독립 구현·검증·리뷰까지, 자체 Coordinator/Builder/Verifier/Reviewer 게이트 엔진 |
 
 > **actor 축**: 모드 축과 직교하는 별도 실행 주체(actor) 축이다 — 지원 Pilot 폐쇄 목록은 `opal-pilot-dev`(alias `opd`·`opds`) 하나뿐이며, 신규 태스크 기본값은 PM 조율(`actor=coordinator`, `--pm`과 같음)이다. PM이 TASK·분석·PLAN·TEST-SCENARIO와 분배·파일 소유권·검토·재작업·마감을 맡고, 구현·자가 점검·TEST FAIL 수정은 전문 워커가 맡는다. `--no-pm`은 분석·PLAN까지 워커가 수행하는 `actor=worker`다. legacy `actor=pm`(PM 직접 수행) 태스크는 재개만 지원한다. 정의·지원 범위·계약 원문 SSOT는 `opal/core/references/harness/actor.md`.
+>
+> `opal-pilot-dev2`(opd2)는 위 actor 축 대상이 아니다 — actor 축을 이식하지 않고 자체 Coordinator/Builder/Verifier/Reviewer 게이트 엔진으로 구현·검증·리뷰를 수행한다.
 >
 > **PM 설계 경로 (Task 157)**: `coordinator` 신규 태스크(opd·opds 공통, `pipeline-pm.json` 행)는 EXECUTE 진입 전 TASK 작성·TASK 확인·PLAN 작성(`## Findings` 포함)·TEST-SCENARIO 작성·설계 게이트·설계 확인 6행을 거친다. 설계 게이트는 `stage.design` 이벤트에서 결정론 검사와 독립 `opal-evaluator-agent`(`design-rubric` phase) 1회 판정을 함께 요구하며 `plan.design_gate` 행이 EXECUTE 진입을 구조적으로 차단한다. 저장 행으로 재개하는 기존 `coordinator` 태스크는 이 경로가 아니라 기존 방식을 그대로 쓴다. 원문 SSOT는 `opal/core/references/harness/design-gate.md`.
 >

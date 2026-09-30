@@ -1,0 +1,37 @@
+{
+  "input_bundle_hash": "42c2cec7e19e9bc2967a7100c0f99edea5cd7e089962566586d45e782e840a7f",
+  "iteration": 3,
+  "verdict": "fail",
+  "rewrite_target": "scenario",
+  "scores": {
+    "design": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"},
+    "scenario": {"goal": 1, "adoption": 2, "boundary": 1, "average": 1.33}
+  },
+  "design": {
+    "axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"},
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {"goal": 1, "adoption": 2, "boundary": 1},
+    "average": 1.33,
+    "gaps": [
+      "scenario.goal: AC-4 Stop blocking exit + resume guidance and worktree-tool checkpoint commit success have no scenario. PLAN W-6 cites S-11/S-12, which do not exist in TEST-SCENARIO.md (only S-1 to S-10).",
+      "scenario.goal: AC-1 resume (saved mode/workspace inherited, different workspace flag rejected with resume_axis_locked) has no scenario. S-2 covers only a new task and flag conflict.",
+      "scenario.boundary: no negative scenario for W-1's new guard. Nothing calls state-tool mark --task-step <opd2 gate key> --done with --force / --auto-pass / --as-worker directly (skipping lifecycle.py) and checks for opd2_gate_record_required with state.json unchanged. S-3 triggers gates only through lifecycle.py."
+    ]
+  },
+  "gaps": [
+    "scenario.goal: add S-11/S-12 as referenced by PLAN W-6 (AC-4 Stop block + resume guidance; checkpoint commit success at a stable boundary)",
+    "scenario.goal: add an AC-1 resume scenario (inherit saved workspace, reject a different workspace flag)",
+    "scenario.boundary: add an AC-3 direct state-tool mark --force/--auto-pass bypass scenario that expects opd2_gate_record_required and unchanged state.json"
+  ],
+  "advisories": [
+    {"id": "A-1", "kind": "mergeable", "targets": ["S-9", "S-3"], "basis": "S-9 has no action or environment of its own; it only reviews dispatch records produced by S-3.", "recommendation": "Fold S-9's expected result into S-3, or state S-9 explicitly as S-3's post-check step."},
+    {"id": "A-2", "kind": "misclassified", "targets": ["S-6"], "basis": "S-6 is typed check, but its action starts opd2 with delivery=release and observes rejection — that is behavior verification.", "recommendation": "Reclassify S-6 as a behavior scenario (integration/manual); keep reading the SKILL.md text as a separate check."},
+    {"id": "A-3", "kind": "cheaper_layer", "targets": ["S-3", "S-5"], "basis": "In S-3's expected results, deliberately triggering each lifecycle gate (hash mismatch, out-of-scope change, builder=verifier, missing evidence, 4th retry) repeats blocking already covered by S-5 at unit level. Only the step where state-tool rejects the row transition is new at the e2e layer.", "recommendation": "Have S-3 trigger one representative gate end to end (row not marked done); leave the per-gate matrix to S-5 and the new direct-mark bypass scenario."}
+  ],
+  "status": "completed",
+  "artifact_path": null,
+  "changed_files": [],
+  "blockers": []
+}

@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""OPD2 public entry point; existing OPAL tools remain the state owners."""
+"""
+@header {
+  "module": "opd2",
+  "layer": "util",
+  "domain": "opal-pipeline",
+  "description": "opd2 스킬 공개 CLI 진입점. resolve-start/status 서브커맨드로 신규·재개 태스크의 effective mode·workspace를 판정해 형제 FW 도구 state-tool(run.sh)에 위임하며, 자체 상태 파일을 소유하지 않는다(existing OPAL tools remain the state owners).",
+  "exports": ["fail", "main"],
+  "depends": ["state_tool"]
+}
+"""
 import argparse
 import json
 from pathlib import Path
@@ -33,9 +42,9 @@ def main(argv=None):
         return fail("engine_missing", str(tool))
     task = args.task_path.expanduser().resolve()
     if args.command == "status":
-        if (task / '.sdlc/events.jsonl').exists():
-            return subprocess.run([sys.executable, str(Path(__file__).with_name('lifecycle.py')),
-                                   'status', str(task)], check=False).returncode
+        # 168 W-4 — opd2 태스크의 단계 상태는 state-tool의 <task>/state.json 한 곳뿐이다
+        # (AC-2). lifecycle.py는 게이트 판정 원장(<task>/run/opd2-ledger.json)만 갖고
+        # 있으므로 status는 더 이상 그 존재로 분기하지 않는다.
         return subprocess.run([str(tool), "show", str(task)], check=False).returncode
     state = task / "state.json"
     if args.new_task and state.exists():
@@ -50,11 +59,11 @@ def main(argv=None):
             return fail("state_json_malformed", str(exc))
         if not isinstance(saved, dict):
             return fail("state_json_malformed", "Expected an object")
-        if saved.get("skill") != "opd":
-            return fail("incompatible_engine_skill", "Only opd engine tasks can resume through opd2")
+        if saved.get("skill") != "opd2":
+            return fail("incompatible_engine_skill", "Only opd2 engine tasks can resume through opd2")
         if mode is None and saved.get("mode") not in ("semi-agentic", "agentic"):
             return fail("unsupported_stored_mode", "Explicit --semi-agentic or --agentic required")
-    command = [str(tool), "resolve-start", str(task), "--skill", "opd"]
+    command = [str(tool), "resolve-start", str(task), "--skill", "opd2"]
     if args.new_task:
         command.append("--new-task")
         mode = mode or "agentic"
@@ -79,7 +88,7 @@ def main(argv=None):
     if not isinstance(payload, dict) or payload.get("ok") is not True:
         return fail("invalid_engine_response", "Missing successful resolver receipt")
     payload["entrypoint"] = "opd2"
-    payload["engine_skill"] = "opd"
+    payload["engine_skill"] = "opd2"
     print(json.dumps(payload, ensure_ascii=False))
     return 0
 

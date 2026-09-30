@@ -1,3 +1,14 @@
+"""
+@header {
+  "module": "test_entrypoint",
+  "layer": "test",
+  "domain": "opal-pipeline",
+  "description": "opal-pilot-dev2/scripts/opd2.py의 resolve-start 서브커맨드 계약 — mode·workspace 판정 매트릭스, 재개 시 axis 잠금, 충돌 플래그 거부, 다른 Pilot skill 거부를 subprocess CLI 호출로 검증한다.",
+  "exports": ["EntrypointTests"],
+  "depends": ["opal-pilot-dev2/scripts/opd2"]
+}
+"""
+
 import json
 from pathlib import Path
 import subprocess
@@ -20,7 +31,7 @@ class EntrypointTests(unittest.TestCase):
                               capture_output=True, text=True)
 
     def saved(self, **changes):
-        data = {"skill": "opd", "mode": "semi-agentic", "actor": "coordinator", "rows": []}
+        data = {"skill": "opd2", "mode": "semi-agentic", "actor": "coordinator", "rows": []}
         data.update(changes)
         (self.task / "state.json").write_text(json.dumps(data))
 

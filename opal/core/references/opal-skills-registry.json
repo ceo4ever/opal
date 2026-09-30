@@ -52,6 +52,21 @@
         "pipeline": "TASK → PLAN → EXECUTE → TEST → CLOSE"
       },
       {
+        "name": "opal-pilot-dev2",
+        "alias": "opd2",
+        "description": "AI-native SDLC 파일럿 — intent/spec/plan부터 독립 구현·검증·리뷰까지",
+        "triggers": [
+          "^opal-pilot-dev2$",
+          "^opd2$"
+        ],
+        "paths": [
+          "{project}/.opal/skills/opal-pilot-dev2/SKILL.md",
+          "~/.opal/skills/opal-pilot-dev2/SKILL.md"
+        ],
+        "domain": "dev",
+        "pipeline": "TASK → DESIGN → PLAN → EXECUTE → VERIFY → CLOSE"
+      },
+      {
         "name": "opal-pilot-dev-wireframe",
         "alias": "opdw",
         "description": "Wireframe UI 오케스트레이터",
