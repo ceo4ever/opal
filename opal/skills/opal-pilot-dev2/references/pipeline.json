@@ -17,7 +17,10 @@
     { "id": 6,  "key": "plan.user_confirm",        "stage": "PLAN",    "item": "사용자 확인" },
     { "id": 7,  "key": "execute.implement",        "stage": "EXECUTE", "item": "작업" },
     { "id": 8,  "key": "verify.verifier_evidence", "stage": "VERIFY",  "item": "독립 검증" },
-    { "id": 9,  "key": "verify.review",            "stage": "VERIFY",  "item": "리뷰" },
+    { "id": 9,  "key": "verify.review",            "stage": "VERIFY",  "item": "리뷰",
+      "gate": { "artifacts": ["run/opd2-ledger.json"], "checklist": [
+        "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+      ] } },
     { "id": 10, "key": "close.done_md",            "stage": "CLOSE",   "item": "DONE.md 생성" },
     { "id": 11, "key": "close.docs_sync",          "stage": "CLOSE",   "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)", "conditional": true },
     { "id": 12, "key": "close.brain_ingest",       "stage": "CLOSE",   "item": "brain ingest (조건부: 프로젝트 brain 사용 시)", "conditional": true },

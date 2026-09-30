@@ -76,16 +76,20 @@ blocker다.
 **[MUST — worker.dispatch 이벤트 게이트]** Builder/Verifier/Reviewer를 호출하기 직전마다
 `pm/dispatch-process.md` §Step 0의 `worker.dispatch` load·전문 적용·`state-tool
 event-verify` 절차를 새로 수행한다 — 이전 역할이나 이전 시점의 receipt를 재사용하지
-않는다. 등록된 FW 워커는 항상 `opal-task-agent`다(`AGENTS.md` §폴백 규칙 2 "매핑
-테이블에 해당 단계/영역 없음 → 해당 단계는 기존 방식" — opd2는 FE/BE/DB 도메인 매핑이
-없는 범용 변경 파일럿이라 매핑 테이블에 해당 조합이 없다).
+않는다. Builder는 `docs/PROJECT.md` "프로젝트 구성" 매칭 결과에 따라 전문 에이전트
+(opal-fe-agent/opal-be-agent/opal-db-agent)를 우선 선택하고, 매핑이 없거나
+`docs/PROJECT.md`가 없으면 `opal-task-agent`로 폴백한다. Verifier/Reviewer는 계약이
+`lifecycle.py collect-evidence`·리뷰 판정 기반이라 FW 전문 에이전트 매핑 대상이 아니므로
+항상 `opal-task-agent`다(`AGENTS.md` §폴백 규칙 2 "매핑 테이블에 해당 단계/영역 없음 →
+해당 단계는 기존 방식").
 Agent 도구로 역할마다 매번 새로 호출하고, 호출 대상 역할 문서(`agents/builder.md`·
 `agents/verifier.md`·`agents/reviewer.md`) 본문을 `pm/dispatch-process.md` §워커 컨텍스트
 주입 템플릿의 `[WORKER]` 프롬프트에 그대로 주입한다. 같은 역할을 위해 이전 호출의 대화
 컨텍스트를 넘기지 않는다 — Builder≠Verifier≠Reviewer는 매번 독립 Agent 세션이다
 (`lifecycle.py`의 기존 builder≠verifier·builder≠reviewer 게이트와 정합). 각 역할의
 입력·수정 권한·출력 계약 자체는 해당 agents/*.md 본문이 그대로 정의하며, 이 절은
-디스패치 방식만 규정한다.
+디스패치 방식만 규정한다. Coordinator가 매 디스패치 전 `pm/dispatch-process.md` §Step
+1~4(프로젝트 문서 선별·에이전트 선택)를 수행한 뒤 위 절차로 디스패치한다.
 
 플랫폼별 분기(Claude/Cursor/Codex 등)는 이 스킬이나 역할 문서에 두지 않는다. 필요하면
 어댑터 계층(`AGENTS.md` §플랫폼 sub-agent 어댑터 변환 규칙)에만 둔다. 파이프라인 행 상태
