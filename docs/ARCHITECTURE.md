@@ -366,7 +366,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 |------|-----|
 | 소스 | `{프로젝트}/dashboard/` (frontend: React+TS+Vite+shadcn / backend: FastAPI) |
 | 배포 | `~/.opal/dashboard-server/` (install이 FE 빌드+BE 복사, venv는 `~/.opal/.venv` 공유) |
-| 기동 | `opal-cli console {start\|stop\|status\|open\|scan\|log}` (127.0.0.1:7823) — `log`는 데몬 로그 조회 |
+| 기동 | `opal-cli console {start\|stop\|status\|open\|scan\|log}` (127.0.0.1:7823) — `open`은 `/health` 응답을 확인하고 미기동이면 기동한 뒤 최대 10초 동안 준비를 기다린 후 브라우저를 열며, `log`는 데몬 로그 조회 |
 | 프로젝트 식별 | `.opal/AGENT.md` 마커 디스크 스캔 (`~/.opal/console.config.json` scan_roots/depth/exclude) — config는 `opal-cli console scan [기준경로...]`이 생성·머지 갱신(기존 roots 보존, `--prune` 옵트인)하며 install(`install_dashboard`)이 1회 자동 실행. `start`는 config 부재 시 scan 안내 출력 |
 | 원칙 | 읽기 전용(쓰기/편집은 2차) · 데이터 SSOT는 각 프로젝트 파일 · 데몬은 도구 오케스트레이터 |
 | 디자인 토큰 | 시그니처 3색(`--brand-primary/secondary/tertiary`)을 `:root` 1곳 전역 CSS 변수화 (교체 용이) |
