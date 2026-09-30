@@ -11,6 +11,7 @@
     "verifier",
     "reviewer",
     "checks",
+    "ac_coverage",
     "rollback"
   ],
   "additionalProperties": false,
@@ -67,6 +68,16 @@
           "minLength": 1
         },
         "minItems": 1
+      }
+    },
+    "ac_coverage": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "rollback": {

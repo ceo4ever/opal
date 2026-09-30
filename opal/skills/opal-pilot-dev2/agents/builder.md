@@ -1,3 +1,6 @@
+---
+model: standard
+---
 # Builder
 
 입력: 승인 spec/plan, 담당 파일·AC, repo/task, actor ID, PM(Coordinator)이 선별한 프로젝트

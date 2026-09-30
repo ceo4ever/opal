@@ -243,6 +243,22 @@ class Store:
             require(current.get(name) == expected, f'protected test changed: {name}')
         return changes
 
+    def plan_coverage(self, state):
+        """168 ADD-1 — PLAN 사전심사 Layer 1(결정론). plan['ac_coverage'][i]는 checks[i]
+        (같은 인덱스)가 커버하는 intent['acceptance'] 인덱스 목록이다. 모든 acceptance
+        인덱스가 적어도 하나의 check로 커버되는지 LLM 없이 기계적으로 확인한다.
+        """
+        plan, _ = self.artifact('plan')
+        intent, _ = self.artifact('intent')
+        coverage = plan.get('ac_coverage', [])
+        require(len(coverage) == len(plan['checks']), 'ac_coverage length must match checks length')
+        covered = set()
+        for indices in coverage:
+            covered.update(indices)
+        total = len(intent['acceptance'])
+        missing = sorted(set(range(total)) - covered)
+        require(not missing, f'uncovered acceptance criteria (0-indexed): {missing}')
+
     def approvals(self, state, gate, fingerprint):
         return any(x['gate'] == gate and x['fingerprint'] == fingerprint for x in state['approvals'])
 
@@ -278,6 +294,7 @@ class Store:
         require(not artifact['open_questions'], 'unresolved questions')
         if name == 'plan':
             self.scope(state)
+            self.plan_coverage(state)
             require(artifact['builder'] != artifact['verifier'], 'builder and verifier must differ')
             require(artifact['builder'] != artifact['reviewer'], 'builder and reviewer must differ')
             for check in artifact.get('red_checks', []):
@@ -287,6 +304,14 @@ class Store:
                         'RED evidence required with expected failure exit')
                 log = self.ledger_dir / entries[-1]['log']
                 require(log.is_file() and digest(log.read_bytes()) == entries[-1]['log_sha256'], 'RED log changed')
+            # 168 ADD-1 — PLAN 사전심사 Layer 2(추론). 서로 다른 --call 식별자(A/B)로
+            # 기록된 독립 Reviewer의 의미 심사가 현재 fingerprint에서 둘 다 pass여야
+            # PLAN→BUILD 전이를 허용한다.
+            for call in ('A', 'B'):
+                entries = [r for r in state.get('plan_reviews', [])
+                           if r['call'] == call and r['fingerprint'] == self.fingerprint(state)]
+                require(entries and entries[-1]['verdict'] == 'pass',
+                        f'plan review call {call} must pass at current fingerprint')
         return artifact, checksum
 
     def verify_mark(self, key):
@@ -393,6 +418,7 @@ def main(argv=None):
     p.add_argument('--reason')
     p.add_argument('--reference', help='Actual user approval message or protected-system approval ID')
     p.add_argument('--verdict', choices=['pass', 'fail'])
+    p.add_argument('--call', choices=['A', 'B'], help='review 전용 — PLAN 사전심사 독립 축 식별자')
     a = p.parse_args(argv)
     try:
         if a.command == 'verify-mark':
@@ -427,7 +453,8 @@ def main(argv=None):
                 state = {'version': 1, 'skill': 'opd2', 'change_id': a.change_id, 'mode': a.mode or 'agentic',
                          'workspace': a.workspace, 'repo': str(repo), 'delivery': a.delivery, 'stage': 'INTENT',
                          'worktree_receipt': receipt, 'baseline': snapshot(repo, store.task), 'artifacts': {},
-                         'approvals': [], 'evidence': [], 'reviews': [], 'retries': 0, 'blocked': None}
+                         'approvals': [], 'evidence': [], 'reviews': [], 'plan_reviews': [], 'retries': 0,
+                         'blocked': None}
                 result = store.save(state, 'init', {'actor': a.actor})
             else:
                 state = store.state()
@@ -449,13 +476,24 @@ def main(argv=None):
                                                'reference': a.reference, 'time': stamp()})
                     result = store.save(state, 'approval', state['approvals'][-1])
                 elif a.command == 'review':
-                    require(state['stage'] == 'REVIEW' and a.verdict and a.reason, 'review stage/verdict/reason required')
-                    plan, _ = store.artifact('plan')
-                    require(a.actor == plan['reviewer'] and a.actor != plan['builder'], 'reviewer identity mismatch')
-                    report = {'actor': a.actor, 'verdict': a.verdict, 'reason': a.reason,
-                              'fingerprint': store.fingerprint(state)}
-                    state['reviews'].append(report)
-                    result = store.save(state, 'review', report)
+                    if state['stage'] == 'PLAN' and a.call:
+                        require(a.verdict and a.reason, 'review verdict/reason required')
+                        plan, _ = store.artifact('plan')
+                        require(a.actor == plan['reviewer'] and a.actor != plan['builder'], 'reviewer identity mismatch')
+                        report = {'call': a.call, 'actor': a.actor, 'verdict': a.verdict, 'reason': a.reason,
+                                  'fingerprint': store.fingerprint(state)}
+                        state['plan_reviews'].append(report)
+                        result = store.save(state, 'plan_review', report)
+                    elif state['stage'] == 'REVIEW' and not a.call:
+                        require(a.verdict and a.reason, 'review verdict/reason required')
+                        plan, _ = store.artifact('plan')
+                        require(a.actor == plan['reviewer'] and a.actor != plan['builder'], 'reviewer identity mismatch')
+                        report = {'actor': a.actor, 'verdict': a.verdict, 'reason': a.reason,
+                                  'fingerprint': store.fingerprint(state)}
+                        state['reviews'].append(report)
+                        result = store.save(state, 'review', report)
+                    else:
+                        require(False, 'invalid review stage/call combination')
                 elif a.command == 'collect-evidence':
                     require(a.role and a.argv and 0 < a.timeout <= 3600, 'role/argv and bounded timeout required')
                     allowed = {'red': 'PLAN', 'builder': 'BUILD', 'verifier': 'VERIFY', 'deployment': 'RELEASE', 'observation': 'OBSERVE'}
@@ -506,7 +544,8 @@ def main(argv=None):
                         for stage, name in ARTIFACTS.items():
                             if STAGES.index(stage) >= STAGES.index(a.gate):
                                 state['artifacts'].pop(name, None)
-                        state.update(stage=a.gate, evidence=[], reviews=[], approvals=[], blocked=None)
+                        state.update(stage=a.gate, evidence=[], reviews=[], approvals=[], blocked=None,
+                                    plan_reviews=[])
                         state.pop('outcome', None)
                         if a.gate != 'BUILD':
                             state.pop('protected_tests', None)

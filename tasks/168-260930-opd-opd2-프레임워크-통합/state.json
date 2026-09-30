@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-09-30 23:06:22",
-  "updated_at": "2026-10-01 07:30:26",
+  "updated_at": "2026-10-01 08:58:07",
   "current_status": "additional_work",
   "rows": [
     {
@@ -208,6 +208,18 @@
     {
       "row_id": 16,
       "stage": "CLOSE",
+      "item": "opd2 PLAN 사전심사(결정론 게이트+병렬 Reviewer) + agents model frontmatter",
+      "key": "close.opd2_2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 08:58:07",
+      "owner": "PM",
+      "note": "ADD_DONE-2.md 작성 완료 — PLAN 사전심사(결정론+병렬 Reviewer) + model frontmatter, 전체 회귀 그린(36 tests + 23 tests/169 subtests)",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
       "key": "close.worktree_finalize",
       "status": "failed",
@@ -218,7 +230,7 @@
       "conditional": true
     },
     {
-      "row_id": 17,
+      "row_id": 18,
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",

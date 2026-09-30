@@ -69,6 +69,21 @@ blocker다.
 | 리뷰 | agents/reviewer.md, references/governance.md | Reviewer |
 | 배포·관측 | references/rollout.md, references/metrics.md | 승인된 실행자·운영 담당자 |
 
+Builder/Verifier/Reviewer를 디스패치할 때, Coordinator는 해당 `agents/*.md`의 frontmatter
+`model` 값(light/standard/advanced)을 현재 플랫폼의 모델 매핑
+(`opal/core/references/opal-model-mapping.md`, 원문 복제 없이 참조만)으로 변환해 디스패치
+호출에 전달한다.
+
+## PLAN 사전심사
+
+PLAN 작성 완료 후 BUILD 진입 전, Layer 1(`ac_coverage`가 `intent.acceptance` 전체를
+커버하는지 `lifecycle.py`가 기계적으로 검사)과 Layer 2(Reviewer의 Call A/B 독립 의미
+심사가 둘 다 현재 fingerprint에서 pass로 기록됨)를 모두 통과해야 PLAN→BUILD 전이가
+허용된다. Coordinator는 Layer 1을 먼저 자체 확인하고, 통과하면 Call A·Call B를 한 메시지
+안에서 병렬 디스패치하며, 실패한 축만 표적 재검증한다. 절차 전문은 `agents/coordinator.md`
+§PLAN 사전심사(BUILD 진입 전), 각 Call이 보는 축은 `agents/reviewer.md` §PLAN
+사전심사(BUILD 진입 전)를 참조한다(원문 복제 없음).
+
 에이전트 문서는 디스패치 계약이다. 해당 단계에서 실제 독립 에이전트를 호출하고 role
 문서·아티팩트·소유 파일·검증 명령을 전달한다. Builder는 Verifier/Reviewer를 겸하지 않는다.
 역할 문자열이 다르다는 것만으로 독립 실행 증거가 되지는 않는다.

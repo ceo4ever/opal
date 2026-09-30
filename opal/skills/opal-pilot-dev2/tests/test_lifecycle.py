@@ -88,14 +88,24 @@ class LifecycleTests(unittest.TestCase):
                          design='Remove offset', policy_versions=['local test policy v1'])
         elif name == 'plan':
             value.update(source_sha256=self.store.artifact('spec')[1], files=['app.py'], builder='b1', verifier='v1',
-                         reviewer='r1', checks=[[sys.executable, '-c', 'assert 1+1 == 2']], rollback='Restore prior source')
+                         reviewer='r1', checks=[[sys.executable, '-c', 'assert 1+1 == 2']], rollback='Restore prior source',
+                         ac_coverage=[[0]])
         value.update(extra)
         (self.task / f'{name}.md').write_text(f'# {name}\n\nConcrete user contract for arithmetic behavior.\n')
         (self.task / f'{name}.json').write_text(json.dumps(value))
 
+    def plan_reviewed(self, reason='Independent PLAN pre-review: acceptance coverage and scope verified'):
+        """168 ADD-1 — PLAN 사전심사 Layer 2(추론). reviewer가 서로 다른 --call(A/B)로
+        독립 심사 pass를 현재 fingerprint에서 기록해야 PLAN→BUILD 전이가 허용된다."""
+        plan = self.store.artifact('plan')[0]
+        for call in ('A', 'B'):
+            self.call('review', '--actor', plan['reviewer'], '--verdict', 'pass', '--reason', reason, '--call', call)
+
     def plan_ready(self, **plan):
         for name in ('intent', 'spec', 'plan'):
             self.artifact(name, **(plan if name == 'plan' else {}))
+            if name == 'plan':
+                self.plan_reviewed()
             self.call('transition')
 
     def evidence(self, role, ok=True):
@@ -143,6 +153,8 @@ class LifecycleTests(unittest.TestCase):
         self.init('semi-agentic')
         for stage, name in lc.ARTIFACTS.items():
             self.artifact(name)
+            if stage == 'PLAN':
+                self.plan_reviewed()
             self.assertIn('await_user', self.call('transition', ok=False)['error'])
             self.call('approve', '--gate', stage, '--actor', 'captain', '--reference', f'user-message-{stage}')
             if stage == 'DESIGN':
@@ -242,6 +254,71 @@ class LifecycleTests(unittest.TestCase):
         self.artifact('plan', reviewer='b1')
         self.call('transition', ok=False)
 
+    def test_ac_coverage_gate_blocks_uncovered_acceptance(self):
+        """168 ADD-1 — plan['ac_coverage']가 intent['acceptance']의 모든 인덱스를
+        커버하지 못하면 PLAN→BUILD 전이가 기계적으로(Layer 1) 거부된다."""
+        self.init()
+        self.artifact('intent', acceptance=['1+1 is 2', 'no regression elsewhere'])
+        self.call('transition')
+        self.artifact('spec')
+        self.call('transition')
+        # ac_coverage covers only acceptance index 0; index 1 is left uncovered.
+        self.artifact('plan', ac_coverage=[[0]])
+        self.assertIn('uncovered acceptance criteria', self.call('transition', ok=False)['error'])
+
+    def test_plan_review_call_b_missing_blocks_transition(self):
+        """168 ADD-1 — call A만 기록되고 call B가 없으면 PLAN→BUILD 전이가 거부된다."""
+        self.init()
+        for name in ('intent', 'spec'):
+            self.artifact(name)
+            self.call('transition')
+        self.artifact('plan')
+        plan = self.store.artifact('plan')[0]
+        self.call('review', '--actor', plan['reviewer'], '--verdict', 'pass',
+                  '--reason', 'Call A only', '--call', 'A')
+        self.assertIn('plan review call B must pass', self.call('transition', ok=False)['error'])
+        self.call('review', '--actor', plan['reviewer'], '--verdict', 'pass',
+                  '--reason', 'Call B recorded', '--call', 'B')
+        self.call('transition')
+        self.assertEqual(self.store.state()['stage'], 'BUILD')
+
+    def test_plan_review_call_a_missing_blocks_transition(self):
+        """168 ADD-1 — 반대 방향: call B만 기록되고 call A가 없으면 전이가 거부된다."""
+        self.init()
+        for name in ('intent', 'spec'):
+            self.artifact(name)
+            self.call('transition')
+        self.artifact('plan')
+        plan = self.store.artifact('plan')[0]
+        self.call('review', '--actor', plan['reviewer'], '--verdict', 'pass',
+                  '--reason', 'Call B only', '--call', 'B')
+        self.assertIn('plan review call A must pass', self.call('transition', ok=False)['error'])
+
+    def test_plan_review_wrong_actor_rejected(self):
+        """168 ADD-1 — plan.reviewer가 아닌 actor로 --call 리뷰를 기록하려 하면
+        신원 불일치로 즉시 거부된다(기록 시점에 거부되므로 전이까지 갈 필요 없음)."""
+        self.init()
+        for name in ('intent', 'spec'):
+            self.artifact(name)
+            self.call('transition')
+        self.artifact('plan')
+        self.assertIn('reviewer identity mismatch',
+                      self.call('review', '--actor', 'not-the-reviewer', '--verdict', 'pass',
+                               '--reason', 'impersonation attempt', '--call', 'A', ok=False)['error'])
+
+    def test_rewind_clears_plan_reviews(self):
+        """168 ADD-1 — rewind는 plan_reviews를 초기화하므로, PLAN으로 되돌아가면
+        이전 fingerprint에서 기록된 call A/B pass는 더 이상 유효하지 않다."""
+        self.init()
+        self.plan_ready()
+        self.assertEqual(self.store.state()['stage'], 'BUILD')
+        self.assertTrue(self.store.state()['plan_reviews'])
+        self.call('rewind', '--gate', 'PLAN', '--reason', 'need re-review of the plan')
+        self.assertEqual(self.store.state()['plan_reviews'], [])
+        self.assertEqual(self.store.state()['stage'], 'PLAN')
+        # Re-entering BUILD now requires fresh call A/B reviews at the current fingerprint.
+        self.assertIn('plan review call A must pass', self.call('transition', ok=False)['error'])
+
     def test_release_requires_approval_and_real_commands(self):
         self.reviewed(delivery='release')
         self.call('transition', ok=False)
@@ -272,6 +349,7 @@ class LifecycleTests(unittest.TestCase):
         self.call('transition', ok=False)
         self.call('collect-evidence', '--role', 'red', '--actor', 'v1',
                   '--argv', json.dumps([sys.executable, 'test_app.py']))
+        self.plan_reviewed()
         self.call('transition')
         (self.repo / 'test_app.py').write_text('assert True\n')
         self.assertIn('protected test changed', self.call('verify-scope', ok=False)['error'])
@@ -307,6 +385,7 @@ class LifecycleTests(unittest.TestCase):
                       red_checks=[{'argv': check, 'exit_code': 1, 'reason': 'Addition has an extra offset'}])
         self.call('collect-evidence', '--role', 'red', '--actor', 'v1', '--argv', json.dumps(check))
         self.assertIn('AssertionError', (self.store.ledger_dir / 'opd2-evidence-1.log').read_text())
+        self.plan_reviewed()
         self.call('transition')
         protected_before = (self.repo / 'test_app.py').read_bytes()
         (self.repo / 'app.py').write_text('def add(a, b):\n    return a + b\n')
