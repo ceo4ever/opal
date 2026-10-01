@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 176,
+  "last_task_number": 177,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -173,6 +173,13 @@
   ],
   "history": [
     {
+      "title": "176 설계 구현 모델 effort 최적화",
+      "date": "2026-10-02",
+      "stage": "완료",
+      "path": "tasks/176-261001-opds-설계-구현-모델-effort-최적화/",
+      "result": "opst에 설계 주체·구현 에이전트 model·effort 변형 측정 기능과 launcher builderModelLevel 추가. 16세션 측정(비용 $198.5) 결과 캡틴 결정으로 현행(sonnet 설계·구현) 유지. main 머지 완료."
+    },
+    {
       "title": "175 이벤트 로딩 경량화",
       "date": "2026-10-02",
       "stage": "완료",
@@ -199,13 +206,6 @@
       "stage": "완료",
       "path": "tasks/173-261001-opds-opd2-사전심사-재시도상한과-지적추적/",
       "result": "opd2 PLAN 사전심사: 재검증은 A·B 모두 재디스패치로 문서 정합, fail 3회 상한과 plan-review-reset(사용자 전용) 도입, 지적 해소 추적. opd2 테스트 46 passed, main 머지 완료."
-    },
-    {
-      "title": "170 설계 게이트 회차 단축",
-      "date": "2026-10-01",
-      "stage": "완료",
-      "path": "tasks/170-261001-opds-설계-게이트-회차-단축/",
-      "result": "설계 게이트 결정론 사전점검(verify --design-gate-check)·decision_clarity 자가점검·previous/resolved_gaps 왕복 도입. evaluator는 측정 결과 baseline 유지. TEST 13/13(S-6 PM 직접 예외), main 머지 완료."
     }
   ]
 }
