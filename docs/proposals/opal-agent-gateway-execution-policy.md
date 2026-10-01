@@ -168,7 +168,7 @@ Console 사용자 선택 정책은 `read_only`·`ask` 두 개다. 구현 워커�
 
 워커 시작 시 모델은 `이번 디스패치의 명시적 override > Binding override > model_source가 선택한 OPAL 레벨 매핑 또는 Profile 모델` 순서로 정한다. effort는 `이번 디스패치 override > Binding override > Agent Definition effort > Profile effort > 선택 모델의 provider 기본값` 순서로 정한다. 지원되지 않는 model·effort 조합은 조용히 상속/치환하지 않고 거절한다. 명시적 디스패치 override는 신뢰된 FW PM 도구만 전달할 수 있고, Account·정책·provider mode를 완화하는 수단이 아니다. 실제 model·effort와 선택 출처는 attempt 메타데이터에 남긴다.
 
-headless 워커는 기본 `cli`로 실행한다. 1차에는 `delegated_write`의 headless ACP를 지원하지 않는다(§7.6). 어느 transport든 기존 `opal-agent` attempt 계약을 따른다. `opal-agent` resolver가 Binding·부모 Account·model/effort·transport를 해석해 실행 명세를 고정하고, provider 실행·출력·재부착을 소유한다. 부모 Account는 다음 규칙으로 판정한다. PM 도구는 부모 세션의 프로세스에서 실행되므로 상속된 환경 변수를 근거로 쓴다. provider 설정 디렉터리 변수(`CLAUDE_CONFIG_DIR`·`CODEX_HOME`)가 없거나 provider 기본 경로(`~/.claude`·`~/.codex`)를 가리키면 `system_default`로 **확정**한다. 이는 provider CLI가 실제로 설정 디렉터리를 해석하는 규칙과 같으므로 추정이 아니다. 변수가 다른 경로를 가리키면 정규화 경로로 registry의 `existing_config_dir`·`isolated` Account와 대조한다. launcher/SessionStart가 부모 Account 출처를 기록했다면 이를 우선 근거로 쓰되, 기록이 없다는 이유만으로 거절하지 않는다. 같은 provider의 부모 Account와 Binding Profile의 Account가 다르면 `account_switch`의 명시적 설정·승인이 없이는 거절한다. 변수가 기본 경로가 아닌 곳을 가리키는데 registry에 매칭되는 Account가 없거나 둘 이상이면 거절하며, 이때 `system_default`로 조용히 대체하지 않는다. provider 변경도 명시적 전환으로 취급한다. 일반 Pilot은 기존 `worker.dispatch` 검증과 `[WORKER]`·컨텍스트 주입을 유지한다. oppb는 Supervisor의 기존 execution packet·lease·attempt 계약을 유지한다. 부모가 Gateway 세션이면 Gateway session ID, 기존 CLI Pilot이면 ownership-tool의 실제 OPAL session ID를 실행 참조로 연결한다.
+headless 워커는 기본 `cli`로 실행한다. 1차에는 `delegated_write`의 headless ACP를 지원하지 않는다(§7.6). 어느 transport든 기존 `opal-agent` attempt 계약을 따른다. `opal-agent` resolver가 Binding·부모 Account·model/effort·transport를 해석해 실행 명세를 고정하고, provider 실행·출력·재부착을 소유한다. 부모 Account는 다음 규칙으로 판정한다. PM 도구는 부모 세션의 프로세스에서 실행되므로 상속된 환경 변수를 근거로 쓴다. provider 설정 디렉터리 변수(`CLAUDE_CONFIG_DIR`·`CODEX_HOME`)가 없거나 provider 기본 경로(`~/.claude`·`~/.codex`)를 가리키면 `system_default`로 **확정**한다. 이는 provider CLI가 실제로 설정 디렉터리를 해석하는 규칙과 같으므로 추정이 아니다. 변수가 다른 경로를 가리키면 정규화 경로로 registry의 `existing_config_dir`·`isolated` Account와 대조한다. 매칭 Account가 하나면 그 Account로 확정한다. 매칭이 없으면 부모의 설정 디렉터리 변수를 워커에 **그대로 상속**하는 `inherited_env` Account로 확정하고 snapshot 출처에 남긴다. `inherited_env`는 registry에 쓰지 않는 파생 값이므로 Gateway 단일 writer 원칙과 충돌하지 않는다. launcher env뿐 아니라 다른 앱(예: 터미널 런타임)이 지정한 설정 디렉터리도 같은 규칙을 따른다. 따라서 Console·Gateway를 쓰지 않는 비기본 경로 사용자도 Binding이 없으면 내장 기본 규칙으로 워커를 시작할 수 있다. `inherited_env`는 부모와 같은 디렉터리를 재사용할 때만 성립하며, Binding Profile이 다른 Account를 가리키는 실행에는 쓰지 않는다. launcher/SessionStart가 부모 Account 출처를 기록했다면 이를 우선 근거로 쓰되, 기록이 없다는 이유만으로 거절하지 않는다. 같은 provider의 부모 Account(`inherited_env` 포함)와 Binding Profile의 Account가 다르면 `account_switch`의 명시적 설정·승인이 없이는 거절한다. 같은 정규화 경로에 매칭되는 registry Account가 둘 이상이면 거절한다. 어떤 경우에도 비기본 경로를 `system_default`로 조용히 대체하지 않는다. provider 변경도 명시적 전환으로 취급한다. 일반 Pilot은 기존 `worker.dispatch` 검증과 `[WORKER]`·컨텍스트 주입을 유지한다. oppb는 Supervisor의 기존 execution packet·lease·attempt 계약을 유지한다. 부모가 Gateway 세션이면 Gateway session ID, 기존 CLI Pilot이면 ownership-tool의 실제 OPAL session ID를 실행 참조로 연결한다.
 
 현재 일반 Pilot PM은 provider-native Agent 도구를 직접 부른다. CLI 부모의 도구를 가로채거나 금지할 수 없으므로, **모든 Pilot 워커가 공통 정책을 강제 적용받는다는 주장은 하지 않는다.** 전환한 Pilot만 `opal-agent` 직접 호출 도구를 쓰고 `managed`로 표시한다. 미전환 native 호출은 `legacy_native`로 남기며 model/effort의 실제 적용은 provider 도구 계약에 따른다. Pilot별 전환에는 PM 호출 지점·반환 계약·사용자 승인 게이트의 변경과 provider별 회귀 테스트가 필요하다. 차단할 수 없는 native 호출을 프롬프트 금지만으로 통제했다고 표시하지 않는다.
 
@@ -354,7 +354,16 @@ Claude `dontAsk`는 probe 후보이지 확정 기본값이 아니다. 실제 mod
 
 oppb Supervisor도 기존처럼 `opal-agent`를 직접 호출하고 attempt 결과를 수확한다. 공통 resolver에서 model·effort·Account를 해석해 기존 execution packet에 고정할 뿐, Supervisor의 `start/tick/resume`·lease·예산·checkpoint·reconcile은 바꾸지 않는다. Gateway 기동·재시작은 두 Pilot의 headless 워커 시작·대기·복구에 필요하지 않다.
 
-`delegated_write`의 provider·transport별 대응은 전환 게이트다. 현행 `opal-agent` Claude CLI adapter는 `--allowedTools`를 붙이지만 `--permission-mode`는 명시하지 않고, Codex CLI adapter는 `--sandbox workspace-write`를 사용한다. Claude CLI는 설치 버전의 `claude -p --permission-mode auto` 조합과 승인·위험 명령 분류를 실제 probe하고, `Bash` 전체를 자동 허용하는 도구 목록으로 우회하지 않는다. Codex CLI는 `codex exec --sandbox workspace-write`의 승인·경계를 비교한다. headless ACP는 승인 자동 응답 규칙과 함께 후속 설계하며 1차 opd 대상이 아니다. **기존 native 워커보다 권한·위험 명령 통제가 약해지지 않는 CLI 조합만** opd에서 허용한다. 동등성을 입증하지 못하면 해당 조합은 disabled로 표시하고 기존 native 경로를 `legacy_native`로 유지한다.
+`delegated_write`의 provider·transport별 대응은 전환 게이트다. 현행 `opal-agent` Claude CLI adapter는 `--allowedTools`를 붙이지만 `--permission-mode`는 명시하지 않고, Codex CLI adapter는 `--sandbox workspace-write`를 사용한다. Claude CLI는 설치 버전의 `claude -p --permission-mode auto` 조합과 승인·위험 명령 분류를 실제 probe하고, `Bash` 전체를 자동 허용하는 도구 목록으로 우회하지 않는다. Codex CLI는 `codex exec --sandbox workspace-write`의 승인·경계를 비교한다. headless ACP는 승인 자동 응답 규칙과 함께 후속 설계하며 1차 opd 대상이 아니다.
+
+opd 허용 조건은 **고정 최소 기준 충족 AND 기존 native 워커 대비 비약화** 두 가지다. 상대 비교만으로는 부족하다. 비교 대상 native 워커가 부모 launcher의 우회 옵션(예: 전역 기본 codex launcher의 `--dangerously-bypass-approvals-and-sandbox`)을 상속하면 어떤 조합도 통과하기 때문이다. 고정 최소 기준은 다음 4개다.
+
+1. 승인·sandbox 우회 옵션(`--dangerously-*`, `bypassPermissions`, `--full-auto` 등)을 쓰지 않는다.
+2. 파일 쓰기는 작업 디렉터리(태스크 worktree 또는 허브) 범위의 provider 쓰기 모드로 한정한다. Codex는 `workspace-write`, Claude는 `bypassPermissions`가 아닌 permission mode다.
+3. `Bash` 전체나 와일드카드 도구를 자동 허용하지 않는다.
+4. 실제 적용된 mode·도구 규칙을 attempt 메타데이터에 기록한다.
+
+부모 세션이 우회 옵션으로 실행 중이어도 워커 기준을 완화하지 않는다. 두 조건 중 하나라도 입증하지 못하면 해당 조합은 disabled로 표시하고 기존 native 경로를 `legacy_native`로 유지한다.
 
 ### 7.6 기본 CLI와 ACP 실행 연결 명세
 
@@ -369,6 +378,8 @@ oppb Supervisor도 기존처럼 `opal-agent`를 직접 호출하고 attempt 결�
 연결 명세는 실행을 **어떻게 연결할지**만 정한다. provider mode·도구 규칙·Account·model/effort는 받지 않으며 계속 Profile·policy·Binding에서 resolver가 결정한다. 정책과의 조합은 다음으로 제한한다. `ask`는 `approval_channel=console_session:<id>`만 허용하고 `deny_all`이면 거절한다. `read_only`는 두 값 모두 허용한다. `delegated_write`의 headless ACP는 권한 요청 자동 응답 규칙이 설계되기 전까지 지원하지 않으며, 1차 워커는 `cli`로 실행한다. `console_session`·`gateway_subscription` 값은 Gateway가 발급한 세션·구독과 일치해야 하며 PM 도구·oppb는 지정할 수 없다. CLI에는 승인 요청 채널이 없으므로 `ask` 정책은 `cli`로 실행할 수 없다.
 
 `opal-agent`가 provider별 ACP/CLI adapter와 공통 capability matrix를 소유한다. matrix는 provider·설치 버전·Account·surface·policy·transport별 model/effort, OPAL bootstrap, 도구 권한, Brain 계약, 승인 채널, resume/stream 지원 여부를 probe한 결과다. ACP와 CLI의 기능이 같다고 추정하지 않는다. Console CLI 대화는 Claude `claude -p --resume`·Codex `codex exec resume`처럼 provider가 지원하는 CLI 세션 이어가기와 이벤트 정규화를 별도로 통과해야 하며, `ask` 승인 요청 채널이 없는 조합은 대화 선택지에서 제외한다. headless attempt는 어느 transport든 기존 `AgentResult`·attempt writer·reconcile 계약으로 귀착한다.
+
+CLI의 쓰기 제한 모드는 정책에서 정해야 하며 adapter 고정값으로 두지 않는다. 현행 Codex CLI adapter는 정책과 무관하게 `--sandbox workspace-write`를 붙인다. 또 `codex exec resume`은 `--sandbox`를 받지 않고 원 세션 값을 상속한다([opal_agent.py](../../opal/tools/opal-agent/opal_agent.py) Codex adapter `build_invocation`). 따라서 adapter는 snapshot 정책으로 sandbox를 결정한다: `read_only → --sandbox read-only`, `delegated_write → workspace-write`. resume turn은 sandbox를 다시 지정할 수 없다. 그래서 `opal-agent`가 provider 세션 ID별로 첫 turn의 정책·적용 mode를 기록하고, resume 요청의 snapshot 정책과 다르면 시작 전에 `policy_mismatch_on_resume`로 거절한다. 기록이 없는 세션 ID의 resume도 거절한다. Claude CLI `--resume`에도 같은 정책 일치 검사를 적용한다.
 
 1차에는 transport 간 폴백을 두지 않는다. 선택한 transport가 실패하면 실패를 반환하고, 필요하면 호출자가 다른 transport로 다시 요청한다. ACP session ID를 CLI resume ID로 재사용하지 않는다. 기존 attempt record에는 transport와 그 출처(`default`/`caller`), ACP일 때 연결 명세, provider 세션 ID, 정책 probe revision을 additive schema 버전으로 추가하고, `reconcile-attempts`가 구버전 record도 읽도록 한다. 폴백이 실제로 필요해지면 동등성 조건을 별도로 설계한다.
 
@@ -425,7 +436,7 @@ ACP `session/request_permission`은 모든 도구 사용을 통과하는 중앙 
 | 구형 Brain 게이트 | `console.config.json`의 `legacy_brain_enabled`(JSON `true`만 켜짐). Registry 진입점과 `Popen` 시작 구간 락에서 차단하며, 끄기가 반환된 뒤 새 spawn 0회, 진행 중 turn은 완료까지 진행 |
 | E2E 진입 | test-tool `environment.json`의 선택 키 `session_bootstrap` — 프로젝트가 선언한 명령이 헤더와 브라우저 fragment를 돌려준다. 프레임워크 도구는 Console을 직접 알지 않는다 |
 
-제안서 본문에 없던 선택은 진입 token 파일 채널, `/health` 마커, `session_bootstrap` 키 3건이다. 보안 검사에서 남은 Medium은 Phase 1 착수 전 후속 후보로 둔다.
+제안서 본문에 없던 선택은 진입 token 파일 채널, `/health` 마커, `session_bootstrap` 키 3건이다. 보안 검사에서 남은 Medium 4건은 Phase 1 태스크에서 함께 해소한다.
 
 - 진입 token이 `open` 명령 인자로 전달되어 다중 사용자 호스트에서 60초 안에 다른 uid가 선점할 수 있다
 - 개발용 CORS origin `127.0.0.1:5173`이 credentials와 함께 항상 허용된다
@@ -437,10 +448,10 @@ ACP `session/request_permission`은 모든 도구 사용을 통과하는 중앙 
 ### Phase 1 — FW 공통 Runtime 기초와 Brain 도구 계약
 
 1. Console용 Gateway를 FW에 패키징하고 독립 launcher·인증된 Unix socket·클라이언트별 capability·readiness·bounded shutdown을 구현한다. Gateway 미기동에서도 FW PM 도구와 oppb Supervisor의 headless 설정 조회·실행이 가능해야 한다. Gateway에는 별도 provider ACP host를 만들지 않는다.
-2. FW 소유 Account·Profile·Binding 저장소와 대화용 `session.start/send`·승인·취소 계약을 정의한다. 기존 `opal-agent`에 공통 `execution.resolve`와 ACP transport adapter를 추가한다. Python ACP SDK와 내부 Node helper를 실측 비교해 하나를 택하되 정책·attempt owner는 `opal-agent`로 고정한다. 기존 CLI adapter·attempt writer·reconcile은 유지한다. 부모 Account 판정 규칙(환경 변수 기반 `system_default` 확정 포함)과 내장 기본 Binding, 기존 env의 Account 참조·충돌 판정, 명시적 계정 전환과 `delegated_write`의 FW-only 게이트를 구현한다.
+2. FW 소유 Account·Profile·Binding 저장소와 대화용 `session.start/send`·승인·취소 계약을 정의한다. 기존 `opal-agent`에 공통 `execution.resolve`와 ACP transport adapter를 추가한다. Python ACP SDK와 내부 Node helper를 실측 비교해 하나를 택하되 정책·attempt owner는 `opal-agent`로 고정한다. 기존 CLI adapter·attempt writer·reconcile은 유지한다. 부모 Account 판정 규칙(환경 변수 기반 `system_default` 확정·미등록 비기본 경로의 `inherited_env` 포함)과 내장 기본 Binding, 기존 env의 Account 참조·충돌 판정, 명시적 계정 전환과 `delegated_write`의 FW-only 게이트를 구현한다.
 3. 설치기의 `install_opal_section`·hook/권한 설치를 배포 가능한 단일 provisioning 진입점으로 추출한다. Gateway Account 생성·로그인과 설치기 재설치 순회가 이를 공유한다. Claude·Codex `system_default`/격리 Account 각각에서 Gateway 첫 프롬프트의 `[ASSISTANT]` 판정·스킬 로딩·`//opbr` 라우팅을 실제 probe한다.
 4. Brain surface가 `//opbr query --read-only`에 해당하는 스킬 계약과 `brain-tool` 실행 환경을 ACP·CLI transport별로 전달하도록 한다. 첫 turn의 marker·매 turn의 `//opbr` 래핑, cold 재시작, 연속 두 질문 모두의 JSON 답변·인용을 현행 `opbr`과 비교한다. Brain 페이지 검색→선택 페이지→`sources` 원문 확인→필요 시 추가 탐색도 검증한다.
-5. Claude ACP `plan`과 `default`/`dontAsk`+명시적 도구 규칙, Codex ACP `read-only`, 각 provider의 CLI read-only 후보를 별도로 probe한다. 읽기·검색, `brain-tool` 고정 명령 래퍼, 편집·쓰기 및 WebFetch·WebSearch·외부 MCP 거절, 임의 Bash/네트워크 명령 차단을 실제로 확인한다.
+5. Claude ACP `plan`과 `default`/`dontAsk`+명시적 도구 규칙, Codex ACP `read-only`, 각 provider의 CLI read-only 후보를 별도로 probe한다. Codex CLI `read_only`는 `--sandbox read-only` 부착, resume turn의 sandbox 상속, 정책 불일치 resume 거절(`policy_mismatch_on_resume`)을 함께 확인한다. 읽기·검색, `brain-tool` 고정 명령 래퍼, 편집·쓰기 및 WebFetch·WebSearch·외부 MCP 거절, 임의 Bash/네트워크 명령 차단을 실제로 확인한다.
 6. 기본 `cli`와 `transport=acp`의 실행 연결 명세 검증(필수 필드·정책 조합·Gateway 전용 값)을 구현한다. 명세 누락·불일치는 실행 0건으로 거절하고 CLI로 바꿔 실행하지 않는 E2E를 추가한다. ACP·CLI 스트림의 임시 update와 최종 텍스트를 공통 계약으로 변환하고, 마지막 JSON 파싱·인용 상태를 검증한다.
 
 **완료 기준:** Console 없이 Gateway 기동·접속·종료가 가능하고, 임의 클라이언트는 권한 밖 RPC를 실행하지 못한다. Gateway 미기동에도 `opal-agent` 설정 조회·headless 시작이 가능하다. 최소 한 provider·transport의 `system_default` Account에서 OPAL 부트스트랩, Brain 페이지·원문 직접 탐색, 추가 검색, 최종 답변 계약, 쓰기 제한과 Agent의 임의 네트워크 차단이 검증된다. 격리 Account는 동일 probe를 독립 통과한 provider·Account·transport 조합만 Brain 후보에 넣는다. 실패하면 해당 provider·transport의 1차 Brain은 `system_default`로 한정한다.
@@ -471,9 +482,9 @@ Brain capability probe는 provider + **transport** + adapter 버전 + Account co
 Phase 1 완료 뒤 Phase 2·3과 독립적으로 진행할 수 있다. Console·Gateway 없이 동작해야 하기 때문이다.
 
 1. 첫 전환 대상으로 `opal-pilot-dev`(opd)를 선정한다. 기존 `worker.dispatch`와 `[WORKER]` 문서 주입을 유지한 채 PM의 native Agent 호출 지점만 `opal-agent` 직접 호출 도구(기본 `cli`)로 전환한다. PM이 기존 `AgentResult`·attempt를 받아 단계 Gate로 전달하는 E2E를 확인한다. 이 전환을 모든 Pilot에 자동 적용했다고 표시하지 않는다.
-2. Console을 연 적 없는 `system_default` 사용자 환경에서 내장 기본 규칙으로 워커가 시작되는 E2E와, launcher `CODEX_HOME` 등 비기본 경로 부모에서 Account 매칭·불일치 거절을 확인한다.
+2. Console을 연 적 없는 `system_default` 사용자 환경에서 내장 기본 규칙으로 워커가 시작되는 E2E와, launcher `CODEX_HOME`·다른 앱이 지정한 설정 디렉터리 등 비기본 경로 부모에서 registry 매칭, 미등록 시 `inherited_env` 상속 시작, 복수 매칭·Binding 불일치 거절을 확인한다. 이 E2E는 Gateway·Console 미기동 상태에서 수행한다.
 3. 장시간 워커 중 PM 도구·Gateway를 재시작하고 `opal-agent reconcile-attempts`의 reattach/harvest/orphan 결과로 PM 도구의 결과 회수가 가능한지 검증한다. oppb Supervisor는 그대로 두고 공통 resolver의 설정 값만 기존 packet에 주입하는 통합을 별도 probe한다. 기존 native 워커는 `legacy_native`로 구별한다.
-4. Claude `-p`의 `--permission-mode auto`·도구 허용 조합과 Codex `workspace-write`를 설치 버전에서 실측한다. Bash 전체 자동 허용을 배제하고 현재 native 워커의 위험 명령 분류·승인·샌드박스보다 약해지지 않는지 비교한다. 통과하지 못한 provider의 opd 전환은 보류한다.
+4. Claude `-p`의 `--permission-mode auto`·도구 허용 조합과 Codex `workspace-write`를 설치 버전에서 실측한다. §7.5의 고정 최소 기준 4개를 먼저 충족하고, 그 위에서 현재 native 워커의 위험 명령 분류·승인·샌드박스보다 약해지지 않는지 비교한다. 통과하지 못한 provider의 opd 전환은 보류한다.
 
 **완료 기준:** 최소 한 provider에서 **선정한 Pilot 하나**의 `opal-agent` 워커 시작·bounded wait·결과 회수·attempt 재부착이 동작한다. Gateway 중단·재시작 중에도 headless 워커가 새로 시작하고 복구된다. `delegated_write` 구현 워커가 PLAN 승인 후 편집별 카드 없이 수행되고 기존 native 워커보다 약하지 않은 통제로 기존 검증 Gate를 통과한다. oppb는 기존 Supervisor의 lease·예산·복구 계약을 유지한다. 미전환 Pilot의 native 워커에는 공통 통제 표시를 하지 않는다.
 
@@ -528,11 +539,12 @@ Gateway 자체는 Phase 1부터 Console과 독립적으로 기동한다. PM ACP 
 - [ ] 직접 대화의 실제 모델은 Profile을 따른다. PM 하위 워커는 Binding의 model_source와 명시된 우선순위를 따르며 부모 PM 모델을 묵시적으로 상속하지 않는다.
 - [ ] opd PM 도구는 `opal-agent`를 직접 호출한다. 현재 `worker.dispatch` receipt를 재검증하고 `[WORKER]`·부모 실행 참조·실제 model/effort·선택 출처를 attempt에 연결한다.
 - [ ] receipt가 없거나 stale/wrong-project인 요청, disabled Profile·지원되지 않는 model/effort 조합, 유효한 부모 실행 맥락 없는 호출은 attempt 0개로 거절된다.
-- [ ] 같은 provider에서는 부모 PM Account를 기본값으로 쓰고, 다른 Account/provider로 전환할 때 명시적 설정·승인이 없다면 거절한다. 설정 디렉터리 변수가 없거나 기본 경로면 `system_default`로 확정하고, 기본 경로가 아닌데 매칭 Account가 없거나 둘 이상이면 `system_default`로 대체하지 않고 거절한다.
-- [ ] Console에서 Account·Binding을 만든 적 없는 CLI 사용자도 전환된 Pilot 워커를 내장 기본 규칙(부모 Account·`opal_level`·`delegated_write`)으로 시작하고, snapshot 선택 출처에 `builtin_default`가 남는다. 내장 규칙은 registry에 쓰지 않는다.
+- [ ] 같은 provider에서는 부모 PM Account를 기본값으로 쓰고, 다른 Account/provider로 전환할 때 명시적 설정·승인이 없다면 거절한다. 설정 디렉터리 변수가 없거나 기본 경로면 `system_default`로 확정한다. 기본 경로가 아닌데 매칭 Account가 없으면 부모 env를 상속하는 `inherited_env`로 확정하고, 매칭이 둘 이상이거나 Binding Profile의 Account와 다르면 거절한다. 비기본 경로를 `system_default`로 대체하지 않는다.
+- [ ] Console에서 Account·Binding을 만든 적 없는 CLI 사용자(설정 디렉터리 변수가 비기본 경로인 부모 포함)도 전환된 Pilot 워커를 내장 기본 규칙(부모 Account·`opal_level`·`delegated_write`)으로 시작하고, snapshot 선택 출처에 `builtin_default`가 남는다. 내장 규칙은 registry에 쓰지 않는다.
 - [ ] 구현 워커의 `delegated_write`는 FW 호출만 허용하고 semi-agentic PLAN 승인 뒤 편집별 카드 없이 실행되며 기존 단계 Gate를 유지한다. Browser에서 직접 선택할 수 없다.
 - [ ] PM 도구는 `opal-agent`의 기존 `AgentResult`·attempt를 bounded 대기 후 받고, PM 도구 재시작 후 기존 attempt 디렉터리와 `reconcile-attempts`로 결과를 회수한다. Gateway 중단 중에도 새 headless 시작·복구가 가능하다.
-- [ ] Claude CLI `claude -p`의 auto mode·허용 도구 조합, Codex CLI `codex exec --sandbox workspace-write`를 별도 probe해 `delegated_write`가 기존 native 워커보다 약해지지 않음을 입증한다. 미충족 provider 조합은 opd 전환을 보류한다.
+- [ ] Claude CLI `claude -p`의 auto mode·허용 도구 조합, Codex CLI `codex exec --sandbox workspace-write`를 별도 probe해 `delegated_write`가 §7.5 고정 최소 기준 4개를 충족하고 기존 native 워커보다 약해지지 않음을 입증한다. 부모가 우회 옵션으로 실행 중이어도 워커 기준은 완화되지 않는다. 미충족 provider 조합은 opd 전환을 보류한다.
+- [ ] Codex CLI `read_only` 실행은 `--sandbox read-only`로 시작하고, 첫 turn과 정책이 다르거나 기록 없는 세션 ID의 resume은 `policy_mismatch_on_resume`로 실행 0건 거절된다. Claude CLI `--resume`도 같은 검사를 거친다.
 - [ ] oppb Supervisor의 lease·예산·attempt 수확·재부착은 그대로 동작하며 Gateway가 중복 구현하지 않는다. 미전환 provider-native 워커는 `legacy_native`로 표시하고 Gateway 통제라고 주장하지 않는다.
 - [ ] Codex ACP `agent` mode에서 workspace 쓰기가 승인 없이 가능한 경우 `ask` Profile은 비활성화된다.
 - [x] 기존 `claude -p` Brain 경로는 Phase 0 인증·명시적 위험 수락 게이트를 모두 통과한 뒤에만 호환 경로로 동작한다.
@@ -556,9 +568,9 @@ Gateway 자체는 Phase 1부터 Console과 독립적으로 기동한다. PM ACP 
 | 정책 | Console `read_only`·`ask`, FW 구현 워커 `delegated_write` | headless 편집별 카드 없음; 기존 Pilot 승인/검증과 oppb lease·checkpoint 유지. Codex ACP `ask`는 실제 승인 동작 미충족 시 비활성화 |
 | 모델 선택 | 직접 대화는 Profile 모델, PM 하위 워커는 Binding + 디스패치 override + OPAL 레벨/프로필 규칙 | 실제 모델·effort·매핑 출처를 세션 메타데이터에 표시 |
 | 워커 생성 | opd·oppb 모두 `execution.resolve → opal-agent` 직접 호출 | 기존 native 호출은 `legacy_native`; Gateway handle/RPC 경유 없음 |
-| headless 계정 기본값 | 같은 provider의 부모 PM Account. 설정 디렉터리 변수가 없거나 기본 경로면 `system_default`로 확정 | 다른 Account/provider는 명시적 전환·승인, 기본 경로가 아닌데 매칭 Account가 없거나 복수면 시작 거절 |
+| headless 계정 기본값 | 같은 provider의 부모 PM Account. 설정 디렉터리 변수가 없거나 기본 경로면 `system_default`로 확정 | 비기본 경로에 매칭 Account가 없으면 `inherited_env`(registry 미기록)로 부모 env 상속. 다른 Account/provider는 명시적 전환·승인, 매칭 복수면 시작 거절 |
 | Binding 부재 시 | `opal-agent` resolver 내장 기본 규칙(부모 Account·`opal_level`·`delegated_write`) | registry에 쓰지 않음(단일 writer 유지). 설치기 시드 방식은 채택하지 않음 |
-| `delegated_write` 회귀 게이트 | provider별 실행 옵션을 `opal-agent`에서 실측 | 기존 native 워커보다 권한·위험 명령 통제가 약하면 Pilot 전환 보류 |
+| `delegated_write` 회귀 게이트 | provider별 실행 옵션을 `opal-agent`에서 실측 | 고정 최소 기준 4개(우회 옵션 금지·작업 디렉터리 쓰기 한정·Bash 전체 허용 금지·적용 mode 기록) 충족 AND 기존 native 워커 대비 비약화. 하나라도 미입증이면 Pilot 전환 보류 |
 | Gateway 수명 | 1차부터 FW 독립 Console 중계 프로세스, headless 복구는 `opal-agent`와 호출자 소유 | 대화 event replay·재접속 중 turn 유지만 후속 검토 |
 | 대화 기록 | Brain은 현행 휘발성 유지 | 일반 대화 영속화는 별도 제품 결정 |
 
