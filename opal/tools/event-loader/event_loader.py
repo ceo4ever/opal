@@ -3,8 +3,9 @@
   "module": "event_loader",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "이벤트 manifest 문서·receipt와 복수 진행 태스크·경로 이상·메모리를 포함한 bounded session.project 브리핑을 결정론적으로 생성·검증하는 플랫폼 독립 CLI",
-  "exports": ["main", "load_event", "verify_receipt", "static_check", "measure_event", "compose_project_brief", "project_brief"]
+  "description": "이벤트 manifest 문서·receipt(worker.dispatch 계약 2: 대상·역할·식별자 묶음, 에이전트 항목 선별, 구형 호환·호출 원장)와 bounded session.project 브리핑을 결정론적으로 생성·검증하는 플랫폼 독립 CLI",
+  "exports": ["main", "load_event", "verify_receipt", "static_check", "measure_event", "load_report", "legacy_report", "agent_index", "compose_project_brief", "project_brief"],
+  "depends": ["agent_sections"]
 }
 """
 
@@ -20,7 +21,12 @@ import re
 import subprocess
 import sys
 import time
+import uuid
+from datetime import datetime, timezone
 from typing import Any, Iterable
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from agent_sections import parse_sections, select_agent_entries  # noqa: E402
 
 
 STANDARD_EVENTS = (
@@ -51,6 +57,22 @@ REQUIRED_EVENT_FIELDS = (
 TEXT_SUFFIXES = {".md", ".mdc", ".py", ".sh", ".json"}
 ROOT_KEYS = ("source", "deployed", "project")
 TOKEN_PATTERN = re.compile(r"^\{(source_root|deployed_root|project_root)\}(?:/|$)")
+CONTRACT_FLAGS = (
+    ("contract_version", "--contract-version"),
+    ("agent", "--agent"),
+    ("role", "--role"),
+    ("dispatch_id", "--dispatch-id"),
+)
+VERSION_PATTERN = re.compile(r"^[0-9]{1,6}$")
+ROLE_PATTERN = re.compile(r"^[a-z][a-z0-9_-]*$")
+DISPATCH_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$")
+AGENT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+DISPATCH_EVENT = "worker.dispatch"
+INDEX_SECTIONS = ("전문 에이전트 매핑 테이블", "폴백 규칙", "탐색 경로")
+LEGACY_WARNING = {
+    "code": "legacy_dispatch_contract",
+    "detail": "구형 호출(계약 인자 없음)입니다. 전체 문서를 전달하며 호환 종료 후 거부됩니다. --contract-version 2 --agent --role --dispatch-id 를 넘기십시오.",
+}
 LEGACY_HARNESS_PATTERN = re.compile(
     r"(?:부트스트랩.{0,80}(?:로드되지|미로드)|fallback|폴백).{0,120}opal-harness\.md",
     re.IGNORECASE,
@@ -136,6 +158,45 @@ def _read_manifest(path: Path) -> tuple[dict[str, Any], bytes]:
     return manifest, raw
 
 
+def _is_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _contract_violations(event_id: str, contract: Any) -> list[dict[str, Any]]:
+    problems: list[str] = []
+    if not isinstance(contract, dict):
+        problems.append("contract는 객체여야 합니다.")
+    else:
+        supported = contract.get("supported")
+        if not _is_int(contract.get("current")):
+            problems.append("current는 정수여야 합니다.")
+        if not isinstance(supported, list) or not supported or not all(_is_int(v) for v in supported):
+            problems.append("supported는 정수의 비어 있지 않은 배열이어야 합니다.")
+        elif _is_int(contract.get("current")) and contract["current"] not in supported:
+            problems.append("current는 supported에 포함되어야 합니다.")
+        if not isinstance(contract.get("legacy_accepted"), bool):
+            problems.append("legacy_accepted는 boolean이어야 합니다.")
+    return [{"code": "contract_invalid", "event": event_id, "detail": text} for text in problems]
+
+
+def _selection_violations(event_id: str, event: dict[str, Any]) -> list[dict[str, Any]]:
+    selection = event["selection"]
+    problems: list[str] = []
+    if not isinstance(selection, dict):
+        problems.append("selection은 객체여야 합니다.")
+    else:
+        doc_ids = [doc.get("id") for doc in event.get("required_docs", []) if isinstance(doc, dict)]
+        if not isinstance(selection.get("document"), str) or selection["document"] not in doc_ids:
+            problems.append("document는 required_docs에 있는 문서 id여야 합니다.")
+        if selection.get("mode") != "agent_entries":
+            problems.append("mode는 agent_entries여야 합니다.")
+        for key in ("exclude_sections", "full_for_agents"):
+            value = selection.get(key)
+            if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+                problems.append(f"{key}는 문자열 배열이어야 합니다.")
+    return [{"code": "selection_invalid", "event": event_id, "detail": text} for text in problems]
+
+
 def _validate_manifest(manifest: Any) -> list[dict[str, Any]]:
     violations: list[dict[str, Any]] = []
     if not isinstance(manifest, dict) or not isinstance(manifest.get("events"), list):
@@ -160,6 +221,10 @@ def _validate_manifest(manifest: Any) -> list[dict[str, Any]]:
         consumer = event["consumer"]
         if not isinstance(consumer, dict) or not isinstance(consumer.get("type"), str) or not isinstance(consumer.get("paths"), list):
             violations.append({"code": "consumer_invalid", "event": event_id})
+        if "contract" in event:
+            violations.extend(_contract_violations(event_id, event["contract"]))
+        if "selection" in event:
+            violations.extend(_selection_violations(event_id, event))
         for kind in ("required_docs", "optional_docs"):
             seen_docs: set[str] = set()
             for doc in event.get(kind, []):
@@ -269,9 +334,148 @@ def _context(args: argparse.Namespace) -> tuple[dict[str, Path], Path, dict[str,
     return roots, manifest_path, manifest, raw
 
 
-def load_event(args: argparse.Namespace) -> dict[str, Any]:
-    roots, manifest_path, manifest, manifest_raw = _context(args)
-    declaration = _event(manifest, args.event)
+def _now_iso() -> str:
+    configured = os.environ.get("OPAL_EVENT_LOADER_NOW")
+    if configured:
+        return configured
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _ledger_path(roots: dict[str, Path]) -> Path:
+    configured = os.environ.get("OPAL_EVENT_LOADER_LEDGER")
+    if configured:
+        return Path(configured).expanduser()
+    return roots["deployed_root"] / "state" / "event-loader" / "legacy-dispatch.jsonl"
+
+
+def _record_legacy(op: str, event_id: str, roots: dict[str, Path], warnings: list[dict[str, Any]]) -> None:
+    """구형 호출 한 줄을 원장에 남긴다. 실패는 호출을 막지 않고 경고로만 남긴다."""
+    line = json.dumps(
+        {"ts": _now_iso(), "op": op, "event": event_id, "project_root": str(roots["project_root"])},
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    try:
+        path = _ledger_path(roots)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+    except OSError as exc:
+        warnings.append({"code": "ledger_write_failed", "detail": f"구형 호출 원장 기록 실패: {exc}"})
+
+
+def _contract_args_error(code: str, detail: str, **fields: Any) -> EventLoaderError:
+    return EventLoaderError(code, detail, **fields)
+
+
+def _call_mode(args: argparse.Namespace, declaration: dict[str, Any]) -> dict[str, Any]:
+    """호출 인자 묶음을 판정한다: plain(계약 선언 없음) | legacy | v2."""
+    contract = declaration.get("contract")
+    given = {name: getattr(args, name, None) for name, _ in CONTRACT_FLAGS}
+    role_doc_arg = getattr(args, "role_doc", None)
+    if not isinstance(contract, dict):
+        if any(value is not None for value in given.values()) or role_doc_arg is not None:
+            raise _contract_args_error(
+                "contract_not_declared",
+                f"이벤트 {declaration.get('id')}는 계약을 선언하지 않았으므로 계약 인자를 받을 수 없습니다.",
+                event=declaration.get("id"),
+            )
+        return {"mode": "plain"}
+    if all(value is None for value in given.values()) and role_doc_arg is None:
+        if not contract.get("legacy_accepted"):
+            return {"mode": "legacy", "rejected": True}
+        return {"mode": "legacy", "rejected": False}
+    missing = [flag for name, flag in CONTRACT_FLAGS if given[name] is None]
+    if missing:
+        raise _contract_args_error(
+            "contract_args_missing",
+            f"계약 인자가 모두 필요합니다. 누락: {', '.join(missing)}",
+            missing=missing,
+        )
+    version, agent, role, dispatch_id = (given[name] for name, _ in CONTRACT_FLAGS)
+    for value, pattern, flag in (
+        (version, VERSION_PATTERN, "--contract-version"),
+        (agent, AGENT_NAME_PATTERN, "--agent"),
+        (role, ROLE_PATTERN, "--role"),
+        (dispatch_id, DISPATCH_ID_PATTERN, "--dispatch-id"),
+    ):
+        if not pattern.fullmatch(value):
+            raise _contract_args_error("contract_arg_invalid", f"{flag} 값의 형식이 올바르지 않습니다: {value}", argument=flag)
+    version_number = int(version)
+    if version_number not in contract["supported"]:
+        raise _contract_args_error(
+            "unsupported_contract_version",
+            f"지원하지 않는 계약 버전입니다: {version_number}. 설치본을 갱신한 뒤 문서를 재로드하십시오.",
+            requested=version_number,
+            supported=contract["supported"],
+        )
+    role_doc: dict[str, Any] | None = None
+    if role_doc_arg is not None:
+        doc_path = Path(role_doc_arg).expanduser().resolve()
+        try:
+            raw = doc_path.read_bytes()
+        except OSError as exc:
+            raise _contract_args_error("contract_arg_invalid", f"--role-doc 파일을 읽을 수 없습니다: {doc_path}", argument="--role-doc") from exc
+        role_doc = {"path": str(doc_path), "sha256": _sha256(raw)}
+    return {
+        "mode": "v2",
+        "contract_version": version_number,
+        "agent": agent,
+        "role": role,
+        "dispatch_id": dispatch_id,
+        "role_doc": role_doc,
+    }
+
+
+def _resolve_agent(name: str, roots: dict[str, Path]) -> dict[str, str]:
+    project_file = roots["project_root"] / ".opal" / "agents" / name / "AGENT.md"
+    if project_file.is_file():
+        origin, path = "project", project_file
+    else:
+        base = roots["source_root"] / "opal" / "agents" if _running_from_source() else roots["deployed_root"] / "agents"
+        path = base / name / "AGENT.md"
+        if not path.is_file():
+            raise EventLoaderError("agent_not_found", f"에이전트 문서를 찾을 수 없습니다: {name}", agent=name)
+        origin = "framework"
+    return {"name": name, "path": str(path.resolve()), "sha256": _sha256(path.read_bytes()), "origin": origin}
+
+
+def _metadata(document: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in document.items() if key != "content"}
+
+
+def _body_sha256(documents: list[dict[str, Any]]) -> str:
+    joined = "".join(f"{doc['id']}\0{doc['content']}\0" for doc in documents)
+    return _sha256(joined.encode("utf-8"))
+
+
+def _select_document(document: dict[str, Any], selection: dict[str, Any], agent: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    """대상 에이전트 항목만 남긴 전달 문서와 selection 요약을 만든다. 원본 값은 source_* 로 보존한다."""
+    result = select_agent_entries(document["content"], selection, agent)
+    content = result["content"]
+    delivered = dict(document)
+    delivered.update(
+        {
+            "content": content,
+            "sha256": _sha256(content.encode("utf-8")),
+            "bytes": len(content.encode("utf-8")),
+        }
+    )
+    summary = {
+        "document": document["id"],
+        "mode": selection["mode"],
+        "agent": agent,
+        "target_entry": result["target"],
+        "kept_entries": result["kept_entries"],
+        "dropped_entries": result["dropped_entries"],
+        "excluded_sections": result["excluded_sections"],
+        "original_bytes": result["original_bytes"],
+        "content_bytes": result["content_bytes"],
+    }
+    return delivered, summary
+
+
+def _collect_documents(declaration: dict[str, Any], roots: dict[str, Path]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
     required = [_load_document(doc, roots, True) for doc in declaration["required_docs"]]
     optional: list[dict[str, Any]] = []
     missing_optional: list[str] = []
@@ -281,39 +485,115 @@ def load_event(args: argparse.Namespace) -> dict[str, Any]:
             missing_optional.append(doc["id"])
         else:
             optional.append(loaded)
+    return required, optional, missing_optional
+
+
+def _with_source_fields(document: dict[str, Any]) -> dict[str, Any]:
+    entry = dict(document)
+    entry.setdefault("source_sha256", document["sha256"])
+    entry.setdefault("source_bytes", document["bytes"])
+    return entry
+
+
+def _build_response(
+    args: argparse.Namespace,
+    context: tuple[dict[str, Path], Path, dict[str, Any], bytes],
+    *,
+    record_ledger: bool,
+) -> dict[str, Any]:
+    roots, manifest_path, manifest, manifest_raw = context
+    declaration = _event(manifest, args.event)
+    call = _call_mode(args, declaration)
+    if call["mode"] == "legacy" and call["rejected"]:
+        raise EventLoaderError("legacy_dispatch_rejected", "구형 호출은 더 이상 허용되지 않습니다. 계약 인자를 넘겨 새 계약으로 호출하십시오.")
+    required, optional, missing_optional = _collect_documents(declaration, roots)
+    warnings: list[dict[str, Any]] = []
+    selection_summary: dict[str, Any] | None = None
+    agent_info: dict[str, str] | None = None
+    source_payload_bytes = sum(doc["bytes"] for doc in required + optional)
+    if call["mode"] == "v2":
+        agent_info = _resolve_agent(call["agent"], roots)
+        selection = declaration.get("selection")
+        delivered_required: list[dict[str, Any]] = []
+        for doc in required + optional:
+            doc = _with_source_fields(doc)
+            if isinstance(selection, dict) and doc["id"] == selection["document"]:
+                doc, selection_summary = _select_document(doc, selection, call["agent"])
+            delivered_required.append(doc)
+        required = delivered_required[: len(required)]
+        optional = delivered_required[len(required):]
     documents = required + optional
-    metadata = [{key: value for key, value in document.items() if key != "content"} for document in documents]
     manifest_sha = _sha256(manifest_raw)
-    receipt = {
-        "schema_version": 1,
+    load_id = uuid.uuid4().hex
+    payload_bytes = sum(document["bytes"] for document in documents)
+    receipt: dict[str, Any] = {
+        "schema_version": 2 if call["mode"] == "v2" else 1,
         "event": args.event,
         "manifest_path": str(manifest_path),
         "manifest_sha256": manifest_sha,
-        "documents": metadata,
+        "documents": [_metadata(document) for document in documents],
         "required_document_ids": [doc["id"] for doc in declaration["required_docs"]],
-        "payload_bytes": sum(document["bytes"] for document in documents),
+        "payload_bytes": payload_bytes,
     }
-    return {
+    response: dict[str, Any] = {
         "ok": True,
         "command": "load",
         "event": args.event,
+        "response_version": 2,
+        "load_id": load_id,
         "receipt_required": declaration["receipt_required"],
         "predecessors": declaration["predecessors"],
         "manifest_path": str(manifest_path),
         "manifest_sha256": manifest_sha,
         "manifest_hash": manifest_sha,
         "documents": documents,
-        "required_documents": required,
-        "optional_documents": optional,
+        "required_documents": [{k: doc[k] for k in ("id", "token", "path", "sha256", "bytes")} for doc in required],
+        "optional_documents": [{k: doc[k] for k in ("id", "token", "path", "sha256", "bytes")} for doc in optional],
         "missing_optional_documents": missing_optional,
         "document_count": len(documents),
         "required_document_count": len(required),
-        "payload_bytes": receipt["payload_bytes"],
+        "payload_bytes": payload_bytes,
         "receipt": receipt,
     }
+    if call["mode"] == "v2":
+        receipt.update(
+            {
+                "contract_version": call["contract_version"],
+                "load_id": load_id,
+                "dispatch_id": call["dispatch_id"],
+                "agent": agent_info,
+                "role": call["role"],
+                "role_doc": call["role_doc"],
+                "selection": selection_summary,
+                "body_sha256": _body_sha256(documents),
+                "source_payload_bytes": source_payload_bytes,
+            }
+        )
+        response["contract"] = call["contract_version"]
+        response["source_payload_bytes"] = source_payload_bytes
+        response["selection"] = selection_summary
+    elif call["mode"] == "legacy":
+        response["contract"] = "legacy"
+        warnings.append(dict(LEGACY_WARNING))
+        if record_ledger:
+            _record_legacy("load", args.event, roots, warnings)
+        response["warnings"] = warnings
+    # response_bytes: 자기 필드를 0으로 둔 응답 JSON의 UTF-8 길이
+    response["response_bytes"] = 0
+    if call["mode"] == "v2":
+        receipt["response_bytes"] = 0
+    size = len(json.dumps(response, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+    response["response_bytes"] = size
+    if call["mode"] == "v2":
+        receipt["response_bytes"] = size
+    return response
 
 
-def _read_receipt(path: Path) -> dict[str, Any]:
+def load_event(args: argparse.Namespace) -> dict[str, Any]:
+    return _build_response(args, _context(args), record_ledger=True)
+
+
+def _read_response_file(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     try:
         raw = path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
@@ -322,25 +602,123 @@ def _read_receipt(path: Path) -> dict[str, Any]:
         value = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise EventLoaderError("receipt_invalid", f"receipt JSON이 유효하지 않습니다: {exc}", path=str(path)) from exc
-    if isinstance(value, dict) and isinstance(value.get("receipt"), dict):
-        value = value["receipt"]
     if not isinstance(value, dict):
         raise EventLoaderError("receipt_invalid", "receipt는 JSON object여야 합니다.", path=str(path))
-    return value
+    receipt = value["receipt"] if isinstance(value.get("receipt"), dict) else value
+    return value, receipt
+
+
+def _check_contract_receipt(receipt: dict[str, Any], response: dict[str, Any], call: dict[str, Any]) -> None:
+    """D-9 (b)(c): 인자와 receipt의 일치, 응답 본문과 receipt 해시의 일치."""
+    if receipt.get("contract_version") != call["contract_version"]:
+        raise EventLoaderError("contract_mismatch", "receipt의 계약 버전이 요청 값과 다릅니다.", receipt_contract_version=receipt.get("contract_version"), requested=call["contract_version"])
+    recorded_agent = receipt.get("agent") if isinstance(receipt.get("agent"), dict) else {}
+    if recorded_agent.get("name") != call["agent"]:
+        raise EventLoaderError("dispatch_target_mismatch", "receipt의 대상 에이전트가 요청 값과 다릅니다.", receipt_agent=recorded_agent.get("name"), requested=call["agent"])
+    role_doc = call["role_doc"]
+    recorded_doc = receipt.get("role_doc")
+    same_doc = (recorded_doc is None and role_doc is None) or (
+        isinstance(recorded_doc, dict)
+        and role_doc is not None
+        and recorded_doc.get("path") == role_doc["path"]
+        and recorded_doc.get("sha256") == role_doc["sha256"]
+    )
+    if receipt.get("role") != call["role"] or not same_doc:
+        raise EventLoaderError("dispatch_role_mismatch", "receipt의 역할 또는 역할 문서가 요청 값과 다릅니다.", receipt_role=receipt.get("role"), requested=call["role"])
+    if receipt.get("dispatch_id") != call["dispatch_id"]:
+        raise EventLoaderError("dispatch_id_mismatch", "receipt의 디스패치 식별자가 요청 값과 다릅니다.", receipt_dispatch_id=receipt.get("dispatch_id"), requested=call["dispatch_id"])
+    documents = response.get("documents")
+    if response is receipt or not isinstance(documents, list) or not all(isinstance(d, dict) and isinstance(d.get("content"), str) for d in documents):
+        raise EventLoaderError("response_body_missing", "receipt에 해당하는 응답 본문(documents[].content)이 없습니다. load 응답 전체 파일을 --receipt로 넘기십시오.")
+    recorded_docs = receipt.get("documents")
+    if not isinstance(recorded_docs, list) or [d.get("id") for d in documents] != [d.get("id") for d in recorded_docs if isinstance(d, dict)]:
+        raise EventLoaderError("body_hash_mismatch", "응답 본문 문서 목록이 receipt와 다릅니다.")
+    for body, recorded in zip(documents, recorded_docs):
+        if _sha256(body["content"].encode("utf-8")) != recorded.get("sha256"):
+            raise EventLoaderError("body_hash_mismatch", f"응답 본문이 receipt 해시와 다릅니다: {body.get('id')}", document=body.get("id"))
+    if _body_sha256(documents) != receipt.get("body_sha256"):
+        raise EventLoaderError("body_hash_mismatch", "응답 본문 전체 해시가 receipt와 다릅니다.")
+
+
+def _check_selection_and_agent(
+    receipt: dict[str, Any],
+    declaration: dict[str, Any],
+    roots: dict[str, Path],
+    call: dict[str, Any],
+) -> None:
+    """D-9 (d)(e): 같은 규칙으로 선별을 다시 수행한 해시와 에이전트 문서 재해석."""
+    required, optional, _ = _collect_documents(declaration, roots)
+    selection = declaration.get("selection")
+    recorded_by_id = {d.get("id"): d for d in receipt.get("documents", []) if isinstance(d, dict)}
+    for doc in required + optional:
+        if isinstance(selection, dict) and doc["id"] == selection["document"]:
+            doc, _summary = _select_document(doc, selection, call["agent"])
+        recorded = recorded_by_id.get(doc["id"])
+        if recorded is None or recorded.get("sha256") != doc["sha256"]:
+            raise EventLoaderError(
+                "document_hash_mismatch",
+                f"선별을 다시 수행한 전달 내용이 receipt와 다릅니다: {doc['id']}",
+                document=doc["id"],
+                expected_sha256=doc["sha256"],
+                receipt_sha256=(recorded or {}).get("sha256"),
+            )
+    recorded_agent = receipt.get("agent") if isinstance(receipt.get("agent"), dict) else {}
+    current = _resolve_agent(call["agent"], roots)
+    if any(recorded_agent.get(key) != current[key] for key in ("path", "sha256", "origin")):
+        raise EventLoaderError(
+            "agent_changed",
+            "에이전트 문서의 경로·해시·출처가 load 시점과 다릅니다. 다시 load하십시오.",
+            receipt_origin=recorded_agent.get("origin"),
+            current_origin=current["origin"],
+            receipt_sha256=recorded_agent.get("sha256"),
+            current_sha256=current["sha256"],
+        )
 
 
 def verify_receipt(args: argparse.Namespace) -> dict[str, Any]:
     receipt_path = Path(args.receipt).expanduser().resolve()
-    receipt = _read_receipt(receipt_path)
+    response, receipt = _read_response_file(receipt_path)
     receipt_event = receipt.get("event")
     if not isinstance(receipt_event, str):
         raise EventLoaderError("receipt_invalid", "receipt.event가 없습니다.", path=str(receipt_path))
     if args.event and args.event != receipt_event:
         raise EventLoaderError("event_mismatch", f"요청 event와 receipt event가 다릅니다: {args.event} != {receipt_event}", expected_event=args.event, receipt_event=receipt_event)
-    if not args.manifest and isinstance(receipt.get("manifest_path"), str):
-        args.manifest = receipt["manifest_path"]
     roots, manifest_path, manifest, manifest_raw = _context(args)
+    receipt_manifest = receipt.get("manifest_path")
+    if not isinstance(receipt_manifest, str) or Path(receipt_manifest).expanduser().resolve() != manifest_path:
+        raise EventLoaderError(
+            "stale_receipt",
+            f"receipt 매니페스트 경로가 실행 경계 매니페스트와 다릅니다: {receipt_manifest} != {manifest_path}",
+            expected_manifest_path=str(manifest_path),
+            receipt_manifest_path=receipt_manifest,
+        )
     declaration = _event(manifest, receipt_event)
+    args.event = receipt_event
+    call = _call_mode(args, declaration)
+    receipt_schema = receipt.get("schema_version")
+    warnings: list[dict[str, Any]] = []
+    contract_fields: dict[str, Any] = {}
+    if call["mode"] == "legacy":
+        if receipt_schema == 2:
+            raise EventLoaderError("contract_args_missing", "새 계약 receipt는 계약 인자가 필요합니다.", missing=[flag for _, flag in CONTRACT_FLAGS])
+        if call["rejected"]:
+            raise EventLoaderError("legacy_receipt_rejected", "구형 receipt는 더 이상 허용되지 않습니다. 새 계약으로 다시 load하십시오.")
+        warnings.append(dict(LEGACY_WARNING))
+        _record_legacy("verify", receipt_event, roots, warnings)
+        contract_fields = {"contract": "legacy", "legacy_verified": True}
+    elif call["mode"] == "v2":
+        if receipt_schema != 2:
+            raise EventLoaderError("contract_mismatch", "구형 receipt에 계약 인자를 함께 쓸 수 없습니다. 새 계약으로 다시 load하십시오.", receipt_schema_version=receipt_schema)
+        _check_contract_receipt(receipt, response, call)
+        _check_selection_and_agent(receipt, declaration, roots, call)
+        contract_fields = {
+            "contract": call["contract_version"],
+            "dispatch_id": call["dispatch_id"],
+            "agent": receipt.get("agent"),
+            "role": call["role"],
+            "load_id": receipt.get("load_id"),
+        }
+    v2 = call["mode"] == "v2"
     current_manifest_sha = _sha256(manifest_raw)
     if receipt.get("manifest_sha256") != current_manifest_sha:
         raise EventLoaderError("stale_receipt", "manifest hash가 현재 값과 다릅니다.", expected_sha256=current_manifest_sha, receipt_sha256=receipt.get("manifest_sha256"))
@@ -372,13 +750,16 @@ def verify_receipt(args: argparse.Namespace) -> dict[str, Any]:
             raise EventLoaderError("missing_document", f"receipt에 필수 문서가 없습니다: {doc_id}", document=doc_id)
         if recorded.get("token") != current["token"] or recorded.get("path") != current["path"]:
             raise EventLoaderError("stale_receipt", f"문서 경로가 현재 선언과 다릅니다: {doc_id}", document=doc_id, expected_path=current["path"], receipt_path=recorded.get("path"))
-        if recorded.get("sha256") != current["sha256"] or recorded.get("bytes") != current["bytes"]:
-            raise EventLoaderError("document_hash_mismatch", f"문서 hash 또는 bytes가 현재 값과 다릅니다: {doc_id}", document=doc_id, expected_sha256=current["sha256"], receipt_sha256=recorded.get("sha256"))
+        recorded_sha = recorded.get("source_sha256") if v2 else recorded.get("sha256")
+        recorded_bytes = recorded.get("source_bytes") if v2 else recorded.get("bytes")
+        if recorded_sha != current["sha256"] or recorded_bytes != current["bytes"]:
+            raise EventLoaderError("document_hash_mismatch", f"문서 hash 또는 bytes가 현재 값과 다릅니다: {doc_id}", document=doc_id, expected_sha256=current["sha256"], receipt_sha256=recorded_sha)
         verified.append(current)
     current_payload_bytes = sum(doc["bytes"] for doc in verified)
-    if receipt.get("payload_bytes") != current_payload_bytes:
-        raise EventLoaderError("stale_receipt", "receipt payload bytes가 현재 문서 합계와 다릅니다.", expected_payload_bytes=current_payload_bytes, receipt_payload_bytes=receipt.get("payload_bytes"))
-    return {
+    recorded_total = receipt.get("source_payload_bytes") if v2 else receipt.get("payload_bytes")
+    if recorded_total != current_payload_bytes:
+        raise EventLoaderError("stale_receipt", "receipt payload bytes가 현재 문서 합계와 다릅니다.", expected_payload_bytes=current_payload_bytes, receipt_payload_bytes=recorded_total)
+    result: dict[str, Any] = {
         "ok": True,
         "command": "verify",
         "event": receipt_event,
@@ -389,6 +770,10 @@ def verify_receipt(args: argparse.Namespace) -> dict[str, Any]:
         "verified_document_count": len(verified),
         "payload_bytes": current_payload_bytes,
     }
+    result.update(contract_fields)
+    if warnings:
+        result["warnings"] = warnings
+    return result
 
 
 def _expand_consumer_paths(source_root: Path, patterns: Iterable[str]) -> list[Path]:
@@ -418,6 +803,23 @@ def _event_token_present(text: str, event_id: str) -> bool:
     return False
 
 
+def _dispatch_line_violations(path: Path, text: str) -> list[dict[str, Any]]:
+    """D-14: worker.dispatch load/verify 줄의 계약 인자 누락과 게이트 줄의 자기 폴더 이름 불일치."""
+    violations: list[dict[str, Any]] = []
+    folder = path.parent.name if path.name == "AGENT.md" and path.parent.parent.name == "agents" else None
+    for line_number, line in enumerate(text.splitlines(), 1):
+        if "--event worker.dispatch" not in line or not re.search(r"\b(?:load|verify)\b", line):
+            continue
+        missing = [flag for _, flag in CONTRACT_FLAGS if flag not in line]
+        if missing:
+            violations.append({"code": "dispatch_contract_args_missing", "event": DISPATCH_EVENT, "path": str(path), "line": line_number, "missing": missing})
+        if folder and re.search(r"\bverify\b", line):
+            match = re.search(r"--agent\s+[`'\"]?([^\s`'\"]+)", line)
+            if match and not match.group(1).startswith("<") and match.group(1) != folder:
+                violations.append({"code": "dispatch_gate_agent_mismatch", "event": DISPATCH_EVENT, "path": str(path), "line": line_number, "agent": match.group(1), "folder": folder})
+    return violations
+
+
 def static_check(args: argparse.Namespace) -> dict[str, Any]:
     roots, manifest_path, manifest, manifest_raw = _context(args)
     selected = [_event(manifest, args.event)] if args.event else list(manifest["events"])
@@ -438,6 +840,8 @@ def static_check(args: argparse.Namespace) -> dict[str, Any]:
                     violations.append({"code": "event_contract_missing", "event": declaration["id"], "path": str(path)})
                 elif "event-loader" not in text or not re.search(r"\b(?:load|verify|receipt)\b", text, re.IGNORECASE):
                     violations.append({"code": "loader_contract_missing", "event": declaration["id"], "path": str(path)})
+                if declaration["id"] == DISPATCH_EVENT and isinstance(declaration.get("contract"), dict):
+                    violations.extend(_dispatch_line_violations(path, text))
                 for line_number, line in enumerate(text.splitlines(), 1):
                     if LEGACY_HARNESS_PATTERN.search(line):
                         violations.append({"code": "legacy_harness_fallback", "event": declaration["id"], "path": str(path), "line": line_number})
@@ -454,25 +858,19 @@ def static_check(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def measure_event(args: argparse.Namespace) -> dict[str, Any]:
-    roots, manifest_path, manifest, manifest_raw = _context(args)
+    context = _context(args)
+    roots, manifest_path, manifest, manifest_raw = context
     declaration = _event(manifest, args.event)
     iterations = args.iterations
     samples_ns: list[int] = []
-    final_documents: list[dict[str, Any]] = []
+    response: dict[str, Any] = {}
     for _ in range(iterations):
         started = time.perf_counter_ns()
-        documents: list[dict[str, Any]] = []
-        for doc in declaration["required_docs"]:
-            loaded = _load_document(doc, roots, True, include_content=False)
-            assert loaded is not None
-            documents.append(loaded)
-        for doc in declaration["optional_docs"]:
-            loaded = _load_document(doc, roots, False, include_content=False)
-            if loaded is not None:
-                documents.append(loaded)
+        response = _build_response(args, context, record_ledger=False)
         samples_ns.append(time.perf_counter_ns() - started)
-        final_documents = documents
-    payload_bytes = sum(doc["bytes"] for doc in final_documents)
+    final_documents = [_metadata(doc) for doc in response["documents"]]
+    payload_bytes = response["payload_bytes"]
+    source_payload_bytes = response.get("source_payload_bytes", payload_bytes)
     return {
         "ok": True,
         "command": "measure",
@@ -483,7 +881,9 @@ def measure_event(args: argparse.Namespace) -> dict[str, Any]:
         "document_count": len(final_documents),
         "required_document_count": len(declaration["required_docs"]),
         "payload_bytes": payload_bytes,
-        "declared_payload_bytes": payload_bytes,
+        "source_payload_bytes": source_payload_bytes,
+        "response_bytes": response["response_bytes"],
+        "declared_payload_bytes": source_payload_bytes,
         "documents": final_documents,
         "elapsed_ns": sum(samples_ns),
         "time_ns": {
@@ -492,6 +892,108 @@ def measure_event(args: argparse.Namespace) -> dict[str, Any]:
             "maximum": max(samples_ns),
             "minimum": min(samples_ns),
         },
+    }
+
+
+def load_report(args: argparse.Namespace) -> dict[str, Any]:
+    """load 응답 파일들의 본문·응답 바이트 합계. load_id 기준 중복 제거, verify 결과 파일은 건너뛴다."""
+    seen: dict[str, tuple[int, int]] = {}
+    skipped_verify = 0
+    for raw_path in args.receipt:
+        path = Path(raw_path).expanduser().resolve()
+        value, receipt = _read_response_file(path)
+        if value.get("command") == "verify":
+            skipped_verify += 1
+            continue
+        load_id = value.get("load_id") or receipt.get("load_id") or f"path:{path}"
+        payload = receipt.get("payload_bytes", value.get("payload_bytes", 0))
+        response_bytes = value.get("response_bytes", receipt.get("response_bytes", 0))
+        seen.setdefault(str(load_id), (int(payload), int(response_bytes)))
+    return {
+        "ok": True,
+        "command": "load-report",
+        "load_count": len(seen),
+        "skipped_verify_results": skipped_verify,
+        "payload_bytes": sum(item[0] for item in seen.values()),
+        "response_bytes": sum(item[1] for item in seen.values()),
+    }
+
+
+def _parse_ts(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def legacy_report(args: argparse.Namespace) -> dict[str, Any]:
+    roots = _roots(args)
+    path = _ledger_path(roots)
+    try:
+        since = _parse_ts(args.since) if args.since else None
+        until = _parse_ts(args.until) if args.until else None
+    except ValueError as exc:
+        raise EventLoaderError("contract_arg_invalid", f"시각 형식이 올바르지 않습니다: {exc}") from exc
+    rows: list[tuple[datetime, dict[str, Any]]] = []
+    if path.is_file():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+                stamp = _parse_ts(row["ts"])
+            except (json.JSONDecodeError, KeyError, ValueError, TypeError, AttributeError):
+                continue
+            if (since and stamp < since) or (until and stamp > until):
+                continue
+            rows.append((stamp, row))
+    rows.sort(key=lambda item: item[0])
+    by_op: dict[str, int] = {}
+    for _, row in rows:
+        by_op[str(row.get("op"))] = by_op.get(str(row.get("op")), 0) + 1
+    return {
+        "ok": True,
+        "command": "legacy-report",
+        "ledger_path": str(path),
+        "since": args.since,
+        "until": args.until,
+        "count": len(rows),
+        "first_ts": rows[0][1]["ts"] if rows else None,
+        "last_ts": rows[-1][1]["ts"] if rows else None,
+        "by_op": by_op,
+    }
+
+
+def agent_index(args: argparse.Namespace) -> dict[str, Any]:
+    """대상 선택용 가벼운 목록: 매핑 테이블·폴백 규칙·탐색 경로 절과 에이전트 이름만 출력한다."""
+    roots, manifest_path, manifest, _ = _context(args)
+    declaration = _event(manifest, DISPATCH_EVENT)
+    selection = declaration.get("selection")
+    if not isinstance(selection, dict):
+        raise EventLoaderError("manifest_invalid", "worker.dispatch에 selection 선언이 없습니다.")
+    doc = next(d for d in declaration["required_docs"] if d["id"] == selection["document"])
+    loaded = _load_document(doc, roots, True)
+    assert loaded is not None
+    sections = parse_sections(loaded["content"])
+    picked: list[dict[str, str]] = []
+    index = 0
+    while index < len(sections):
+        section = sections[index]
+        if section.level == 2 and section.title in INDEX_SECTIONS:
+            end = index + 1
+            while end < len(sections) and sections[end].level > 2:
+                end += 1
+            picked.append({"title": section.title, "content": "".join(s.text for s in sections[index:end])})
+            index = end
+            continue
+        index += 1
+    names = select_agent_entries(loaded["content"], selection, "")["dropped_entries"]
+    return {
+        "ok": True,
+        "command": "agent-index",
+        "manifest_path": str(manifest_path),
+        "document": {k: loaded[k] for k in ("id", "token", "path", "sha256", "bytes")},
+        "agents": names,
+        "sections": picked,
+        "content": "".join(item["content"] for item in picked),
     }
 
 
@@ -658,6 +1160,14 @@ def project_brief(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def _add_contract_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--contract-version", dest="contract_version", help="worker.dispatch 계약 버전")
+    parser.add_argument("--agent", help="디스패치 대상 에이전트 이름")
+    parser.add_argument("--role", help="디스패치 역할 (예: builder, verifier)")
+    parser.add_argument("--role-doc", dest="role_doc", help="역할 문서 경로(선택)")
+    parser.add_argument("--dispatch-id", dest="dispatch_id", help="호출자가 발급한 디스패치 식별자")
+
+
 def _add_context_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--manifest", help="events.json 경로")
     parser.add_argument("--source-root", help="framework source checkout root")
@@ -671,12 +1181,14 @@ def _parser() -> argparse.ArgumentParser:
 
     load_parser = subparsers.add_parser("load", help="필수 문서 전문과 receipt 반환")
     load_parser.add_argument("--event", required=True)
+    _add_contract_options(load_parser)
     _add_context_options(load_parser)
     load_parser.set_defaults(handler=load_event)
 
     verify_parser = subparsers.add_parser("verify", help="receipt의 event/manifest/document 최신성 검증")
     verify_parser.add_argument("--receipt", required=True)
     verify_parser.add_argument("--event")
+    _add_contract_options(verify_parser)
     _add_context_options(verify_parser)
     verify_parser.set_defaults(handler=verify_receipt)
 
@@ -690,8 +1202,24 @@ def _parser() -> argparse.ArgumentParser:
     measure_parser = subparsers.add_parser("measure", help="이벤트 선언 payload bytes와 읽기 시간 측정")
     measure_parser.add_argument("--event", required=True)
     measure_parser.add_argument("--iterations", type=int, default=3)
+    _add_contract_options(measure_parser)
     _add_context_options(measure_parser)
     measure_parser.set_defaults(handler=measure_event)
+
+    report_parser = subparsers.add_parser("load-report", help="load 응답 파일들의 본문·응답 바이트 합계(load_id 중복 제거)")
+    report_parser.add_argument("--receipt", nargs="+", required=True)
+    _add_context_options(report_parser)
+    report_parser.set_defaults(handler=load_report)
+
+    legacy_parser = subparsers.add_parser("legacy-report", help="구형 worker.dispatch 호출 원장 집계")
+    legacy_parser.add_argument("--since", help="ISO8601 시작 시각(포함)")
+    legacy_parser.add_argument("--until", help="ISO8601 종료 시각(포함)")
+    _add_context_options(legacy_parser)
+    legacy_parser.set_defaults(handler=legacy_report)
+
+    index_parser = subparsers.add_parser("agent-index", help="대상 선택용 매핑 테이블·폴백 규칙·탐색 경로·에이전트 이름 목록")
+    _add_context_options(index_parser)
+    index_parser.set_defaults(handler=agent_index)
 
     brief_parser = subparsers.add_parser(
         "project-brief",

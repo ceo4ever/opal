@@ -14,9 +14,9 @@ tools: [Read, Grep, Glob, Bash]
 ## `worker.dispatch` 진입 게이트
 
 1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
-2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
-3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
-4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch --contract-version 2 --agent opal-convention-checker --role <role> --dispatch-id <dispatch_id>`를 반드시 실행한다. 프롬프트에 `role_doc`이 있으면 `--role-doc <role_doc>`도 함께 넘긴다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 프롬프트에 role·dispatch_id·contract_version이 없거나 verify 인자와 맞지 않거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`이고 결과의 `contract`가 2이며 결과의 `dispatch_id`·`agent.name`·`role`이 프롬프트와 같을 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
 
 ---
 

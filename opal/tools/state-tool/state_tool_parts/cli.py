@@ -352,6 +352,14 @@ def build_parser():
                        help="installed OPAL root")
     p_evt.add_argument("--project-root", dest="project_root",
                        help="current project root")
+    # worker.dispatch 계약 인자: 값이 있을 때만 loader에 그대로 전달, 필수 판정은 loader 소유
+    p_evt.add_argument("--agent", help="worker.dispatch 대상 에이전트 (loader로 전달)")
+    p_evt.add_argument("--role", help="worker.dispatch 역할 (loader로 전달)")
+    p_evt.add_argument("--role-doc", dest="role_doc", help="역할 문서 경로 (loader로 전달)")
+    p_evt.add_argument("--dispatch-id", dest="dispatch_id",
+                       help="디스패치 식별자 (loader로 전달)")
+    p_evt.add_argument("--contract-version", dest="contract_version",
+                       help="worker.dispatch 계약 버전 (loader로 전달)")
     p_evt.set_defaults(func=cmd_event_verify)
 
     # ── verify ──

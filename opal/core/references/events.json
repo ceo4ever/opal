@@ -438,10 +438,32 @@
         "pilot.start"
       ],
       "receipt_required": true,
+      "contract": {
+        "current": 2,
+        "supported": [
+          2
+        ],
+        "legacy_accepted": true
+      },
+      "selection": {
+        "document": "agent-registry",
+        "mode": "agent_entries",
+        "exclude_sections": [
+          "에이전트 추가 가이드",
+          "향후 추가 에이전트"
+        ],
+        "full_for_agents": [
+          "opal-plan-agent",
+          "opal-task-action-agent",
+          "opal-sdd-action-agent",
+          "opal-loop-action-agent"
+        ]
+      },
       "consumer": {
         "type": "worker",
         "paths": [
-          "opal/agents/*/AGENT.md"
+          "opal/agents/*/AGENT.md",
+          "opal/core/references/pm/dispatch-process.md"
         ]
       }
     }

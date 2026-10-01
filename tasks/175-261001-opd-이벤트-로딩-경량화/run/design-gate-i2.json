@@ -1,0 +1,43 @@
+{
+  "input_bundle_hash": "2e91eee5c24e15ad21b6aaf5f213125cde090d1e9731e526320a446cd340c687",
+  "iteration": 2,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [
+    {
+      "id": "recoverability-1",
+      "status": "resolved",
+      "reason": "PLAN.md Release and recovery now has a 설치본 loader 결함 복구 item covering post-deploy checks, git revert, reinstall via install-mac.sh, recheck, and .bak fallback."
+    }
+  ],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": [
+        "S-10",
+        "S-12"
+      ],
+      "basis": "S-10 already runs the same command, static-check --event worker.dispatch --path opal/agents, and checks that the repository source has 0 violations. S-12 looks at the same 16 AGENT.md files with that same command.",
+      "recommendation": "Fold the specific checks that only S-12 makes into S-10's expected results, so the static check runs once."
+    }
+  ],
+  "verdict": "pass",
+  "rewrite_target": null
+}

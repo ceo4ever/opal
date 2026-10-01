@@ -1,0 +1,11 @@
+{
+  "base_sha": "bb257506ef2deeb80fda10c4ceaf90006b866c83",
+  "head_sha": "bb257506ef2deeb80fda10c4ceaf90006b866c83",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": []
+}

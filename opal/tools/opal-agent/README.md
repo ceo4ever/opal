@@ -289,7 +289,8 @@ stream도 정상이다.
 
 - opal-agent 서브에이전트는 **fresh 프로세스**라 세션 컨텍스트를 공유하지 않는다 →
   필요한 컨텍스트를 프롬프트에 직접 주입한다. OPAL 워커 디스패치라면 `[WORKER]` 다음에
-  `worker.dispatch` event id와 검증 가능한 receipt를 함께 주입해야 하며, 누락·stale·wrong-event
+  `worker.dispatch` event id와 검증 가능한 receipt(대상 에이전트·역할·새 `dispatch_id`·계약 버전 2로
+  load·verify한 결과)를 함께 주입해야 하며, 누락·stale·wrong-event
   receipt는 워커가 blocked로 반환한다.
 - 반환 JSON의 `result`로 결과, `session_id`로 다중 턴(`--resume`).
 - 비-claude 플랫폼(codex/gemini/grok/cursor/antigravity) 워커도 `--provider`로 디스패치 가능

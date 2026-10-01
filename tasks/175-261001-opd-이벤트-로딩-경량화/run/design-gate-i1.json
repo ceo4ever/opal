@@ -1,0 +1,47 @@
+{
+  "input_bundle_hash": "3413486cd45b75f4dbd5e776941659af10267b20026c9a50311d537c0c615cf5",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "recoverability-1: PLAN.md:74 (## Release and recovery, '실패 시') — 배포 뒤 복구 경로는 구형 호출과 새 계약 소비자 문서 되돌리기만 다룬다. 설치된 event_loader.py 자체가 잘못된 경우의 복구 경로가 없다. 예를 들어 D-1 응답 형식 변경(PLAN.md:34)이 session.*·pm.activate·stage.* 부트 load를 깨뜨리면 legacy_accepted:true로는 복구되지 않는다. 이때 소스를 되돌린 뒤 scripts/install-mac.sh로 재설치하는지, 재설치 후 무엇을 확인하는지(예: session.assistant load 성공, static-check)를 구현자가 정해야 한다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "subsumed",
+      "targets": [
+        "S-12"
+      ],
+      "basis": "S-10 already runs `static-check --event worker.dispatch --path opal/agents` on the repository source with an expected result of 0 violations. S-12 runs the same command on the same path. The extra checks in S-12 all come out of that same static-check output.",
+      "recommendation": "Add S-12's expected results to S-10's expected results and drop S-12. Alternatively, record in S-12 the specific check items that S-10 does not cover."
+    },
+    {
+      "id": "A-2",
+      "kind": "cheaper_layer",
+      "targets": [
+        "S-15"
+      ],
+      "basis": "In S-15, the Verifier/Reviewer real dispatch and cross-verify proves a deterministic contract already proven by S-4(b)(c). The model's judgment quality is not an acceptance criterion for AC-3 or H-2.",
+      "recommendation": "Keep the real call to 1 opal-test-agent dispatch plus 1 sub-dispatch path. Prove the Verifier/Reviewer cross-rejection with deterministic load and verify runs against the installed build (S-14 level)."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

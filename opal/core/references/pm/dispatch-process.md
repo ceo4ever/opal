@@ -3,25 +3,9 @@
 > Lazy 트리거: 워커 디스패치 직전
 
 Steps 1~3(실행 단위 확정·프로젝트 지식/코드맵 선조회·PROJECT 레지스트리 문서 선별)은 PM이 직접 작성하는 단계(`actor=coordinator`의 ANALYSIS·PLAN·TEST-SCENARIO, legacy `actor=pm`의 직접 수행)의 preflight로 그대로 재사용한다.
-Step 0(이벤트 게이트)과 Steps 4~7(에이전트·모델 선택·슬라이싱·capability 주입·디스패치)은 워커·독립 검증자를 실제로 호출할 때마다 적용한다(`harness/actor.md` 참조). `actor=coordinator`의 EXECUTE 구현·FAIL 수정 디스패치도 여기에 포함된다.
+Step 4(에이전트·모델 선택)로 대상·역할을 확정한 뒤 Step 0(이벤트 게이트)을 수행하고, Steps 5~7(슬라이싱·capability 주입·디스패치)로 이어진다. Step 0과 Steps 4~7은 워커·독립 검증자를 실제로 호출할 때마다 적용한다(`harness/actor.md` 참조). `actor=coordinator`의 EXECUTE 구현·FAIL 수정 디스패치도 여기에 포함된다.
 
-PM은 워커마다 아래 순서를 다시 수행한다. 과거 디스패치의 문서·capability 목록을 재사용하지 않는다.
-
-## Step 0. worker.dispatch 이벤트 게이트
-
-**[MUST]** 매 워커 디스패치 직전에 다음을 새로 수행한다.
-
-1. manifest가 선언한 predecessor `pilot.start`의 receipt를 `state-tool event-verify`로 재검증한다.
-   현재 receipt가 없으면 `pilot.start` load·전문 적용·검증을 먼저 수행한다.
-2. `~/.opal/tools/event-loader/run.sh load --event worker.dispatch > <worker-receipt-path>`를 호출한다.
-3. 응답의 `documents[].content` 전문을 적용한다. 이 문서도 같은 응답에 포함되므로 직접 다시
-   Read하거나 `worker.dispatch`를 재귀 load하지 않는다.
-4. `~/.opal/tools/event-loader/run.sh verify --event worker.dispatch --receipt <worker-receipt-path>`를
-   호출한다.
-5. predecessor 미충족, load 실패, 필수 문서 누락, stale receipt, wrong-event receipt면 아래 Steps 1~7과 Agent
-   호출을 시작하지 않고 blocker로 반환한다.
-
-manifest의 `worker.dispatch` 문서 집합이 유일한 SSOT다. 이 문서에는 구성 파일 목록을 복제하지 않는다.
+PM은 워커마다 Step 1~4 → Step 0 → Step 5~7 순서를 다시 수행한다. 과거 디스패치의 문서·capability 목록을 재사용하지 않는다.
 
 ## Step 1. 실행 단위 확정
 
@@ -71,6 +55,31 @@ PROJECT 프로젝트 구성과 `.opal/AGENT.md`의 전문 에이전트 매핑을
 모델은 effective setting의 해당 플랫폼·레벨 값을 사용한다. PLAN에는 실제 실행 가능한 담당 역할을
 기입하며, 존재하지 않는 에이전트 이름을 만들지 않는다.
 
+## Step 0. worker.dispatch 이벤트 게이트
+
+**[MUST]** Steps 1~4에서 대상 에이전트와 역할이 확정된 뒤, 매 워커 디스패치 직전에 다음을 새로 수행한다.
+번호는 유지하되 실행 순서는 Step 1~4 → Step 0 → Step 5~7이다.
+
+1. manifest가 선언한 predecessor `pilot.start`의 receipt를 `state-tool event-verify`로 재검증한다.
+   현재 receipt가 없으면 `pilot.start` load·전문 적용·검증을 먼저 수행한다.
+2. 호출마다 새 디스패치 식별자를 발급한다. 불투명 문자열이며 형식은
+   `^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$`다. 예: `python3 -c "import uuid;print('dsp-'+uuid.uuid4().hex)"`.
+   다른 호출의 식별자를 재사용하지 않는다.
+3. 대상 에이전트(`<대상>`)와 역할(`<역할>`)을 넘겨 load한다. 역할 문서가 있으면 `--role-doc`을 더한다.
+   `~/.opal/tools/event-loader/run.sh load --event worker.dispatch --contract-version 2 --agent <대상> --role <역할> --dispatch-id <식별자> [--role-doc <역할 문서>] > <worker-receipt-path>`
+4. 같은 인자로 검증한다.
+   `~/.opal/tools/state-tool/run.sh event-verify --event worker.dispatch --receipt <worker-receipt-path> --contract-version 2 --agent <대상> --role <역할> --dispatch-id <식별자> [--role-doc <역할 문서>]`
+   성공 조건은 결과가 `ok: true`이고 결과의 `contract`가 2이며 결과의 `dispatch_id`·`agent.name`·`role`이 위 값과 같을 때뿐이다.
+5. 응답은 대상 에이전트 항목만 선별된 전문이다. `documents[].content`를 한 번 적용하며, 이 문서도 같은
+   응답에 포함되므로 직접 다시 Read하거나 `worker.dispatch`를 재귀 load하지 않는다.
+6. predecessor 미충족, load·verify 실패(대상·역할·식별자 불일치 포함), 필수 문서 누락, stale receipt,
+   wrong-event receipt면 아래 Steps 5~7과 Agent 호출을 시작하지 않고 blocker로 반환한다.
+
+대상 선택용 가벼운 목록(매핑 테이블·폴백 규칙·에이전트 이름)은 `~/.opal/tools/event-loader/run.sh agent-index`로 조회한다.
+전환 기간에는 계약 인자 없는 구형 호출도 호환되지만 새 호출에 쓰지 않는다(`legacy_accepted` 종료 절차는 event-loader README 소유).
+
+manifest의 `worker.dispatch` 문서 집합이 유일한 SSOT다. 이 문서에는 구성 파일 목록을 복제하지 않는다.
+
 ## Step 5. 컨텍스트 슬라이싱
 
 `pm/context-injection.md`의 단계별 계약에 따라 다음만 추린다.
@@ -98,7 +107,7 @@ PROJECT 프로젝트 구성과 `.opal/AGENT.md`의 전문 에이전트 매핑을
 
 ## Step 7. 디스패치
 
-Step 0에서 현재 디스패치용 `worker.dispatch` receipt가 성공 검증된 경우에만 Agent 도구를
+Step 0에서 현재 디스패치용(식별자·대상·역할 일치) `worker.dispatch` receipt가 성공 검증된 경우에만 Agent 도구를
 호출한다. 다른 워커 또는 이전 시점의 receipt는 재사용하지 않는다.
 
 워커 프롬프트는 아래 계약만 가진다.
@@ -111,8 +120,13 @@ Step 0에서 현재 디스패치용 `worker.dispatch` receipt가 성공 검증�
 ## 이벤트 검증
 - event: `worker.dispatch`
 - receipt: {현재 디스패치용 receipt 절대경로}
-- verification: {`event-loader verify --event worker.dispatch`의 `ok: true` 결과}
-- loaded_documents: {현재 load 응답의 `documents[].content` 전문}
+- dispatch_id: {Step 0에서 발급한 식별자}
+- agent: {대상 에이전트}
+- role: {역할}
+- role_doc: {역할 문서 경로 | 없음}
+- contract_version: 2
+- verification: {Step 0 4번 검증의 `ok: true` 결과}
+- loaded_documents: {현재 load 응답의 선별된 `documents[].content` 전문}
 
 ## 작업
 - 단계·실행 단위: {W/Step/산출물}
