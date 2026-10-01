@@ -1,6 +1,6 @@
 # STATE: @header 이력 누적 코드 차단 + state-tool 동작 보존 분할
 
-> 최종 갱신: 2026-10-01 16:00:58
+> 최종 갱신: 2026-10-01 17:07:54
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
@@ -14,6 +14,7 @@
 | 5 | 2026-10-01 14:31:52 | current_status changed: in_progress → blocked | 설계 게이트 재상한(retry_limit, 6회차) — 사용자 reset 결정 대기 |
 | 6 | 2026-10-01 14:34:58 | design gate retry limit reset at i6 (owner=user) | 사용자 승인: 6회차 지적 반영 후 7회차 진행 |
 | 7 | 2026-10-01 14:34:58 | current_status changed: blocked → in_progress | 사용자 승인 후 재개 |
+| 8 | 2026-10-01 17:07:54 | current_status changed: completed_unmerged → done | (none) |
 
 ## 블로커
 없음
