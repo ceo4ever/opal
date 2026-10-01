@@ -492,3 +492,7 @@
 - 갱신: [[pages/entity/test-tool.md]], [[pages/concept/scenario-goal-coverage-gate-loop.md]], [[pages/entity/op-scenario-gate-skill.md]], [[pages/entity/state-tool.md]]
 - 출처: task:161, task:162, task:167
 
+## [2026-10-01] ingest | CLOSE ingest — 태스크 169 워크트리 CLOSE brain 쓰기 계약 반영
+- 신규: [[pages/concept/worktree-close-brain-write-contract.md]]
+- 출처: task:169
+

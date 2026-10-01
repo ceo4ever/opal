@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-10-01 08:34
+> 갱신: 2026-10-01 09:48
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -377,6 +377,7 @@
 - [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
 - [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
+- [[worktree-close-brain-write-contract]] — 워크트리 CLOSE brain 쓰기 계약 — 같은 브랜치 반영·merge 전파 #worktree #brain #architecture #workspace
 - [[worktree-locates-hub-by-issued-copy]] — 워크트리는 허브를 탐색하지 않고 발급값 사본으로 찾는다 #worktree #ownership #issued-value #hook #task-138
 - [[worktree-session-launch-order-and-ownership]] — 워크트리 세션 기동은 허브가 만들고 state init 이후에 띄운다 #worktree #세션 #런처 #소유권
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
