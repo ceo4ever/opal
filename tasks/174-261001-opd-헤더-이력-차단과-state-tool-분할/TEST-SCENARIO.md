@@ -1,0 +1,30 @@
+---
+template: sdlc-v2
+---
+# TEST-SCENARIO: @header 이력 누적 코드 차단 + state-tool 동작 보존 분할
+
+> 입력: [TASK.md](TASK.md), [PLAN.md](PLAN.md) | 작성자: PM
+
+## Setup
+
+- 환경: 이 워크트리의 소스 트리. code-scan은 `node`, state-tool 테스트는 `opal/tools/state-tool/run-tests.sh`, code-scan 테스트는 `node --test opal/tools/code-scan/tests/`. 배포본(`~/.opal`)은 쓰지 않는다.
+- 공통 데이터: code-scan 시나리오는 임시 디렉토리에 `.opal/code-scan.json`(`headerSource: inline`)과 최소 파일을 만들어 쓴다. 동작 비교(S-7)는 기준 트리는 `git archive dee405ca opal`을 임시 디렉토리에 푼 것이고 분할본 트리는 작업 트리의 `opal/`을 임시 디렉토리에 복사한 것이다. 두 트리는 형제 도구(`date`·`run-log-tool`·`ownership-tool`·`memory-tool`·`test-tool`·`event-loader`, `skills/opal-pilot-dev`)의 상대 위치가 같아 `__file__` 기준 경로가 유효하며, 각 트리의 `opal/tools/state-tool/state_tool.py`를 같은 fixture 태스크에 실행한다.
+- 대역 사용과 한계: 사용하지 않음. 모든 시나리오가 실제 code-scan·state-tool 실행이다.
+- 실행 조건: 자동 실행. 사용자 협업 없음.
+
+## Scenarios
+
+| ID | 유형 | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|---|
+| S-1 | contract | AC-1 | `description`에 서로 다른 태스크 번호 2개(예: `태스크 138`·`태스크 145`)가 든 inline @header 파일 1개. 미정의 필드(`track`)만 가진 파일 1개 | `validate --changed <파일> --json`, 같은 파일을 포함한 전체 `validate --json` | 두 모드 모두 exit 2, `ok:false`, `violations`에 `header_history`(sub `description` / `undeclared_field`), `counts.header_history` ≥ 1. 번호가 1개뿐인 파일은 exit 0 | `node --test`(`test-header-history.js`) + 임시 디렉토리 | 구현 전 RED |
+| S-2 | contract | AC-2, H-3 | 유효 JSON @header가 24,576바이트 범위를 넘어 끝나는 파일 2종: 닫는 `}`가 범위 직후에 있는 것과 범위를 한참 넘는 것(파일 크기 > 범위) | `validate --json`(전체)·`validate --changed` | exit 2, `violations`에 `header_overflow` 1건(같은 파일의 `uncovered`는 없음), `counts.header_overflow` ≥ 1. `pre_existing`으로 분류되지 않음 | `node --test`(`test-validate.js`) + 임시 디렉토리 | 구현 전 RED |
+| S-3 | unit | H-3 | 비해당 경계 4종: ① 닫는 `}`가 범위 직전에 있는 헤더 ② `@header`가 없는 24,576바이트 초과 md ③ 본문이 `@header`를 산문으로 인용하는 대형 md ④ 106 ADD-1 대체 픽스처 — git에 커밋된 HEAD 사본의 머리말이 범위 밖에서 닫히고(대조군은 범위 안에서 닫힘) 작업본에서는 머리말을 제거한 파일 | 각 파일에 `validate --json`(④는 임시 git 저장소) | ①은 정상 커버(overflow 아님) ②③은 `header_overflow` 없이 기존 분류(`uncovered:pre_existing` 또는 `newly_uncovered`)를 유지 ④는 HEAD 범위 밖 닫힘 → `uncovered:pre_existing`·비차단, HEAD 범위 안 닫힘 대조군 → `newly_uncovered`·exit 2(라이브·HEAD 창문 일치 불변식 유지) | `node --test`(`test-validate.js`) | 구현 전 RED |
+| S-4 | integration | AC-3, H-1 | W-1~W-3 통합 후 저장소 | `node opal/tools/code-scan/code-scan.js validate --json`(저장소 루트 전체) | exit 0, `ok:true`, `counts.header_history`=0, `counts.header_overflow`=0, `violations[]`에서 `code:'uncovered'`·`sub:'incomplete'` 0건 | 실제 저장소 전체 실행 | 구현 후 |
+| S-5 | contract | AC-4, C-1 | 분할 전 `state_tool.py`에서 추출한 최상위 이름 집합(밑줄 포함)·`ERROR_CODES` 59종·서브커맨드 목록 fixture | `test_split_surface.py` 실행 — 분할본 `state_tool` 모듈의 이름 집합·코드표·`--help` 서브커맨드가 fixture 이상인지 비교 | 누락 이름 0건, `len(ERROR_CODES)`==59, 서브커맨드 목록 동일 | pytest(`run-tests.sh`) | 구현 전 RED |
+| S-6 | regression | AC-4, C-1, H-2 | 분할 후 state-tool 전체 테스트와 소스를 읽는 외부 테스트 | `opal/tools/state-tool/run-tests.sh` 전건 실행, `opal/tools/oppb-runtime-tool/tests/test_pilot_isolation.py` 실행 | 전건 PASS(두 실행 모두), 수집 테스트 수가 분할 전(기준 커밋에서 같은 명령으로 측정)과 같거나 `test_split_surface.py` 추가분만큼만 많음. 단언 내용 변경 없음(patch 대상·복사 방식 보정 diff만 존재) | pytest 병렬 러너 | 구현 후 |
+| S-7 | integration | AC-4, C-1 | 같은 fixture 태스크(init 직후)에 기준 트리의 `state_tool.py`와 분할본 트리의 `state_tool.py`를 각각 실행 | 대표 명령 `show`·`resolve-mode`·`resolve-start`·`init`·`advance`·`mark`·`verify --plan-contract-check`·`design-gate start`·`event-verify`·`validate`와 오류 경로 3종(없는 경로·잘못된 인자·전이 위반)을 양쪽에서 실행해 stdout JSON(시각·run id·임시 경로 정규화)·종료 코드 비교 | 모든 명령에서 정규화 stdout 동일, 종료 코드 동일. `state.json`·STATE.md 산출물도 정규화 후 동일 | 임시 디렉토리 + `diff` | 구현 후 |
+| S-8 | check | AC-3, AC-4 | 분할 완료 트리 | ① `state_tool_parts/`에 PLAN이 정한 9개 모듈(`codes`·`base`·`run_log`·`journal`·`guards`·`gates`·`commands_core`·`commands_run`·`cli`)이 모두 있고 각각 인라인 @header가 있는지 ② `ast`로 import 방향이 `codes`<`base`<`run_log`<`journal`<`guards`<`gates`<(`commands_core`·`commands_run`)<`cli`를 지키는지(상위 import 0건, `commands_core`↔`commands_run` 상호 import 0건) ③ `state_tool.py` 줄 수 | ① 9/9 ② 위반 import 0건 ③ 분할 전 8,256줄 대비 대폭 감소(진입점 수준) | 정적 검사 스크립트 | 구현 후 |
+| S-9 | check | C-3, H-2 | 분할 완료 트리 | ① `install_dir`가 디렉토리 통째 복사임을 `scripts/install-mac.sh`와 다른 install 변형 스크립트에서 확인 ② `tools/state-tool`을 임시 디렉토리로 통째 복사해 `run.sh` 방식(`python <dir>/state_tool.py show <fixture>`) 실행 ③ 실행 전후 `~/.opal/tools/state-tool` 트리 해시 비교 | ① 파일 단위 목록 방식 없음 ② 정상 출력 ③ 해시 불변(배포본 미변경) | grep + 임시 디렉토리 + 해시 | 구현 후 |
+| S-10 | check | AC-1, AC-2, C-3 | 문서 갱신 후 트리 | `opal/`와 `docs/CONVENTIONS.md`에서 `header_history`와 `비차단`이 같은 문장에 있는 곳을 검색(`header-rules.md`의 `## 변경 이력` 표 행은 과거 기록이라 검색 대상에서 제외)하고, `pm-review-gate.md`의 `validate --changed` ok:true 요구 문장과 `header_history`·`header_overflow` 0건 명시, `code-scan/README.md` 종료 코드·분류 표, `state-tool/README.md` 모듈 표를 확인 | `header_history`를 비차단으로 서술하는 문서 0건, PM Gate 문서의 ok:true 요구 유지와 `header_history`·`header_overflow` 명시, `docs/CONVENTIONS.md`의 비차단 서술 0건, `header-standard.md`의 `code-scan.js:<줄번호>` 인용 0건, `code-scan.js`·`test-header-history.js`에 `header_history` 비차단 서술 0건, `header-rules.md`에 `header_overflow` 처리 문장 존재, `code-scan/README.md`가 `header_history` 차단과 `header_overflow`를 서술, `state-tool/README.md`가 9개 모듈을 서술 | grep | 구현 후 |
+| S-11 | check | C-2 | W-3·W-2 머리말 정리 파일(`test_state_tool_ownership.py` 포함) | 변경 전(`dee405ca`)과 후 각 파일의 `ast.dump`(docstring·주석 제외)와 JS 아닌 파일의 코드 본문을 비교 | 코드 AST 동일(머리말 docstring/주석 외 차이 0). `worktree_tool.py`는 주석 인용 교체만 차이 | 정적 비교 스크립트 | 구현 후 |
+| S-12 | check | AC-4, C-1 | 임시 OPAL 트리(소스 `opal/tools/state-tool/`의 분할 완료 사본과 설치본 역할의 복사본) | ① 복사본의 `state_tool_parts/*.py` 한 파일에 1바이트를 바꾸고 `skill_tester.py`의 `_framework_fingerprint()` 값 전후 비교 ② 설치본 역할 트리에서 `state_tool_parts/*.py` 한 파일을 삭제·변경한 뒤 `_install_drift()` 결과 확인 | ① 하위 모듈 1바이트 변경으로 지문이 달라짐, 변경 전 같은 입력의 지문은 반복 호출에서 동일 ② 누락·불일치한 하위 모듈이 드리프트 경고로 보고되고 동일 트리에서는 경고 0건 | `importlib`로 `skill_tester.py`를 로드한 뒤 모듈 속성 `OPAL`을 임시 설치본 루트로, `SKILL_DIR`을 임시 소스 트리의 `opal/skills/opal-skill-tester`로 대입하고 `_framework_fingerprint(skill)`(임의의 pilot 이름 1개를 인자로)·`_install_drift()`를 직접 호출(두 함수가 호출 시점에 모듈 전역을 읽음, `~/.opal` 비접촉) | 구현 후 |

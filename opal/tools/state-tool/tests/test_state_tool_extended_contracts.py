@@ -11,7 +11,7 @@
 from state_tool_test_support import *  # noqa: F401,F403
 
 class TestT098Add2RootDerivation(unittest.TestCase):
-    """098 ADD-2 RED — `_resolve_citation_exists()`(`state_tool.py:2400`)가 프로젝트
+    """098 ADD-2 RED — `_resolve_citation_exists()`(`state_tool_parts/gates.py:1003`)가 프로젝트
     루트를 `task_root(str(pathlib.Path(__file__).resolve()))`로, 즉
     `task_md_path`가 아니라 스크립트 자기 위치에서 파생하는 결함의 배포 경로
     등가성 실패 테스트.
@@ -49,6 +49,8 @@ class TestT098Add2RootDerivation(unittest.TestCase):
         # 힌트: memory_tool.py는 `verify` 경로에서 미참조(_MEMORY_TOOL은
         # link_memory_history 전용 — cmd_mark에서만 소비)이므로 복사 불필요.
         shutil.copy2(_SRC_093, self._copied_script)
+        shutil.copytree(_SRC_093.parent / "state_tool_parts", self._copy_dir / "state_tool_parts",
+                        ignore=shutil.ignore_patterns("__pycache__"))
 
     def tearDown(self):
         shutil.rmtree(self._copy_dir, ignore_errors=True)
@@ -121,7 +123,7 @@ class TestT098Add2RootDerivation(unittest.TestCase):
 
     def test_axis2_copied_script_no_false_demotion_for_valid_citation(self):
         """축② — 사본 실행에서 정규 인용(`경로:N` 형식으로 실존 파일을 가리키는
-        항목, 여기서는 '제약' 요소의 `opal/tools/state-tool/state_tool.py:2225`)이
+        항목, 여기서는 '제약' 요소의 `opal/tools/state-tool/state_tool_parts/gates.py:876`)이
         `citation_path_not_found`를 받지 않아야 한다. 결함 현재: 사본 실행은
         실존 파일 인용까지 미존재로 오판정 — 지금 FAIL 기대."""
         copied_result = self._run_verify(self._copied_script)
@@ -130,12 +132,12 @@ class TestT098Add2RootDerivation(unittest.TestCase):
         constraint_item = by_elem.get("제약", {})
         citation = None
         for c in constraint_item.get("citations", []):
-            if "state_tool.py:2225" in str(c.get("raw", "")):
+            if "state_tool_parts/gates.py:876" in str(c.get("raw", "")):
                 citation = c
                 break
         self.assertIsNotNone(
             citation,
-            f"[RED] '제약' 항목에서 `state_tool.py:2225` 인용을 찾지 못함 — "
+            f"[RED] '제약' 항목에서 `state_tool_parts/gates.py:876` 인용을 찾지 못함 — "
             f"TASK.md 표 구조가 전제와 달라졌을 가능성. item={constraint_item}",
         )
         self.assertNotIn(
@@ -228,7 +230,7 @@ class TestT100DirectionEvidence(BaseTestCase):
     # (state_tool.py 2897줄 / README.md 420줄 / citation-rules.md 487줄 — 전부
     #  E2·E4 등급 매칭 경로이므로 4축을 통과한다.)
     _REAL_CITATIONS = (
-        "opal/tools/state-tool/state_tool.py:100",
+        "opal/tools/state-tool/state_tool_parts/codes.py:100",
         "opal/tools/state-tool/README.md:10",
         "opal/core/references/harness/citation-rules.md:20",
     )
@@ -548,7 +550,7 @@ class TestT100DirectionEvidence(BaseTestCase):
         """⑥ [회귀] `--evidence-check` 반환 3경로 전부 exit 0 유지 —
         ① TASK.md 부재 skip ② 섹션/열 부재 skip ③ 정상 판정(픽스처 A·B·C).
         정상 경로에서는 신규 키가 JSON에 실려야 한다(③과 동일 계약).
-        (`state_tool.py:2621` `:2630` `:2639` — 신규 플래그 신설 금지)"""
+        (`state_tool_parts/gates.py:2326` `:2335` `:2345` — 신규 플래그 신설 금지)"""
         # ① TASK.md 부재
         exit_code, result = self._call_evidence_verify()
         self.assertEqual(exit_code, 0, f"[RED] TASK.md 부재 skip exit 0 기대. result={result}")
@@ -1787,7 +1789,7 @@ class TestT138W9OwnershipClaimBoundary(unittest.TestCase):
     def test_ownership_tool_import_failure_is_fail_safe(self):
         """C-9 — ownership-tool을 적재할 수 없어도 state-tool은 죽지 않는다."""
         with patch.dict(os.environ, {"OPAL_SESSION_ID": "sess-w9-noimport"}), \
-                patch.object(ST, "_import_ownership_lease",
+                patch.object(ST_BASE, "_import_ownership_lease",
                              side_effect=ModuleNotFoundError("ownership_tool")):
             outcome = ST._claim_task_lease_if_needed(self.task_path)
         self.assertFalse(outcome["claimed"])
@@ -2056,7 +2058,7 @@ class TestT132OppbStageEnumExtension(unittest.TestCase):
 class TestT132OppbSpecValidateSkillEnum(unittest.TestCase):
     """W-3 보강 — validate_pipeline_spec() 로컬 skill_enum에 "oppb" 누락 RED.
 
-    PM이 W-3 GREEN 완료 후 실측으로 잡은 결함: state_tool.py:1247의
+    PM이 W-3 GREEN 완료 후 실측으로 잡은 결함: state_tool_parts/guards.py:424의
     skill_enum(로컬 상수)에는 "oppb"가 없어 `spec-validate`(및 이를 거치는
     `init --rows-from`)가 spec_skill_invalid로 거부한다. `--skill` argparse
     choices(별도 목록, GREEN 완료)와는 독립적으로 검증되어야 한다.

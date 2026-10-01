@@ -1,5 +1,6 @@
 # Project Brain Index
 > 갱신: 2026-10-01 14:45
+> 갱신: 2026-10-01 16:00
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -55,6 +56,7 @@
 - [[auto-approve-user-confirmation-axis-separation]] — 자동 승인 판정의 두 독립 축 — CLOSE 축과 모드 경계 축은 분리된다 #state-tool #gate-design #pattern #task-093
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[backward-compat-default-value-discipline]] — 하위호환 확장의 기본값 규율 — 분기 인자 기본값을 기존 동작으로 #backward-compat #api-design #cli #pattern
+- [[behavior-preserving-split-and-block-conversion-lessons]] — 동작 보존 분할과 차단 전환의 교훈 #lesson #refactor #code-scan #state-tool
 - [[blanket-prohibition-blocks-required-artifacts]] — 워커 프롬프트의 포괄 금지가 규정 산출물을 막는다 — 금지 대신 반환 경로를 지정한다 #dispatch #prompt #worker #pm-discipline #lesson-learned
 - [[blind-reproduction-verification-test]] — 블라인드 재현 테스트 — 작성자 자기검증 배제 검증법 #verification #testing #scenario #ssot #evaluator
 - [[bootstrap-marker-skip-ladder]] — 부트스트랩 첫 줄 마커 3단 스킵 사다리 ([WORKER]/[ASSISTANT]/무마커) #bootstrap #2tier #assistant-tier #headless #pm-gate #architecture

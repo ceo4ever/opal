@@ -13,9 +13,10 @@ tags:
 - code-scan
 sources:
 - task:107
+- task:174
 related: [code-scan-tool, regulation-tool-four-way-mismatch, prohibit-by-property-not-name, tag-removal-is-not-history-removal]
 created: '2026-09-06'
-updated: '2026-09-06'
+updated: '2026-10-01'
 status: draft
 ---
 ## 개요
@@ -37,7 +38,7 @@ status: draft
 
 ## 관계 (HOW)
 
-- [[code-scan-tool]] — `code-scan validate`가 이 문서 §2.1·§4.2의 규정을 `header_history`·`undeclared_field` 비차단 경고로 집행한다.
+- [[code-scan-tool]] — `code-scan validate`가 이 문서 §2.1·§4.2의 규정을 `header_history`·`undeclared_field` 차단(종료 코드 2)으로 집행하고, 읽기 범위 안에서 닫히지 않는 머리말은 `header_overflow` 차단으로 드러낸다(근거: task:174).
 - [[regulation-tool-four-way-mismatch]] — 이 문서와 `code-scan.js`가 함께 개정되며 겪은 규정-도구 불일치 4건.
 - [[prohibit-by-property-not-name]] — §2 "이름 불문" 조항의 설계 논리.
 - [[tag-removal-is-not-history-removal]] — §2.1 원칙을 적용할 때 "태그만 제거"로는 불충분하다는 실측.

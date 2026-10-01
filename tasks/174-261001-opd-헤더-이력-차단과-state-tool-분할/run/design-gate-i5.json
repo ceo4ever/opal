@@ -1,0 +1,37 @@
+{
+ "input_bundle_hash": "cd1857e89d2879d7c5658ff4fce6f0f371d38628b42560f0ef7e00d582268607",
+ "iteration": 5,
+ "design": {
+  "axes": {
+   "completeness": "FAIL",
+   "decision_clarity": "FAIL",
+   "executability": "FAIL",
+   "recoverability": "PASS"
+  },
+  "gaps": [
+   "completeness-1: S-10 0건 기대 ↔ W-1/W-4 변경 범위 불일치(code-scan.js:3600 주석, test-header-history.js 머리말·단언 메시지, header-rules.md:193 이력 표) 및 header_overflow 문장 확인 항목 부재.",
+   "decision_clarity-1: _install_drift 쌍 목록을 만드는 glob 기준과 한쪽에만 있는 하위 모듈의 처리 정책 미정(S-12 ②와 어긋남).",
+   "executability-1: S-7 기준 단일 파일을 임시 디렉토리에 풀면 __file__ 기준 형제 도구 경로가 깨져 결정적으로 실행 불가.",
+   "executability-2: S-12에서 skill_tester의 OPAL·SKILL_DIR에 임시 트리를 주입하는 방법 미정."
+  ]
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "resolved_gaps": [
+  {
+   "id": "completeness-1",
+   "status": "resolved",
+   "reason": "S-12 추가·Release 반영"
+  }
+ ],
+ "verdict": "fail",
+ "rewrite_target": "both",
+ "advisories": []
+}

@@ -1,0 +1,42 @@
+{
+ "input_bundle_hash": "44740d9bfaecac24a10e1fcde141d4d3e49fdf1fd5d148e89aee35d2744e4704",
+ "iteration": 1,
+ "design": {
+  "axes": {
+   "completeness": "FAIL",
+   "decision_clarity": "FAIL",
+   "executability": "FAIL",
+   "recoverability": "PASS"
+  },
+  "gaps": [
+   "completeness-1: PLAN.md > Findings·Work items W-2·Risks H-2 — state_tool.py 소스 텍스트를 정규식으로 읽는 테스트(test_pilot_shared_contract.py:422, oppb-runtime-tool/tests/test_pilot_isolation.py:384-385)가 누락됐다. 분할 후 리터럴이 state_tool_parts/*로 이동해 실패한다.",
+   "completeness-2: PLAN.md > Findings > 회귀 확인 — opal-skill-tester/scripts/skill_tester.py:139 _install_drift()가 state_tool.py만 비교해 분할 후 state_tool_parts/* 드리프트를 놓친다.",
+   "decision_clarity-1: PLAN.md > 재노출과 patch 대상 — from-import 바인딩과 정의 모듈 대상 patch가 모순된다. get_kst_datetime은 guards·commands_core·commands_run·design_gate에서 호출되고 _mock_now()가 98회 사용된다.",
+   "decision_clarity-2: PLAN.md > 분할 구조·TEST-SCENARIO S-8 ③ — 동급 4개 모듈 간 import 허용 규칙이 없어 S-8 ③ 통과 조건이 미정의다.",
+   "executability-1: PLAN.md > 분할 구조 줄 범위 — design_gate↔plan_checks 양방향 import(11/3개 이름), codes→journal, journal→commands_core 역참조가 실제 호출 그래프에 존재한다."
+  ]
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "verdict": "fail",
+ "rewrite_target": "plan",
+ "advisories": [
+  {
+   "id": "A-1",
+   "kind": "mergeable",
+   "targets": [
+    "S-2",
+    "S-3"
+   ],
+   "basis": "S-3 ②와 S-2의 검증 조건이 같다.",
+   "recommendation": "S-3 ②를 S-2에 합치거나 S-2를 모드별 exit/counts 검사로 한정한다."
+  }
+ ]
+}

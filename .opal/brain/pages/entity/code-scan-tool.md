@@ -25,9 +25,10 @@ sources:
 - task:077
 - code:opal/tools/code-scan/
 - task:107
+- task:174
 related: [brain-code-scan-role-division, code-header-dual-source-inheritance, exports-generation-tool-verification-division, regulation-tool-four-way-mismatch, prohibit-by-property-not-name]
 created: '2026-08-01'
-updated: '2026-09-06'
+updated: '2026-10-01'
 status: draft
 ---
 ## 개요
@@ -41,7 +42,8 @@ status: draft
 - 기록 위치 판정: 파일 하나를 주면 그 파일의 헤더를 인라인과 외부 지도 중 어디에 남겨야 하는지 알려준다(`opal/tools/code-scan/code-scan.js:755` `decideTarget`).
 - 커버리지·위반 검증: 연결 끊김·미커버·충돌·초안 상태·존재하지 않는 노출 인터페이스 다섯 가지 위반을 검사하고, 변경된 파일만 골라 검사하는 모드를 지원한다(`opal/tools/code-scan/code-scan.js:1448` `cmdValidate`).
 - 여러 소속 영역에 걸쳐 이름이 같은 항목을 한 번에 조회하는 기능도 제공한다(근거: task:077 PLAN F-008).
-- 이력 누적 비차단 경고: `description`·`note`에 서로 다른 태스크 번호가 2개 이상 쌓이면(단발 출처 인용은 허용, 시점이 다른 변경이 겹겹이 쌓이면 경고) `header_history` 위반으로 표시하고, `@header` 블록에 §2가 정의하지 않은 필드(`changelog` 등)가 존재하면 `undeclared_field`로 표시한다. 둘 다 기존 `blockingViolations` 필터에서 제외된 비차단 경고다(근거: task:107 `code-scan.js:34-46,3245-3256,3443,3450`, PLAN §3.2.2 (C)).
+- 이력 누적 차단: `description`·`note`에 서로 다른 태스크 번호가 2개 이상 쌓이면(단발 출처 인용은 허용, 시점이 다른 변경이 겹겹이 쌓이면 위반) `header_history` 위반으로 표시하고, `@header` 블록에 §2가 정의하지 않은 필드(`changelog` 등)가 존재하면 `undeclared_field`로 표시한다. `header_history`(하위 구분 `description`·`note`·`undeclared_field` 전부)는 전체 검증과 변경 파일 한정(`--changed`) 검증 두 모드 모두 차단(종료 코드 2)이며, PM Gate가 CLOSE 전에 요구하는 변경분 검증 통과가 곧 이력 누적 차단이 된다(`blockingViolations` 필터가 포함 — 근거: task:174).
+- 머리말 읽기 범위 초과 차단: 읽기 범위(24,576바이트) 안에서 닫히지 않는 머리말은 미커버로 숨지 않고 별도 차단 코드 `header_overflow`로 드러난다. 같은 파일을 `uncovered`로 중복 기록하지 않으며 위반 집계에는 `counts.header_overflow`로 잡힌다(`isHeaderOverflow`·`findHeaderCloseIndex`·`blockingViolations`, 근거: task:174).
 
 ## 설계 배경 (WHY)
 

@@ -41,7 +41,8 @@ const VERSION = '1.6.0';
 // 같은 단위로 창문을 잘라야 한다 — 한쪽이 문자 기준이면 한글 헤더에서 창문 크기가 3배
 // 어긋나 거짓 회귀(newly_uncovered)를 만든다(태스크 106 ADD-1).
 // 값 근거(레포 @header 보유 115건 전수 실측): 바이트 p50 683 / p90 3666 / 최대 17810,
-// 8192 초과 3건 · 16384 초과 1건 · 24576 초과 0건. 24576은 전건을 담는 최소 여유값이다.
+// 8192 초과 3건 · 16384 초과 1건. 머리말이 이 범위를 넘어 닫히는 파일은 읽을 수 없으므로
+// uncovered로 흘리지 않고 header_overflow로 차단한다(실측 현재 1건).
 const HEADER_READ_BYTES = 24576;
 
 // description/note에 실린 서로 다른 태스크 번호가 몇 개 이상이면 "이력 누적"으로 보는지의 임계값.
@@ -1050,6 +1051,34 @@ function readFileHead(filePath) {
   } catch { return null; }
 }
 
+// 여는 "{"(braceStart)에 대응하는 닫는 "}" 위치(string-aware). 없으면 -1.
+function findHeaderCloseIndex(content, braceStart) {
+  let depth = 0, inStr = false, esc = false;
+  for (let i = braceStart; i < content.length; i++) {
+    const ch = content[i];
+    if (esc) { esc = false; continue; }
+    if (ch === '\\' && inStr) { esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === '{') depth++;
+    else if (ch === '}') { depth--; if (depth === 0) return i; }
+  }
+  return -1;
+}
+
+// 파일이 읽기 범위를 가득 채우고(크기 >= HEADER_READ_BYTES), 범위 안에 근접 @header {가 있으며,
+// 닫는 }가 범위 안에 없으면 true — 머리말이 읽기 범위를 넘어 닫히는 파일(header_overflow).
+function isHeaderOverflow(filePath) {
+  try {
+    if (fs.statSync(filePath).size < HEADER_READ_BYTES) return false;
+  } catch { return false; }
+  const content = readFileHead(filePath);
+  const idx = findProximateHeaderIndex(content);
+  if (idx === -1) return false;
+  const braceStart = content.indexOf('{', idx + 7);
+  return braceStart !== -1 && findHeaderCloseIndex(content, braceStart) === -1;
+}
+
 function extractHeaderFromContent(content) {
   if (!content) return null;
 
@@ -1065,17 +1094,7 @@ function extractHeaderFromContent(content) {
   const braceStart = content.indexOf('{', idx + 7);
   if (braceStart === -1) return null;
 
-  // Match closing brace (string-aware)
-  let depth = 0, inStr = false, esc = false, end = -1;
-  for (let i = braceStart; i < content.length; i++) {
-    const ch = content[i];
-    if (esc) { esc = false; continue; }
-    if (ch === '\\' && inStr) { esc = true; continue; }
-    if (ch === '"') { inStr = !inStr; continue; }
-    if (inStr) continue;
-    if (ch === '{') depth++;
-    else if (ch === '}') { depth--; if (depth === 0) { end = i; break; } }
-  }
+  const end = findHeaderCloseIndex(content, braceStart);
   if (end === -1) return null;
 
   const raw = content.substring(braceStart, end + 1);
@@ -3326,6 +3345,11 @@ function cmdValidate(projectRoot, config, opts, mode) {
     // 커버 판정은 **해당 모드의 소스만** 본다 — 반대 소스는 계상하지 않는다 (080 §3.3.2 (D)).
     const covered = isInlineMode ? inlineHeader !== null : fe !== null;
     if (!covered) {
+      if (isHeaderOverflow(fileAbs)) {
+        violations.push({ code: 'header_overflow', file: relPath,
+          detail: `@header 블록이 읽기 범위(${HEADER_READ_BYTES}바이트) 안에서 닫히지 않음 — 머리말을 줄이거나 분할` });
+        continue;
+      }
       // inline 모드에는 "관리 매니페스트" 개념이 없으므로 항상 git 2분류다.
       // manifest 모드에서 매니페스트가 이 디렉토리를 관리 중(scaffold됨)인데 files{}에 키가 없는
       // 경우는 구조적 결손 — git 상태와 무관하게 'no_entry'(항상 차단, 기존 동작 불변).
@@ -3594,14 +3618,14 @@ function cmdValidate(projectRoot, config, opts, mode) {
     pre_existing: violations.filter(v => v.code === 'uncovered' && v.sub === 'pre_existing').length,
     manifest_oversize: violations.filter(v => v.code === 'manifest_oversize').length,
     header_history: violations.filter(v => v.code === 'header_history').length,
+    header_overflow: violations.filter(v => v.code === 'header_overflow').length,
   };
   const covered = inlineCount + manifestCount;
   const percent = totalCount === 0 ? 100 : Math.round((covered / totalCount) * 1000) / 10;
-  // 'uncovered:pre_existing'·'manifest_oversize'·'header_history'는 비차단(U-2) — 나머지는 차단 불변.
+  // 'uncovered:pre_existing'·'manifest_oversize'만 비차단 — header_history·header_overflow 포함 나머지는 차단.
   const blockingViolations = violations.filter(v =>
     !(v.code === 'uncovered' && v.sub === 'pre_existing') &&
-    v.code !== 'manifest_oversize' &&
-    v.code !== 'header_history');
+    v.code !== 'manifest_oversize');
   const ok = blockingViolations.length === 0;
 
   const result = {

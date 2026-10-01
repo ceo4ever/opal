@@ -179,7 +179,7 @@
 | `note` | 코드를 읽어서는 알 수 없는 **현재 유효한 제약·계약**(순서 계약, fail-safe 이유, 의도적 예외) | **변경 이력**(`description`의 이력을 옮겨 담는 대체 저장소가 아니다 — 블록 총량이 그대로면 창문 재포화를 늦출 뿐이다) — 서로 다른 태스크 번호가 **2개 이상** 쌓이는 형태, TODO·미래 계획. 출신 태스크 1개의 단발 인용은 허용한다 | `"모드 게이트는 code-map 로딩보다 위에 놓인다 — 아래에 있으면 무출력 계약이 stderr 축에서 깨진다"` |
 | `feature` | 기능축 조인 키 1개 — `code-scan feature <id>` 조회 키(§7) | 복수 값 나열, 태스크 번호, 화면/정책 축 값(`ia:{system}:{screen}`·`POL-{번호}`는 별개 축) | `"F-003"` |
 
-> **임계값 근거**: `description`·`note` 모두 서로 다른 태스크 번호가 **2개 이상**(`TASK_TAG_THRESHOLD = 2`, `opal/tools/code-scan/code-scan.js:51`) 모이면 `code-scan validate`가 `header_history` 비차단 경고로 감지한다(같은 파일 `:3311-3321`). 1개는 규정과 도구 양쪽에서 허용된다 — 자산의 출신 태스크를 밝히는 단발 인용일 뿐 시간이 지나도 늘지 않기 때문이다.
+> **임계값 근거**: `description`·`note` 모두 서로 다른 태스크 번호가 **2개 이상**(`TASK_TAG_THRESHOLD = 2`, `opal/tools/code-scan/code-scan.js`) 모이면 `code-scan validate`가 `header_history` 차단 위반(exit 2)으로 감지한다. 1개는 규정과 도구 양쪽에서 허용된다 — 자산의 출신 태스크를 밝히는 단발 인용일 뿐 시간이 지나도 늘지 않기 때문이다.
 
 ---
 

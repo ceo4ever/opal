@@ -368,7 +368,7 @@ class TestVerify(BaseTestCase):
         실행하면 worktree 자체의 루트를 가리켜, `tasks/`가 분기되지 않고
         허브에 고정되는 092 경로 계약(`opal-harness.md` §2.5)과 어긋나
         `tasks/034-*`를 못 찾는다. [MUST] 신규 헬퍼를 만들지 않고
-        `task_root()`(state_tool.py:553 — `.opal/MEMORY.json` 보유
+        `task_root()`(state_tool_parts/journal.py:355 — `.opal/MEMORY.json` 보유
         조상 탐색, 088 §2.3에서 이미 검증된 패턴)를 재사용한다 — 이 함수는
         worktree/허브(전체 체크아웃) 양쪽에서 정확히 허브 루트를 반환한다."""
         import io
@@ -1646,7 +1646,7 @@ class TestT098EvidenceCheck(BaseTestCase):
         """S-7 — `FX-NEW`: 항목별 verdict+reasons+citations[{raw,grade,exists}]
         + confirmed_ratio 반환, exit 0 (PLAN §3.3.2 반환 JSON 스키마)."""
         self._write_task_md({
-            "목표": ("목표 확정값", "`opal/tools/state-tool/state_tool.py:100`"),
+            "목표": ("목표 확정값", "`opal/tools/state-tool/state_tool_parts/codes.py:100`"),
             "범위": ("범위 확정값", "`opal/tools/state-tool/README.md` §1"),
             "제약": ("제약 확정값", "-"),
             "완료기준": ("완료기준 확정값", "`.opal/brain/note.md`"),
@@ -1854,7 +1854,7 @@ class TestT098EvidenceCheck(BaseTestCase):
         citation_path_not_found로 강등되지 않음. 파싱 비대상 형식(③④)은
         unknown으로 PM 판단에 위임되되 경로 부재로 오판정하지 않는다."""
         self._write_task_md({
-            "목표": ("목표 확정값", "`opal/tools/state-tool/state_tool.py:100`"),
+            "목표": ("목표 확정값", "`opal/tools/state-tool/state_tool_parts/codes.py:100`"),
             "범위": ("범위 확정값", "`opal/tools/state-tool/README.md` §1"),
             "제약": ("제약 확정값", "[Anthropic Docs](https://docs.anthropic.com)"),
             "완료기준": ("완료기준 확정값", "(→ D-1 §2)"),

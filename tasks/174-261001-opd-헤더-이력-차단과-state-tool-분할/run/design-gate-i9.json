@@ -1,0 +1,32 @@
+{
+ "input_bundle_hash": "0d46df5828c595463a17f4f87fbadeb8faef5d61bb028d3c2571a9de6008d060",
+ "iteration": 9,
+ "design": {
+  "axes": {
+   "completeness": "PASS",
+   "decision_clarity": "PASS",
+   "executability": "PASS",
+   "recoverability": "PASS"
+  },
+  "gaps": []
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "resolved_gaps": [
+  {
+   "id": "completeness-1",
+   "status": "resolved",
+   "reason": "Decision '기존 읽기 범위 테스트 처리'가 c1·c2·c3·106 ADD-1 불변식을 확정, S-3 ④로 연결"
+  }
+ ],
+ "verdict": "pass",
+ "rewrite_target": null,
+ "advisories": []
+}

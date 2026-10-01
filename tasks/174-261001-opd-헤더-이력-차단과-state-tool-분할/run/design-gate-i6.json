@@ -1,0 +1,49 @@
+{
+ "input_bundle_hash": "36552656b9cd3481d972b53b025555a2026adff279e9fb8bca55cd31ca6f26b6",
+ "iteration": 6,
+ "design": {
+  "axes": {
+   "completeness": "FAIL",
+   "decision_clarity": "PASS",
+   "executability": "PASS",
+   "recoverability": "PASS"
+  },
+  "gaps": [
+   "completeness-1: PLAN.md W-4(header-standard.md:182 어긋난 줄번호 인용만 삭제) ↔ TEST-SCENARIO S-10(header-standard.md의 code-scan.js:<줄번호> 인용 0건) — code-scan.js:51 같은 유효 인용을 지울지 구현자 선택으로 남아 있고, 남기면 S-10이 실패한다."
+  ]
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "resolved_gaps": [
+  {
+   "id": "completeness-1",
+   "status": "resolved",
+   "reason": "문서·코드 대조로 해소 확인"
+  },
+  {
+   "id": "decision_clarity-1",
+   "status": "resolved",
+   "reason": "문서·코드 대조로 해소 확인"
+  },
+  {
+   "id": "executability-1",
+   "status": "resolved",
+   "reason": "문서·코드 대조로 해소 확인"
+  },
+  {
+   "id": "executability-2",
+   "status": "resolved",
+   "reason": "문서·코드 대조로 해소 확인"
+  }
+ ],
+ "verdict": "fail",
+ "rewrite_target": "both",
+ "advisories": []
+}

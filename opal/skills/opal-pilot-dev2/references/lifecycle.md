@@ -54,8 +54,8 @@ block --reason은 차단을 기록하고 unblock --reference ... --reason ...은
 ## AC-4 실측 — lease·Stop·checkpoint·finalize
 
 AC-4의 lease·Stop·checkpoint·finalize는 opd2 전용 코드 없이 FW 공통 메커니즘으로 자동
-적용됨 — 근거: (1) lease — `opal/tools/state-tool/state_tool.py:3991`(cmd_advance)·`:4298`
-(cmd_mark)이 상태 전이 진입 경계에서 `_claim_task_lease_if_needed(task_path)`(정의 `:846`)를
+적용됨 — 근거: (1) lease — `opal/tools/state-tool/state_tool_parts/commands_core.py`의 `cmd_advance`·`cmd_mark`가
+상태 전이 진입 경계에서 `_claim_task_lease_if_needed(task_path)`(정의 `state_tool_parts/base.py`)를
 skill 조건 없이 호출하며, lifecycle.py의 Store.save()가 전이마다 호출하는 `state-tool mark`
 (`scripts/lifecycle.py:172-177`)가 이 경로를 그대로 탄다. (2) Stop — `~/.opal/tools/
 ownership-tool/ownership_tool/stop_evaluator.py`·`stop_hook.py`에 "skill" 조건 분기가 전혀
