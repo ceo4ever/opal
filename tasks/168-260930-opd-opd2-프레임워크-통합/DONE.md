@@ -45,7 +45,7 @@ opd2가 FW 문서 체계에 등재됐다 — `opal-skills-registry.json`(alias `
 
 ## 회고적 학습 후보
 
-`.opal/brain/pages/opd2-state-tool-integration.md`
+`.opal/brain/pages/concept/opd2-state-tool-integration.md`
 
 ## 참고
 

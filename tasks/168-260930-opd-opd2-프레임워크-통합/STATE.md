@@ -1,6 +1,6 @@
 # STATE: opd2 프레임워크 통합
 
-> 최종 갱신: 2026-10-01 10:30:09
+> 최종 갱신: 2026-10-01 10:55:46
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
@@ -14,6 +14,7 @@
 | 5 | 2026-10-01 08:46:07 | current_status changed: additional_work_done → additional_work | ADD-2: PLAN 사전심사(결정론+병렬 추론) + model frontmatter 제어 |
 | 6 | 2026-10-01 08:46:07 | additional row inserted after row 15: stage=CLOSE, item=opd2 PLAN 사전심사(결정론 게이트+병렬 Reviewer) + agents model frontmatter, key=close.opd2_2, new_row_id=16 | additional work entry |
 | 7 | 2026-10-01 08:58:18 | current_status changed: additional_work → additional_work_done | ADD-2 완료 — PLAN 사전심사(결정론+병렬 Reviewer) + model frontmatter |
+| 8 | 2026-10-01 10:55:46 | current_status changed: completed_unmerged → done | (none) |
 
 ## 블로커
 없음

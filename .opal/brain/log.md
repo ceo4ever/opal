@@ -496,3 +496,7 @@
 - 신규: [[pages/concept/worktree-close-brain-write-contract.md]]
 - 출처: task:169
 
+## [2026-10-01] ingest | CLOSE ingest — 태스크 168 opd2 프레임워크 통합
+- 신규: [[pages/concept/opd2-state-tool-integration.md]]
+- 출처: task:168
+
