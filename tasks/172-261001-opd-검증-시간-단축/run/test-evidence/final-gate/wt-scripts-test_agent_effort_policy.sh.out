@@ -1,0 +1,6 @@
+[PASS] opal/agents 의 effort 선언이 정책(허용 집합·어댑터 출력)을 만족
+[PASS] 양성: effort: high 임시 에이전트가 정책을 통과 (미선언 에이전트 포함)
+[PASS] 음성: effort: default 임시 에이전트를 시험이 실패로 판정
+[PASS] 음성: 허용 집합 밖 값(turbo)을 시험이 실패로 판정
+
+PASS=4 FAIL=0

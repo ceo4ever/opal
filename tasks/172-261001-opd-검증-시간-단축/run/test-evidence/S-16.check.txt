@@ -1,0 +1,29 @@
+checker rows 40
+evaluator per-call rows 48
+rows without result: 0
+combined rows 24
+md combined rows == results.json combined rows: OK
+md checker rows == results.json checker rows: OK
+K0 n=10 nores=0 miss=0 flip=0 -> 채택 가능 | report: 채택 가능 results=10/10 MATCH
+K1 n=10 nores=0 miss=0 flip=0 -> 채택 가능 | report: 채택 가능 results=10/10 MATCH
+K2 n=10 nores=0 miss=0 flip=0 -> 채택 가능 | report: 채택 가능 results=10/10 MATCH
+K3 n=10 nores=0 miss=0 flip=0 -> 채택 가능 | report: 채택 가능 results=10/10 MATCH
+E0 n=8 nores=0 miss=0 flip=0 -> 채택 가능 | report: 채택 가능 results=8/8 MATCH
+E1 n=8 nores=0 miss=0 flip=0 -> 채택 가능 | report: 채택 가능 results=8/8 MATCH
+E2 n=8 nores=0 miss=0 flip=0 -> 채택 가능 | report: 채택 가능 results=8/8 MATCH
+all 7 candidate verdicts match recomputation: True
+evaluator combined verdict differing from 170 expected: 0 (of 24)
+K0 mean sec 39.9 mismatch rows 0
+K1 mean sec 32.3 mismatch rows 0
+K2 mean sec 43.7 mismatch rows 0
+K3 mean sec 132.4 mismatch rows 1
+E0 mean pair wall 57.3
+E1 mean pair wall 57.2
+E2 mean pair wall 78.3
+'결과 없음' 행 수 (checker,evaluator): 0 0 | header: 결과 있음 88 / 없음 0: True
+상대 비교 한정 문구: True | 절대 누락률 주장 없음 문구: True
+section8 present: True | results-initial.json: True | results-initial-EVAL-RESULT.md: True
+initial checker flips: 4 initial no-result: 2
+checker fm {'model': 'standard', 'effort': 'low'} evaluator fm {'model': 'advanced', 'effort': 'medium'}
+AGENTIC-LOG row7 states K1/E1: True
+run-log activity evt_36956d9a present: True

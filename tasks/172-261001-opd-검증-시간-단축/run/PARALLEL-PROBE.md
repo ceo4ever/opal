@@ -45,7 +45,7 @@
 - `opal/tools/test-tool/lib/scenario.py:206` `_save_spec`: `open(path, "w")`로 `test-scenario.json` 전체를 덮어쓴다. 파일 잠금·임시 파일 교체(rename)가 없다.
 - `opal/tools/test-tool/lib/scenario.py:445` `cmd_scenario_mark`: `_load_spec`(읽기) → 대상 시나리오 수정 → `_save_spec`(`:512`)의 읽기-수정-쓰기이며 구간 전체에 잠금이 없다. 두 프로세스가 같은 원본을 읽으면 나중에 쓴 쪽이 앞선 쪽의 mark를 덮는다(위 (b)의 사라진 건과 일치).
 - 파일에 `fcntl`·`flock`·`lockf`·`msvcrt`·`O_EXCL` 사용이 없음을 `probe.py`가 소스 검색으로 확인했다(`lock_in_code: false`).
-- `opal/tools/state-tool/state_tool.py:4925` `_interval_sum_seconds`: `auto` 구간 `started_at`~`ended_at` 길이를 단순 합산한다(호출 `:4940` `auto_seconds`). 여러 에이전트가 같은 시간대에 각자 auto 구간을 기록하면 `auto_seconds`가 벽시계 시간보다 커진다(human 구간은 `_interval_union_seconds`로 합집합이라 다르다).
+- `opal/tools/state-tool/state_tool.py:4928` `_interval_sum_seconds`: `auto` 구간 `started_at`~`ended_at` 길이를 단순 합산한다(호출 `:4943` `auto_seconds`). 여러 에이전트가 같은 시간대에 각자 auto 구간을 기록하면 `auto_seconds`가 벽시계 시간보다 커진다(human 구간은 `_interval_union_seconds`로 합집합이라 다르다).
 
 ## (d) D-14 규칙 판정
 
@@ -67,5 +67,5 @@
 
 ### 비채택: 여러 `opal-test-agent` 동시 디스패치
 
-- 근거: (b) 동시 mark에서 5라운드 중 4라운드 6건 소실, 파일 잠금 부재(`scenario.py:206`·`:445`), `auto_seconds` 단순 합산(`state_tool.py:4925`·`:4940`).
+- 근거: (b) 동시 mark에서 5라운드 중 4라운드 6건 소실, 파일 잠금 부재(`scenario.py:206`·`:445`), `auto_seconds` 단순 합산(`state_tool.py:4928`·`:4943`).
 - 대안: 후속 태스크에서 `scenario-mark`(`_save_spec`)에 파일 잠금과 원자적 쓰기를 도입하고, `auto_seconds`를 구간 합집합 방식으로 바꾼 뒤 재측정한다.

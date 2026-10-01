@@ -1,0 +1,135 @@
+TAP version 13
+# Subtest: [T107/F-002] TS-010: description 이력 누적(distinct2) 단독 위반 — exit 0 + ok:true + counts.header_history>=1
+ok 1 - [T107/F-002] TS-010: description 이력 누적(distinct2) 단독 위반 — exit 0 + ok:true + counts.header_history>=1
+  ---
+  duration_ms: 29.243542
+  ...
+# Subtest: [T107/F-002] TS-011: header_history + uncovered:newly_uncovered 혼재 — exit 2는 uncovered 때문이지 header_history 때문이 아니다
+ok 2 - [T107/F-002] TS-011: header_history + uncovered:newly_uncovered 혼재 — exit 2는 uncovered 때문이지 header_history 때문이 아니다
+  ---
+  duration_ms: 144.178292
+  ...
+# Subtest: [T107/F-002] TS-012: header_history violation 항목이 code·sub·file·detail·tasks 5키를 갖는다
+ok 3 - [T107/F-002] TS-012: header_history violation 항목이 code·sub·file·detail·tasks 5키를 갖는다
+  ---
+  duration_ms: 28.556875
+  ...
+# Subtest: [T107/F-002] TS-013: 기능번호·시나리오id·범위나열(F-005 등) 전건 미탐지 — distinct는 단발 출처(080) 1개뿐
+ok 4 - [T107/F-002] TS-013: 기능번호·시나리오id·범위나열(F-005 등) 전건 미탐지 — distinct는 단발 출처(080) 1개뿐
+  ---
+  duration_ms: 28.712
+  ...
+# Subtest: [T107/F-002] TS-014: HTTP상태·IP·경로:줄번호·수량표기(400/127.0.0.1/*.js:455/340 passed) 전건 미탐지
+ok 5 - [T107/F-002] TS-014: HTTP상태·IP·경로:줄번호·수량표기(400/127.0.0.1/*.js:455/340 passed) 전건 미탐지
+  ---
+  duration_ms: 28.61275
+  ...
+# Subtest: [T107/F-002] TS-015: 진성 표기 4형태(대괄호 마커/콜론 나열/TASK 표기/맨숫자 나열) 전건 탐지
+ok 6 - [T107/F-002] TS-015: 진성 표기 4형태(대괄호 마커/콜론 나열/TASK 표기/맨숫자 나열) 전건 탐지
+  ---
+  duration_ms: 28.679334
+  ...
+# Subtest: [T107/F-002] TS-016: distinct 1(단발 출처) 미탐지 / distinct 2 탐지 — 임계값 2 양방향
+ok 7 - [T107/F-002] TS-016: distinct 1(단발 출처) 미탐지 / distinct 2 탐지 — 임계값 2 양방향
+  ---
+  duration_ms: 25.309166
+  ...
+# Subtest: [T107/F-002] TS-017 (baseline PASS 기대): 기존 counts 9키가 전건 존재하고 clean 프로젝트에서 값이 전부 0이다
+ok 8 - [T107/F-002] TS-017 (baseline PASS 기대): 기존 counts 9키가 전건 존재하고 clean 프로젝트에서 값이 전부 0이다
+  ---
+  duration_ms: 29.015917
+  ...
+# Subtest: [T107/F-002] TS-018 (baseline PASS 기대): code-scan --version === "code-scan v1.6.0" (VERSION 상수 불변)
+ok 9 - [T107/F-002] TS-018 (baseline PASS 기대): code-scan --version === "code-scan v1.6.0" (VERSION 상수 불변)
+  ---
+  duration_ms: 28.543459
+  ...
+# Subtest: [T107/F-002] TS-019: description 깨끗 + note만 이력 누적 — sub:"note"로만 검출된다
+ok 10 - [T107/F-002] TS-019: description 깨끗 + note만 이력 누적 — sub:"note"로만 검출된다
+  ---
+  duration_ms: 30.203917
+  ...
+# Subtest: [T107/F-002] TS-041 (a): description 키 부재 — 크래시 없음 + header_history 미탐지(unrelated incomplete 위반은 별개)
+ok 11 - [T107/F-002] TS-041 (a): description 키 부재 — 크래시 없음 + header_history 미탐지(unrelated incomplete 위반은 별개)
+  ---
+  duration_ms: 29.068375
+  ...
+# Subtest: [T107/F-002] TS-041 (b): description: "" — 크래시 없음 + header_history 미탐지 + exit 0
+ok 12 - [T107/F-002] TS-041 (b): description: "" — 크래시 없음 + header_history 미탐지 + exit 0
+  ---
+  duration_ms: 27.596958
+  ...
+# Subtest: [T107/F-002] TS-041 (c): note 키 부재 — 크래시 없음 + header_history 미탐지 + exit 0
+ok 13 - [T107/F-002] TS-041 (c): note 키 부재 — 크래시 없음 + header_history 미탐지 + exit 0
+  ---
+  duration_ms: 29.302583
+  ...
+# Subtest: [T107/F-002] TS-041 (d): note: "" — 크래시 없음 + header_history 미탐지 + exit 0
+ok 14 - [T107/F-002] TS-041 (d): note: "" — 크래시 없음 + header_history 미탐지 + exit 0
+  ---
+  duration_ms: 27.865292
+  ...
+# Subtest: [T107/F-002] TS-042: §4.2 기준(「담는 것」만 채운) @header — header_history 미탐지 + exit 0 + description 태스크 번호 0개
+ok 15 - [T107/F-002] TS-042: §4.2 기준(「담는 것」만 채운) @header — header_history 미탐지 + exit 0 + description 태스크 번호 0개
+  ---
+  duration_ms: 26.004583
+  ...
+# Subtest: [T107/F-002] TS-043: 큰따옴표·역슬래시·이스케이프 개행·한글이 섞인 description이 예외 없이 파싱된다
+ok 16 - [T107/F-002] TS-043: 큰따옴표·역슬래시·이스케이프 개행·한글이 섞인 description이 예외 없이 파싱된다
+  ---
+  duration_ms: 27.444209
+  ...
+# Subtest: [T107/F-002] TS-052: changelog 엔트리 1개 — sub:"changelog" 탐지 + counts.header_history>=1 + exit 0
+ok 17 - [T107/F-002] TS-052: changelog 엔트리 1개 — sub:"changelog" 탐지 + counts.header_history>=1 + exit 0
+  ---
+  duration_ms: 28.606416
+  ...
+# Subtest: [T107/F-002] TS-053 (a): changelog 키 부재 — header_history(changelog) 미탐지
+ok 18 - [T107/F-002] TS-053 (a): changelog 키 부재 — header_history(changelog) 미탐지
+  ---
+  duration_ms: 27.299375
+  ...
+# Subtest: [T107/F-002] TS-053 (b): changelog: [] — header_history(changelog) 미탐지
+ok 19 - [T107/F-002] TS-053 (b): changelog: [] — header_history(changelog) 미탐지
+  ---
+  duration_ms: 28.753625
+  ...
+# Subtest: [T107/F-002] TS-054: description/note 깨끗 + changelog만 이력 — sub:"changelog"로만 검출된다
+ok 20 - [T107/F-002] TS-054: description/note 깨끗 + changelog만 이력 — sub:"changelog"로만 검출된다
+  ---
+  duration_ms: 27.538791
+  ...
+# Subtest: [T107/F-002] TS-055: history/revisions/updates 등 임의 이름의 이력 필드도 sub:"undeclared_field"로 탐지된다
+ok 21 - [T107/F-002] TS-055: history/revisions/updates 등 임의 이름의 이력 필드도 sub:"undeclared_field"로 탐지된다
+  ---
+  duration_ms: 112.566166
+  ...
+# Subtest: [T107/F-002] TS-056 (a): task/scenarios만 있는 헤더 — header_history 미탐지(§2 예외)
+ok 22 - [T107/F-002] TS-056 (a): task/scenarios만 있는 헤더 — header_history 미탐지(§2 예외)
+  ---
+  duration_ms: 30.193958
+  ...
+# Subtest: [T107/F-002] TS-056 (b): 선언 8필드만 있는 깨끗한 헤더 — header_history 미탐지
+ok 23 - [T107/F-002] TS-056 (b): 선언 8필드만 있는 깨끗한 헤더 — header_history 미탐지
+  ---
+  duration_ms: 29.514625
+  ...
+# Subtest: [T107/F-002] TS-057 (a): manifest 모드 draft:true — header_history/undeclared_field 미탐지(draft 위반은 그대로 발생)
+ok 24 - [T107/F-002] TS-057 (a): manifest 모드 draft:true — header_history/undeclared_field 미탐지(draft 위반은 그대로 발생)
+  ---
+  duration_ms: 27.045
+  ...
+# Subtest: [T107/F-002] TS-057 (b): inline 모드에서 임의 필드명 "draft"는 예외 미적용 — undeclared_field로 그대로 탐지된다 (mode 게이트 정밀도 증명)
+ok 25 - [T107/F-002] TS-057 (b): inline 모드에서 임의 필드명 "draft"는 예외 미적용 — undeclared_field로 그대로 탐지된다 (mode 게이트 정밀도 증명)
+  ---
+  duration_ms: 33.406416
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 25
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 923.550417

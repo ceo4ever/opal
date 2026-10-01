@@ -30,7 +30,7 @@ load: stage.test
 
 에이전트·외부 서비스를 실제로 호출하는 시나리오는 TEST-SCENARIO의 방법·환경 열에 `[실호출 1회]` 표지가 있는 행이다.
 
-1. 실행 주체는 `opal-test-agent`다. Bash로 헤드리스 `claude -p --agent <이름>`을 시나리오당 **1회** 실행한다. 설치 전 단계에서 저장소 정의를 쓰려면 `--agents` JSON으로 저장소의 에이전트 정의를 지정한다. 반복 호출하지 않는다.
+1. 실행 주체는 `opal-test-agent`다. Bash로 정식 wrapper `~/.opal/tools/opal-agent/run.sh`를 시나리오당 **1회** 실행한다. 원 CLI `claude -p`를 직접 호출하지 않는다(정식 OPAL wrapper가 있으면 raw 외부 CLI 대신 wrapper, `~/.opal/AGENT.md` 도구 선택 규칙). 대상 에이전트의 역할은 해당 `AGENT.md`(설치본 `~/.opal/agents/<이름>/AGENT.md`, 설치 전에는 저장소 `opal/agents/<이름>/AGENT.md`)에서 frontmatter를 제외한 본문을 `--system-prompt`로, frontmatter의 `model`을 플랫폼 모델 별칭(light/standard/advanced → haiku/sonnet/opus, `~/.opal/setting.json` models 기준)으로 `--model`에, `effort`를 `--effort`에, `tools`를 쉼표 목록으로 `--allowed-tools`에 전달한다. 그 밖에 `--json`, `--cwd`, `--timeout`, `--opal-bootstrap off`를 지정한다. opal-agent 옵션의 근거는 `opal/tools/opal-agent/README.md`이며, `--agent <이름>`처럼 설치된 정의를 이름으로 고르는 옵션은 없으므로 역할은 `--system-prompt`로 전달한다. 반복 호출하지 않는다.
 2. 원본 JSON 응답을 증거 파일로 저장하고, 그 파일을 기대 결과와 대조해 판정한다. 요약·가공본만으로 판정하지 않는다.
 3. 헤드리스 호출이 불가능하면 `blocked`로 반환한다. PM은 직접 수행하거나 우회 판정하지 않고 사용자에게 보고한다(`actor.md` §독립 검증 경계 유지).
 

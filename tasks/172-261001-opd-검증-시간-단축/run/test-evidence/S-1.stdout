@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /Users/lucas/.opal/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172
+plugins: asyncio-1.3.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 33 items / 23 deselected / 10 selected
+
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_all_files_missing PASSED [ 10%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_deterministic_same_input_same_response PASSED [ 20%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_empty_gaps_stop PASSED [ 30%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_latest_valid_design_then_scenario PASSED [ 40%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_missing_file_falls_back PASSED [ 50%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_no_history PASSED [ 60%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_non_string_items_ignored PASSED [ 70%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_rejection_paths_unchanged PASSED [ 80%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_skips_non_evaluated_verdicts PASSED [ 90%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::PreviousGapsStartTest::test_previous_gaps_unreadable_file_falls_back PASSED [100%]
+
+====================== 10 passed, 23 deselected in 20.57s ======================

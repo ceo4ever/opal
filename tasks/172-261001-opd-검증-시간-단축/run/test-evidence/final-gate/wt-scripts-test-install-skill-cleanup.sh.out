@@ -1,0 +1,17 @@
+[PASS] update.sh는 install-mac.sh 공개 배포 경로를 호출
+[PASS] 격리 HOME에서 install_opal 실행 성공
+[FAIL] legacy top-level skill 제거: opal-pilot-dev-short
+       detail: 설치 후에도 /var/folders/0k/n9rvmztx6xs3xvjsvf0qqzdw0000gn/T/tmp.U1ZEKKEKQ7/home/.opal/skills/opal-pilot-dev-short 존재
+[PASS] legacy top-level skill 제거: op-sdd-spec
+[PASS] legacy top-level skill 제거: op-sdd-plan
+[PASS] legacy top-level skill 제거: op-sdd-action-plan
+[PASS] legacy top-level skill 제거: op-sdd-verify
+[PASS] canonical/nested skill 배포: opal-pilot-dev
+[PASS] canonical/nested skill 배포: opal-pilot-sdd/internal-skills/op-sdd-spec
+[PASS] canonical/nested skill 배포: opal-pilot-sdd/internal-skills/op-sdd-plan
+[PASS] canonical/nested skill 배포: opal-pilot-sdd/internal-skills/op-sdd-action-plan
+
+========================================================
+PASS: 10 | FAIL: 1
+========================================================
+verdict: FAIL (1 failures)

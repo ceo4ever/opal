@@ -1,0 +1,55 @@
+TAP version 13
+# Subtest: [T080/L1-F4] TS-023 (S-10): inline 모드 scaffold — .opal/code-map/ 하위 전 파일 내용·mtime 무변화 + skipped[0].reason + exit 0
+ok 1 - [T080/L1-F4] TS-023 (S-10): inline 모드 scaffold — .opal/code-map/ 하위 전 파일 내용·mtime 무변화 + skipped[0].reason + exit 0
+  ---
+  duration_ms: 35.165667
+  ...
+# Subtest: [T080/L1-F4] TS-023 (S-10): inline 모드 scaffold — index.json 부재여도 index_missing으로 실패하지 않는다
+ok 2 - [T080/L1-F4] TS-023 (S-10): inline 모드 scaffold — index.json 부재여도 index_missing으로 실패하지 않는다
+  ---
+  duration_ms: 29.476542
+  ...
+# Subtest: [T080/L1-F4] TS-023 (S-10) [대조군]: 같은 트리를 manifest로 뒤집으면 scaffold가 실제로 매니페스트를 갱신한다
+ok 3 - [T080/L1-F4] TS-023 (S-10) [대조군]: 같은 트리를 manifest로 뒤집으면 scaffold가 실제로 매니페스트를 갱신한다
+  ---
+  duration_ms: 30.4925
+  ...
+# Subtest: [T077-승계] (S-10): manifest 모드 scaffold — 코드 보유 디렉토리 수 = 생성 매니페스트 수
+ok 4 - [T077-승계] (S-10): manifest 모드 scaffold — 코드 보유 디렉토리 수 = 생성 매니페스트 수
+  ---
+  duration_ms: 36.591583
+  ...
+# Subtest: [T077-승계] (S-10): manifest 모드 scaffold 2회 연속 실행 — 산출물 바이트 동일 (멱등)
+ok 5 - [T077-승계] (S-10): manifest 모드 scaffold 2회 연속 실행 — 산출물 바이트 동일 (멱등)
+  ---
+  duration_ms: 64.093833
+  ...
+# Subtest: [T077-승계] (S-10): description 보존 + 신규 파일만 draft:true 빈 엔트리 추가
+ok 6 - [T077-승계] (S-10): description 보존 + 신규 파일만 draft:true 빈 엔트리 추가
+  ---
+  duration_ms: 62.592417
+  ...
+# Subtest: [T077-승계] (S-10): 소스 파일 삭제 → 재실행 시 엔트리 제거 + pruned 보고
+ok 7 - [T077-승계] (S-10): 소스 파일 삭제 → 재실행 시 엔트리 제거 + pruned 보고
+  ---
+  duration_ms: 72.934583
+  ...
+# Subtest: [T077-승계] (S-10): scaffold 실행 후 소스 파일 mtime·내용 무변화
+ok 8 - [T077-승계] (S-10): scaffold 실행 후 소스 파일 mtime·내용 무변화
+  ---
+  duration_ms: 42.687625
+  ...
+# Subtest: [T077-승계] (S-11): mirror_collision — scaffold가 exit 1로 거부하고 어떤 매니페스트도 쓰지 않음
+ok 9 - [T077-승계] (S-11): mirror_collision — scaffold가 exit 1로 거부하고 어떤 매니페스트도 쓰지 않음
+  ---
+  duration_ms: 32.849625
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 412.209292

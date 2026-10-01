@@ -1,6 +1,6 @@
 # STATE: 검증 시간 단축
 
-> 최종 갱신: 2026-10-01 14:21:10
+> 최종 갱신: 2026-10-01 16:47:16
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 

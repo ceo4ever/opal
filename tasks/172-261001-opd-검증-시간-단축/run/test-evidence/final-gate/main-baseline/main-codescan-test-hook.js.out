@@ -1,0 +1,100 @@
+TAP version 13
+# Subtest: [T080/L1-F12e] TS-042 (S-2) [077 TS-038 계승]: manifest 모드 + 미갱신 매니페스트 → 경고 정상 출력, exit 0
+ok 1 - [T080/L1-F12e] TS-042 (S-2) [077 TS-038 계승]: manifest 모드 + 미갱신 매니페스트 → 경고 정상 출력, exit 0
+  ---
+  duration_ms: 29.967292
+  ...
+# Subtest: [T080/L1-F12e] TS-040 (S-2): headerSource 미설정 트리 → stdout 0바이트 · exit 0
+ok 2 - [T080/L1-F12e] TS-040 (S-2): headerSource 미설정 트리 → stdout 0바이트 · exit 0
+  ---
+  duration_ms: 25.28175
+  ...
+# Subtest: [T080/L1-F12e] TS-041 (S-2): headerSource:"auto"(무효값) 트리 → stdout 0바이트 · exit 0
+ok 3 - [T080/L1-F12e] TS-041 (S-2): headerSource:"auto"(무효값) 트리 → stdout 0바이트 · exit 0
+  ---
+  duration_ms: 26.724125
+  ...
+# Subtest: [T080/L1-F12e] TS-041 (S-2): headerSource:"bogus"(임의 무효값) 트리 → stdout 0바이트 · exit 0
+ok 4 - [T080/L1-F12e] TS-041 (S-2): headerSource:"bogus"(임의 무효값) 트리 → stdout 0바이트 · exit 0
+  ---
+  duration_ms: 27.785334
+  ...
+# Subtest: [T080/L1-F12e] TS-043 (S-2): headerSource:"inline" 모드 → stdout 0바이트 · exit 0
+ok 5 - [T080/L1-F12e] TS-043 (S-2): headerSource:"inline" 모드 → stdout 0바이트 · exit 0
+  ---
+  duration_ms: 25.051042
+  ...
+# Subtest: [T080/L1-F12e] TS-040/043 (S-2): 깨진 code-scan.json 트리에서도 hook은 무출력 exit 0
+ok 6 - [T080/L1-F12e] TS-040/043 (S-2): 깨진 code-scan.json 트리에서도 hook은 무출력 exit 0
+  ---
+  duration_ms: 28.863875
+  ...
+# Subtest: [T080/L1-F12e] TS-076 (S-2): headerSource 미설정 + readonly 보유 index 트리 → stdout 0 · stderr 0 · exit 0
+ok 7 - [T080/L1-F12e] TS-076 (S-2): headerSource 미설정 + readonly 보유 index 트리 → stdout 0 · stderr 0 · exit 0
+  ---
+  duration_ms: 26.439958
+  ...
+# Subtest: [T080/L1-F12e] TS-076 (S-2): headerSource:"auto"(무효값) + readonly 보유 index 트리 → stdout 0 · stderr 0 · exit 0
+ok 8 - [T080/L1-F12e] TS-076 (S-2): headerSource:"auto"(무효값) + readonly 보유 index 트리 → stdout 0 · stderr 0 · exit 0
+  ---
+  duration_ms: 27.706042
+  ...
+# Subtest: [T080/L1-F12e] TS-076 (S-2): headerSource:"inline" + readonly 보유 index 트리 → stdout 0 · stderr 0 · exit 0
+ok 9 - [T080/L1-F12e] TS-076 (S-2): headerSource:"inline" + readonly 보유 index 트리 → stdout 0 · stderr 0 · exit 0
+  ---
+  duration_ms: 25.6825
+  ...
+# Subtest: [T080/L1-F12e] (S-2) [산출물 검사]: loadConfig 본문에 process.exit·throw 0건 (fail-safe 1차 방어)
+ok 10 - [T080/L1-F12e] (S-2) [산출물 검사]: loadConfig 본문에 process.exit·throw 0건 (fail-safe 1차 방어)
+  ---
+  duration_ms: 1.758958
+  ...
+# Subtest: [T080/L1-F8c] TS-036 (S-9): manifest 모드 + out_of_scope 파일(VendorLegacy.java) → stdout 0바이트 · exit 0
+ok 11 - [T080/L1-F8c] TS-036 (S-9): manifest 모드 + out_of_scope 파일(VendorLegacy.java) → stdout 0바이트 · exit 0
+  ---
+  duration_ms: 26.787167
+  ...
+# Subtest: [T080/L1-F8c] TS-036 (S-9) [양성 대조군]: 같은 트리·같은 모드에서 in-scope 미등재 파일은 경고가 나온다
+ok 12 - [T080/L1-F8c] TS-036 (S-9) [양성 대조군]: 같은 트리·같은 모드에서 in-scope 미등재 파일은 경고가 나온다
+  ---
+  duration_ms: 26.627875
+  ...
+# Subtest: 077 TS-039 (S-18): 매니페스트 갱신 완료 상태 이벤트 → stdout 0바이트, exit 0
+ok 13 - 077 TS-039 (S-18): 매니페스트 갱신 완료 상태 이벤트 → stdout 0바이트, exit 0
+  ---
+  duration_ms: 25.80175
+  ...
+# Subtest: 077 TS-040 (S-18): code-map 부재 트리 이벤트 → stdout 0바이트, exit 0 (⑤단 이탈)
+ok 14 - 077 TS-040 (S-18): code-map 부재 트리 이벤트 → stdout 0바이트, exit 0 (⑤단 이탈)
+  ---
+  duration_ms: 27.260416
+  ...
+# Subtest: 077 TS-041 (S-18): 깨진 stdin JSON → 무출력 exit 0 (fail-safe)
+ok 15 - 077 TS-041 (S-18): 깨진 stdin JSON → 무출력 exit 0 (fail-safe)
+  ---
+  duration_ms: 26.069
+  ...
+# Subtest: 077 TS-041 (S-18): tool_name:"Bash" 이벤트 → 무출력 exit 0 (matcher 이중 방어)
+ok 16 - 077 TS-041 (S-18): tool_name:"Bash" 이벤트 → 무출력 exit 0 (matcher 이중 방어)
+  ---
+  duration_ms: 25.324333
+  ...
+# Subtest: 077 TS-041 (S-18): file_path 부재 이벤트 → 무출력 exit 0
+ok 17 - 077 TS-041 (S-18): file_path 부재 이벤트 → 무출력 exit 0
+  ---
+  duration_ms: 24.262291
+  ...
+# Subtest: 077 TS-042 (S-18): claude-hooks.json — PostToolUse 배열에 Bash 엔트리 + code-map-hook 엔트리 공존
+ok 18 - 077 TS-042 (S-18): claude-hooks.json — PostToolUse 배열에 Bash 엔트리 + code-map-hook 엔트리 공존
+  ---
+  duration_ms: 0.481416
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 433.891542
