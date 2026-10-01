@@ -1,0 +1,92 @@
+{
+  "check": "security",
+  "status": "pass",
+  "checked_files": [
+    "opal/skills/opal-pilot-dev2/scripts/lifecycle.py",
+    "opal/skills/opal-pilot-dev2/schemas/plan-review.schema.json",
+    "opal/skills/opal-pilot-dev2/tests/test_lifecycle.py",
+    "opal/skills/opal-pilot-dev2/agents/coordinator.md",
+    "opal/skills/opal-pilot-dev2/agents/reviewer.md",
+    "opal/skills/opal-pilot-dev2/SKILL.md",
+    "opal/skills/opal-pilot-dev2/references/lifecycle.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "6521452f1361bf71",
+      "category": "OWASP-A07 Identification and Authentication Failures (CWE-287)",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "OWASP-A07",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/skills/opal-pilot-dev2/scripts/lifecycle.py",
+        "line": 585,
+        "symbol": "main/plan-review-reset"
+      },
+      "evidence": "plan-review-reset의 사용자 신원 검사는 a.actor가 ('coordinator','builder','verifier','reviewer')에 속하지 않는지만 확인한다(대소문자 구분, 임의 문자열 통과). --reference는 비어 있지 않은지만 검사한다. 기존 approve(line 500)와 동일 패턴이며 references/governance.md가 '승인 기록 인터페이스이지 인증 서비스가 아니다'·'로컬 도구를 우회한 직접 파일/API 변경까지 차단하지 않는다'로 명시한 수용된 신뢰 경계다.",
+      "impact": "같은 로컬 CLI를 호출할 수 있는 에이전트가 실명 형태 actor와 임의 reference로 상한 대기를 해제할 수 있다. 상한은 협조적 에이전트에 대한 절차 통제이며 적대적 우회 방지 수단이 아니다.",
+      "remediation": {
+        "guidance": "이번 태스크 범위에서는 조치 불요(기존 신뢰 모델 유지). 강제 경계가 필요하면 governance.md 방침대로 플랫폼 hook·보호 CI·별도 승인 서비스로 해제 권한을 제한한다. 선택적으로 actor 비교를 casefold해 'Coordinator' 같은 변형 역할명을 거부할 수 있다.",
+        "reference": "https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/",
+        "auto_fixable": false
+      },
+      "verification": "governance.md 신뢰 경계 문구가 유지되고, 강제 경계 도입 시 hook/CI가 비인가 plan-review-reset 원장 이벤트를 거부하는지 확인한다.",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "6ec858644aa12a04",
+      "category": "CWE-20 Improper Input Validation / CWE-755 Improper Handling of Exceptional Conditions",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CWE-20",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/skills/opal-pilot-dev2/scripts/lifecycle.py",
+        "line": 513,
+        "symbol": "main/review --call"
+      },
+      "evidence": "--findings/--resolutions는 json.loads 후 schema 부분집합(validate, additionalProperties:false·enum·minLength)으로 검증되고 JSONDecodeError(ValueError 하위)는 공용 except로 exit 2 JSON 오류가 된다. 그러나 깊게 중첩된 JSON('['*100000 등)은 json.loads가 RecursionError(RuntimeError 하위)를 던지며 이는 except 튜플(ValueError, OSError, KeyError, TypeError, SubprocessError)에 없다. 로컬 재현: python3 json.loads 깊은 중첩 -> RecursionError 확인.",
+      "impact": "원장 쓰기 이전 단계라 상태 변조·fail 수 반영은 없다(fail-closed). 다만 CLI가 traceback과 exit 1을 내 JSON 오류 계약(ok:false, transition_action)을 깨뜨리므로 소비자가 응답을 파싱하지 못한다. 기존 collect-evidence --argv(line 555)도 같은 양상.",
+      "remediation": {
+        "guidance": "인자 길이 상한을 두거나 except 튜플에 RecursionError를 추가해 동일 JSON 오류 계약으로 exit 2를 반환한다.",
+        "reference": "https://cwe.mitre.org/data/definitions/755.html",
+        "auto_fixable": true
+      },
+      "verification": "--findings에 깊은 중첩 배열을 넣었을 때 stdout이 ok:false JSON이고 exit 2이며 원장 이벤트 수가 변하지 않는지 테스트한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "~/.opal/tools/event-loader/run.sh verify --event worker.dispatch -> ok: true",
+    "git diff --stat main...HEAD -- opal/skills/opal-pilot-dev2 (변경 7파일 확인)",
+    "target_files 7건 Read 완료",
+    "python3 json.loads 깊은 중첩 -> RecursionError(RuntimeError) 재현",
+    "활성 영역: Python CLI 입력 검증(CWE-20/755), 명령 실행(CWE-78: subprocess는 shell 없이 list argv, plan 승인 명령만 허용 - 변경 없음), 파일 쓰기 경로(CWE-22/377: 원장은 <task>/run 고정 경로, mkstemp+fsync+os.replace 원자 쓰기 - 변경 없음), 신원/승인(OWASP-A07), ReDoS(CWE-1333: finding id 정규식 re.escape(call)+'-[1-9][0-9]*' fullmatch, 선형)",
+    "비활성 영역: 웹/프런트엔드·DB·MCP 등록·install 무결성 — target_files에 해당 표면 없음",
+    "Markdown 대상(coordinator.md, reviewer.md, SKILL.md, references/lifecycle.md): 시크릿·위험 명령 예시 없음, 신뢰 경계 문구 governance.md와 일치",
+    "test_lifecycle.py: tempfile.TemporaryDirectory 사용, shell=True·하드코딩 자격증명 없음",
+    "비보안 관찰(finding 아님): references/lifecycle.md는 plan_review_floor를 '집계·추적의 시작 지점'이라 하지만 previous_findings()(line 258)는 floor를 적용하지 않아 reset 이후에도 직전 open_findings 해소 보고를 요구한다 — 문서/구현 의미 확인 권장"
+  ],
+  "references": [
+    "docs/SECURITY.md",
+    "opal/skills/op-gc-security/references/security-baseline.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    "opal/skills/opal-pilot-dev2/references/governance.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/173-261001-opds-opd2-사전심사-재시도상한과-지적추적/GC-SECURITY-2026-10-01T14-40-00.md",
+  "baseline": "none",
+  "delta": {
+    "new": [
+      "6521452f1361bf71",
+      "6ec858644aa12a04"
+    ],
+    "persisting": [],
+    "resolved": [],
+    "suppressed": []
+  }
+}

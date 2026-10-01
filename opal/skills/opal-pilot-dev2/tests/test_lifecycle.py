@@ -406,5 +406,249 @@ class LifecycleTests(unittest.TestCase):
         self.assertTrue((self.task / 'STATE.md').is_file())
 
 
+    # ------------------------------------------------------------------
+    # 173 — opd2 PLAN 사전심사: 재검증 절차 정합·회차 상한·지적 해소 추적 (RED-first)
+    # ------------------------------------------------------------------
+    HOLD = 'await_user: PLAN pre-review fail limit (3) reached; user release required'
+
+    def plan_stage(self):
+        """PLAN 단계까지 INTENT·DESIGN을 통과하고 plan 산출물이 있는 임시 태스크."""
+        self.init()
+        self.artifact('intent', acceptance=['1+1 is 2', 'no regression elsewhere'])
+        self.call('transition')
+        self.artifact('spec')
+        self.call('transition')
+        self.artifact('plan', ac_coverage=[[0, 1]])
+
+    @staticmethod
+    def finding(fid, location='plan.json files', choice='app.py 외 테스트 파일 포함 여부'):
+        return {'id': fid, 'location': location, 'remaining_choice': choice}
+
+    @staticmethod
+    def resolution(rid, status='resolved', evidence='plan.json files 수정으로 해소'):
+        return {'id': rid, 'status': status, 'evidence': evidence}
+
+    def review_plan(self, call, verdict, findings=None, resolutions=None, ok=True, actor='r1',
+                    reason='Independent PLAN pre-review of acceptance coverage and scope'):
+        args = ['--actor', actor, '--verdict', verdict, '--reason', reason, '--call', call]
+        if findings is not None:
+            args += ['--findings', json.dumps(findings)]
+        if resolutions is not None:
+            args += ['--resolutions', json.dumps(resolutions)]
+        return self.call('review', *args, ok=ok)
+
+    def count(self):
+        return len(self.store.events())
+
+    def raw(self, *argv):
+        """task 위치 인자 없이 CLI를 호출한다(verify-mark 전용). (exit code, 응답 JSON)."""
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            code = lc.main(list(map(str, argv)))
+        return code, json.loads(out.getvalue())
+
+    def hold_state(self):
+        """fail 2건(A-1, B-1) 뒤 3번째 fail(A, A-1 해소 보고 + 새 지적 A-2)로 상한 대기에 진입한다."""
+        self.plan_stage()
+        self.review_plan('A', 'fail', findings=[self.finding('A-1')], resolutions=[])
+        self.review_plan('B', 'fail', findings=[self.finding('B-1')], resolutions=[])
+        return self.review_plan('A', 'fail', findings=[self.finding('A-2')],
+                                resolutions=[self.resolution('A-1')])
+
+    def assert_held(self, result, before):
+        self.assertEqual(result['transition_action'], 'await_user', result)
+        self.assertTrue(result['error'].startswith(self.HOLD), result)
+        self.assertEqual(self.count(), before)
+
+    def test_s1_replan_requires_rerecording_call_a(self):
+        """173 S-1 — B fail 지적 반영으로 plan을 고치면 통과했던 A 기록이 무효가 되어
+        B만 다시 pass해도 전이가 거부되고, A까지 다시 pass해야 BUILD가 된다."""
+        self.plan_stage()
+        self.review_plan('A', 'pass')
+        self.review_plan('B', 'fail', findings=[self.finding('B-1')])
+        self.artifact('plan', ac_coverage=[[0, 1]], rollback='Restore prior source after fixing B-1')
+        self.review_plan('B', 'pass', findings=[], resolutions=[self.resolution('B-1')])
+        self.assertIn('plan review call A must pass at current fingerprint',
+                      self.call('transition', ok=False)['error'])
+        self.review_plan('A', 'pass')
+        self.call('transition')
+        self.assertEqual(self.store.state()['stage'], 'BUILD')
+
+    def test_s3_third_fail_holds_and_blocks_everything(self):
+        """173 S-3(a)~(g) — 3번째 fail은 저장되며 blocked/decision_request가 되고, 이후
+        pass·fail·transition·verify-mark·rewind·unblock은 await_user로 거부된다."""
+        third = self.hold_state()
+        self.assertEqual(third['transition_action'], 'blocked')
+        self.assertEqual(third['report_type'], 'decision_request')
+        self.assertEqual(self.store.state()['blocked'], self.HOLD)
+        before = self.count()
+        self.assert_held(self.review_plan('A', 'pass', findings=[], resolutions=[self.resolution('A-2')],
+                                          ok=False), before)
+        self.assert_held(self.review_plan('A', 'fail', findings=[self.finding('A-3')],
+                                          resolutions=[self.resolution('A-2')], ok=False), before)
+        self.assert_held(self.call('transition', ok=False), before)
+        code, result = self.raw('verify-mark', '--task', self.task, '--key', 'plan.plan_md')
+        self.assertEqual(code, 2, result)
+        self.assert_held(result, before)
+        self.assert_held(self.call('rewind', '--gate', 'DESIGN', '--reason', 'try to bypass', ok=False), before)
+        self.assert_held(self.call('unblock', '--reason', 'r', '--reference', 'r', ok=False), before)
+        status = self.call('status')
+        self.assertEqual(status['result']['blocked'], self.HOLD)
+        self.assertEqual(status['transition_action'], 'blocked')
+
+    def test_s3_other_block_reason_is_not_overwritten(self):
+        """173 S-3(h) — 다른 사유의 blocked가 먼저 있어도 상한 대기 시 그 값은 덮어쓰이지 않고
+        transition 오류는 같은 await_user 문구로 시작한다."""
+        self.plan_stage()
+        self.call('block', '--reason', 'other')
+        self.review_plan('A', 'fail', findings=[self.finding('A-1')], resolutions=[])
+        self.review_plan('B', 'fail', findings=[self.finding('B-1')], resolutions=[])
+        self.review_plan('A', 'fail', findings=[self.finding('A-2')], resolutions=[self.resolution('A-1')])
+        self.assertEqual(self.store.state()['blocked'], 'other')
+        self.assert_held(self.call('transition', ok=False), self.count())
+
+    def test_s4_reset_rejections_and_release(self):
+        """173 S-4(a)(b)(d) — 해제는 실명 actor+reference만 허용하고 이력을 보존하며,
+        이후 fail은 새 기준(floor)부터 3건까지 허용된다."""
+        self.hold_state()
+        before = self.count()
+        self.call('plan-review-reset', '--actor', 'coordinator', '--reference', 'user message 1',
+                  '--reason', 'release', ok=False)
+        self.assertEqual(self.count(), before)
+        self.call('plan-review-reset', '--actor', 'captain', '--reason', 'release', ok=False)
+        self.assertEqual(self.count(), before)
+        history = list(self.store.state()['plan_reviews'])
+        self.call('plan-review-reset', '--actor', 'captain', '--reference', '사용자 승인 메시지',
+                  '--reason', 'user approved another attempt')
+        state = self.store.state()
+        self.assertIsNone(state['blocked'])
+        self.assertEqual(self.store.events()[-1]['kind'], 'plan_review_reset')
+        self.assertEqual(state['plan_reviews'], history)
+        self.assertEqual(state['plan_review_floor'], len(history))
+        # 해제 뒤 fail 2건은 허용되고 아직 상한 대기가 아니다.
+        self.review_plan('A', 'fail', findings=[self.finding('A-3')], resolutions=[self.resolution('A-2')])
+        self.review_plan('B', 'fail', findings=[self.finding('B-2')], resolutions=[self.resolution('B-1')])
+        self.assertIsNone(self.store.state()['blocked'])
+        # rewind는 plan_reviews와 floor를 함께 초기화한다(상한 우회 없음).
+        self.call('rewind', '--gate', 'DESIGN', '--reason', 'rework design')
+        state = self.store.state()
+        self.assertEqual(state['plan_reviews'], [])
+        self.assertEqual(state.get('plan_review_floor'), 0)
+        self.artifact('spec')
+        self.call('transition')
+        self.artifact('plan', ac_coverage=[[0, 1]])
+        self.review_plan('A', 'fail', findings=[self.finding('A-1')], resolutions=[])
+        self.review_plan('B', 'fail', findings=[self.finding('B-1')], resolutions=[])
+        self.assertIsNone(self.store.state()['blocked'])
+        self.review_plan('A', 'fail', findings=[self.finding('A-2')], resolutions=[self.resolution('A-1')])
+        self.assertEqual(self.store.state()['blocked'], self.HOLD)
+
+    def test_s4_reset_rejected_without_hold(self):
+        """173 S-4(c) — 상한 대기가 아니면 plan-review-reset은 거부되고 원장이 바뀌지 않는다."""
+        self.plan_stage()
+        before = self.count()
+        result = self.call('plan-review-reset', '--actor', 'captain', '--reference', '사용자 승인 메시지',
+                           '--reason', 'no hold', ok=False)
+        self.assertIn('no plan review hold to reset', result['error'])
+        self.assertEqual(self.count(), before)
+
+    def test_s5_first_round_format_rejections(self):
+        """173 S-5(a)~(g) — 첫 회차 fail/pass의 findings 형식 위반은 모두 거부되고 원장·fail 수에
+        반영되지 않으며, 올바른 fail은 findings/resolutions/open_findings를 남긴다."""
+        self.plan_stage()
+        before = self.count()
+        good = self.finding('A-1')
+        bad = [
+            ('A', 'fail', None),                                              # (a) findings 없음
+            ('A', 'fail', [{'id': 'A-1', 'remaining_choice': 'x'}]),          # (b) location 누락
+            ('A', 'fail', [{'id': 'A-1', 'location': 'x'}]),                  # (b) remaining_choice 누락
+            ('A', 'fail', [self.finding('A-1', location='  ')]),              # (b) 공백 location
+            ('A', 'fail', [self.finding('A-1', choice='')]),                  # (b) 공백 remaining_choice
+            ('A', 'fail', [self.finding('B-1')]),                             # (c) Call A에 B-1
+            ('A', 'fail', [self.finding('A-01')]),                            # (d) 앞자리 0
+            ('A', 'fail', [self.finding('A-x')]),                             # (d) 숫자 아님
+            ('A', 'fail', [self.finding('A-1'), self.finding('A-1')]),        # (e) 중복
+            ('A', 'pass', [good]),                                            # (f) pass에 findings
+        ]
+        for call, verdict, findings in bad:
+            result = self.review_plan(call, verdict, findings=findings, ok=False)
+            self.assertTrue(result['error'], (call, verdict, findings))
+            self.assertEqual(self.count(), before, (call, verdict, findings))
+            self.assertEqual(self.store.state()['plan_reviews'], [])
+        self.review_plan('A', 'fail', findings=[good])
+        record = self.store.state()['plan_reviews'][-1]
+        self.assertEqual(record['findings'], [good])
+        self.assertEqual(record['resolutions'], [])
+        self.assertEqual(record['open_findings'], [good])
+
+    def test_s6_resolution_reports_and_call_independence(self):
+        """173 S-6(a)~(k) — 해소 보고는 이전 지적 id 집합과 정확히 일치해야 하고, 위반은 거부되며,
+        미해소 지적은 open_findings로 이월된다. Call B는 Call A와 독립이다."""
+        self.plan_stage()
+        a1, a2 = self.finding('A-1'), self.finding('A-2', location='plan.json checks')
+        self.review_plan('A', 'fail', findings=[a1, a2])
+        # Call B 첫 기록은 Call A 지적과 무관하게 --resolutions 없이 성공한다.
+        self.review_plan('B', 'pass')
+        before = self.count()
+        cover = 'resolutions must cover exactly the previous findings [A-1, A-2]'
+        r1, r2 = self.resolution('A-1'), self.resolution('A-2')
+        new3 = [self.finding('A-3')]
+        for resolutions in (None, [r1], [r1, r2, self.resolution('A-9')], [r1, r1, r2]):   # (a)~(d)
+            result = self.review_plan('A', 'fail', findings=new3, resolutions=resolutions, ok=False)
+            self.assertIn(cover, result['error'])
+            self.assertEqual(self.count(), before)
+        rejects = [
+            ('fail', new3, [r1, dict(r2, status='done')]),                        # (e)
+            ('fail', new3, [r1, dict(r2, evidence='  ')]),                        # (f)
+            ('pass', [], [r1, self.resolution('A-2', status='unresolved')]),      # (g)
+            ('fail', [], [r1, r2]),                                               # (h)
+            ('fail', [self.finding('A-1')], [r1, r2]),                            # (i)
+        ]
+        for verdict, findings, resolutions in rejects:
+            result = self.review_plan('A', verdict, findings=findings, resolutions=resolutions, ok=False)
+            self.assertTrue(result['error'])
+            self.assertEqual(self.count(), before)
+        unresolved = self.resolution('A-2', status='unresolved', evidence='아직 남은 선택이 있음')
+        self.review_plan('A', 'fail', findings=new3, resolutions=[r1, unresolved])           # (j)
+        record = self.store.state()['plan_reviews'][-1]
+        self.assertEqual([f['id'] for f in record['open_findings']], ['A-2', 'A-3'])
+        self.review_plan('A', 'pass', findings=[],
+                         resolutions=[r2, self.resolution('A-3')])                          # (k)
+        self.assertEqual(self.store.state()['plan_reviews'][-1]['verdict'], 'pass')
+
+    def legacy_fixture(self, fails, passes=()):
+        """변경 전 형식 원장 — findings/resolutions 키가 없는 사전심사 기록을 Store.save로 직접 심는다."""
+        self.plan_stage()
+        state = self.store.state()
+        fingerprint = self.store.fingerprint(state)
+        for call, verdict in [*fails, *passes]:
+            report = {'call': call, 'actor': 'r1', 'verdict': verdict, 'reason': 'legacy record',
+                      'fingerprint': fingerprint}
+            state['plan_reviews'].append(report)
+            self.store.save(state, 'plan_review', report)
+
+    def test_s7_legacy_ledger_status_and_transition(self):
+        """173 S-7(a)(b) — 변경 전 형식 fail 3건과 현재 지문의 A·B pass가 있는 원장은 조회되고
+        전이도 변경 전 pass 기록으로 성공한다."""
+        self.legacy_fixture([('A', 'fail'), ('B', 'fail'), ('A', 'fail')], [('A', 'pass'), ('B', 'pass')])
+        self.assertEqual(self.call('status')['result']['stage'], 'PLAN')
+        self.call('transition')
+        self.assertEqual(self.store.state()['stage'], 'BUILD')
+
+    def test_s7_legacy_fails_not_counted_nor_previous_findings(self):
+        """173 S-7(c)(d) — 변경 전 fail은 상한 수·이전 지적에 들어가지 않으므로 새 형식 fail이
+        --resolutions 없이 저장되고 상한 대기가 되지 않는다."""
+        self.legacy_fixture([('A', 'fail')])
+        self.review_plan('A', 'fail', findings=[self.finding('A-1')])
+        self.assertIsNone(self.store.state()['blocked'])
+
+    def test_s7_legacy_three_fails_then_new_fail(self):
+        """173 S-7(d) — 변경 전 fail 3건 뒤 새 형식 fail 기록도 상한 대기를 만들지 않는다."""
+        self.legacy_fixture([('A', 'fail'), ('B', 'fail'), ('A', 'fail')])
+        self.review_plan('A', 'fail', findings=[self.finding('A-1')])
+        self.review_plan('B', 'fail', findings=[self.finding('B-1')])
+        self.assertIsNone(self.store.state()['blocked'])
+        self.assertIsNone(self.store.state().get('plan_review_floor'))
+
+
 if __name__ == '__main__':
     unittest.main()

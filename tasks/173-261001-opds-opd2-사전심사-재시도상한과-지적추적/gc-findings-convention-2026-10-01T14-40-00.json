@@ -1,0 +1,25 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/skills/opal-pilot-dev2/scripts/lifecycle.py",
+    "opal/skills/opal-pilot-dev2/schemas/plan-review.schema.json",
+    "opal/skills/opal-pilot-dev2/tests/test_lifecycle.py",
+    "opal/skills/opal-pilot-dev2/agents/coordinator.md",
+    "opal/skills/opal-pilot-dev2/agents/reviewer.md",
+    "opal/skills/opal-pilot-dev2/SKILL.md",
+    "opal/skills/opal-pilot-dev2/references/lifecycle.md"
+  ],
+  "findings": [],
+  "evidence": [
+    "docs/CONVENTIONS.md 언어·네이밍·@header 현재사실 규칙 대조",
+    "python3 -m py_compile lifecycle.py ok",
+    "git diff main 변경 구간 검토",
+    "비ASCII 식별자 없음, 파일명 snake_case/kebab-case 준수"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "GC-CONVENTION-2026-10-01T14-40-00.md"
+}
