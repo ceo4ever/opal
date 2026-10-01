@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-10-01 12:38
+> 갱신: 2026-10-01 14:45
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -254,6 +254,8 @@
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
 - [[opal-skill-classification-system]] — OPAL 스킬 분류 체계 — opal-pilot / op-* / opal-* 의미 계층 #skill-registry #classification #pilot #operator #architecture
 - [[opal-skill-tester]] — opal-skill-tester (opst) — 스킬 모의 실행 테스트 #opst #testing #skill
+- [[opd2-plan-review-fail-limit-and-findings-tracking]] — opd2 사전심사 fail 3회 상한과 지적 해소 추적 #opd2 #plan-review #findings
+- [[opd2-plan-review-reverify-doc-over-tool-relaxation]] — opd2 사전심사 재검증 정합은 도구 완화가 아니라 문서 수정으로 푼다 #opd2 #plan-review #fingerprint
 - [[opd2-state-tool-integration]] — opd2 state-tool 통합 #opd2 #state-tool #gate-guard #ssot #task-168
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
 - [[opdd-reverse-track-physical-first-order]] — 역공학 트랙 MODEL 순서는 물리가 먼저다 #architecture-decision #data-design #pipeline #reverse-engineering #task-104
