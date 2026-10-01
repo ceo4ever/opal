@@ -197,16 +197,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": "blocked",
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": "PLAN.md Decisions(라인 19, 57) — 3회차 지적 executability-1(치명): \"워커가 서브에이전트를 디스패치할 도구가 없는데 W-5/S-6을 워커에게 맡김\". W-5·S-6 round-trip 검증(opal-evaluator-agent 재디스패치 포함)은 PM이 직접 수행하기로 명시 결정됨(디스패치 위임 금지). opal-test-agent는 worker.dispatch로 기동된 워커로 이 정책상 S-6을 자체 수행할 수 없음 — opal-evaluator-agent 재디스패치 필요, PM 직접 수행 필요로 반환",
-      "marked_at": "2026-10-01T11:38:56+09:00",
-      "fidelity": "mock"
+      "evidence": "PM 직접 수행(워커 위임 금지 정책). fixture-task에서 design-gate start --iteration 1 → opal-evaluator-agent 실제 디스패치(fail, design.gaps 4건+scenario.gaps 1건) → design-gate record(rewrite) → PLAN.md/TEST-SCENARIO.md 일부 수정(H-1/H-2 id 분리, S-3 추가) → design-gate start --iteration 2 → previous_gaps 5건 전달해 재디스패치 → resolved_gaps 5건 id 집합이 previous_gaps id 집합과 정확히 일치(completeness-1·adoption-1 resolved, decision_clarity-1·executability-1·recoverability-1 unresolved) → design.gaps/scenario.gaps 4건 전부 정규식 ^[\\w_]+-\\d+: .+ — .+ 통과(코드로 재검증) → design-gate record(rewrite) 정상 기록. 근거 파일: run/fixture-task/run/design-gate-i1.json, i2.json(절차 완료 후 fixture-task 폴더 삭제 예정)",
+      "marked_at": "2026-10-01T11:51:11+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-7",
