@@ -9,9 +9,7 @@ tags:
 - task-090
 sources:
 - task:090
-related:
-- pipeline-json-spec
-- state-tool
+related: [pipeline-json-spec, state-tool]
 created: '2026-08-13'
 updated: '2026-08-13'
 status: draft

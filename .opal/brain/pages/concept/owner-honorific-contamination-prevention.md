@@ -9,9 +9,7 @@ tags:
 - brain-ingest
 sources:
 - task:054
-related:
-- state-tool-owner-name-write-time-substitution
-- state-tool
+related: [state-tool-owner-name-write-time-substitution, state-tool]
 created: '2026-07-10'
 updated: '2026-07-10'
 status: active

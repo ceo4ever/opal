@@ -10,12 +10,7 @@ tags:
 sources:
 - task:075
 - task:111
-related:
-- skill-opal-pilot-dev-short
-- op-dev-test-scenario
-- op-scenario-gate-skill
-- scenario-gate-pilot-fit-criteria
-- readme-ssot-principle
+related: [skill-opal-pilot-dev-short, op-dev-test-scenario, op-scenario-gate-skill, scenario-gate-pilot-fit-criteria, readme-ssot-principle]
 created: '2026-07-23'
 updated: '2026-09-09'
 status: stale

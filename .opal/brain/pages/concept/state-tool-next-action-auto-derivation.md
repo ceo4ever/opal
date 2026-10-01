@@ -8,9 +8,7 @@ tags:
 - enforce-dont-advise
 sources:
 - task:072
-related:
-- state-tool
-- state-tool-task-step-key-address
+related: [state-tool, state-tool-task-step-key-address]
 created: '2026-07-23'
 updated: '2026-07-23'
 status: draft

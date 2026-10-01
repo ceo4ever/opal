@@ -8,10 +8,7 @@ tags:
 - non-trivial-resolution
 sources:
 - task:092
-related:
-- worktree-tool
-- worktree-workspace-isolation-axis
-- fixture-vs-real-blind-spot-lesson
+related: [worktree-tool, worktree-workspace-isolation-axis, fixture-vs-real-blind-spot-lesson]
 created: '2026-08-15'
 updated: '2026-08-15'
 status: draft

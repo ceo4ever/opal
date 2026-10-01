@@ -9,11 +9,7 @@ tags:
 - bugfix
 sources:
 - task:063
-related:
-- brain-prime-connection-pool-design
-- pool-lock-idiom-contract
-- console-settings-incremental-scope-policy
-- console-brain-volatile-single-session
+related: [brain-prime-connection-pool-design, pool-lock-idiom-contract, console-settings-incremental-scope-policy, console-brain-volatile-single-session]
 created: '2026-07-15'
 updated: '2026-07-15'
 status: active

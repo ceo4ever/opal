@@ -11,10 +11,7 @@ sources:
 - task:099
 - task:050
 - task:108
-related:
-- agent-md-digest-pattern
-- template-precedence-over-prose-norms
-- norm-proliferation-spiral-without-enforcement
+related: [agent-md-digest-pattern, template-precedence-over-prose-norms, norm-proliferation-spiral-without-enforcement]
 created: '2026-08-22'
 updated: '2026-09-06'
 status: draft

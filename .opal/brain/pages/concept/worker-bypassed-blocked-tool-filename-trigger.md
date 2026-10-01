@@ -8,8 +8,7 @@ tags:
 - dispatch
 sources:
 - task:099
-related:
-- template-precedence-over-prose-norms
+related: [template-precedence-over-prose-norms]
 created: '2026-08-22'
 updated: '2026-08-22'
 status: draft

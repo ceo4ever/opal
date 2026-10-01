@@ -7,10 +7,7 @@ tags:
 - task-114
 sources:
 - task:114
-related:
-- side-effect-observation-enables-runtime-verification
-- exploration-marker-as-output-artifact-creates-circularity
-- ac-infeasible-from-start-requires-preexisting-baseline-diff
+related: [side-effect-observation-enables-runtime-verification, exploration-marker-as-output-artifact-creates-circularity, ac-infeasible-from-start-requires-preexisting-baseline-diff]
 created: '2026-09-09'
 updated: '2026-09-09'
 status: draft

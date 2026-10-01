@@ -1,0 +1,15 @@
+{
+  "change_id": "CHANGE-ID",
+  "source_sha256": "intent 결합 해시",
+  "requirements": [
+    "AC에 연결된 요구"
+  ],
+  "design": "실제 설계",
+  "policy_versions": [
+    "적용한 정책과 버전 또는 해당 없음 근거"
+  ],
+  "risk": "normal",
+  "open_questions": [
+    "설계 확인 필요"
+  ]
+}

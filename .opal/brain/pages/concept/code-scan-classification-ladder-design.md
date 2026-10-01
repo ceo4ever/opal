@@ -8,10 +8,7 @@ tags:
 - task-083
 sources:
 - task:083
-related:
-- code-scan-split-execution-precedes-block
-- code-scan-manifest-sharding-design
-- code-scan-two-axis-threshold-design
+related: [code-scan-split-execution-precedes-block, code-scan-manifest-sharding-design, code-scan-two-axis-threshold-design]
 created: '2026-08-04'
 updated: '2026-08-04'
 status: draft

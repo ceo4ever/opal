@@ -10,12 +10,7 @@ tags:
 - enforce-not-advise
 sources:
 - task:088
-related:
-- state-tool
-- memory-tool
-- pipeline-todo-mirror-hook-enforcement
-- memory-lifecycle-graduation-workflow
-- opal-principles-constitution
+related: [state-tool, memory-tool, pipeline-todo-mirror-hook-enforcement, memory-lifecycle-graduation-workflow, opal-principles-constitution]
 created: '2026-08-11'
 updated: '2026-08-11'
 status: draft

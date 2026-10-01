@@ -1,14 +1,19 @@
 ---
 type: concept
 title: tool-scan 매니페스트 thin 설계 + federation 불파괴
-tags: [design-principle, tool-scan, manifest, federation, ssot]
-sources: [task:044]
-related: []
+tags:
+- design-principle
+- tool-scan
+- manifest
+- federation
+- ssot
+sources:
+- task:044
+related: [tool-scan, tool-usage-precheck-error-diagnosis-rule]
 created: 2026-06-26
-updated: 2026-06-26
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 tool-scan의 capability 인벤토리는 두 축으로 나뉜다: ① OPAL atomic 도구 7종은 `manifest.json` SSOT(thin, 포인터만) ② MCP·스킬은 기존 `mcps.md`·`opal-skills-registry.json`을 읽기 전용 federation. 두 파일을 복사하거나 수정하지 않으므로 기존 소비자(install·harness)에 영향을 주지 않는다.
@@ -30,3 +35,8 @@ MCP/스킬 인벤토리는 이미 `mcps.md`(4개 MCP)와 `opal-skills-registry.j
 - `opal/tools/tool-scan/manifest.json` — thin SSOT 7 엔트리
 - `opal/tools/tool-scan/lib/federation.py` — mcps.md·skills-registry.json 읽기 파서
 - `opal/core/references/mcps.md`, `opal/core/references/opal-skills-registry.json` — 읽기 전용 입력
+
+## 관련 페이지
+
+- [[tool-scan]] — 이 설계를 구현한 도구
+- [[tool-usage-precheck-error-diagnosis-rule]] — 같은 태스크(task:044)의 도구 사용 규율

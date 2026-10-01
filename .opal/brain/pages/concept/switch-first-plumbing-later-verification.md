@@ -9,11 +9,7 @@ tags:
 - phasing
 sources:
 - task:119
-related:
-- worktree-task-root-allocator-root-split
-- state-aware-path-resolution-unblocks-merge
-- worktree-workspace-isolation-axis
-- byte-identical-proof-requires-data-root-fixed
+related: [worktree-task-root-allocator-root-split, state-aware-path-resolution-unblocks-merge, worktree-workspace-isolation-axis, byte-identical-proof-requires-data-root-fixed]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft

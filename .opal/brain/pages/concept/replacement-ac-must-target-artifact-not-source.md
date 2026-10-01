@@ -9,9 +9,7 @@ tags:
 - migration
 sources:
 - task:105
-related:
-- grep-ac-layer-judgment
-- silent-success-defect-class
+related: [grep-ac-layer-judgment, silent-success-defect-class]
 created: '2026-09-03'
 updated: '2026-09-03'
 status: draft

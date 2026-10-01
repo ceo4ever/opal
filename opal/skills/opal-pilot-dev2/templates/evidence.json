@@ -1,0 +1,15 @@
+{
+  "role": "verifier",
+  "actor": "verifier-session",
+  "argv": [
+    "python3",
+    "-m",
+    "unittest"
+  ],
+  "exit_code": 0,
+  "fingerprint": "도구가 산출",
+  "stable": true,
+  "log": "evidence-1.log",
+  "log_sha256": "도구가 산출",
+  "time": "도구가 산출"
+}

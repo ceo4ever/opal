@@ -8,13 +8,7 @@ tags:
 - task-084
 sources:
 - task:084
-related:
-- asis-workflow-order-over-new-skill
-- pm-conversation-readonly-collection-exception
-- degraded-execution-with-explicit-gap
-- inherit-new-boundary-fixed-before-writing
-- code-scan-mandatory-policy
-- brain-answer-layout-content-driven
+related: [asis-workflow-order-over-new-skill, pm-conversation-readonly-collection-exception, degraded-execution-with-explicit-gap, inherit-new-boundary-fixed-before-writing, code-scan-mandatory-policy, brain-answer-layout-content-driven]
 created: '2026-08-06'
 updated: '2026-08-06'
 status: draft

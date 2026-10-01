@@ -8,9 +8,7 @@ tags:
 - opds
 sources:
 - task:098
-related:
-- worker-role-boundary-exposes-pm-measurement-error
-- measurement-tool-more-fallible-than-artifact-lesson
+related: [worker-role-boundary-exposes-pm-measurement-error, measurement-tool-more-fallible-than-artifact-lesson]
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft

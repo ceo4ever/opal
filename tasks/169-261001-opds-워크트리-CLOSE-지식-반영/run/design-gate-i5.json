@@ -1,0 +1,52 @@
+{
+  "status": "completed",
+  "verdict": "fail",
+  "input_bundle_hash": "9a211bb1d5453cea06faf11dd9c483ef17345ec6e191a1fe0712a4e2530179d9",
+  "iteration": 5,
+  "summary": "design-rubric 판정 완료: verdict=fail, rewrite_target=plan (decision_clarity·recoverability FAIL, 시나리오 2/2/1 통과). D-14/W-5의 허브 .gitattributes 블록과 W-4의 브랜치 블록이 바이트 단위로 다르고(재현: CONFLICT), D-15의 brain-tool validate 명령이 실제 CLI 시그니처(--brain-path만, 위치 인자 없음)와 다르다.",
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "decision_clarity-1 (재현함): D-14/W-5는 허브 .gitattributes에 '동일한 2줄'만 넣으라 하고 W-4는 브랜치에 '새 섹션 주석과 함께' 추가하라 한다. 두 블록이 바이트 단위로 다르면 169 자신의 첫 merge에서 .gitattributes 자체가 CONFLICT(content)로 충돌한다(scratchpad 실측). 두 블록이 바이트 단위로 같을 때만 깨끗하게 끝나고, 그 경우 log.md는 양쪽 항목 보존, index.md는 union 병합까지 확인했다.",
+      "recoverability-1 (재현함): D-15·W-3(b)의 'brain-tool validate <path>'는 실제 CLI와 다르다 — validate/lint 파서는 위치 인자 없이 --brain-path만 받는다(brain_tool.py:1603-1605, :1596-1600). 실제 호출은 'unrecognized arguments'로 실패한다.",
+      "recoverability-2: D-15는 '.opal/brain/**' 충돌만 다루고 .gitattributes 충돌에는 해결 경로가 없다. H-5의 '묶음 커밋 자체가 충돌해도 D-15로 해결'도 부정확하다 — 묶음 커밋은 main 위 직접 커밋이라 merge 충돌이 생기지 않는다. 실제 첫 충돌 지점은 이어지는 169 merge의 .gitattributes다.",
+      "minor: Approach의 '문서 3건 정정'이 실제 문서 갱신 대상 6건과 맞지 않는다.",
+      "minor: S-11(또는 병합 후 S-7)이 허브 .gitattributes를 백필 경로 목록·경고 문구 확인 대상에 포함하지 않는다."
+    ],
+    "evidence": {
+      "completeness": "AC-1~5·C-1~4 모두 Work item/Risk로 연결. 다른 pilot(dev-short/dev2/sdd)에 같은 전제 문구가 남아 있지 않음을 grep으로 확인.",
+      "executability": "W-1 대상 줄(brain_tool.py:232 WORKTREE_SEGMENT, :246-252 _inside_worktree, :321-334, :157 부근)이 실제 코드와 일치. WORKTREE_SEGMENT 호출처는 :252 하나뿐. finalize의 ATTRIBUTION_ALWAYS_DECLARED(worktree_tool.py:128-132)가 index.md·log.md를 이미 기본 선언 집합에 포함하므로 D-8은 page 경로 보정만으로 충분.",
+      "recoverability": "D-14 자체 방향은 맞으나 실제 명령·블록 내용이 코드와 어긋나 재현 실패했다."
+    }
+  },
+  "scenario": {
+    "scores": {"goal": 2, "adoption": 2, "boundary": 1},
+    "average": 1.67,
+    "gaps": [
+      "boundary: S-3이 169 브랜치 자신도 W-4의 .gitattributes 블록을 커밋하는 실제 조건을 재현하지 않아, decision_clarity-1이 만드는 .gitattributes 충돌 경계를 검증하지 못한다."
+    ],
+    "evidence": {
+      "goal": "S-3이 실제 CLI 경로로 AC-1을 직접 검증한다.",
+      "adoption": "S-3·S-6이 새 경로 채택과 옛 문구 제거를 모두 검증한다.",
+      "boundary": "S-2(c)·S-4·S-12가 다른 실패 경로를 검증하지만 .gitattributes 충돌 경계는 비어 있다."
+    }
+  },
+  "rewrite_target": "plan",
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": ["S-11", "S-7"],
+      "basis": "S-7과 S-11은 둘 다 W-5 백필 산출물을 정적으로 확인하는 check이고 같은 트리거·환경에서 나온다.",
+      "recommendation": "S-11의 확인 항목을 S-7에 합쳐 백필 검증을 한 시나리오로 줄인다."
+    }
+  ],
+  "blockers": [],
+  "changed_files": [],
+  "artifact_path": null
+}

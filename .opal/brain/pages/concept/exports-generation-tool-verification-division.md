@@ -7,9 +7,7 @@ tags:
 - architecture
 sources:
 - task:077
-related:
-- code-header-dual-source-inheritance
-- regression-only-coverage-gate
+related: [code-header-dual-source-inheritance, regression-only-coverage-gate]
 created: '2026-08-01'
 updated: '2026-08-01'
 status: draft

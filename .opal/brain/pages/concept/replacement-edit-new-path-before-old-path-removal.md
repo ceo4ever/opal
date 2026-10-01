@@ -9,10 +9,7 @@ tags:
 - lesson
 sources:
 - task:097
-related:
-- anchor-load-condition-must-match-target
-- replacement-goal-verification-scope-gap
-- code-scan-split-execution-precedes-block
+related: [anchor-load-condition-must-match-target, replacement-goal-verification-scope-gap, code-scan-split-execution-precedes-block]
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft

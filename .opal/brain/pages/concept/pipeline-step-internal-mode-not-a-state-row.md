@@ -9,10 +9,7 @@ tags:
 - task-104
 sources:
 - task:104
-related:
-- state-tool-task-step-key-address
-- phase-name-stage-value-homonym-boundary
-- opdd-pipeline-flow
+related: [state-tool-task-step-key-address, phase-name-stage-value-homonym-boundary, opdd-pipeline-flow]
 created: '2026-08-30'
 updated: '2026-08-30'
 status: draft

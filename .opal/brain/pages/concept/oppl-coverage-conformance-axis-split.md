@@ -9,10 +9,7 @@ tags:
 - tool-gated
 sources:
 - task:069
-related:
-- oppl-surface-inventory-contract
-- oppl-evidence-fidelity-principle
-- oppl-3-ssot-tool-gated-separation
+related: [oppl-surface-inventory-contract, oppl-evidence-fidelity-principle, oppl-3-ssot-tool-gated-separation]
 created: '2026-07-19'
 updated: '2026-07-19'
 status: active

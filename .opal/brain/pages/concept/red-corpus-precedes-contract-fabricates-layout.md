@@ -9,12 +9,7 @@ tags:
 - task-138
 sources:
 - task:138
-related:
-- fixture-vs-real-blind-spot-lesson
-- fixture-conflicting-requirements-lesson
-- fixture-ownership-separation-closes-reward-hacking
-- red-timing-follows-implementation-subject
-- worktree-tasks-fixture-structural-limit
+related: [fixture-vs-real-blind-spot-lesson, fixture-conflicting-requirements-lesson, fixture-ownership-separation-closes-reward-hacking, red-timing-follows-implementation-subject, worktree-tasks-fixture-structural-limit]
 created: '2026-09-18'
 updated: '2026-09-18'
 status: draft

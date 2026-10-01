@@ -8,10 +8,7 @@ tags:
 - architecture
 sources:
 - task:056
-related:
-- oppl-two-loop-orchestrator
-- state-tool
-- test-two-tier-system
+related: [oppl-two-loop-orchestrator, state-tool, test-two-tier-system]
 created: '2026-07-10'
 updated: '2026-07-10'
 status: active

@@ -1,14 +1,19 @@
 ---
 type: entity
 title: tool-scan
-tags: [tool, opal-tools, discovery, usage, capability]
-sources: [task:044]
-related: []
+tags:
+- tool
+- opal-tools
+- discovery
+- usage
+- capability
+sources:
+- task:044
+related: [usage-ssot-live-help-principle, tool-scan-thin-manifest-federation, tool-usage-precheck-error-diagnosis-rule]
 created: 2026-06-26
-updated: 2026-06-26
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 PM이 작업 중 필요한 capability(OPAL 도구·MCP·스킬)를 ①상황 기반 검색 → ②권위 출처(live)에서 정확한 사용법 확인 → ③정확히 사용하도록 하는 결정론적 도구다. MAMS cmux 사건(존재하지 않는 서브명령을 추측 호출 → 무분별 Playwright 폴백)의 재발을 방지하기 위해 설계됐다. (근거: task:044 DONE.md §1)
@@ -40,7 +45,8 @@ PM이 작업 중 필요한 capability(OPAL 도구·MCP·스킬)를 ①상황 기
 - `opal/tools/tool-scan/manifest.json` — 7종 OPAL 도구 thin SSOT
 - `opal/tools/tool-scan/lib/federation.py` — mcps.md·skills-registry.json 읽기 파서
 - `opal/core/AGENT.md` 도구 인지 맵 — `tool-scan` 행과 도구 사용 규율 문단이 등록됨
-- 설계 원칙 상세: `concept/usage-ssot-live-help-principle.md`, `concept/tool-scan-thin-manifest-federation.md`
+- 설계 원칙 상세: [[usage-ssot-live-help-principle]], [[tool-scan-thin-manifest-federation]]
+- 사용 규율: [[tool-usage-precheck-error-diagnosis-rule]]
 
 ## 소스 커버리지
 

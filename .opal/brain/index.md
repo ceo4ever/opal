@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-30 13:13
+> 갱신: 2026-10-01 12:38
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -31,7 +31,7 @@
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[skill-registry-project-scope-4source-merge]] — skill-registry 프로젝트 스코프 4소스 병합 #tool #skill-registry #project-scope #task-114
 - [[state-tool]] — state-tool #tool #pipeline
-- [[test-tool]] — test-tool #tool #testing #pipeline
+- [[test-tool]] — test-tool #tool #testing #pipeline #scenario-gate
 - [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
 - [[workstudio-project-registry]] — WorkStudio Project Registry #desktop #workstudio #project-registry
 - [[worktree-tool]] — worktree-tool #tool #workspace #git #pipeline
@@ -94,6 +94,8 @@
 - [[code-scan-version-constant-freeze]] — 형식 버전 상수 동결 — 형식이 안 바뀌면 올리지 않는다 #code-scan #versioning #backward-compat #task-082
 - [[codex-dispatch-inline-injection]] — Codex tool-backed 워커 디스패치 인라인 주입 규칙 #codex #dispatch #adapter #workaround #platform
 - [[codex-platform-integration]] — Codex CLI OPAL 4번째 플랫폼 통합 #codex #platform #bootstrap #mcp #task
+- [[codex-session-handoff-identity-recovery]] — Codex 세션 이관 — 플랫폼 신원 어댑터와 실제 소유자 반영 #codex #ownership #task
+- [[codex-worktree-boot-ownership-handoff]] — Codex 워크트리 부팅 — 자식 소유권 확인 후 허브가 소유자 확정 #codex #worktree #task
 - [[coding-principles-ssot]] — OPAL Coding Principles SSOT 신설 #framework #principles #ssot #task
 - [[cold-warm-session-separation]] — Cold-Warm Session 분리 설계 (Caller-Supplied Session ID) #session-management #architecture #caller-supplied #capability-flags #api-design
 - [[community-skill-basename-matching]] — 커뮤니티 스킬 basename alias 매칭 — 벤더 무관 호출 #architecture #community-skills #ux #routing
@@ -120,13 +122,18 @@
 - [[delegation-only-file-gate-bypass]] — 위임 전용 파일에 게이트를 두면 우회된다 — 진입경로 역추적 #gate #architecture #lesson #call-graph
 - [[demote-promote-recursion-guard-timing-threshold-split]] — 강등·승격 재귀 차단 — 판정 시점 분리 + 임계 상호배타 #track-routing #recursion #architecture #opds
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
+- [[design-gate-deterministic-pretier-separation]] — 설계 게이트 결정론/evaluator 2-tier 분리 — 회차 비소비 사전검사 #design-gate #state-tool #opd #opds #pm-path
+- [[design-gate-gaps-resolution-roundtrip]] — 설계 게이트 gaps 해소 보고 왕복 계약 (previous_gaps/resolved_gaps) #design-gate #evaluator #op-scenario-gate #gaps-contract
 - [[dev-pilot-profile-unification]] — 개발 Pilot Full/Short profile 통합 계약 #pilot #dev #opd #opds #compatibility
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-candidate-order-and-fidelity-ownership]] — E2E 후보 순서·충실도 소유 경계 — 계약이 소유하고 코드가 복제하지 않는다 #e2e #driver #fidelity #contract #ownership
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
+- [[e2e-environment-config-ownership]] — E2E 실행 환경은 프로젝트 설정 파일 하나가 선언한다 #e2e #config #task
 - [[e2e-frozen-spec-seeding-constraint]] — 동결 spec 시드 제약 — lock 이후 시나리오 추가 불가 #e2e #red-first #ssot #tool-gated
+- [[e2e-harness-three-responsibility-split]] — 범용 E2E 하네스 — 3책임 분리와 실행 profile #e2e #harness #proposal
 - [[e2e-integration-gap-pattern]] — 통합 지점 공백 패턴 — 자체 테스트 통과·연결부 미검증 #e2e #integration #testing #contract
+- [[e2e-journey-library]] — E2E 여정 라이브러리 — 승격된 여정·조각 자산 #e2e #testing #docs
 - [[electron-main-owned-project-registry]] — Electron main-owned Project Registry #electron #security #workstudio
 - [[enforce-rule-legacy-data-surfacing-lesson]] — enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈 #lesson #enforce #validate #brain-tool
 - [[enforcement-basis-must-be-structural-not-voluntary]] — 강제의 판정 근거는 자발적 표시가 아니라 구조여야 한다 — 3회 우회 후 행 기반 판정 + CLOSE 차단 #enforcement #governance #state-tool #worker #measurement #lesson-learned
@@ -157,6 +164,7 @@
 - [[grep-ac-layer-judgment]] — grep 판정식은 문자열의 층위를 구분해야 한다 #verification #test-scenario #gate-design #lesson
 - [[guard-precision-none-passthrough-early-return]] — 가드 정밀화가 새 우회로를 만든다 — None 통과는 조기 반환으로 봉쇄한다 #memory-tool #guard-design #none-safety #lesson #task-096
 - [[handoff-contract-table-schema-mismatch]] — 승계 계약과 표 스키마의 불일치 — 원천 재지정으로 해소(스키마 확장 대신 분리) #contract #schema #handoff #verification-gap #opd
+- [[hook-session-identity-from-envelope-only]] — 훅의 세션 신원은 이벤트 봉투로만 정한다 #ownership #hook #task
 - [[identity-coord-truncation-is-a-miss]] — 정체성 좌표 절단은 정규화가 아니라 미탐이다 #lesson-learned #identity-key #fail-closed #testing #task-139
 - [[inherit-new-boundary-fixed-before-writing]] — 상속·신규 경계를 집필 전에 표로 고정한다 #documentation #ssot #dedup #task-084
 - [[install-hook-ownership-marker-idempotent-upsert]] — install hook 소유권-마커 멱등 upsert (외부 hook clobber 해소) #install #deploy #hook #idempotent #ownership-marker
@@ -210,6 +218,11 @@
 - [[op-dev-test-scenario]] — op-dev-test-scenario — 테스트 시나리오 작성 단계 스킬 #dev #test #skill
 - [[op-dev-todo]] — op-dev-todo — 실행 체크리스트 확장 단계 스킬 #dev #todo #skill
 - [[op-dev-wireframe]] — op-dev-wireframe — 와이어프레임 생성 단계 스킬 #dev #wireframe #skill
+- [[op-gc-convention]] — op-gc-convention — 컨벤션 검사 단계 스킬 #gc #convention #skill
+- [[op-gc-report]] — op-gc-report — GC 결과 정규화·릴리스 판정 스킬 #gc #report #skill
+- [[op-gc-security]] — op-gc-security — 보안 검사 단계 스킬 #gc #security #skill
+- [[op-oppb-knowledge-finalize]] — op-oppb-knowledge-finalize — OPPB 프로젝트 지식 1회 반영 단계 스킬 #oppb #knowledge #skill
+- [[op-oppb-project-slice]] — op-oppb-project-slice — OPPB capability 슬라이스 단계 스킬 #oppb #slice #skill
 - [[op-sdd-action-plan]] — op-sdd-action-plan — SDD 내부 Action Plan 단계 스킬 #sdd #action-plan #skill #internal
 - [[op-sdd-plan]] — op-sdd-plan — SDD 내부 PLAN 단계 스킬 #sdd #plan #skill #internal
 - [[op-sdd-spec]] — op-sdd-spec — SDD 내부 SPEC 단계 스킬 #sdd #spec #skill #internal
@@ -227,12 +240,21 @@
 - [[opal-brain-not-pilot-decision]] — opal-brain은 pilot이 아니다 — 리네임 철회 결정 #opal-brain #skill-naming #pilot #operator #architecture
 - [[opal-brain-system]] — OPAL Project Brain 시스템 #knowledge #architecture #wiki
 - [[opal-cli-install-subcommand-removal]] — opal-cli install 서브커맨드 완전 제거 — 컨텍스트별 리다이렉트 원칙 #install #opal-cli #deploy #ux
+- [[opal-code-map-builder]] — opal-code-map-builder (opcmb) — @header 자산 구축 스킬 #code-scan #header #skill
 - [[opal-conventions]] — OPAL 코드 컨벤션 #convention #naming #commit #guard #state
+- [[opal-e2e]] — opal-e2e — E2E 여정 operator 스킬 #e2e #testing #skill
+- [[opal-eli5]] — opal-eli5 — 5살 눈높이 설명서 스킬 #eli5 #explain #skill
+- [[opal-grill]] — opal-grill (opgr) — 산출물 캐묻기 스킬 #grill #review #skill
+- [[opal-help]] — opal-help — 스킬 카탈로그·사용법 안내 스킬 #help #catalog #skill
+- [[opal-pilot-dev2]] — opal-pilot-dev2 (opd2) — AI-native SDLC Pilot #opd2 #pilot #skill
+- [[opal-pilot-project-build]] — opal-pilot-project-build (oppb) — 확정 계약 무인 소화 Pilot #oppb #pilot #skill
 - [[opal-pm-promotion-gate]] — PM 승격 게이트 — 프로젝트 초기화 신호 존재 조건 #bootstrap #pm-gate #opi #2tier #project-level
 - [[opal-principles-constitution]] — OPAL Principles 헌법 신설 + 테스트 하네스 집행 강화 #principles #constitution #testing #framework #task
 - [[opal-project-definition]] — OPAL 프로젝트 정의 #project #overview #principle #component
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
 - [[opal-skill-classification-system]] — OPAL 스킬 분류 체계 — opal-pilot / op-* / opal-* 의미 계층 #skill-registry #classification #pilot #operator #architecture
+- [[opal-skill-tester]] — opal-skill-tester (opst) — 스킬 모의 실행 테스트 #opst #testing #skill
+- [[opd2-state-tool-integration]] — opd2 state-tool 통합 #opd2 #state-tool #gate-guard #ssot #task-168
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
 - [[opdd-reverse-track-physical-first-order]] — 역공학 트랙 MODEL 순서는 물리가 먼저다 #architecture-decision #data-design #pipeline #reverse-engineering #task-104
 - [[opds-testscenario-producer-establishment]] — opds 시나리오 producer 확립 — 공용 스킬 미접촉 SSOT 상충 해소 #opds #ssot-conflict #producer #shared-skill #task-075
@@ -241,6 +263,7 @@
 - [[oppb-run-records-follow-task-lifecycle]] — OPPB run records follow task lifecycle #oppb #run-root #lifecycle #cache
 - [[oppd-prd-trd-task-folder-promote]] — oppd PRD/TRD 태스크폴더 작성 → docs 승격 프로세스 #oppd #prd #trd #wbs #promote #docs-ssot
 - [[oppl-3-ssot-tool-gated-separation]] — 3-SSOT tool-gated 축 분리 — backlog/state/test-scenario #ssot #tool-gated #oppl #architecture
+- [[oppl-bounded-convergence-runtime]] — OPPL 실행 안정화 — 유한 예산 안의 수렴 #oppl #runtime #proposal
 - [[oppl-coverage-conformance-axis-split]] — 커버리지·conformance 판정의 축별 분리 — backlog-tool/test-tool 외부 집계 #oppl #coverage #conformance #ssot #tool-gated
 - [[oppl-evidence-fidelity-principle]] — 증거 충실도(Evidence Fidelity) 원칙 — mock/real-http/real-usage 사다리 #oppl #verification #evidence-fidelity #enforce-dont-advise
 - [[oppl-executor-delegation-architecture]] — oppl 루프 액션 에이전트 위임 구조 — 태스크 단위 컨텍스트 격리 #oppl #executor #delegation #context-isolation #ssot-boundary #blocked-contract
@@ -250,6 +273,7 @@
 - [[oppl-surface-inventory-contract]] — 계약 표면 인벤토리 — surfaces.json 단일 IR #oppl #contract #surfaces-json #schema
 - [[oppl-two-loop-orchestrator]] — opal-pilot-project-loop(oppl) — 2-루프 수렴 오케스트레이터 #skill #pilot #orchestrator #loop #oppl
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
+- [[opst-oppb-profile-detects-finalize-violation]] — opst OPPB 판정 프로필 — 종료 계약 위반 검출 #opst #oppb #task
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[order-inversion-corrupts-derived-attribution]] — 순서 역전은 표기 문제가 아니다 — 파생 계산의 귀속까지 오염한다 #state-tool #incident #aggregation #lesson-learned
 - [[owner-honorific-contamination-prevention]] — 산출물 소유자 호칭 오염 차단 원칙 #state-tool #identity #harness #contamination #brain-ingest
@@ -262,6 +286,7 @@
 - [[pipeline-user-confirmation-single-status-axis]] — 사용자 확인 행 상태 계약 — pending에서 done/auto 또는 done/user로 단일화 #state-tool #pipeline #contract #task-093
 - [[platform-parity-mirror-before-design]] — 플랫폼 규약 편측 존재 — 새 설계보다 미러링 우선 #install #platform #lesson #mirroring
 - [[pm-conversation-readonly-collection-exception]] — PM(대화) 읽기 전용 수집 워커 예외 — 수집만 나누고 판단은 단일 주체 #pm #dispatch #boundary #task-084
+- [[pm-design-path-independent-gate]] — PM 설계 경로 단일화와 독립 설계 게이트 #pm #design-gate #task
 - [[pm-gate-artifact-tool-enforcement]] — PM Gate 정의 단일화와 산출물 존재 게이트 집행 #gate-design #state-tool #pm-gate #ssot #enforce-not-advise #task-091
 - [[pm-improvement-loop-two-tracks]] — PM 개선 루프 2트랙 구조 (회고/온디맨드) #pm-loop #architecture-decision #improvement #process
 - [[pool-lock-idiom-contract]] — 프라임 풀 락 관용구 계약 #brain #concurrency #locking #pattern
@@ -291,10 +316,15 @@
 - [[report-norm-topology-10-types]] — 보고 규범 지형 — 10유형과 소유 문서 매핑 #reporting #agent-md #norm-ownership #minimal-guide #task-108
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
 - [[round-trip-pre-state-assertion-false-green-guard]] — 왕복 검증 사전 상태 단언 — false green 차단 장치 #testing #pattern #task-083
+- [[run-log-contract]] — 태스크 실행 로그 CONTRACT — 사건 스키마·인터페이스 계약 #run-log #contract #docs
+- [[run-log-prd]] — 태스크 실행 로그 PRD — 무엇을 왜 만드는가 #run-log #prd #docs
+- [[run-log-trd]] — 태스크 실행 로그 TRD — 기술 결정과 책임 경계 #run-log #trd #docs
+- [[scenario-economy-advisory-gate]] — 테스트 시나리오 작성 경제성 — 중복·과잉 억제와 advisory 응답 게이트 #testing #scenario-gate #test-scenario #advisory #opd #opds
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
 - [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
 - [[scenario-prewrite-goal-series-track]] — 목표계열 선작성 트랙 — 도출 입력 2계열 분리와 게이트 계약 경계 #scenario-gate #testing #prewrite #opd #opds #task-095
+- [[scenario-table-parse-fail-loud]] — 시나리오 표 파싱은 조용히 버리지 않고 거부한다 #test-tool #determinism #task
 - [[score-free-tiered-verdict-ladder]] — 재현 불가한 채점을 하드필터+3단 판정어+순서 있는 사다리로 대체 #verification #decision-pattern #anti-scoring #task-105
 - [[sdd-internal-stage-skill-ownership]] — SDD 내부 단계 스킬 소유권 #sdd #skill #pilot #ownership
 - [[sdlc-v2-development-artifact-contract]] — sdlc-v2 개발 산출물 계약 #sdlc #development #artifact #ssot #pipeline
@@ -351,6 +381,7 @@
 - [[switch-first-plumbing-later-verification]] — 배관을 먼저 깔고 스위치를 나중에 켜면 계약은 스위치 전까지 검증되지 않는다 #worktree #rollout #verification #contract #phasing
 - [[tag-removal-is-not-history-removal]] — 태그 제거는 이력 제거가 아니다 — 문장이 무엇을 말하는가 #header-standard #test-design
 - [[template-precedence-over-prose-norms]] — 템플릿 우위 법칙 — 규범은 산문보다 템플릿이 이긴다 #template-precedence #prose-norms #framework-norm #governance #harness-design
+- [[terminal-host-detection-from-own-process-lineage]] — 터미널 호스트는 자기 프로세스 계보로 판별한다 #bootstrap #terminal #task
 - [[test-path-layer-gap-masks-deployment-defect]] — 테스트 소스 경로와 배포본 경로의 계층 차이가 실사용 불가를 덮는다 #testing #deployment #layered-verification #task-105
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task
@@ -377,7 +408,9 @@
 - [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
 - [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
+- [[worktree-close-brain-write-contract]] — 워크트리 CLOSE brain 쓰기 계약 — 같은 브랜치 반영·merge 전파 #worktree #brain #architecture #workspace
 - [[worktree-locates-hub-by-issued-copy]] — 워크트리는 허브를 탐색하지 않고 발급값 사본으로 찾는다 #worktree #ownership #issued-value #hook #task-138
+- [[worktree-multirepo-capsule-ownership]] — 워크트리 multi-repo 캡슐 소유권 #worktree #multi-repo #proposal
 - [[worktree-session-launch-order-and-ownership]] — 워크트리 세션 기동은 허브가 만들고 state init 이후에 띄운다 #worktree #세션 #런처 #소유권
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
 - [[worktree-task-root-allocator-root-split]] — 워크트리 태스크 루트 분리 — 해석용 task root와 발급용 allocator root #worktree #architecture #workspace #ownership #root-resolution
@@ -390,6 +423,7 @@
 - [[asis-analysis-five-stage-workflow]] — AS-IS 분석 5단계 워크플로우 (PM 대화) #pm #asis-analysis #workflow #task-084
 - [[close-retrospective-hardstep]] — CLOSE 회고 하드스텝 (개선 루프 자동 enforce) #flow #close-pipeline #improvement #tool-gated #architecture-decision
 - [[opdd-pipeline-flow]] — opdd 파이프라인 흐름 — DB 설계 표준 3층 파이프라인 #pipeline #data-design #flow #opdd #db
+- [[test-cycle-early-human-handoff]] — TEST 단계 선요청 흐름 — 사람 협업 선요청과 자동 검사 병행 #testing #test-cycle #opd #opds #flow
 
 ## 합성
 - [[opal-first-use-guide]] — OPAL 첫 사용 가이드 — 설치부터 파이프라인까지 #guide #onboarding #first-use

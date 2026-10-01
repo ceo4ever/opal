@@ -1,0 +1,24 @@
+{
+  "input_bundle_hash": "ce9eeb85b3f8a5ab7db0f38a7944c8e0deaf044a64b88c5423428837e5738486",
+  "iteration": 4,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: id 정의가 콜론 없는 레거시 gaps(예: 162 i1, 163 i1/i2)와 혼합 접두부(예: 167 i3/i4의 '(비차단) ...', 159 i2의 'decision_clarity-1 (blocking): ...')에 대해 정의돼 있지 않다. 레거시 포맷 previous_gaps를 보낼지, resolved_gaps 불일치를 항상 input_error로 처리할지(회차를 소비함)도 결정해야 한다.",
+      "executability-1: scripts/install-mac.sh는 인자 없는 대화형 메뉴(show_menu, :156-167, read -rp)이고 Claude 전용 비대화형 옵션이 없다. W-5가 요구하는 6회 설치(후보 3개×적용+원복)를 정확히 어떤 명령으로 실행하는지 정의돼야 한다. 또한 이미 실행 중인 Claude Code 세션이 변경된 ~/.claude/agents/opal-evaluator-agent.md를 재시작 없이 다시 읽는지도 확인되지 않았다 — 안 읽으면 24회 측정이 전부 같은 effort를 재는 꼴이 된다."
+    ]
+  },
+  "scenario": {
+    "scores": {"goal": 2, "adoption": 2, "boundary": 2},
+    "average": 2.0,
+    "gaps": []
+  },
+  "verdict": "fail",
+  "rewrite_target": "plan",
+  "advisories": []
+}

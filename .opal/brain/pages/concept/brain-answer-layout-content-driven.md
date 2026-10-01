@@ -9,10 +9,7 @@ tags:
 - workflow
 sources:
 - task:062
-related:
-- skill-opal-brain
-- opal-brain-system
-- brain-query-latency-model
+related: [skill-opal-brain, opal-brain-system, brain-query-latency-model]
 created: '2026-07-14'
 updated: '2026-07-14'
 status: active

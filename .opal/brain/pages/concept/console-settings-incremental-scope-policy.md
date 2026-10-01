@@ -8,10 +8,7 @@ tags:
 - security
 sources:
 - task:061
-related:
-- console-write-exception-router-isolation
-- opal-console
-- opal-security-model
+related: [console-write-exception-router-isolation, opal-console, opal-security-model]
 created: '2026-07-14'
 updated: '2026-07-14'
 status: active

@@ -10,10 +10,7 @@ tags:
 sources:
 - task:100
 - task:101
-related:
-- new-ssot-pointer-not-value-copy
-- template-precedence-over-prose-norms
-- handoff-contract-table-schema-mismatch
+related: [new-ssot-pointer-not-value-copy, template-precedence-over-prose-norms, handoff-contract-table-schema-mismatch]
 created: '2026-08-24'
 updated: '2026-08-24'
 status: draft

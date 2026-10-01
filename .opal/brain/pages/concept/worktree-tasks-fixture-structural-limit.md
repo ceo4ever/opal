@@ -7,9 +7,7 @@ tags:
 - harness
 sources:
 - task:107
-related:
-- regression-pin-of-task-time-fact
-- regression-only-coverage-gate
+related: [regression-pin-of-task-time-fact, regression-only-coverage-gate]
 created: '2026-09-06'
 updated: '2026-09-06'
 status: draft

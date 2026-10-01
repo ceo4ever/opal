@@ -10,16 +10,11 @@ tags:
 sources:
 - task:050
 - task:094
-related:
-- agent-md-digest-pattern
-- opal-principles-constitution
-- coding-principles-ssot
-- state-md-journal-redefinition
+related: [agent-md-digest-pattern, opal-principles-constitution, coding-principles-ssot, state-md-journal-redefinition]
 created: '2026-06-30'
 updated: '2026-08-16'
 status: active
 ---
-
 ## 개요
 
 문서를 이동·병합할 때, 이동 대상 내용이 목적지 문서 혹은 다른 권위 문서에 이미 존재하는 경우 해당 내용을 다시 복사해 넣는 것을 금지한다. 대신 기존 문서로의 포인터(한 줄 참조)만 남겨 단일 SSOT를 유지한다. 이것이 OPAL dedup 원칙이다.

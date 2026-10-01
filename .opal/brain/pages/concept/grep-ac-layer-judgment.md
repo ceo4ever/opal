@@ -8,8 +8,7 @@ tags:
 - lesson
 sources:
 - task:097
-related:
-- anchor-load-condition-must-match-target
+related: [anchor-load-condition-must-match-target]
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft

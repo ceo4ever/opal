@@ -9,9 +9,7 @@ tags:
 sources:
 - skill:op-sdd-verify
 - task:112
-related:
-- skill-opal-pilot-sdd
-- sdd-internal-stage-skill-ownership
+related: [skill-opal-pilot-sdd, sdd-internal-stage-skill-ownership]
 created: '2026-06-11'
 updated: '2026-09-10'
 status: stale

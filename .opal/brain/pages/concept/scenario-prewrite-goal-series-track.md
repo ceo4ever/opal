@@ -11,14 +11,7 @@ tags:
 sources:
 - task:095
 - task:111
-related:
-- 070-derivation-engine-perspective-bias-lesson
-- scenario-goal-coverage-gate-loop
-- scenario-normalized-contract-pilot-neutral
-- opds-testscenario-producer-establishment
-- test-scenario-pipeline-redesign
-- prewrite-track-quality-not-efficiency-measurement
-- prewrite-self-confirming-triple-defense
+related: [070-derivation-engine-perspective-bias-lesson, scenario-goal-coverage-gate-loop, scenario-normalized-contract-pilot-neutral, opds-testscenario-producer-establishment, test-scenario-pipeline-redesign, prewrite-track-quality-not-efficiency-measurement, prewrite-self-confirming-triple-defense]
 created: '2026-08-19'
 updated: '2026-09-09'
 status: stale

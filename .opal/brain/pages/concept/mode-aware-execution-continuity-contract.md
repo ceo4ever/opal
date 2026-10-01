@@ -9,11 +9,7 @@ tags:
 - close
 sources:
 - task:136
-related:
-- state-tool-next-action-auto-derivation
-- pipeline-user-confirmation-single-status-axis
-- pipeline-step-internal-mode-not-a-state-row
-- close-related-doc-update-before-ingest
+related: [state-tool-next-action-auto-derivation, pipeline-user-confirmation-single-status-axis, pipeline-step-internal-mode-not-a-state-row, close-related-doc-update-before-ingest]
 created: '2026-09-16'
 updated: '2026-09-16'
 status: draft

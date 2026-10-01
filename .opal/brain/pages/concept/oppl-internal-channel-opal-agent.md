@@ -10,16 +10,11 @@ tags:
 - observability-boundary
 sources:
 - task:066
-related:
-- opal-loop-action-agent
-- oppl-executor-delegation-architecture
-- opal-agent-stream-json-passthrough
-- oppl-run-record-journal-dual-observability
+related: [opal-loop-action-agent, oppl-executor-delegation-architecture, opal-agent-stream-json-passthrough, oppl-run-record-journal-dual-observability]
 created: '2026-07-17'
 updated: '2026-07-17'
 status: active
 ---
-
 ## 개념 요약
 
 루프 액션 에이전트가 내부 4축(생성자·Evaluator·test-agent·체커)을 디스패치하던 통로를 플랫폼 Agent 도구에서 opal-agent(claude 헤드리스 CLI) 채널로 전환한 설계 결정 묶음이다. 호출 방식은 단계별로 동기/비동기 이원화되며, 결과 수거는 파일 3종 분리 캡처로 결정론화된다.

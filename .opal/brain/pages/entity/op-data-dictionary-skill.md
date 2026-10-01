@@ -1,14 +1,20 @@
 ---
 type: entity
 title: op-data-dictionary (DICT 단계 스킬)
-tags: [skill, stage-skill, data-design, dictionary, db]
-sources: [task:019]
+tags:
+- skill
+- stage-skill
+- data-design
+- dictionary
+- db
+sources:
+- task:019
+- skill:op-data-dictionary
 related: [skill-opal-pilot-data-design, op-data-model-skill, opdd-pipeline-flow]
 created: 2026-06-12
-updated: 2026-06-12
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 DB 설계 파이프라인의 DICT 단계 스킬. 표준사전·코드사전의 CRUD 주체이며, md SSOT 3종(`표준단어사전.md` / `도메인사전.md` / `코드사전.md`)을 관리하고 xlsx를 단방향 export한다.

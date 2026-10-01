@@ -9,9 +9,7 @@ tags:
 - install
 sources:
 - task:105
-related:
-- fixture-vs-real-blind-spot-lesson
-- silent-success-defect-class
+related: [fixture-vs-real-blind-spot-lesson, silent-success-defect-class]
 created: '2026-09-03'
 updated: '2026-09-03'
 status: draft

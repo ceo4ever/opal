@@ -7,10 +7,7 @@ tags:
 - architecture
 sources:
 - task:068
-related:
-- opal-action-status
-- opal-action-monitor
-- oppl-run-record-journal-dual-observability
+related: [opal-action-status, opal-action-monitor, oppl-run-record-journal-dual-observability]
 created: '2026-07-18'
 updated: '2026-07-18'
 status: active

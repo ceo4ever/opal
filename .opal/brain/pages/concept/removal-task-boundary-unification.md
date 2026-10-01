@@ -8,9 +8,7 @@ tags:
 - technique
 sources:
 - task:108
-related:
-- multilayer-verification-no-single-layer-catches-all
-- non-tty-install-bypass-pattern
+related: [multilayer-verification-no-single-layer-catches-all, non-tty-install-bypass-pattern]
 created: '2026-09-06'
 updated: '2026-09-06'
 status: draft

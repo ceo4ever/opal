@@ -10,11 +10,7 @@ tags:
 sources:
 - task:082
 - task:083
-related:
-- code-scan-manifest-sharding-design
-- backward-compat-default-value-discipline
-- clarification-gate-backward-compat
-- code-scan-split-execution-precedes-block
+related: [code-scan-manifest-sharding-design, backward-compat-default-value-discipline, clarification-gate-backward-compat, code-scan-split-execution-precedes-block]
 created: '2026-08-03'
 updated: '2026-08-04'
 status: draft

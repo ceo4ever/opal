@@ -8,9 +8,7 @@ tags:
 - task-070
 sources:
 - task:070
-related:
-- state-tool
-- pipeline-json-spec
+related: [state-tool, pipeline-json-spec]
 created: '2026-07-23'
 updated: '2026-07-23'
 status: active

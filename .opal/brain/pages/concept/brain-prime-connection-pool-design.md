@@ -10,12 +10,7 @@ tags:
 - fastapi
 sources:
 - task:060
-related:
-- brain-query-latency-model
-- cold-warm-session-separation
-- warm-handle-single-entry-injection
-- pool-lock-idiom-contract
-- brain-tool
+related: [brain-query-latency-model, cold-warm-session-separation, warm-handle-single-entry-injection, pool-lock-idiom-contract, brain-tool]
 created: '2026-07-14'
 updated: '2026-07-14'
 status: active

@@ -38,7 +38,7 @@ scenarios/<id>/
 | `id` | O | 폴더명과 같다 |
 | `mode` | O | `smoke` / `function` / `judgment` |
 | `base` | O | `scenarios/` 기준 상대경로. 폴더가 존재해야 한다 |
-| `target_pilots` | O | 시험 대상 Pilot 약어 목록. `run`은 변형의 커맨드가 이 목록 밖이면 `variant_not_targeted`로 거부한다 |
+| `target_pilots` | O | 이 시나리오로 시험해 온 권장 Pilot 약어 목록. 실행 제한이 아니다 — `run`은 변형의 Pilot이 `PROFILES`에 없을 때만 `variant_unprofiled`로 거부하며, 시나리오는 어느 Pilot으로도 고를 수 있다 |
 | `default_variant` | O | 단일 실행 때 쓰는 커맨드 접두(예: `//opd`, `//opds --no-pm`). 기본이 semi-agentic인 Pilot은 헤드리스 세션이 사용자 게이트에서 멈추므로 `--agentic`을 붙인다(예: `//opsdd --agentic`) |
 | `utterance` | O | `{variant}`·`{request}` 토큰을 모두 포함 |
 | `existing_test_cmd` | function O | 작업본에서 실행할 기존 테스트 argv |

@@ -9,10 +9,7 @@ tags:
 - evidence
 sources:
 - task:141
-related:
-- e2e-candidate-order-and-fidelity-ownership
-- e2e-frozen-spec-seeding-constraint
-- oppl-evidence-fidelity-principle
+related: [e2e-candidate-order-and-fidelity-ownership, e2e-frozen-spec-seeding-constraint, oppl-evidence-fidelity-principle]
 created: '2026-09-18'
 updated: '2026-09-18'
 status: draft

@@ -25,6 +25,7 @@ Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프�
 |---|---|---|
 | opd·opds | 설계 게이트 `design_gate.status=pass` 또는 `.scenario-gate-history.json` 마지막 pass, 그리고 `test-scenario.json` 전 시나리오 pass | `execute.implement` / `test.pm_gate` |
 | opsdd | `.scenario-gate-history.json` 마지막 pass, 그리고 `review.scenario_gate`·`verify.ts_green` 행 done | `execute.act_run` / `verify.pm_gate` |
+| opd2 | `verify.verifier_evidence`·`verify.review` 행 done | `execute.implement` / `verify.review` |
 | oppb | P1·P3·P4·P5 필수 gate/checkpoint/finalize 행 done, canonical 태스크의 `.oppb-run/<run_id>/run.closed.json` 존재, 허브 `.opal-runs` 미생성, `state.worktree` 경로 회수 | `p3.continuous_execution` / `p4.pm_gate` / `p5.worktree_finalize` |
 
 `runlog_pending`이 0이 아니면 기록 코어가 어떤 사건을 거부해 drain이 멈춘 상태다. 첫 pending 사건을 보고서에 함께 싣는다.

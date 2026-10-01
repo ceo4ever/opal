@@ -20,7 +20,7 @@ load: pilot.start
 
 | Pilot | 무플래그 신규 태스크 | `--no-wt` |
 |---|---|---|
-| `opd`·`opds`·`oppd`·`oppl` | worktree | 허브 작업본 |
+| `opd`·`opds`·`opd2`·`oppd`·`oppl` | worktree | 허브 작업본 |
 | `oppb` | worktree(프로젝트 worktree 1개·Supervisor 구조) | `workspace_required_for_skill`로 거부 |
 | 그 외 Pilot | 허브 작업본 | 허브 작업본(기본값과 같음) |
 

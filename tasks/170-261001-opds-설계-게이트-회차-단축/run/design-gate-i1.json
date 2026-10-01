@@ -1,0 +1,36 @@
+{
+  "input_bundle_hash": "4aad83b9ca238e856dbc125371b7bf437519cebdec10c5ee497442cc487d4b87",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:36-37 (Findings 문서 갱신 '없음') — W-3/W-4가 design-rubric을 scope: design/scope: scenario 병렬 디스패치 2개로 바꾸는데, opal/core/references/harness/design-gate.md:20은 여전히 'evaluator design-rubric phase를 1회 디스패치'라고 쓰여 있고 W-2는 그 문서에 문장 하나(:78 이후)만 추가한다. 흐름 원문(:20-21)을 갱신할지, scope 분리를 설명하는 SSOT를 어디에 둘지 결정하고 Work item에 반영해야 한다.",
+      "completeness-2: PLAN.md:24-29 (Findings 직접 변경) — TASK.md:26은 op-dev-plan·op-dev-test-scenario 가이드도 포함 범위로 들고, AC-3(TASK.md:41)은 'PLAN·시나리오 작성 절차'를 요구한다. PLAN은 규칙을 opal-pilot-dev SKILL.md에만 두고 op-dev-plan/op-dev-test-scenario를 제외한 이유를 밝히지 않는다. 그 가이드들을 고칠지, 제외 이유를 기록할지 결정해야 한다.",
+      "completeness-3: PLAN.md:28 대 PLAN.md:65 — Findings는 '③ 뒤에 resolved_gaps 검증 절차 추가'라고 하는데 W-4는 '③④는 그대로 두고 병합 JSON만 그 입력으로 넘긴다'고 해서 resolved_gaps 완전성(누락 id·중복) 검증 단계가 없다. op-scenario-gate가 resolved_gaps를 검증할지, 검증 실패 시 verdict를 무엇으로 할지 결정해야 한다.",
+      "decision_clarity-1: PLAN.md:65 (W-4 병합 JSON) — 병합 키 목록(design, scenario, advisories, resolved_gaps, verdict, rewrite_target)에 최상위 input_bundle_hash·iteration이 빠져 있다. 각 scope 결과가 이 값을 따로 갖는데 병합 JSON에 어느 값을 쓸지 규칙이 없다. op-scenario-gate/SKILL.md:216 ③과 state_tool.py:7133-7139(design_gate_result_stale)는 최상위에 이 값을 요구한다. hash·iteration을 병합 JSON에 넣는 규칙과, 두 scope가 값이 다를 때 처리를 결정해야 한다.",
+      "decision_clarity-2: PLAN.md:64 (W-3 (a)) — previous_gaps는 'run/design-gate-i{N-1}.json'에서 온다고 했는데, 직전 회차가 결정론 실패나 input_error였다면 그 파일이 없거나 evaluator 결과가 없을 수 있다. 그럴 때 어느 회차를 쓸지(마지막 evaluator 회차, 또는 생략) 결정해야 한다.",
+      "decision_clarity-3: PLAN.md:48, PLAN.md:62 (W-1 _decision_clarity_lint) — 패턴 목록이 'TBD 등'으로 열려 있고, 코드 블록·인용문·범위 밖 제안 절에 대한 규칙이 없다. 이는 구현자에게 출력 인터페이스(후보 집합)를 맡기는 것이다. 정확한 패턴 목록과 스캔 범위를 결정해야 한다.",
+      "decision_clarity-4: PLAN.md:47, PLAN.md:62 (W-1) — --design-gate-check를 _gate_flags 상호배타 그룹(state_tool.py:7363-7369)에서 제외했는데, 다른 게이트 플래그와 동시 지정했을 때의 동작(어느 분기가 먼저 실행되는지, 거부할지 무시할지)이 결정돼 있지 않다.",
+      "decision_clarity-5: PLAN.md:64 (W-3 (f)) — 'frontmatter에 effort 키를 추가하되 … effort 키 자체 미기재 상태를 유지'는 자기모순이다. PLAN.md:27(Findings)도 'effort 키 추가'라고만 쓴다. W-3이 frontmatter를 건드리는지 여부를 결정해야 한다.",
+      "decision_clarity-6: PLAN.md:53-54, PLAN.md:66 (W-5) — scope 분리 이후 'design-rubric 디스패치 1회'가 호출 1번인지 2번(design+scenario)인지 결정돼 있지 않다. 이에 따라 실행 상한(C-3, 24회)이 24인지 48인지, EVAL-RESULT 행 수, 소요 시간 측정 방식이 달라진다.",
+      "decision_clarity-7: PLAN.md:66 (W-5 결함 사례) — 결함 사례를 'gaps 텍스트로 재구성한 서술형 시나리오'라고 하지만, evaluator 입력은 task_md·plan_md·scenario_source·input_bundle_hash다. 입력 문서를 어떻게 복원하는지(git 이력 스냅샷인지 합성 문서인지), 어디에 저장하는지, 열린 시도가 없을 때 어떤 input_bundle_hash 값을 쓰는지 결정돼 있지 않다."
+    ]
+  },
+  "scenario": {
+    "scores": {"goal": 1, "adoption": 1, "boundary": 1},
+    "average": 1.0,
+    "gaps": [
+      "goal: AC-1의 핵심 약속('회차·상한·상태를 소비하지 않음')은 skip 케이스(S-2)만 검증한다. S-1은 missing 리스트만 비교하고 PM 경로에서 state.json design_gate.iteration·history가 불변인지는 검증하지 않는다. AC-4의 항목별 gaps 포맷(위치+남은 선택)은 S-5의 MUST 문구 grep만 있고 실제 evaluator 응답으로 검증하지 않는다. AC-6의 '호출 세션 effort와 무관하게 같은 설정'은 frontmatter·배포본 비교(S-10)만 있고 실행 검증이 없다.",
+      "adoption: 이번 변경은 대체형이다(design-rubric 단일 디스패치 1개 → scope 병렬 디스패치 2개). S-5·S-7은 새 문구 존재만 확인한다. 옛 단일 디스패치 문구와 결합 결과 계약이 실제로 사라졌는지(design-gate.md:20, op-scenario-gate SKILL.md §6.1 ②의 기존 YAML 예시, AGENT.md Phase 4의 결합 반환 예시)는 아무것도 검증하지 않는다.",
+      "boundary: S-8·S-11은 기존 안전판만 확인한다. 이번 PLAN이 결정하는 새 실패 경로(scope 하나가 blocked·계약 위반, resolved_gaps id 누락, previous_gaps 파일 부재, --design-gate-check를 다른 플래그와 동시 지정)에는 시나리오가 없다. S-11이 나열한 5개 플래그도 실제 상호배타 그룹(state_tool.py:7363-7369)과 다르다 — --red-check는 그 그룹에 없고 --run-log-completeness-check가 빠졌다."
+    ]
+  },
+  "verdict": "fail",
+  "rewrite_target": "both",
+  "advisories": []
+}

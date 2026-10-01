@@ -8,10 +8,7 @@ tags:
 sources:
 - skill:op-dev-analysis
 - task:111
-related:
-- sdlc-v2-development-artifact-contract
-- op-dev-plan
-- skill-opal-pilot-dev
+related: [sdlc-v2-development-artifact-contract, op-dev-plan, skill-opal-pilot-dev]
 created: '2026-06-11'
 updated: '2026-09-09'
 status: active

@@ -8,10 +8,7 @@ tags:
 - dependency-injection
 sources:
 - task:060
-related:
-- brain-prime-connection-pool-design
-- pool-lock-idiom-contract
-- cold-warm-session-separation
+related: [brain-prime-connection-pool-design, pool-lock-idiom-contract, cold-warm-session-separation]
 created: '2026-07-14'
 updated: '2026-07-14'
 status: active

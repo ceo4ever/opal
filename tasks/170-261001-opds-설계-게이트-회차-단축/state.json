@@ -1,0 +1,318 @@
+{
+  "task_id": "170-261001-opds-설계-게이트-회차-단축",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-10-01 08:23:42",
+  "updated_at": "2026-10-01 12:28:25",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 08:23:56",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 08:27:06",
+      "owner": "user",
+      "note": "캡틴 승인 확인 (이 세션에서 재확인)"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 12:06:46",
+      "owner": "PM",
+      "note": "PM이 PLAN.md를 직접 작성(워커 디스패치 아님) — 소요 미측정 명시",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "TEST-SCENARIO 작성",
+      "key": "plan.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 08:48:45",
+      "owner": "PM",
+      "note": "TEST-SCENARIO.md 작성 완료 — 결정론 검사 ①~⑦ pre-check 통과"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "설계 게이트",
+      "key": "plan.design_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 09:57:58",
+      "owner": "PM",
+      "note": "design gate i6 pass",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "`state-tool design-gate record`가 pass를 기록했고 현재 문서 묶음 hash가 통과 hash와 같다",
+          "evaluator design-rubric 설계 4축 PASS·시나리오 3축 기준 충족"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 09:58:12",
+      "owner": "PM",
+      "note": "agentic 모드 자동 승인 — 설계 게이트 6회차 pass"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 11:31:13",
+      "owner": "PM",
+      "note": "W-1~W-6 전부 완료(복수 워커 디스패치 + W-5·W-6 PM 직접 수행 혼합이라 단일 duration 집계 불가 — unknown 명시). main merge 완료(충돌 없음)",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 11:51:47",
+      "owner": "PM",
+      "note": "opal-test-agent 디스패치(S-1~S-12, S-2b 포함 13건) + PM 직접 S-6 round-trip 수행. scenario-status: 13/13 pass, 0 fail/blocked",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 12:05:46",
+      "owner": "PM",
+      "note": "체크리스트 전부 충족 — scenario-status 13/13 pass, 전체 회귀 629 passed/3 skipped/2 failed(세션 환경 무관 확인), 시크릿·gitignore 이상 없음, design_gate status=pass(미해결 빈틈 없음), GC-CONVENTION 최종 1회 Critical/High 0(Medium 3건은 즉시 반영·재검증 완료)",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 12:06:51",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 12:06:51",
+      "owner": "PM",
+      "note": "DONE.md 작성 완료"
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 12:06:56",
+      "owner": "PM",
+      "note": "docs/PROJECT.md:82 문구 재검토 완료 — scope-split이 PLAN에서 제외돼 '1회 판정' 서술이 여전히 정확함. 갱신 대상 없음(자연 스킵)",
+      "conditional": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 12:13:34",
+      "owner": "PM",
+      "note": "op-brain-ingest 완료 — 신규 concept 2건, 기존 entity/concept 4건 갱신. DONE.md 회고적 학습 후보 절을 ingested_pages와 일치시킴",
+      "conditional": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 12:15:00",
+      "owner": "PM",
+      "note": "개선 후보 4건 기록 — FW 3건(워커 서브디스패치 불가 Work item 조기 탐지, evaluator effort 세션상속 확인 절차, PLAN 표 이스케이프 파이프 파서 취약점) + improve-tool 자체 버그 1건(local scope가 워크트리에서 --task-path 누락으로 실패) FW inbox 기록. local 1건(로그 append 앵커 습관)은 memory-tool 직접 호출로 우회 기록"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 12:15:37",
+      "owner": "PM",
+      "note": "worktree-tool finalize 완료(state: closed), memory index 요청 applied·커밋 완료. status: dirty=false, unpushed=9, merged=false — main merge는 사용자 수행 대기",
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 12:15:41",
+      "owner": "PM",
+      "note": "CLOSE 완료. merge 전 수동 절차 대기: (1) 허브에서 git merge --no-ff feat/OP-TASK-170 (2) finalize-attribution (3) status --set done (4) worktree-tool remove"
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_170",
+  "actor": "coordinator",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_fcd28646-e359-4345-b697-25d6729e326a",
+    "status": "active",
+    "pending_events": []
+  },
+  "design_gate": {
+    "status": "pass",
+    "iteration": 6,
+    "limit": 3,
+    "limit_from": 3,
+    "task_confirm_req_hash": "3030070cce76510f01e6c36d7dba194c54ff63bc39796084ce54b68544341965",
+    "current_attempt": {
+      "iteration": 6,
+      "bundle_hash": "b8fb5339280cd9e42da32c8b05b31f0244d52b97e13656528d5c3a5935838400",
+      "files": {
+        "TASK.md": "7654c3a9f7bc6720515a21962a062d95052ccce219d44d0ff98620202899e686",
+        "PLAN.md": "159a8a887994288a4d0187b1960558cd417d2c7a3a2150ef626feffad0421b4f",
+        "TEST-SCENARIO.md": "24f8eb82e0df1ce1318dedd65aaa69a97d483e24099933e1dafd847272bde5fa"
+      },
+      "started_at": "2026-10-01 09:56:20",
+      "refinement": false
+    },
+    "passed_bundle_hash": "b8fb5339280cd9e42da32c8b05b31f0244d52b97e13656528d5c3a5935838400",
+    "approved_bundle_hash": "b8fb5339280cd9e42da32c8b05b31f0244d52b97e13656528d5c3a5935838400",
+    "last_rewrite_target": "plan",
+    "history": [
+      {
+        "iteration": 1,
+        "verdict": "rewrite",
+        "rewrite_target": "both",
+        "bundle_hash": "4aad83b9ca238e856dbc125371b7bf437519cebdec10c5ee497442cc487d4b87",
+        "reason": "design FAIL: completeness, decision_clarity, recoverability; scenario average 1.0",
+        "at": "2026-10-01 08:52:58",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 2,
+        "verdict": "rewrite",
+        "rewrite_target": "both",
+        "bundle_hash": "da2ffc60ad33af5a408685c6c0c2415999812a71e3f2be0db0c8065d2a1079cd",
+        "reason": "design FAIL: completeness, decision_clarity, recoverability; scenario average 1.333",
+        "at": "2026-10-01 09:05:10",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 3,
+        "verdict": "rewrite",
+        "rewrite_target": "both",
+        "bundle_hash": "e6608574d748209ac8658b44c07badd0832a0107902f3e4712280770b6d8d311",
+        "reason": "design FAIL: completeness, decision_clarity, executability, recoverability; scenario average 1.333",
+        "at": "2026-10-01 09:29:08",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 4,
+        "verdict": "rewrite",
+        "rewrite_target": "plan",
+        "bundle_hash": "ce9eeb85b3f8a5ab7db0f38a7944c8e0deaf044a64b88c5423428837e5738486",
+        "reason": "design FAIL: decision_clarity, executability; scenario average 2.0",
+        "at": "2026-10-01 09:50:35",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 5,
+        "verdict": "rewrite",
+        "rewrite_target": "plan",
+        "bundle_hash": "92d9f4ebc5ddbe3c0c7b8ff3c853c7f83a77b6fe20b3d721c810f212d9643cd9",
+        "reason": "design FAIL: decision_clarity, executability; scenario average 2.0",
+        "at": "2026-10-01 09:55:03",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 6,
+        "verdict": "pass",
+        "rewrite_target": null,
+        "bundle_hash": "b8fb5339280cd9e42da32c8b05b31f0244d52b97e13656528d5c3a5935838400",
+        "reason": null,
+        "at": "2026-10-01 09:57:58",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      }
+    ],
+    "refinement_pending": false
+  }
+}

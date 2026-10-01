@@ -9,13 +9,7 @@ tags:
 - task-094
 sources:
 - task:094
-related:
-- state-tool
-- mirror-gate-must-not-hostage-ssot-record
-- mark-force-decision-log-scope
-- state-tool-next-action-auto-derivation
-- state-tool-import-existing-key-reattachment
-- dedup-pointer-over-copy
+related: [state-tool, mirror-gate-must-not-hostage-ssot-record, mark-force-decision-log-scope, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, dedup-pointer-over-copy]
 created: '2026-08-16'
 updated: '2026-08-16'
 status: draft

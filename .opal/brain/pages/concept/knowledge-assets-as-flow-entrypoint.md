@@ -9,11 +9,7 @@ tags:
 - decision
 sources:
 - task:086
-related:
-- three-layer-memory-architecture
-- brain-code-scan-role-division
-- opal-architecture
-- nojs-flex-rail-over-inline-svg-overlay
+related: [three-layer-memory-architecture, brain-code-scan-role-division, opal-architecture, nojs-flex-rail-over-inline-svg-overlay]
 created: '2026-08-10'
 updated: '2026-08-10'
 status: draft

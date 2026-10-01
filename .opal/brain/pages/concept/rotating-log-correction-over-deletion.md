@@ -8,9 +8,7 @@ tags:
 - design-pattern
 sources:
 - task:079
-related:
-- memory-tool
-- silent-loss-prevention-row-accounting-invariant
+related: [memory-tool, silent-loss-prevention-row-accounting-invariant]
 created: '2026-07-30'
 updated: '2026-07-30'
 status: draft

@@ -7,9 +7,7 @@ tags:
 - task-083
 sources:
 - task:083
-related:
-- code-scan-split-execution-precedes-block
-- code-scan-fixture-policy-override-absorption
+related: [code-scan-split-execution-precedes-block, code-scan-fixture-policy-override-absorption]
 created: '2026-08-04'
 updated: '2026-08-04'
 status: draft

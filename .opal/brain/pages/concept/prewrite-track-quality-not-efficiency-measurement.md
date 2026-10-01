@@ -12,12 +12,7 @@ tags:
 sources:
 - task:095
 - task:096
-related:
-- scenario-prewrite-goal-series-track
-- 070-derivation-engine-perspective-bias-lesson
-- scenario-goal-coverage-gate-loop
-- source-measured-figures-over-stale-docs
-- expected-total-as-reference-not-gate-criterion
+related: [scenario-prewrite-goal-series-track, 070-derivation-engine-perspective-bias-lesson, scenario-goal-coverage-gate-loop, source-measured-figures-over-stale-docs, expected-total-as-reference-not-gate-criterion]
 created: '2026-08-19'
 updated: '2026-08-20'
 status: draft

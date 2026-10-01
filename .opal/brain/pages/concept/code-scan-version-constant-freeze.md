@@ -8,9 +8,7 @@ tags:
 - task-082
 sources:
 - task:082
-related:
-- code-scan-manifest-sharding-design
-- backward-compat-default-value-discipline
+related: [code-scan-manifest-sharding-design, backward-compat-default-value-discipline]
 created: '2026-08-03'
 updated: '2026-08-03'
 status: draft

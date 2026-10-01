@@ -8,8 +8,7 @@ tags:
 - contract
 sources:
 - task:127
-related:
-- e2e-frozen-spec-seeding-constraint
+related: [e2e-frozen-spec-seeding-constraint]
 created: '2026-09-18'
 updated: '2026-09-18'
 status: draft

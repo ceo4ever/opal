@@ -6,6 +6,7 @@ description: |
   oppl 태스크 파이프라인 G(명세 리뷰) 게이트 및 설계 루프 D6에서 디스패치.
   `design-rubric` phase로 opd/opds PM 경로의 설계 게이트(`op-scenario-gate` `gate: design`)에서도 디스패치.
 model: advanced
+effort: default
 icon: "⚖️"
 tools: [Read, Grep, Glob, Bash]
 ---
@@ -46,6 +47,7 @@ tools: [Read, Grep, Glob, Bash]
 | task_md | `phase==design-rubric`일 때 O | 태스크 폴더 `TASK.md` 경로 — 요구·변경 범위 완전성 판정의 AC/C 원천 |
 | plan_md | `phase==design-rubric`일 때 O | 태스크 폴더 `PLAN.md` 경로 — 설계 4축 판정 대상 |
 | input_bundle_hash | `phase==design-rubric`일 때 O | `design-gate start` 응답의 `bundle_hash` — 결과 JSON 최상위에 입력값 그대로 반환해야 한다(ADD-1, 157). `state-tool design-gate record`가 `--verdict pass|rewrite`에서 이 값과 `iteration`을 현재 열린 시도와 대조해 다르거나 없으면 `design_gate_result_stale`로 거부한다 |
+| previous_gaps | `phase==design-rubric`이고 조회 규칙상 존재할 때만 O | 직전 유효 회차(design_gate.history를 역순 순회해 verdict가 `deterministic_fail`·`input_error`·`superseded`가 아닌 가장 최근 회차)의 `run/design-gate-i{k}.json`에서 가져온 design+scenario 합산 `gaps` — op-scenario-gate가 조회해 전달한다. 없으면 생략된다 |
 
 > **[MUST] `phase` 5번째 값 — `acceptance`(OPPB P4)**: 위 4개 값에 더해 `phase`는 `acceptance`를 받는다 — OPPB Product Flow P4 `p4.acceptance`(pipeline id 16)에서 프로젝트 완료조건↔증거 대응을 판정하는 시점이다. `scenario-rubric`과 동일하게 Base 루브릭 트랙과 분리된 **병렬 전용 트랙**이며, 이때 `target_artifacts`·`contract_path`는 사용하지 않는다(위 `acceptance_path`·`workgraph_path`·`evidence_root`가 대체 입력이다). 기존 4개 phase(`design-review`·`spec-review`·`drift-recheck`·`scenario-rubric`)의 입력·판정·보고 계약은 무변경이다.
 
@@ -119,6 +121,10 @@ tools: [Read, Grep, Glob, Bash]
 
 > **[MUST] verdict 규칙(design-rubric 전용)**: 설계 4축 전부 PASS **AND** 시나리오 3축 각 ≥1점 **AND** 평균 ≥1.5 → `verdict: pass`, 아니면 `verdict: fail`. `rewrite_target`은 설계 축 FAIL만 있으면 `plan`, 시나리오 미달만 있으면 `scenario`, 둘 다 미달이면 `both`, pass면 `null`.
 
+> **[MUST] gaps 항목 포맷(design·scenario 공통)**: `design.gaps`·`scenario.gaps` 각 문자열은 `{axis}-{n}: {대상 문서 위치} — {구현자에게 남은 선택}`으로 시작한다(`n`은 같은 축 안에서 1부터 시작하는 카운터). 위치는 citation-rules.md §2.1/§2.2 포맷을 쓴다. gaps 항목 id는 "문자열에서 첫 번째 `: ` 앞부분 전체. `: `가 없으면 전체 문자열이 id다"로 정의한다(신규·레거시 포맷 모두에 적용되는 단일 규칙).
+
+> **[MUST] resolved_gaps 완전성**: `previous_gaps`가 입력으로 주어지면, 그 안의 모든 id(위 gaps 항목 id 정의 기준)에 대해 `resolved_gaps`(`[{id, status(resolved 또는 unresolved), reason}]`) 원소가 정확히 1개씩 있어야 한다.
+
 ### Phase 2: CONTRACT.md 루브릭절 병합
 
 > `phase == "scenario-rubric"`은 본 Phase를 건너뛴다 — Phase 1-S 전용 루브릭은 CONTRACT.md 병합 대상이 아니다(별도 트랙).
@@ -183,10 +189,10 @@ verdict은 Phase 1-A의 `[MUST]` 규칙(완료조건별 ⓐ~ⓓ 전부 yes AND �
 **`phase == "design-rubric"` 결과 계약 (전용, 다른 트랙과 분리)**:
 
 ```json
-{"input_bundle_hash": "<입력받은 값 그대로>", "iteration": "<입력받은 값 그대로>", "design": {"axes": {"completeness": "PASS|FAIL", "decision_clarity": "PASS|FAIL", "executability": "PASS|FAIL", "recoverability": "PASS|FAIL"}, "gaps": []}, "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []}, "verdict": "pass|fail", "rewrite_target": "plan|scenario|both|null", "advisories": [{"id": "A-1", "kind": "subsumed|mergeable|cheaper_layer|misclassified", "targets": ["S-2"], "basis": "...", "recommendation": "..."}]}
+{"input_bundle_hash": "<입력받은 값 그대로>", "iteration": "<입력받은 값 그대로>", "design": {"axes": {"completeness": "PASS|FAIL", "decision_clarity": "PASS|FAIL", "executability": "PASS|FAIL", "recoverability": "PASS|FAIL"}, "gaps": []}, "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []}, "resolved_gaps": [{"id": "...", "status": "resolved|unresolved", "reason": "..."}], "verdict": "pass|fail", "rewrite_target": "plan|scenario|both|null", "advisories": [{"id": "A-1", "kind": "subsumed|mergeable|cheaper_layer|misclassified", "targets": ["S-2"], "basis": "...", "recommendation": "..."}]}
 ```
 
-verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용한다. `input_bundle_hash`·`iteration`은 입력받은 값을 그대로 최상위에 반환한다(가공·재계산 금지) — `state-tool design-gate record`의 stale 검사 대상이다. `refinement: true` 입력에서는 `advisories: []`만 반환한다.
+verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용한다. `input_bundle_hash`·`iteration`은 입력받은 값을 그대로 최상위에 반환한다(가공·재계산 금지) — `state-tool design-gate record`의 stale 검사 대상이다. `resolved_gaps`는 `previous_gaps`가 입력으로 주어졌을 때만 포함한다(조건부 O) — 완전성 요건은 위 `[MUST] resolved_gaps 완전성` 참조. `refinement: true` 입력에서는 `advisories: []`만 반환한다.
 
 ### Phase 5: 자기완결 보고서 생성
 
@@ -266,6 +272,7 @@ verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용�
   "iteration": "<입력받은 값 그대로>",
   "design": {"axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"}, "gaps": []},
   "scenario": {"scores": {"goal": 0, "adoption": 0, "boundary": 0}, "average": 0, "gaps": []},
+  "resolved_gaps": [],
   "rewrite_target": null,
   "advisories": [],
   "blockers": [],

@@ -12,12 +12,7 @@ sources:
 - skill:opal-pilot-dev-short
 - task:111
 - task:112
-related:
-- dev-pilot-profile-unification
-- skill-opal-pilot-dev
-- sdlc-v2-development-artifact-contract
-- op-dev-plan
-- op-dev-test-scenario
+related: [dev-pilot-profile-unification, skill-opal-pilot-dev, sdlc-v2-development-artifact-contract, op-dev-plan, op-dev-test-scenario]
 created: '2026-06-11'
 updated: '2026-09-10'
 status: active

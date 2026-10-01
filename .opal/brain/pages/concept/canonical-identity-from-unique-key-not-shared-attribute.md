@@ -8,9 +8,7 @@ tags:
 - lesson
 sources:
 - task:140
-related:
-- fixture-vs-real-blind-spot-lesson
-- skill-registry-project-scope-4source-merge
+related: [fixture-vs-real-blind-spot-lesson, skill-registry-project-scope-4source-merge]
 created: '2026-09-18'
 updated: '2026-09-18'
 status: draft

@@ -9,9 +9,7 @@ tags:
 - design-decision
 sources:
 - task:103
-related:
-- degeneracy-rule-preserves-past-values-on-axis-split
-- measurement-tool-more-fallible-than-artifact-lesson
+related: [degeneracy-rule-preserves-past-values-on-axis-split, measurement-tool-more-fallible-than-artifact-lesson]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

@@ -9,9 +9,7 @@ tags:
 - lesson
 sources:
 - task:030
-related:
-- skill-registry-validate-extension
-- skill-opal-next
+related: [skill-registry-validate-extension, skill-opal-next]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active

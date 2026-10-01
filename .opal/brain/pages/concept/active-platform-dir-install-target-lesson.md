@@ -9,9 +9,7 @@ tags:
 - lesson-learned
 sources:
 - task:032
-related:
-- adapter-body-model-level-substitution
-- opal-adapter-platform-isolation
+related: [adapter-body-model-level-substitution, opal-adapter-platform-isolation]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active

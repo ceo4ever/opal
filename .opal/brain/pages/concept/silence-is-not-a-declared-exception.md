@@ -9,10 +9,7 @@ tags:
 - lesson-learned
 sources:
 - task:103
-related:
-- enforcement-basis-must-be-structural-not-voluntary
-- unresolvable-not-absent-two-vocabulary-split
-- degraded-execution-with-explicit-gap
+related: [enforcement-basis-must-be-structural-not-voluntary, unresolvable-not-absent-two-vocabulary-split, degraded-execution-with-explicit-gap]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

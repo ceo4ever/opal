@@ -1,0 +1,4 @@
+interface:
+  display_name: "OPAL Pilot Dev 2"
+  short_description: "semi-agentic·agentic과 wt를 지원하는 OPAL 개발 파일럿"
+  default_prompt: "Use $opal-pilot-dev2 to perform this development task with --agentic --wt."

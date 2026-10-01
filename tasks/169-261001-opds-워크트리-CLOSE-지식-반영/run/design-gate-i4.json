@@ -1,0 +1,53 @@
+{
+  "status": "completed",
+  "verdict": "fail",
+  "input_bundle_hash": "703683b1cc6b4f419f5f4ef7eae2b85260f0e30604d0c14a0fc99f77132174fa",
+  "iteration": 4,
+  "summary": "design-rubric 판정: verdict=fail, rewrite_target=plan. iteration 3의 지적은 대부분 실제로 해결됐다(completeness·executability PASS). 그러나 실제 git 실험 결과, .gitattributes union이 이를 처음 들여오는 merge 자체에는 적용되지 않아 D-11 순서대로면 task 169 merge에서 log.md·index.md 충돌이 사실상 확실하고(recoverability-1), D-13/H-4/S-12가 근거로 든 'updated: 날짜 bump가 같은 줄 충돌을 보장한다'는 전제가 실측으로 반증됐다(decision_clarity-1, 같은 날짜로 동일하게 bump하면 git이 충돌 없이 자동 병합함). 충돌 발생 시의 해결 절차도 정의돼 있지 않다(recoverability-2/decision_clarity-2).",
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "recoverability-1 (신규, 실측): `.gitattributes`의 merge=union은 그 설정을 처음 들여오는 merge에는 적용되지 않는다(머지를 받는 쪽에 이미 있어야 함). D-11 순서(사용자가 W-5 백필을 먼저 main에 커밋)대로면 main이 앞서 나가 task 169 merge가 ff-only 불가능해지고, 169 브랜치 자신의 CLOSE(op-brain-ingest STEP5-2/5-3)가 log.md·index.md를 바꾸므로 이 merge에서 union 미적용 상태로 충돌 가능성이 사실상 확실하다. 대안 3가지(.gitattributes를 백필과 함께 먼저 main에 커밋 / 백필을 169 브랜치 안에서 수행 / 첫 merge 충돌 해결 절차 명시) 중 하나로 확정해야 한다. S-5는 이미 union이 커밋된 상태를 전제해 이 경우를 못 잡는다.",
+      "recoverability-2: D-13·H-4는 같은 page 충돌을 '사용자 수동 해결'로 돌리기만 하고, W-3(b) merge 후 안내나 Release 절에 실제 충돌 해결·검증 절차(수동 해결 후 brain-tool validate/lint, 필요시 index 재실행, 커밋)가 없다.",
+      "decision_clarity-1 (신규, 실측): D-13·H-4·S-12는 'update-page가 항상 갱신하는 updated: 줄이 같은 줄 충돌을 보장한다'고 서술하지만, 두 브랜치가 같은 날짜로 동일하게 bump하면 git은 충돌 없이 자동 병합한다(실측 확인, rc=0). 충돌 여부는 겹치는 구간이 서로 다르게 바뀌었을 때만 결정된다. D-13 결정 자체는 유효하나 근거·H-4·S-12 조건이 사실과 다르다.",
+      "decision_clarity-2: page 충돌 시 실패 정책 미정 — conflict marker를 손으로 편집해도 되는지, 해결 후 어떤 brain-tool 검증이 필수인지(C-4 'brain은 brain-tool로만 갱신'과의 관계) 정해지지 않았다.",
+      "minor (비차단): `_inside_worktree` 삭제 시 그 함수만 쓰던 `WORKTREE_SEGMENT` 상수(brain_tool.py:232)도 무호출이 되는데 정리 대상에 없다. `test_brain_tool.py:2639` 섹션 주석('회고적 학습 쓰기 루트 = 명시 allocator_root')도 정정 대상에 없다. D-2 괄호 서술은 반전 대상 3개 테스트가 모두 `TestS19WorktreeTaskRootBrainResolution`에 있는 것처럼 읽히지만 실제로 `test_write_from_worktree_without_allocator_root_is_rejected`·`test_update_page_from_worktree_without_allocator_root_is_rejected`는 `TestTaskRootAndAllocatorRoot118`(:2557)에 있고 `test_add_page_default_brain_path_from_worktree_requires_explicit_allocator_root`만 `TestS19WorktreeTaskRootBrainResolution`(:2722)에 있다. Findings의 worktree_tool.py 항목이 '3곳'이라 쓰고 2곳(@header·cmd_finalize docstring)만 나열한다(3번째는 README.md라는 별도 파일)."
+    ],
+    "evidence": {
+      "completeness": "AC-1~5·C-1~4 모두 Work item/시나리오로 연결. Findings 문서 갱신 목록이 실제 grep 결과와 일치(done-template.md:52, oppb SKILL.md:36, worktree_tool.py:6/:2879, README.md:190).",
+      "decision_clarity": "D-1~D-12는 명확하다. D-13 근거가 실측과 다르고 충돌 해결 정책이 없다.",
+      "executability": "brain_tool.py require_write_root:321-334, _inside_worktree:246-252(호출처 :331 하나), ERROR_CODES:157, index/log 파서:1563-1575, LOG_OPS:66, opal-pilot-dev SKILL.md:338-347/:364-367, op-brain-ingest STEP 구조 모두 실제와 일치. Work item만으로 구현 가능.",
+      "recoverability": "W-1·W-5 되돌리기 경로는 있으나 union 미적용 첫 merge 충돌과 page 충돌 해결 경로가 빠져 있다."
+    }
+  },
+  "scenario": {
+    "scores": {"goal": 2, "adoption": 2, "boundary": 1},
+    "average": 1.67,
+    "gaps": [
+      "boundary: S-12의 전제(updated: 줄 충돌 보장)가 실측으로 반증돼 결과가 결정론적으로 재현되지 않는다. A·B의 본문을 같은 구간에서 서로 다르게 바꾸도록 조건을 다시 써야 한다. union이 아직 켜지지 않은 첫 merge 경계 시나리오도 없다.",
+      "S-4: `pytest -k WORKTREE_WRITE_REJECTED` 선택자가 테스트를 하나도 선택하지 못한다(실제 클래스명은 `TestS12WorktreeWriteRejection`, test_memory_tool.py:3896) — `-k TestS12WorktreeWriteRejection`으로 고쳐야 한다."
+    ],
+    "evidence": {
+      "goal": "S-3이 워크트리 add-page → finalize 귀속 커밋 → git merge → 허브 page 존재까지 실제 CLI 경로로 AC-1을 직접 검증한다.",
+      "adoption": "S-3이 새 경로 채택을, S-6이 6개 파일에서 옛 문구 부재+재배포 diff를 확인한다."
+    }
+  },
+  "rewrite_target": "plan",
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": ["S-9", "S-6"],
+      "basis": "S-9(반전 테스트 docstring grep)와 S-6(문서 grep)은 둘 다 구현 후 정적 grep check로 같은 계층이다.",
+      "recommendation": "S-9을 S-6의 grep 목록에 합치고 H-2를 S-6에 연결한다."
+    }
+  ],
+  "blockers": [],
+  "changed_files": [],
+  "artifact_path": null
+}

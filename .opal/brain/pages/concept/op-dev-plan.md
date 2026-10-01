@@ -8,10 +8,7 @@ tags:
 sources:
 - skill:op-dev-plan
 - task:111
-related:
-- sdlc-v2-development-artifact-contract
-- op-dev-analysis
-- op-dev-execute
+related: [sdlc-v2-development-artifact-contract, op-dev-analysis, op-dev-execute]
 created: '2026-06-11'
 updated: '2026-09-09'
 status: active

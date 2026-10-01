@@ -8,10 +8,7 @@ tags:
 - opds
 sources:
 - task:098
-related:
-- decision-vs-fact-claim-separation
-- verdict-tool-fail-safe-direction-design
-- clarification-gate
+related: [decision-vs-fact-claim-separation, verdict-tool-fail-safe-direction-design, clarification-gate]
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft

@@ -10,14 +10,11 @@ tags:
 - docs-ssot
 sources:
 - task:031
-related:
-- skill-opal-pilot-project-dev
-- wbs-세분화-단일책임-수용시나리오
+related: [skill-opal-pilot-project-dev, wbs-세분화-단일책임-수용시나리오]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active
 ---
-
 ## 개념 요약
 
 oppd Phase 1에서 PRD/TRD를 docs/ 직접 작성에서 태스크 폴더 작업본 작성 → 사용자 확정 후 docs/ 승격으로 전환. WBS는 실행 산출물이므로 docs/ 승격 없이 태스크 폴더 전용으로 분리.

@@ -9,11 +9,7 @@ tags:
 - state-machine
 sources:
 - task:119
-related:
-- worktree-task-root-allocator-root-split
-- worktree-slot-existence-to-occupancy-judgment
-- switch-first-plumbing-later-verification
-- worktree-tool
+related: [worktree-task-root-allocator-root-split, worktree-slot-existence-to-occupancy-judgment, switch-first-plumbing-later-verification, worktree-tool]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft

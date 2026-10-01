@@ -8,8 +8,7 @@ tags:
 - pitfall
 sources:
 - task:079
-related:
-- memory-tool
+related: [memory-tool]
 created: '2026-07-30'
 updated: '2026-07-30'
 status: draft

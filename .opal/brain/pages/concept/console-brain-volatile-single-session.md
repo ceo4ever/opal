@@ -9,12 +9,7 @@ tags:
 - ux
 sources:
 - task:063
-related:
-- cold-warm-session-separation
-- brain-prime-connection-pool-design
-- opal-console
-- brain-prime-pool-need-based-refill
-- console-brain-exit-guard-pattern
+related: [cold-warm-session-separation, brain-prime-connection-pool-design, opal-console, brain-prime-pool-need-based-refill, console-brain-exit-guard-pattern]
 created: '2026-07-15'
 updated: '2026-07-15'
 status: active

@@ -8,8 +8,7 @@ tags:
 - knowledge
 sources:
 - task:027
-related:
-- business-terminology-first-principle
+related: [business-terminology-first-principle]
 created: '2026-06-17'
 updated: '2026-06-17'
 status: active

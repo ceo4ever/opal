@@ -8,14 +8,11 @@ tags:
 - anti-pattern
 sources:
 - task:031
-related:
-- b7-action-completion-loop
-- coding-principles-ssot
+related: [b7-action-completion-loop, coding-principles-ssot]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active
 ---
-
 ## 개념 요약
 
 자동 루핑 상한 수치는 `opal/core/references/opal-harness.md` §1 자동 루핑 제약 표에 단독 기재하고, 타 문서는 포인터 참조만 허용하는 패턴. 수치 복제 금지.

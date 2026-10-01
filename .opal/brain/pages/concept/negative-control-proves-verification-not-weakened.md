@@ -8,9 +8,7 @@ tags:
 - task-114
 sources:
 - task:114
-related:
-- negative-scenario-requires-3-condition-and
-- prewrite-self-confirming-triple-defense
+related: [negative-scenario-requires-3-condition-and, prewrite-self-confirming-triple-defense]
 created: '2026-09-09'
 updated: '2026-09-09'
 status: draft

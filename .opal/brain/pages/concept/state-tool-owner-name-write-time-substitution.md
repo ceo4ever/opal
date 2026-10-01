@@ -8,9 +8,7 @@ tags:
 - mechanism
 sources:
 - task:054
-related:
-- owner-honorific-contamination-prevention
-- state-tool
+related: [owner-honorific-contamination-prevention, state-tool]
 created: '2026-07-10'
 updated: '2026-07-10'
 status: active

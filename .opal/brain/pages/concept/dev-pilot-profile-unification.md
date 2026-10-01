@@ -9,11 +9,7 @@ tags:
 - compatibility
 sources:
 - task:112
-related:
-- skill-opal-pilot-dev
-- skill-opal-pilot-dev-short
-- demote-promote-recursion-guard-timing-threshold-split
-- new-ssot-pointer-not-value-copy
+related: [skill-opal-pilot-dev, skill-opal-pilot-dev-short, demote-promote-recursion-guard-timing-threshold-split, new-ssot-pointer-not-value-copy]
 created: '2026-09-10'
 updated: '2026-09-10'
 status: draft

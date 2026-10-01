@@ -11,8 +11,7 @@ sources:
 - task:078
 - task:079
 - task:081
-related:
-- long-running-worker-infra-failure-mitigation
+related: [long-running-worker-infra-failure-mitigation]
 created: '2026-08-02'
 updated: '2026-08-02'
 status: draft

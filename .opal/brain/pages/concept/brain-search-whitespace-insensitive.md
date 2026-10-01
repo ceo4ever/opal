@@ -9,8 +9,7 @@ tags:
 - normalization
 sources:
 - task:025
-related:
-- brain-search-on-demand
+related: [brain-search-on-demand]
 created: '2026-06-16'
 updated: '2026-06-16'
 status: active

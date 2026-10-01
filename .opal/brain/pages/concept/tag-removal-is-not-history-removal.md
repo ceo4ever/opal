@@ -6,9 +6,7 @@ tags:
 - test-design
 sources:
 - task:107
-related:
-- prohibit-by-property-not-name
-- regulation-tool-four-way-mismatch
+related: [prohibit-by-property-not-name, regulation-tool-four-way-mismatch]
 created: '2026-09-06'
 updated: '2026-09-06'
 status: draft

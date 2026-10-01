@@ -9,10 +9,7 @@ tags:
 - task-096
 sources:
 - task:096
-related:
-- unresolvable-not-absent-two-vocabulary-split
-- rotating-log-correction-over-deletion
-- silent-render-failure-deterministic-gate
+related: [unresolvable-not-absent-two-vocabulary-split, rotating-log-correction-over-deletion, silent-render-failure-deterministic-gate]
 created: '2026-08-20'
 updated: '2026-08-20'
 status: draft

@@ -9,8 +9,7 @@ tags:
 - lesson
 sources:
 - task:122
-related:
-- actor-axis-orthogonal-to-mode
+related: [actor-axis-orthogonal-to-mode]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: active

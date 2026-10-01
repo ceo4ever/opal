@@ -8,9 +8,7 @@ tags:
 - worker-report
 sources:
 - task:085
-related:
-- agentic-output-direct-verification-lesson
-- silent-success-defect-class
+related: [agentic-output-direct-verification-lesson, silent-success-defect-class]
 created: '2026-08-07'
 updated: '2026-08-07'
 status: draft

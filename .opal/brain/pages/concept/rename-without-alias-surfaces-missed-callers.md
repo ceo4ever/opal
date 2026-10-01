@@ -8,11 +8,7 @@ tags:
 - lesson
 sources:
 - task:118
-related:
-- worktree-task-root-allocator-root-split
-- backward-compat-default-value-discipline
-- skill-rename-validate-pattern
-- parser-drift-silent-longevity-lesson
+related: [worktree-task-root-allocator-root-split, backward-compat-default-value-discipline, skill-rename-validate-pattern, parser-drift-silent-longevity-lesson]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft

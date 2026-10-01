@@ -9,10 +9,7 @@ tags:
 sources:
 - task:091
 - task:104
-related:
-- pm-gate-artifact-tool-enforcement
-- expected-total-as-reference-not-gate-criterion
-- silent-render-failure-deterministic-gate
+related: [pm-gate-artifact-tool-enforcement, expected-total-as-reference-not-gate-criterion, silent-render-failure-deterministic-gate]
 created: '2026-08-14'
 updated: '2026-08-30'
 status: draft

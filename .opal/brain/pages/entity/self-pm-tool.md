@@ -14,10 +14,7 @@ tags:
 - task-122
 sources:
 - task:122
-related:
-- opal-self-pm
-- improve-tool
-- state-tool
+related: [opal-self-pm, improve-tool, state-tool]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: active

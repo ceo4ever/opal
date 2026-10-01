@@ -9,9 +9,7 @@ tags:
 - task-096
 sources:
 - task:096
-related:
-- guard-precision-none-passthrough-early-return
-- memory-lifecycle-graduation-workflow
+related: [guard-precision-none-passthrough-early-return, memory-lifecycle-graduation-workflow]
 created: '2026-08-20'
 updated: '2026-08-20'
 status: draft

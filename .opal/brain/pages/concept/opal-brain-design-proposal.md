@@ -9,9 +9,10 @@ tags:
 - index
 sources:
 - doc:docs/proposals/opal-brain-design.md
+- doc:docs/proposals/archives/opal-brain-design.md
 related: []
 created: '2026-06-11'
-updated: '2026-06-11'
+updated: '2026-10-01'
 status: draft
 ---
 ## 개념 요약

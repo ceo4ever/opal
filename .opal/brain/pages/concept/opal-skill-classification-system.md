@@ -10,11 +10,7 @@ tags:
 sources:
 - task:029
 - task:120
-related:
-- opal-architecture
-- opal-brain-not-pilot-decision
-- skill-registry-validate-extension
-- gc-finding-schema
+related: [opal-architecture, opal-brain-not-pilot-decision, skill-registry-validate-extension, gc-finding-schema]
 created: '2026-06-18'
 updated: '2026-09-12'
 status: active

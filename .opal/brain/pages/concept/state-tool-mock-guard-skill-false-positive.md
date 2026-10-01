@@ -11,14 +11,11 @@ tags:
 sources:
 - task:033
 - task:034
-related:
-- op-dev-test-scenario
-- verification-command-4-standard
+related: [op-dev-test-scenario, verification-command-4-standard]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active
 ---
-
 ## 개요
 
 `state_tool.py`의 `_MOCK_CODE_PATTERNS` 정규식이 op-dev-test-scenario SKILL 표준 PM Gate 문구에 포함된 `MagicMock` **단어**를 오탐하는 false positive 문제. 주석 의도("단순 단어 제외")와 실제 동작이 불일치하며, 후속 수정이 필요한 프레임워크 버그다.

@@ -2,21 +2,18 @@
 type: concept
 title: 메모리 라이프사이클·졸업(promote) 워크플로우
 tags:
-  - memory
-  - lifecycle
-  - architecture
-  - promote
+- memory
+- lifecycle
+- architecture
+- promote
 sources:
-  - task:045
-  - task:096
-related:
-  - memory-tool
-  - three-layer-memory-architecture
-created: "2026-06-26"
-updated: "2026-08-20"
+- task:045
+- task:096
+related: [memory-tool, three-layer-memory-architecture]
+created: '2026-06-26'
+updated: '2026-08-20'
 status: active
 ---
-
 ## 개요
 
 OPAL 메모리는 영구 지식 저장소가 아니라 **임시 인박스**다. 성숙한 지식은 영구 거처(docs=규범 / brain=설명)로 **졸업(promote)**하고, 진부화·완료된 지식은 상태 전이 후 정리한다. 갯수 상한 대신 졸업·자가검토·길이캡이 비대화를 방지한다. (근거: task:045 DONE 핵심 설계 결정 #1, #2)

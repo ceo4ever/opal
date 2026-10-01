@@ -9,8 +9,7 @@ tags:
 - opd
 sources:
 - task:100
-related:
-- template-precedence-over-prose-norms
+related: [template-precedence-over-prose-norms]
 created: '2026-08-24'
 updated: '2026-08-24'
 status: draft

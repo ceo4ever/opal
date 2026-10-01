@@ -1,0 +1,203 @@
+{
+  "goal": "사용자가 `//opd2`로 opd2를 호출할 수 있다. 신규 태스크는 agentic·worktree로 시작하고, 재개하면 저장된 mode·workspace를 이어받는다. opd2 태스크의 단계 상태는 다른 Pilot과 마찬가지로 `state-tool`이 태스크 루트 `state.json` 한 곳에서 관리하며, opd2 전용 상태 기록은 더 이상 쓰지 않는다. opd2 고유의 기계 게이트는 해당 게이트 행을 완료하는 조건으로 그대로 남는다. 대상은 아티팩트 결합 해시, 변경 범위, 실행 증거, 역할 분리, 보호 테스트, 재작업 상한이며, PM이 검사를 건너뛰고 행을 완료할 수 없다. FW 실행 안전장치(lease 확보, Stop 종료 차단·재개 안내, worktree 체크포인트, CLOSE finalize)가 opd2 태스크에도 적용된다. opd2는 단계마다 FW 이벤트 게이트를 거치고, 구현·검증·리뷰를 등록된 FW 워커에게 디스패치한다. 배포 범위는 build로 한정한다. 독립 리뷰를 통과하면 opd와 같은 CLOSE 절차로 마감되고, 배포·관측 경로는 이번에 지원하지 않는다. opd2는 FW 공통 Pilot 계약을 충족하고, 기존 Pilot의 동작은 바뀌지 않는다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "AC-6",
+    "AC-7",
+    "AC-8",
+    "C-1",
+    "C-2",
+    "C-3",
+    "C-4"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1",
+        "AC-7",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "type": "e2e",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "type": "unit",
+      "red_required": false,
+      "covers_requirements": [],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-3",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-8"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-9",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-10",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-11",
+      "type": "e2e",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-12",
+      "type": "e2e",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-13",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "C-2",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

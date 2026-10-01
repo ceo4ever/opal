@@ -9,9 +9,7 @@ tags:
 - session-toggle
 sources:
 - task:043
-related:
-- opal-bootstrap-skip-gate
-- opal-adapter-platform-isolation
+related: [opal-bootstrap-skip-gate, opal-adapter-platform-isolation]
 created: '2026-06-24'
 updated: '2026-06-24'
 status: active

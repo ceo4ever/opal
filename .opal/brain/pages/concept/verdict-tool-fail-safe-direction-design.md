@@ -8,15 +8,12 @@ tags:
 - opds
 sources:
 - task:098
-related:
-- decision-vs-fact-claim-separation
-- demote-promote-recursion-guard-timing-threshold-split
+related: [decision-vs-fact-claim-separation, demote-promote-recursion-guard-timing-threshold-split]
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft
 speculative_override: true
-override_note: 도메인 용어 '미확정'(등급 판정 결과값 이름)이 미실체 마커로 오탐됨 — 본 페이지는 이미 완료·구현된 task:098
-  확정 설계 내용이며 향후 계획이 아님
+override_note: 도메인 용어 '미확정'(등급 판정 결과값 이름)이 미실체 마커로 오탐됨 — 본 페이지는 이미 완료·구현된 task:098 확정 설계 내용이며 향후 계획이 아님
 ---
 ## 개요
 

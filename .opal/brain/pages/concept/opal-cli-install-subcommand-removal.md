@@ -8,9 +8,7 @@ tags:
 - ux
 sources:
 - task:055
-related:
-- installer-version-priority-model
-- linux-install-script
+related: [installer-version-priority-model, linux-install-script]
 created: '2026-07-10'
 updated: '2026-07-10'
 status: active

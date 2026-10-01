@@ -9,9 +9,7 @@ tags:
 sources:
 - task:087
 - task:105
-related:
-- silent-success-defect-class
-- install-hook-ownership-marker-idempotent-upsert
+related: [silent-success-defect-class, install-hook-ownership-marker-idempotent-upsert]
 created: '2026-08-10'
 updated: '2026-09-03'
 status: draft

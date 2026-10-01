@@ -10,9 +10,7 @@ tags:
 sources:
 - task:073
 - task:070
-related:
-- scenario-goal-coverage-gate-loop
-- state-tool-task-step-key-address
+related: [scenario-goal-coverage-gate-loop, state-tool-task-step-key-address]
 created: '2026-07-23'
 updated: '2026-07-23'
 status: draft

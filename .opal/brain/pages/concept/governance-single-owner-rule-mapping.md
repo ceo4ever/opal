@@ -8,9 +8,7 @@ tags:
 - dispatch
 sources:
 - task:081
-related:
-- mitigation-recurs-without-ssot-registration
-- anchor-load-condition-must-match-target
+related: [mitigation-recurs-without-ssot-registration, anchor-load-condition-must-match-target]
 created: '2026-08-02'
 updated: '2026-08-02'
 status: draft

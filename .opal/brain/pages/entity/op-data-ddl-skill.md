@@ -1,14 +1,21 @@
 ---
 type: entity
 title: op-data-ddl (DDL 단계 스킬)
-tags: [skill, stage-skill, data-design, ddl, migration, dbml]
-sources: [task:019]
+tags:
+- skill
+- stage-skill
+- data-design
+- ddl
+- migration
+- dbml
+sources:
+- task:019
+- skill:op-data-ddl
 related: [skill-opal-pilot-data-design, op-data-model-skill, opdd-pipeline-flow]
 created: 2026-06-12
-updated: 2026-06-12
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 DB 설계 파이프라인의 DDL 단계 스킬. MODEL 물리 산출물(DBML)을 입력으로 받아 DDL SQL을 추출하고 ORM 마이그레이션 스크립트를 생성한다. **물리(DBML) 완료 이후에만 실행 가능**하다.

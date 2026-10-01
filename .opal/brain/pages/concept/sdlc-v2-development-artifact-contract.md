@@ -9,14 +9,7 @@ tags:
 - pipeline
 sources:
 - task:111
-related:
-- skill-opal-pilot-dev
-- skill-opal-pilot-dev-short
-- op-dev-analysis
-- op-dev-plan
-- op-dev-execute
-- op-dev-test-scenario
-- test-tool
+related: [skill-opal-pilot-dev, skill-opal-pilot-dev-short, op-dev-analysis, op-dev-plan, op-dev-execute, op-dev-test-scenario, test-tool]
 created: '2026-09-09'
 updated: '2026-09-09'
 status: draft

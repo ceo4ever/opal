@@ -8,8 +8,7 @@ tags:
 - technique
 sources:
 - task:108
-related:
-- removal-task-boundary-unification
+related: [removal-task-boundary-unification]
 created: '2026-09-06'
 updated: '2026-09-06'
 status: draft

@@ -10,10 +10,7 @@ tags:
 sources:
 - task:040
 - task:043
-related:
-- bootstrapper-marker-ssot-single-point
-- opal-adapter-platform-isolation
-- read-based-gate-pattern
+related: [bootstrapper-marker-ssot-single-point, opal-adapter-platform-isolation, read-based-gate-pattern]
 created: '2026-06-24'
 updated: '2026-06-24'
 status: active

@@ -9,13 +9,7 @@ tags:
 sources:
 - task:021
 - task:115
-related:
-- daemon-as-tool-orchestrator
-- project-id-query-param-pattern
-- deploy-artifact-verification-lesson
-- opal-architecture
-- brain-tool
-- state-tool
+related: [daemon-as-tool-orchestrator, project-id-query-param-pattern, deploy-artifact-verification-lesson, opal-architecture, brain-tool, state-tool]
 source_ref: dashboard/
 created: 2026-06-15
 updated: '2026-09-12'

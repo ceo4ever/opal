@@ -11,8 +11,7 @@ sources:
 - opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py
 - tasks/147-260919-opds-PM-보고-활동이벤트-정지판정-관측배선/DONE.md
 - opal/tools/run-log-tool/adapters/agent_tool_adapter.py
-related:
-- worktree-tool
+related: [worktree-tool]
 created: '2026-09-19'
 updated: '2026-09-20'
 status: active

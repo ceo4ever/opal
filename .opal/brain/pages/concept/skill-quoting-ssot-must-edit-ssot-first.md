@@ -9,10 +9,7 @@ tags:
 - task-104
 sources:
 - task:104
-related:
-- skill-owned-constraint-restated-in-prompt-overrides-skill
-- new-ssot-pointer-not-value-copy
-- skill-opal-pilot-data-design
+related: [skill-owned-constraint-restated-in-prompt-overrides-skill, new-ssot-pointer-not-value-copy, skill-opal-pilot-data-design]
 created: '2026-08-30'
 updated: '2026-08-30'
 status: draft

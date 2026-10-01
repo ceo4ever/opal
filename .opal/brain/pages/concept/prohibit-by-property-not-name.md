@@ -7,9 +7,7 @@ tags:
 - design-principle
 sources:
 - task:107
-related:
-- tag-removal-is-not-history-removal
-- regulation-tool-four-way-mismatch
+related: [tag-removal-is-not-history-removal, regulation-tool-four-way-mismatch]
 created: '2026-09-06'
 updated: '2026-09-06'
 status: draft

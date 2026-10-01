@@ -487,3 +487,28 @@
 - 신규: [[pages/entity/worktree-tool.md]], [[pages/entity/ownership-tool.md]], [[pages/concept/worktree-session-launch-order-and-ownership.md]]
 - 출처: task:164
 
+## [2026-10-01] ingest | CLOSE 누락 백필 — 태스크 161·162·167 brain 후보 반영
+- 신규: [[pages/flow/test-cycle-early-human-handoff.md]], [[pages/concept/scenario-economy-advisory-gate.md]]
+- 갱신: [[pages/entity/test-tool.md]], [[pages/concept/scenario-goal-coverage-gate-loop.md]], [[pages/entity/op-scenario-gate-skill.md]], [[pages/entity/state-tool.md]]
+- 출처: task:161, task:162, task:167
+
+## [2026-10-01] ingest | CLOSE ingest — 태스크 169 워크트리 CLOSE brain 쓰기 계약 반영
+- 신규: [[pages/concept/worktree-close-brain-write-contract.md]]
+- 출처: task:169
+
+## [2026-10-01] ingest | CLOSE ingest — 태스크 168 opd2 프레임워크 통합
+- 신규: [[pages/concept/opd2-state-tool-integration.md]]
+- 출처: task:168
+
+## [2026-10-01] ingest | ingest --all: 신규 37페이지 + 기존 21페이지 출처 보강 (스킬 24·태스크 9·run-log 3·e2e 1·적용 제안서 10). 제외: docs/backup 6·미적용/폐기 제안서 9·e2e 계약 데이터 2
+- 신규: [[op-gc-security]], [[op-gc-convention]], [[op-gc-report]], [[opal-pilot-project-build]], [[op-oppb-project-slice]], [[op-oppb-knowledge-finalize]], [[opal-skill-tester]], [[opal-pilot-dev2]], [[opal-code-map-builder]], [[opal-e2e]], [[opal-help]], [[opal-eli5]], [[opal-grill]], [[e2e-journey-library]], [[run-log-prd]], [[run-log-trd]], [[run-log-contract]], [[e2e-harness-three-responsibility-split]], [[worktree-multirepo-capsule-ownership]], [[oppl-bounded-convergence-runtime]], [[scenario-table-parse-fail-loud]], [[terminal-host-detection-from-own-process-lineage]], [[hook-session-identity-from-envelope-only]], [[codex-session-handoff-identity-recovery]], [[pm-design-path-independent-gate]], [[e2e-environment-config-ownership]], [[opst-oppb-profile-detects-finalize-violation]], [[codex-worktree-boot-ownership-handoff]]
+- 출처: ingest-scan:all
+
+## [2026-10-01] ingest | 정정: 직전 ingest --all 기록의 수치를 실측으로 바로잡는다 — 신규 28페이지, 기존 17페이지 출처 보강, 반영 소스 47건(스킬 24·태스크 9·run-log 3·e2e 1·적용 제안서 10). 제외 17건: docs/backup 6·폐기/미적용 제안서 9·e2e 계약 데이터 2
+- 출처: ingest-scan:all
+## [2026-10-01] ingest | CLOSE ingest — 태스크 170 설계 게이트 회차 단축
+- 신규: [[pages/concept/design-gate-deterministic-pretier-separation.md]], [[pages/concept/design-gate-gaps-resolution-roundtrip.md]]
+- 출처: task:170
+
+## [2026-10-01] lint | lint 정비: related 인라인 배열 자동 교정 270페이지(272건), 깨진 링크 2건 수정(brain-entity-discipline), 고립·링크 누락 9건 해소(관련 페이지 링크 추가 5페이지). stale 8건 판정: 제거 기능 기록 5건 유지, 3건은 task:111 sdlc-v2 축소 이후 내용이라 stale 유지. 잔여 21건은 예시 문법 오탐 broken_link 9·용어 오탐 speculative 4·의도된 stale 8
+

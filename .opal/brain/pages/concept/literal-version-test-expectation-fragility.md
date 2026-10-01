@@ -8,8 +8,7 @@ tags:
 - lesson
 sources:
 - task:079
-related:
-- concurrent-task-shared-file-discipline
+related: [concurrent-task-shared-file-discipline]
 created: '2026-07-30'
 updated: '2026-07-30'
 status: draft

@@ -8,9 +8,7 @@ tags:
 - pattern
 sources:
 - task:079
-related:
-- memory-tool
-- clarification-gate-backward-compat
+related: [memory-tool, clarification-gate-backward-compat]
 created: '2026-07-30'
 updated: '2026-07-30'
 status: draft

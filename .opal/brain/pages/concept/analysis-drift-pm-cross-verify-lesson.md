@@ -10,15 +10,11 @@ tags:
 sources:
 - task:031
 - task:032
-related:
-- b7-action-completion-loop
-- deploy-artifact-verification-lesson
-- adapter-body-model-level-substitution
+related: [b7-action-completion-loop, deploy-artifact-verification-lesson, adapter-body-model-level-substitution]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active
 ---
-
 ## 개념 요약
 
 ANALYSIS 드리프트 분석이 사실과 반대인 환각을 생성하고 PLAN이 이를 신뢰해 실행 오류로 이어진 사례 학습. "드리프트 분석은 PM이 직접 Read 교차검증"이 필수임을 확인한 패턴.

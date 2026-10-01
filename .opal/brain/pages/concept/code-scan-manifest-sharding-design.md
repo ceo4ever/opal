@@ -10,11 +10,7 @@ tags:
 sources:
 - task:082
 - task:083
-related:
-- code-scan-tool
-- code-header-dual-source-inheritance
-- code-scan-classification-ladder-design
-- code-scan-split-execution-precedes-block
+related: [code-scan-tool, code-header-dual-source-inheritance, code-scan-classification-ladder-design, code-scan-split-execution-precedes-block]
 created: '2026-08-03'
 updated: '2026-08-04'
 status: draft

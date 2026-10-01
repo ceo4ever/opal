@@ -14,11 +14,7 @@ tags:
 - task-114
 sources:
 - task:114
-related:
-- opal-skill-wizard
-- additive-field-extension-over-schema-replacement
-- exploration-marker-as-output-artifact-creates-circularity
-- community-skill-installation-architecture
+related: [opal-skill-wizard, additive-field-extension-over-schema-replacement, exploration-marker-as-output-artifact-creates-circularity, community-skill-installation-architecture]
 created: '2026-09-09'
 updated: '2026-09-09'
 status: draft

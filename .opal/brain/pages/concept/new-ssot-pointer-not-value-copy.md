@@ -8,9 +8,7 @@ tags:
 - opds
 sources:
 - task:098
-related:
-- dedup-pointer-over-copy
-- demote-promote-recursion-guard-timing-threshold-split
+related: [dedup-pointer-over-copy, demote-promote-recursion-guard-timing-threshold-split]
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft

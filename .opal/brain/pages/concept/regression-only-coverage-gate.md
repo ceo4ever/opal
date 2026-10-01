@@ -7,9 +7,7 @@ tags:
 - close
 sources:
 - task:077
-related:
-- exports-generation-tool-verification-division
-- code-map-write-location-decision
+related: [exports-generation-tool-verification-division, code-map-write-location-decision]
 created: '2026-08-01'
 updated: '2026-08-01'
 status: draft

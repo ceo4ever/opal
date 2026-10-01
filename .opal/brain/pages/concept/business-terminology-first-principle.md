@@ -1,19 +1,19 @@
 ---
 type: concept
 title: 기획 산출물 비즈니스 용어 우선 원칙
-tags: [citation-rules, opal-writing, opwt, brain-ingest, document-standard]
-sources: [task:024]
-related:
-- opwt-v4-output-system
-- skill-opal-pilot-write-tech
-- op-brain-ingest
-- opal-principles-constitution
-- brain-business-term-layer
+tags:
+- citation-rules
+- opal-writing
+- opwt
+- brain-ingest
+- document-standard
+sources:
+- task:024
+related: [opwt-v4-output-system, skill-opal-pilot-write-tech, op-brain-ingest, opal-principles-constitution, brain-business-term-layer]
 created: 2026-06-16
 updated: 2026-06-16
 status: active
 ---
-
 ## 개요
 
 정책서·PRD·TRD·IA·외부 API 명세서·brain 페이지 등 기획/지식 산출물의 본문은 비즈니스 용어/자연어로 서술해야 한다. 코드 변수·enum·식별자를 본문 서술의 주어로 나열하는 것은 금지이며, 코드 식별자는 괄호+근거 인용(`경로:줄번호`)으로만 병기한다.

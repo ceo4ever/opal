@@ -8,11 +8,7 @@ tags:
 - lesson
 sources:
 - task:118
-related:
-- removal-task-boundary-unification
-- marker-literal-check-meta-circular-false-positive
-- context-tag-suppresses-false-positive-without-removing-hit
-- worktree-task-root-allocator-root-split
+related: [removal-task-boundary-unification, marker-literal-check-meta-circular-false-positive, context-tag-suppresses-false-positive-without-removing-hit, worktree-task-root-allocator-root-split]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft

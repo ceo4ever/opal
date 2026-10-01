@@ -9,10 +9,7 @@ tags:
 - pattern
 sources:
 - task:085
-related:
-- code-scan-opal-home-test-isolation
-- external-tool-boundary-stub-insufficient-lesson
-- dl-contract-download-verify-target-identity
+related: [code-scan-opal-home-test-isolation, external-tool-boundary-stub-insufficient-lesson, dl-contract-download-verify-target-identity]
 created: '2026-08-07'
 updated: '2026-08-07'
 status: draft

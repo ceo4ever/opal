@@ -9,11 +9,7 @@ tags:
 sources:
 - task:019
 - task:104
-related:
-- opdd-pipeline-flow
-- op-data-dictionary-skill
-- op-data-model-skill
-- opdd-reverse-track-physical-first-order
+related: [opdd-pipeline-flow, op-data-dictionary-skill, op-data-model-skill, opdd-reverse-track-physical-first-order]
 created: 2026-06-12
 updated: '2026-08-30'
 status: active

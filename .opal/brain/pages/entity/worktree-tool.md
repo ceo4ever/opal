@@ -17,9 +17,10 @@ sources:
 - task:118
 - task:119
 - task:164
-related: [worktree-workspace-isolation-axis, worktree-slot-existence-to-occupancy-judgment, worktree-task-root-allocator-root-split, state-aware-path-resolution-unblocks-merge, switch-first-plumbing-later-verification, state-tool, git-sync-tool]
+- task:169
+related: [worktree-workspace-isolation-axis, worktree-slot-existence-to-occupancy-judgment, worktree-task-root-allocator-root-split, state-aware-path-resolution-unblocks-merge, switch-first-plumbing-later-verification, state-tool, git-sync-tool, worktree-close-brain-write-contract]
 created: '2026-08-15'
-updated: '2026-09-28'
+updated: '2026-10-01'
 status: draft
 ---
 ## 개요
@@ -36,7 +37,7 @@ status: draft
 - `.gitignore` 멱등 보장(`ensure_gitignore_entry`, `worktree_tool.py:272`), 캐시 볼륨 불일치(`diagnose_cache_volume`, `worktree_tool.py:297`), code-scan exclude 누락(`diagnose_code_scan_exclude`, `worktree_tool.py:324`), 동시 활성 슬롯 수(`diagnose_concurrent_slots`, `worktree_tool.py:343`) 4종을 비차단 경고로 진단한다.
 - `list`/`status`는 슬롯 현황을 조회 전용으로 답한다(`cmd_list`/`cmd_status`, `worktree_tool.py:630,1071`). 상태 조회는 정규 태스크 경로를 해석해 그 경로와 출처를 함께 보고한다(`worktree_tool.py:1074`).
 - 정규 태스크 경로 해석은 귀속 진행 상태에 의존한다 — 귀속이 아직 진행 중인 세 경우에는 워크트리 사본이 정규이고 허브에 같은 이름의 폴더가 동시에 있으면 자동 선택 없이 차단하며, 병합 확인 뒤 종결된 경우에만 허브의 병합 사본을 정규로 반환한다(`worktree_tool.py:1035`, `:1062-1063`). 배경은 [[state-aware-path-resolution-unblocks-merge]].
-- `finalize`는 완료 문서가 선언한 학습 후보 집합과 실제로 변경된 브레인·메모리 경로 집합을 대조해 후자가 전자의 부분집합일 때만 관측 경로를 단일 귀속 커밋으로 확정하고, 아니면 위반 경로를 동봉해 거부한다. 상태는 미병합 → 귀속 대기 → 종결로 전이하며, 종결 상태에서 다시 부르면 커밋 없이 멱등 반환한다(`worktree_tool.py:1411`, `:1426`, `:1454-1455`, `:1541`).
+- `finalize`는 완료 문서가 선언한 학습 후보 집합과 실제로 변경된 브레인·메모리 경로 집합을 대조해 후자가 전자의 부분집합일 때만 관측 경로를 단일 귀속 커밋으로 확정하고, 아니면 위반 경로를 동봉해 거부한다. **이 확정은 merge 전, 워크트리 브랜치 자신에서 일어난다** — `opal-pilot-dev` CLOSE 스텝의 "merge _전_ finalize" 순서가 원래 설계이며, merge는 이미 커밋된 지식·문서·산출물을 그대로 옮기는 단계일 뿐이다(근거: task:169 PLAN D-1·Approach, `opal/skills/opal-pilot-dev/SKILL.md` §CLOSE 5-(a)). 상태는 미병합 → 귀속 대기 → 종결로 전이하며, 종결 상태에서 다시 부르면 커밋 없이 멱등 반환한다(`worktree_tool.py:1411`, `:1426`, `:1454-1455`, `:1541`).
 - `init`은 저장소 구조를 탐지해 설정 초안을 만든다 — 자동 생성이 아니라 초안이며, 기존 파일이 있으면 강제 옵션 없이는 손대지 않는다.
 
 ## 설계 배경 (WHY)
@@ -48,13 +49,15 @@ status: draft
 - 캡슐 실체화 범위를 선언하는 설정 키는 기본이 빈 목록이고 단일 레포 구성에서만 전개된다(`worktree_tool.py:255`, `:948-952`). 값이 비어 있으면 태스크 해석 루트가 허브로 탈출하므로, 이 키가 루트 소유권 계약을 켜는 유일한 스위치다 (근거: task:119 ANALYSIS Q4) — [[switch-first-plumbing-later-verification]].
 - 메타를 태스크별 폴더로 나눈 것은 워크트리 세션에 자기 태스크 메타만 쓰기 권한으로 주기 위해서다. 평면 구조에서는 lock·임시 파일이 `.meta/` 루트에 생겨 루트 전체를 열어야 했고, 그러면 다른 태스크 메타까지 쓸 수 있었다 (근거: task:164 TASK AC-1·C-1).
 - 병합 이후에도 수명주기가 닫히도록 정규 경로 해석에 귀속 상태를 더한 것은 태스크 119의 차단급 결함 대응이다 (근거: task:119 PLAN D-1).
+- **문서상 "finalize는 merge 후 귀속 후처리를 확정한다"는 서술은 오기였다**: 모듈 @header, `cmd_finalize` docstring, README.md 3곳에 이 표현이 남아 있었으나 실제 로직(`S ⊆ D` 판정·단일 귀속 커밋)과 CLOSE 파이프라인 배선은 항상 "merge 전" 확정이었다. 워크트리 brain 쓰기 가드가 거부돼 왔던 탓에 이 순서가 실제로 작동한 적이 없어 오기가 들키지 않았을 뿐이다 — brain-tool 쓰기 루트 반전으로 이 경로가 처음 실동작하면서 세 문서를 "merge 전 확정"으로 정정했다. `S ⊆ D` 판정 로직·분기·반환값 자체는 바꾸지 않았다(근거: task:169 PLAN D-1·W-7, [[worktree-close-brain-write-contract]] 참조).
 
 ## 관계 (HOW)
 
 - 오케스트레이터 공통 후처리 스텝 4.5(TASK 완료 직후 훅)가 `create`를 호출하고, 결과를 `state-tool init --worktree`가 영속화한다 — [[state-tool]].
-- `opal-pilot-dev`(opd) CLOSE 단계가 `remove` 실행을 안내한다(pilot 10종 중 유일하게 이 도구를 언급하는 지점).
+- `opal-pilot-dev`(opd) CLOSE 단계가 `remove` 실행을 안내한다(pilot 10종 중 유일하게 이 도구를 언급하는 지점). 같은 CLOSE 단계가 merge _전_에 `finalize`를 먼저 호출한다.
 - 도구 골격(`ERROR_CODES`/`ok_response`/`err_response`/`_run_git` 리스트 인자 방식)은 [[git-sync-tool]]을 그대로 계승했다.
 - 워크스페이스 축의 설계 원칙 전반은 [[worktree-workspace-isolation-axis]] 참조.
+- `finalize`가 쓰는 brain 쓰기 경로와 CLOSE 전체 계약은 [[worktree-close-brain-write-contract]] 참조.
 
 ## 소스 커버리지
 
@@ -69,7 +72,7 @@ status: draft
 | `_meta_dir` / `_meta_path` / `_list_task_meta_dirs` | `opal/tools/worktree-tool/worktree_tool.py:939,944,948` | 태스크별 메타 폴더 경로 계산 단일 지점과 새 구조 전건 조회 |
 | `_resolve_canonical_task_path` | `opal/tools/worktree-tool/worktree_tool.py:1035` | 귀속 상태 의존 정규 경로 해석(출처 동반 반환) |
 | `ATTRIBUTION_STATE_KEY` | `opal/tools/worktree-tool/worktree_tool.py:86` | 귀속 상태 메타 키 |
-| `cmd_finalize` | `opal/tools/worktree-tool/worktree_tool.py:1411` | 귀속 확정 서브명령(종결 상태 멱등 반환 `:1426`) |
+| `cmd_finalize` | `opal/tools/worktree-tool/worktree_tool.py:1411` | 귀속 확정 서브명령(merge 전, 종결 상태 멱등 반환 `:1426`) |
 | `taskCapsuleCone` | `opal/tools/worktree-tool/worktree_tool.py:255,948-952` | 캡슐 실체화 범위 설정(단일 레포 분기 전용, 기본 빈 목록) |
 | `diagnose_cache_volume` / `diagnose_code_scan_exclude` / `diagnose_concurrent_slots` | `opal/tools/worktree-tool/worktree_tool.py:297,324,343` | 비차단 진단 3종 |
 
@@ -82,3 +85,4 @@ status: draft
 - [[switch-first-plumbing-later-verification]]
 - [[state-tool]]
 - [[git-sync-tool]]
+- [[worktree-close-brain-write-contract]]

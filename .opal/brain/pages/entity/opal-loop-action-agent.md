@@ -8,17 +8,11 @@ tags:
 - action-agent
 sources:
 - task:065
-related:
-- oppl-two-loop-orchestrator
-- oppl-executor-delegation-architecture
-- oppl-3-ssot-tool-gated-separation
-- opal-action-monitor
-- oppl-run-record-journal-dual-observability
+related: [oppl-two-loop-orchestrator, oppl-executor-delegation-architecture, oppl-3-ssot-tool-gated-separation, opal-action-monitor, oppl-run-record-journal-dual-observability]
 created: '2026-07-17'
 updated: '2026-07-17'
 status: active
 ---
-
 ## 개요
 
 oppl(opal-pilot-project-loop) Loop 2에서 태스크당 1회만 디스패치되는 일회용 루프 액션 에이전트다. 태스크 내부 파이프라인(T1 명세·설계 → T2 RED-first 시나리오 → G 명세 리뷰 게이트 → T3 구현 → T4a 테스트 → T4b 규칙검사 → T5 마무리)을 끝까지 완주한 뒤, 압축된 결과 계약 1건만 소유자(PM)에게 반환한다.

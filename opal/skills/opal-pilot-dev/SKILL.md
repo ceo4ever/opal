@@ -59,7 +59,7 @@ blocker다. 부트 캐시를 근거로 공통 문서를 직접 재Read하는 우
 **절차**:
 
 1. **TASK**: STEP 1과 동일하게 PM이 직접 작성한다.
-2. **PLAN**: PM이 `op-dev-plan/SKILL.md`를 직접 Read하고 STEP 3-1과 같은 입력·출력 계약으로 PLAN.md를 작성하되, 분석 결과를 `## Findings` H3 4소절(`직접 변경`·`회귀 확인`·`문서 갱신`·`미확인 가정`)로 PLAN 안에 함께 기록한다(형식 SSOT: `op-dev-plan/references/plan-guide.md` §2 PM 경로 Findings). 이 경로에서는 STEP 2 ANALYSIS.md를 별도로 만들지 않는다.
+2. **PLAN**: PM이 `op-dev-plan/SKILL.md`를 직접 Read하고 STEP 3-1과 같은 입력·출력 계약으로 PLAN.md를 작성하되, 분석 결과를 `## Findings` H3 4소절(`직접 변경`·`회귀 확인`·`문서 갱신`·`미확인 가정`)로 PLAN 안에 함께 기록한다(형식 SSOT: `op-dev-plan/references/plan-guide.md` §2 PM 경로 Findings). 이 경로에서는 STEP 2 ANALYSIS.md를 별도로 만들지 않는다. PLAN 작성 완료 후 `design-gate start` 호출 전에 `state-tool verify --design-gate-check`를 실행해 `deterministic_missing`을 모두 해소하고 `decision_clarity_candidates`를 검토한다. decision_clarity 자가점검은 '외부 동작·인터페이스·실패 정책·구조·저장 방식 중 하나라도 구현자에게 선택을 남기면 FAIL'(`opal-evaluator-agent/AGENT.md` Phase 1-D) 기준을 그대로 적용한다. PLAN에 새 가드·명령·상태·오류 코드 등 새 검증 대상을 추가/변경했으면 같은 회차 안에서 TEST-SCENARIO.md에도 대응 시나리오를 반영한다.
 3. **TEST-SCENARIO 작성**: STEP 3.5와 같은 절차로 `plan.test_scenario_md` 행을 mark한다.
 4. **설계 게이트**: `op-scenario-gate` 스킬을 `gate: design` 입력으로 호출한다(내부에서 `state-tool design-gate start` → evaluator `design-rubric` 1회 디스패치 → `state-tool design-gate record`를 수행). 절차·해시·오류 코드 원문 SSOT는 `opal/core/references/harness/design-gate.md`다. `verdict: pass`를 받으면 `plan.design_gate` 행이 자동으로 done 처리된다. `rewrite`면 `rewrite_target` 문서를 보완해 재호출한다. 반복 상한 도달 시 `harness/guards.md` §자동 루핑 제약 표의 설계 게이트 행대로 심각도와 무관하게 사용자 대기한다.
 5. **설계 확인**(`plan.user_confirm`): 진행 모드의 사용자 확인·자동 승인 규칙을 그대로 적용한다(agentic은 EXECUTE 진입 시 자동 승인). 확인 통과 후 Full profile의 STEP 4~6(EXECUTE·TEST·CLOSE 공통 절차)으로 진입한다.
@@ -336,7 +336,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
    - 갱신 대상이 있으면 PM이 판단하여 직접 수정하거나 적합한 워커를 디스패치해 최신화한다. 갱신 대상이 없으면 자연 스킵(no-op) — CLOSE를 중단시키지 않는다.
    - 목적: brain ingest 이전에 기획·설계 문서를 최신 상태로 만들어 ingest 품질을 보장한다.
 3. **op-brain-ingest 디스패치** (DONE.md 생성 직후 실행):
-   - `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
+   - `<프로젝트-루트>`(워크트리 태스크면 그 워크트리 자신, 허브 태스크면 허브다 — 워크트리에서도 허브 경로로 치환하지 않는다)의 `.opal/brain/` 존재 여부를 확인한다.
    - **brain이 존재하면**: op-brain-ingest 워커를 디스패치하여 태스크 산출물(DONE.md·PLAN 결정·신규 엔티티)을 brain에 누적한다.
    - **brain이 없으면**: 자연 스킵(no-op). CLOSE가 막히지 않는다.
    - op-brain-ingest 탐색 경로:
@@ -344,6 +344,7 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
      2. `~/.opal/skills/op-brain-ingest/SKILL.md`
    - 디스패치 입력: 태스크 폴더 경로
    - 워커가 `status: skipped` 또는 `status: completed` 또는 `status: completed_with_errors` 반환 — 어떤 경우도 CLOSE를 중단시키지 않는다.
+   - op-brain-ingest 워커가 반환한 `ingested_pages`의 각 항목 앞에 `.opal/brain/`를 붙여 레포 루트 상대 경로로 정규화한 뒤, DONE.md `## 회고적 학습 후보` 절과 대조하고, 절에 없는 경로가 있으면 `worktree-tool finalize` 호출 전에 그 경로를 DONE.md 선언에 추가해 선언 집합을 워커의 실제 결과와 일치시킨다.
 4. **회고(개선 루프) 하드스텝** (op-brain-ingest 직후 실행):
    - 입력: 태스크/세션 궤적 신호 — 워커 재시도·폴백, 소유자 재지시·피드백, PM Gate 반복 이슈, PLAN 재진입, 검증/재설계 루프 로그(STATE.md). ※ 산출물 재독이 아님(그건 PM Gate/QA 담당). 산출 = 프로세스·규칙 개선점.
    - 관찰→분류(로컬 PM 개선 / FW 개선)→기록: 개선 후보별로 `~/.opal/tools/improve-tool/run.sh record --scope <local|fw> --title ... --body ... --situation retrospective --source-task <NNN> --project-root <루트>` 호출.
@@ -362,6 +363,8 @@ opal-test-agent 워커 디스패치. TEST-SCENARIO.md를 실행 명세로 읽고
      - **[MUST] 자동 제거하지 않는다.** CLOSE 시점에 미머지 커밋이 남아 있는 것이 정상이다 — 커밋·머지는 사용자의 권한이며 PM이 대행하지 않는다.
      - 안내 문구: "worktree `{worktree_root}`는 **머지 대기** 상태입니다. 아래 순서로 마감하세요."
        1. 허브에서 `git merge --ff-only feat/OP-TASK-{NNN}` 또는 `git merge --no-ff feat/OP-TASK-{NNN}` (허용 merge 경로는 이 둘뿐이다)
+          - ① merge가 `.opal/brain/**` 변경을 포함하면 `~/.opal/tools/brain-tool/run.sh index --brain-path <허브 절대경로>`를 1회 실행해 `index.md`를 전체 page 목록과 재일치시킨다. 이 index 재생성은 새 지식을 쓰는 것이 아니라 이미 merge로 들어온 page들의 목록을 다시 계산하는 것일 뿐이다 — 그 결과로 허브 작업트리가 dirty해지면 사용자가 직접 커밋한다(PM이 허브 main에 자율 커밋하지 않는다).
+          - ② merge가 `.opal/brain/**`에서 git conflict marker를 남기면: (1) 충돌 파일을 열어 사람이 양쪽 내용을 판단해 하나로 합친다(frontmatter가 있으면 중복 키 없이 유효한 YAML이 되도록 정리) (2) `brain-tool validate --brain-path <허브 절대경로>`(또는 `lint --brain-path <허브 절대경로>`)로 brain 전체 정합성을 확인한다 — 두 서브커맨드 모두 위치 인자가 아니라 `--brain-path`만 받는다 (3) `index.md`가 영향받았으면 `brain-tool index`를 재실행한다 (4) 검증 통과 후 커밋해 merge를 완료한다.
        2. `~/.opal/tools/state-tool/run.sh finalize-attribution <task-path> --allocator-root <허브 절대경로>`
        3. `~/.opal/tools/state-tool/run.sh status <task-path> --set done`
        4. `~/.opal/tools/worktree-tool/run.sh remove --project-root <허브 절대경로> --task <NNN>`

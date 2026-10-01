@@ -10,11 +10,9 @@ tags:
 sources:
 - task:140
 - task:143
-related:
-- bundle-asset-path-needs-real-usage-check
-- fixture-vs-real-blind-spot-lesson
+related: [bundle-asset-path-needs-real-usage-check, fixture-vs-real-blind-spot-lesson]
 created: '2026-09-18'
-updated: '2026-09-18'
+updated: '2026-10-01'
 status: draft
 ---
 ## 개요
@@ -37,3 +35,8 @@ status: draft
 ## 영향 범위
 
 Markdown·설정 파일·로그 등 반정형 문서에서 필드를 뽑아 UI나 API로 내보내는 모든 기능.
+
+## 관련 페이지
+
+- [[bundle-asset-path-needs-real-usage-check]] — 실측으로만 잡히는 결함의 같은 유형
+- [[fixture-vs-real-blind-spot-lesson]] — 픽스처와 실물의 사각지대

@@ -9,11 +9,7 @@ tags:
 sources:
 - task:074
 - task:094
-related:
-- state-tool
-- state-tool-task-step-key-address
-- pipeline-json-spec
-- state-md-journal-redefinition
+related: [state-tool, state-tool-task-step-key-address, pipeline-json-spec, state-md-journal-redefinition]
 created: '2026-07-23'
 updated: '2026-08-16'
 status: stale

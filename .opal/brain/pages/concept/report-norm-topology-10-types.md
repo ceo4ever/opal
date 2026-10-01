@@ -10,12 +10,7 @@ tags:
 sources:
 - task:108
 - doc:opal/core/references/opal-pm.md
-related:
-- unenforceable-norm-minimal-design
-- agent-md-digest-pattern
-- lean-core-relocation-benefit-precondition
-- norm-proliferation-spiral-without-enforcement
-- template-precedence-over-prose-norms
+related: [unenforceable-norm-minimal-design, agent-md-digest-pattern, lean-core-relocation-benefit-precondition, norm-proliferation-spiral-without-enforcement, template-precedence-over-prose-norms]
 created: '2026-09-06'
 updated: '2026-09-08'
 status: draft

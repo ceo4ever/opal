@@ -16,9 +16,10 @@ sources:
 - task:122
 - task:154
 - task:166
+- skill:opal-self-pm
 related: [actor-axis-orthogonal-to-mode, self-pm-tool]
 created: '2026-09-12'
-updated: '2026-09-28'
+updated: '2026-10-01'
 status: active
 ---
 ## 개요

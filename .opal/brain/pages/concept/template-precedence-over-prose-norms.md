@@ -13,11 +13,7 @@ sources:
 - task:101
 - skill:op-brain-ingest
 - doc:opal/core/references/pm/dispatch-process.md
-related:
-- lean-core-relocation-benefit-precondition
-- agent-md-digest-pattern
-- shared-ssot-procedure-artifact-role-split
-- skill-owned-constraint-restated-in-prompt-overrides-skill
+related: [lean-core-relocation-benefit-precondition, agent-md-digest-pattern, shared-ssot-procedure-artifact-role-split, skill-owned-constraint-restated-in-prompt-overrides-skill]
 created: '2026-08-22'
 updated: '2026-08-27'
 status: draft

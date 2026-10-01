@@ -1,0 +1,194 @@
+{
+  "goal": "결정론 검사에서 걸리는 누락은 반복 상한을 소모하지 않고 PM이 미리 보완하므로, evaluator 회차는 의미 판정에만 쓰인다. PM 경로는 `design-gate start` 전에 `decision_clarity` 기준 점검과 \"새 메커니즘에 대응하는 시나리오\" 점검을 절차로 수행한다. evaluator의 rewrite 지적은 PM이 다음 회차에 무엇을 채워야 하는지 알 수 있을 만큼 구체적이다. evaluator의 model·effort는 과거 판정 기록으로 만든 평가 세트로 측정한다. 캡틴은 결함을 놓치지 않는 후보 가운데 설정을 고르고, 선택한 설정은 호출 세션과 무관하게 고정 적용된다. 판정 기준과 반복 상한은 그대로다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "AC-6",
+    "C-1",
+    "C-2",
+    "C-3",
+    "C-4",
+    "C-5"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3",
+    "H-4"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-2",
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-9",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-5",
+        "C-2",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1",
+        "H-3",
+        "H-4"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-10",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-6",
+        "C-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-11",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-12",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

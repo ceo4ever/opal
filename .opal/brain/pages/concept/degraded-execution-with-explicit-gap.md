@@ -8,10 +8,7 @@ tags:
 - task-084
 sources:
 - task:084
-related:
-- asis-analysis-five-stage-workflow
-- shard-policy-block-vs-nonblock-fallback-criterion
-- silent-loss-prevention-row-accounting-invariant
+related: [asis-analysis-five-stage-workflow, shard-policy-block-vs-nonblock-fallback-criterion, silent-loss-prevention-row-accounting-invariant]
 created: '2026-08-06'
 updated: '2026-08-06'
 status: draft

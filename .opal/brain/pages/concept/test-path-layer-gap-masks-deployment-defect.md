@@ -8,8 +8,7 @@ tags:
 - task-105
 sources:
 - task:105
-related:
-- silent-success-defect-class
+related: [silent-success-defect-class]
 created: '2026-09-03'
 updated: '2026-09-03'
 status: draft

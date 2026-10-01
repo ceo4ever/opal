@@ -8,9 +8,7 @@ tags:
 - opds
 sources:
 - task:098
-related:
-- verdict-tool-fail-safe-direction-design
-- evidence-tier-asis-tobe-jurisdiction
+related: [verdict-tool-fail-safe-direction-design, evidence-tier-asis-tobe-jurisdiction]
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft

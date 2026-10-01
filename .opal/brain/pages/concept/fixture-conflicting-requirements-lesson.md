@@ -9,9 +9,7 @@ tags:
 - task-082
 sources:
 - task:082
-related:
-- fixture-vs-real-blind-spot-lesson
-- red-test-determinism-abort-trap
+related: [fixture-vs-real-blind-spot-lesson, red-test-determinism-abort-trap]
 created: '2026-08-03'
 updated: '2026-08-03'
 status: draft

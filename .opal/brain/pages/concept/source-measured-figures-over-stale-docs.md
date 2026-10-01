@@ -9,11 +9,7 @@ tags:
 - discipline
 sources:
 - task:086
-related:
-- usage-ssot-live-help-principle
-- readme-ssot-principle
-- analysis-drift-pm-cross-verify-lesson
-- expected-total-as-reference-not-gate-criterion
+related: [usage-ssot-live-help-principle, readme-ssot-principle, analysis-drift-pm-cross-verify-lesson, expected-total-as-reference-not-gate-criterion]
 created: '2026-08-10'
 updated: '2026-08-10'
 status: draft

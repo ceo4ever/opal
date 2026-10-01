@@ -1,14 +1,22 @@
 ---
 type: entity
 title: op-data-model (MODEL 단계 스킬)
-tags: [skill, stage-skill, data-design, modeling, erd, mermaid, dbml]
-sources: [task:019]
+tags:
+- skill
+- stage-skill
+- data-design
+- modeling
+- erd
+- mermaid
+- dbml
+sources:
+- task:019
+- skill:op-data-model
 related: [skill-opal-pilot-data-design, op-data-dictionary-skill, op-data-ddl-skill, opdd-pipeline-flow]
 created: 2026-06-12
-updated: 2026-06-12
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 DB 설계 파이프라인의 MODEL 단계 스킬. `concept(개념) → logical(논리) → physical(물리)` 3모드 분리 발동으로 데이터 모델링을 수행한다. `//erm` alias의 하위호환 목적지이기도 하다.

@@ -9,10 +9,7 @@ tags:
 sources:
 - skill:op-sdd-plan
 - task:112
-related:
-- skill-opal-pilot-sdd
-- sdd-internal-stage-skill-ownership
-- op-sdd-spec
+related: [skill-opal-pilot-sdd, sdd-internal-stage-skill-ownership, op-sdd-spec]
 created: '2026-06-11'
 updated: '2026-09-10'
 status: active

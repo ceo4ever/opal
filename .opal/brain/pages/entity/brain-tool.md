@@ -4,17 +4,33 @@ title: brain-tool
 module: brain_tool
 layer: util
 domain: opal-brain
-exports: [cmd_init, cmd_add_page, cmd_index, cmd_log, cmd_search, cmd_sync_header, cmd_lint, cmd_validate, cmd_analyze, cmd_ingest_scan]
+exports:
+- cmd_init
+- cmd_add_page
+- cmd_index
+- cmd_log
+- cmd_search
+- cmd_sync_header
+- cmd_lint
+- cmd_validate
+- cmd_analyze
+- cmd_ingest_scan
 source_ref: opal/tools/brain-tool/brain_tool.py
 header_synced: 2026-06-11
-tags: [tool, knowledge]
-sources: [code:opal/tools/brain-tool/, task:015, task:016, task:035]
-related: [state-tool, opal-brain-system, brain-validate-flatness-enforcement]
+tags:
+- tool
+- knowledge
+sources:
+- code:opal/tools/brain-tool/
+- task:015
+- task:016
+- task:035
+- task:169
+related: [state-tool, opal-brain-system, brain-validate-flatness-enforcement, worktree-close-brain-write-contract]
 created: 2026-06-10
-updated: 2026-07-10
+updated: '2026-10-01'
 status: active
 ---
-
 # brain-tool
 
 ## 개요
@@ -43,8 +59,13 @@ OPAL Project Brain 지식 위키를 결정론적으로 집행하는 CLI 도구. 
 - `validate_frontmatter` 링크필드(`related`) 검사 — 요소가 위키링크 문법(`[[`/`]]`)이나 `.md` 접미사를 포함하면 `frontmatter_invalid`로 거부한다. 035 평탄성 검사가 놓친 quoted `"[[slug]]"` 사각지대를 닫는다. None·빈 리스트·정상 슬러그는 통과(기존 동작 불변). (`brain_tool.py`, 참조: [[brain-validate-flatness-enforcement]])
 - `add-page --related a,b` 플래그 신설 — `tags`/`sources`와 동일한 CSV→평탄 리스트 패턴으로 `related`를 생성한다. 손편집 유인을 줄인다.
 
+169 기능 변경(쓰기 루트 기본값 반전):
+- 회고적 학습 쓰기(`add-page`·`update-page`)의 루트 판정 함수 `require_write_root`가 `--allocator-root` 미지정 시 더 이상 워크트리 여부를 검사해 거부하지 않는다. 조회(`require_brain`)와 동일하게 호출 시점의 작업본(task_root, cwd) 자신에 기본 쓰기가 성공한다. `--allocator-root`를 명시하는 경로(다른 루트를 지정할 때 쓰는 기존 기능, `finalize_brain_root` 경유)는 그대로 유지된다(`brain_tool.py:310-334`).
+- 이전 가드(`_inside_worktree`로 워크트리 cwd의 기본 쓰기를 전면 거부)는 `worktree.md`의 task root/allocator root 계약(`.opal`을 task_root 쓰기 대상으로 규정)과 모순되는 과잉 일반화로 판단되어 제거됐다 — 유일한 호출처를 잃은 `_inside_worktree` 함수와 `WORKTREE_SEGMENT` 상수도 함께 삭제됐다(죽은 코드 금지). `.opal/MEMORY.json` 쓰기(별도 코드 경로인 `memory-tool`)는 계속 허브 명시 인자로만 수행되며 이 반전의 영향을 받지 않는다(근거: task:169 PLAN D-1·D-2, 회귀 확인). 설계 배경·CLOSE 절차와의 관계는 [[worktree-close-brain-write-contract]] 참조.
+
 ## 관련 페이지
 
 - [[state-tool]] — brain-tool이 복제한 원본 패턴
 - [[opal-brain-system]] — brain-tool이 집행하는 위키 시스템
 - [[brain-validate-flatness-enforcement]] — 035 선택 필드 평탄성 집행 설계 결정
+- [[worktree-close-brain-write-contract]] — 169 쓰기 루트 반전이 속한 CLOSE 계약

@@ -9,10 +9,7 @@ tags:
 - lesson-learned
 sources:
 - task:103
-related:
-- pm-gate-artifact-tool-enforcement
-- close-history-auto-link-enforce-conversion
-- enforcement-basis-must-be-structural-not-voluntary
+related: [pm-gate-artifact-tool-enforcement, close-history-auto-link-enforce-conversion, enforcement-basis-must-be-structural-not-voluntary]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

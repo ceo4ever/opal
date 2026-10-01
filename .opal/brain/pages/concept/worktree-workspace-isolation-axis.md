@@ -11,11 +11,7 @@ sources:
 - task:092
 - task:118
 - task:119
-related:
-- worktree-tool
-- worktree-slot-existence-to-occupancy-judgment
-- worktree-task-root-allocator-root-split
-- switch-first-plumbing-later-verification
+related: [worktree-tool, worktree-slot-existence-to-occupancy-judgment, worktree-task-root-allocator-root-split, switch-first-plumbing-later-verification]
 created: '2026-08-15'
 updated: '2026-09-12'
 status: draft

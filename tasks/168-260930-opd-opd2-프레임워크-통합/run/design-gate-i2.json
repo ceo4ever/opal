@@ -1,0 +1,42 @@
+{
+  "input_bundle_hash": "24a8a61e8064f7924a361aeb93fb6069cd8df90db3e10b3c6eff89fb49504a44",
+  "iteration": 2,
+  "verdict": "fail",
+  "rewrite_target": "plan",
+  "scores": {
+    "design": {"completeness": "FAIL", "decision_clarity": "FAIL", "executability": "PASS", "recoverability": "PASS"},
+    "scenario": {"goal": 1, "adoption": 2, "boundary": 2, "average": 1.67}
+  },
+  "design": {
+    "axes": {"completeness": "FAIL", "decision_clarity": "FAIL", "executability": "PASS", "recoverability": "PASS"},
+    "gaps": [
+      "completeness/AC-3: AC-3 says a gate row cannot be completed while the machine gate is unmet, and that --force or --auto-pass cannot bypass this. The PLAN only enforces this inside lifecycle.py, which calls `state-tool mark` after its own checks (Decisions row 3, W-4). A PM can still call `state-tool mark <task> --task-step verify.review --done` (or with --force/--auto-pass) directly and skip lifecycle.py. The PLAN has no decision or Work item that blocks direct marking of the opd2 gate rows.",
+      "completeness/AC-4: The only Work item tied to AC-4 is W-6, which is a documentation rewrite. No Work item or scenario confirms that the Stop check blocks exit and returns resume guidance, or that a `worktree-tool checkpoint` commit succeeds at a stable boundary. W-6 also keeps the checkpoint stage mapping VERIFY/REVIEW→TEST while the new pipeline.json uses the VERIFY stage, and the PLAN does not say whether this conflicts with checkpoint or guard stage checks.",
+      "completeness/scope: TASK §Affected lists install 배포 검증 as in scope. The PLAN has no Work item or verification step for install-mac.sh deployment.",
+      "decision_clarity/row mapping: The PLAN does not say which state.json row each lifecycle.py transition marks, who marks the user_confirm rows in semi-agentic and agentic modes, or who marks close.done_md through close.final.",
+      "decision_clarity/stage events: W-5 says to load the matching stage.* event on each stage entry, but does not name the event for the VERIFY stage.",
+      "recoverability(reference): H-1 fixes order as state-tool mark first, then ledger commit, but gives no recovery path for mark succeeding and the ledger write then failing."
+    ]
+  },
+  "scenario": {
+    "scores": {"goal": 1, "adoption": 2, "boundary": 2},
+    "average": 1.67,
+    "gaps": []
+  },
+  "gaps": [
+    "design.completeness: no enforcement that blocks direct state-tool mark (--force/--auto-pass) on AC-3 gate rows",
+    "design.completeness: AC-4 Stop blocking, resume guidance, and checkpoint commit success have no Work item or verification",
+    "design.completeness: install deployment verification is missing from the Work items",
+    "design.decision_clarity: which rows each lifecycle transition marks and who marks them is not decided",
+    "design.decision_clarity: the stage event for the VERIFY stage is not specified",
+    "scenario.goal: no scenario covers resume workspace-flag rejection (AC-1), Stop blocking exit (AC-4), checkpoint commit success (AC-4), or a direct state-tool mark bypass attempt (AC-3)"
+  ],
+  "advisories": [
+    {"id": "A-1", "kind": "mergeable", "targets": ["S-9", "S-3"], "basis": "S-9 has no action or environment of its own; it only reviews the dispatch records produced by S-3.", "recommendation": "Merge S-9's expected result into S-3's expected results, or make S-9 an explicit post-check step of S-3."},
+    {"id": "A-2", "kind": "misclassified", "targets": ["S-6"], "basis": "S-6 is typed check but its action starts opd2 with delivery=release and observes rejection, a behavior verification.", "recommendation": "Reclassify S-6 as a behavior scenario (integration/manual); keep the SKILL.md text read as a separate check."}
+  ],
+  "status": "completed",
+  "artifact_path": null,
+  "changed_files": [],
+  "blockers": []
+}

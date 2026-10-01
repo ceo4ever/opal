@@ -1,14 +1,19 @@
 ---
 type: concept
 title: 도구 사용법 선확인·에러 종류 진단후 폴백 규율
-tags: [design-principle, tool-usage, mams-lesson, fallback, error-handling]
-sources: [task:044]
-related: []
+tags:
+- design-principle
+- tool-usage
+- mams-lesson
+- fallback
+- error-handling
+sources:
+- task:044
+related: [tool-scan, tool-scan-thin-manifest-federation]
 created: 2026-06-26
-updated: 2026-06-26
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 도구를 처음 호출하기 전 서브명령·인자를 추측하지 말고 `tool-scan usage <도구>` 또는 도구의 `--help`(live)로 사용법을 먼저 확인한다. 실패 시에는 에러 종류를 진단한 후 폴백 여부를 결정한다 — 맹목적으로 다른 도구로 갈아타는 것은 금지다. MAMS cmux 사건(존재하지 않는 `take-screenshot` 서브명령 추측 호출 → 무분별 Playwright 폴백)의 재발 방지를 위해 AGENT.md 규율 문단으로 명문화됐다. (근거: task:044 DONE.md §1, PLAN.md §F-005 R-6·R-7)
@@ -37,3 +42,8 @@ cmux-tool은 12개 서브명령을 가지지만 AGENT.md 인지 맵에 cmux-tool
 - `opal/core/AGENT.md` — §도구·MCP 적극 활용 규칙에 사용법 선확인·에러 진단후 폴백 문단 추가
 - `opal/tools/tool-scan/manifest.json` — cmux-tool `fallback` 에러계약 필드
 - `~/.opal/AGENT.md` — install 재배포 후 실세션 발효
+
+## 관련 페이지
+
+- [[tool-scan]] — 사용법 선확인에 쓰는 도구
+- [[tool-scan-thin-manifest-federation]] — 같은 태스크(task:044)의 매니페스트 설계

@@ -11,10 +11,7 @@ tags:
 sources:
 - task:090
 - task:094
-related:
-- state-tool
-- na-status-contract-agentic-init-only
-- state-md-journal-redefinition
+related: [state-tool, na-status-contract-agentic-init-only, state-md-journal-redefinition]
 created: '2026-08-13'
 updated: '2026-08-16'
 status: active

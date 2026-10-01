@@ -9,12 +9,7 @@ tags:
 - task-075
 sources:
 - task:075
-related:
-- scenario-goal-coverage-gate-loop
-- scenario-normalized-contract-pilot-neutral
-- op-scenario-gate-skill
-- oppl-coverage-conformance-axis-split
-- 070-derivation-engine-perspective-bias-lesson
+related: [scenario-goal-coverage-gate-loop, scenario-normalized-contract-pilot-neutral, op-scenario-gate-skill, oppl-coverage-conformance-axis-split, 070-derivation-engine-perspective-bias-lesson]
 created: '2026-07-23'
 updated: '2026-07-23'
 status: draft

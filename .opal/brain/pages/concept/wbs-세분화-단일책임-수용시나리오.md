@@ -10,15 +10,11 @@ tags:
 - acceptance-scenario
 sources:
 - task:031
-related:
-- skill-opal-pilot-project-dev
-- b7-action-completion-loop
-- oppd-prd-trd-task-folder-promote
+related: [skill-opal-pilot-project-dev, b7-action-completion-loop, oppd-prd-trd-task-folder-promote]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active
 ---
-
 ## 개념 요약
 
 oppd WBS의 액션 크기 기준을 "1~3일 분량"에서 "단일 책임 + 단일 수용 시나리오로 독립 검증 가능한 단위"로 교체. BE 원자 5종, FE 3계층(T0/T1/T2), 통합 액션 타입이 함께 도입됐다.

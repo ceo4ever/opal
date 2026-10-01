@@ -9,16 +9,11 @@ tags:
 - assistant-tier
 sources:
 - task:049
-related:
-- opal-bootstrap-skip-gate
-- bootstrapper-marker-ssot-single-point
-- opal-adapter-platform-isolation
-- bootstrap-marker-skip-ladder
+related: [opal-bootstrap-skip-gate, bootstrapper-marker-ssot-single-point, opal-adapter-platform-isolation, bootstrap-marker-skip-ladder]
 created: '2026-06-30'
 updated: '2026-07-02'
 status: active
 ---
-
 ## 개요
 
 OPAL 부트스트랩은 두 단계(tier)로 분리된다. 비서(Lite) tier는 전역 마커를 통해 모든 세션에서 항상 로드되고, PM(Full) tier는 현재 작업 디렉토리에 프로젝트 초기화 신호가 존재하는 경우에만 승격 로드된다. 이 구조로 "프레임워크 사용자레벨 설치 + PM 부트스트랩은 프로젝트레벨 opt-in"이 달성된다 (task:049 DONE.md §결과 요약).

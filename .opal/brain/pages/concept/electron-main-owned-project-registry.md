@@ -7,8 +7,7 @@ tags:
 - workstudio
 sources:
 - task:128
-related:
-- workstudio-project-registry
+related: [workstudio-project-registry]
 created: '2026-09-13'
 updated: '2026-09-13'
 status: draft

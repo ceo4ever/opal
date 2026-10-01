@@ -9,9 +9,7 @@ tags:
 - task-096
 sources:
 - task:096
-related:
-- green-tests-do-not-imply-contract-conformance
-- red-test-determinism-abort-trap
+related: [green-tests-do-not-imply-contract-conformance, red-test-determinism-abort-trap]
 created: '2026-08-20'
 updated: '2026-08-20'
 status: draft

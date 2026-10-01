@@ -2,21 +2,18 @@
 type: concept
 title: 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지)
 tags:
-  - model
-  - mapping
-  - setting
-  - override
-  - bootstrap
+- model
+- mapping
+- setting
+- override
+- bootstrap
 sources:
-  - task:046
-related:
-  - model-mapping-latest-tracking
-  - opal-bootstrap-skip-gate
-created: "2026-06-28"
-updated: "2026-06-28"
+- task:046
+related: [model-mapping-latest-tracking, opal-bootstrap-skip-gate]
+created: '2026-06-28'
+updated: '2026-06-28'
 status: active
 ---
-
 ## 개요
 
 OPAL의 레벨↔모델 매핑(light/standard/advanced ↔ 플랫폼 실모델)은 `setting.json`의 `models` 블록이 SSOT다. 전역(`~/.opal/setting.json`)과 프로젝트(`{프로젝트}/.opal/setting.local.json`) 두 레이어를 **부트스트랩 step 0**에서 셀 단위 deep merge하여 effective setting을 결정한다.

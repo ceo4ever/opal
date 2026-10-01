@@ -9,8 +9,7 @@ tags:
 - decision
 sources:
 - task:085
-related:
-- dl-contract-download-verify-target-identity
+related: [dl-contract-download-verify-target-identity]
 created: '2026-08-07'
 updated: '2026-08-07'
 status: draft

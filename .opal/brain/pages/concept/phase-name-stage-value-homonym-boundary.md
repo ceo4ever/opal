@@ -9,10 +9,7 @@ tags:
 - task-090
 sources:
 - task:090
-related:
-- opsdd-pipeline-ssot
-- pipeline-json-spec
-- pipeline-json-full-adoption-migration
+related: [opsdd-pipeline-ssot, pipeline-json-spec, pipeline-json-full-adoption-migration]
 created: '2026-08-13'
 updated: '2026-08-13'
 status: draft

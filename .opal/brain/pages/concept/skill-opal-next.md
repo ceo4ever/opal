@@ -10,11 +10,7 @@ tags:
 sources:
 - skill:opal-next
 - task:111
-related:
-- skill-opal-start
-- skill-opal-onboarding
-- skill-opal-project-init
-- skill-registry-validate-extension
+related: [skill-opal-start, skill-opal-onboarding, skill-opal-project-init, skill-registry-validate-extension]
 created: '2026-06-21'
 updated: '2026-09-09'
 status: stale

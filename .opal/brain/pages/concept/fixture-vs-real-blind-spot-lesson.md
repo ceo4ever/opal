@@ -11,10 +11,7 @@ sources:
 - task:039
 - task:044
 - task:140
-related:
-- memory-tool
-- agentic-output-direct-verification-lesson
-- canonical-identity-from-unique-key-not-shared-attribute
+related: [memory-tool, agentic-output-direct-verification-lesson, canonical-identity-from-unique-key-not-shared-attribute]
 created: '2026-06-26'
 updated: '2026-09-18'
 status: active

@@ -9,10 +9,7 @@ tags:
 - task-104
 sources:
 - task:104
-related:
-- dict-선행-model-ssot
-- opdd-pipeline-flow
-- skill-opal-pilot-data-design
+related: [dict-선행-model-ssot, opdd-pipeline-flow, skill-opal-pilot-data-design]
 created: '2026-08-30'
 updated: '2026-08-30'
 status: draft

@@ -9,9 +9,7 @@ tags:
 - lesson
 sources:
 - task:122
-related:
-- count-notation-scattered-across-docs
-- fork-agent-inherits-pm-role
+related: [count-notation-scattered-across-docs, fork-agent-inherits-pm-role]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: active

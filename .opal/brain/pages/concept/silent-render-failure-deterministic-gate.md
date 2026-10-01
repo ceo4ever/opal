@@ -9,10 +9,7 @@ tags:
 - silent-failure
 sources:
 - task:086
-related:
-- silent-success-defect-class
-- vertical-writing-rotation-glyph-flip
-- expected-total-as-reference-not-gate-criterion
+related: [silent-success-defect-class, vertical-writing-rotation-glyph-flip, expected-total-as-reference-not-gate-criterion]
 created: '2026-08-10'
 updated: '2026-08-10'
 status: draft
