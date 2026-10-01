@@ -2,7 +2,7 @@
 
 ## 결과
 
-검증 단계(설계 게이트·TEST·컨벤션 검사)의 시간을 쓰는 곳을 모델 판단이 필요한 부분과 결정론으로 고정할 수 있는 부분으로 나눴다. 시나리오 18건 중 17건이 통과했고 1건(S-13)은 실패로 남았다.
+검증 단계(설계 게이트·TEST·컨벤션 검사)의 시간을 쓰는 곳을 모델 판단이 필요한 부분과 결정론으로 고정할 수 있는 부분으로 나눴다. 시나리오 18건 중 17건이 통과했고 1건(S-13)은 실패로 남았다. CLOSE 이후 추가작업 ADD-1~5(`ADD_DONE-1~4.md`)로 S-13 원인 분리, 도구 누락 방지, 평가자 세트 정비·재측정, evaluator effort `low` 변경을 수행했다.
 
 **달라진 것**
 
@@ -71,6 +71,7 @@
 .opal/brain/pages/entity/op-scenario-gate-skill.md
 .opal/brain/pages/concept/design-gate-gaps-resolution-roundtrip.md
 .opal/brain/pages/entity/state-tool.md
+.opal/brain/pages/concept/evaluator-eval-set-label-fixture-measurement-lesson.md (ADD-3·4·5)
 
 ## 참고
 
@@ -80,3 +81,5 @@
 2. 병렬 판정의 시간 이득 확보 방안(설계 판정 호출이 느린 원인 분석, 설계 축을 더 나누는 안, 또는 기본값을 `scope: all`로 되돌리는 안).
 3. `scenario-mark` 파일 잠금 도입과 `auto_seconds` 합집합화(다중 `opal-test-agent` 병렬의 전제).
 4. 보안 Low 권고: 파일명 앞 `--` 처리, `.opal/code-scan.json` 필드 타입 검증.
+5. (ADD-3·4에서 추가) 170 평가 세트 fixture 결손 보정 — `tasks/170-…/run/eval-set/pass-161·pass-163`이 참조하는 `REQUEST.md`를 세트에 포함하거나 `test_design_gate_parallel.py --make-fixture`가 참조 입력 파일을 함께 복사하도록 확장. clean 세트의 남은 지적(EVAL-RESULT-4 §6·EVAL-RESULT-5 §5, B2·B3 주제)의 재판정은 미수행.
+6. (ADD-5에서 추가) 172 머지 후 install 필요 — 설치본 `~/.opal`은 2026-10-01 21:04 허브 main 기준 재설치 상태라 evaluator `effort: low` 선언이 미반영.
