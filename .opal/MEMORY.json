@@ -173,6 +173,13 @@
   ],
   "history": [
     {
+      "title": "170 설계 게이트 회차 단축",
+      "date": "2026-10-01",
+      "stage": "완료",
+      "path": "tasks/170-261001-opds-설계-게이트-회차-단축/",
+      "result": "설계 게이트 결정론 사전점검(verify --design-gate-check)·decision_clarity 자가점검·previous/resolved_gaps 왕복 도입. evaluator는 측정 결과 baseline 유지. TEST 13/13(S-6 PM 직접 예외), main 머지 완료."
+    },
+    {
       "title": "168 opd2 프레임워크 통합",
       "date": "2026-10-01",
       "stage": "완료",
@@ -199,13 +206,6 @@
       "stage": "완료",
       "path": "tasks/164-260928-opds-워크트리-메타-태스크폴더-권한-분리/",
       "result": "registry 메타를 .meta/task_{NNN}/meta.json 태스크 폴더로 분리하고 Codex 세션에 자기 메타 폴더만 --add-dir 부여, 런처 기동 전 점검(원인 코드 4종·git 쓰기 경고) 추가. TEST 12/12 PASS, 배포본 실측 재확인"
-    },
-    {
-      "title": "162 TEST 단계 소요시간 단축",
-      "date": "2026-09-28",
-      "stage": "완료",
-      "path": "tasks/162-260927-opd-TEST-단계-소요시간-단축/",
-      "result": "opd/opds TEST에 사람 조치 선요청·자동 실행 병행·증거 재사용·최종 Gate 주기와 계측을 도입하고 병행 계측 유실을 잠금으로 수정함. 시나리오 10/10 통과, main 머지 완료."
     }
   ]
 }
