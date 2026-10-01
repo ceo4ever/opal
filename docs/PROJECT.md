@@ -79,7 +79,7 @@
 >
 > `opal-pilot-dev2`(opd2)는 위 actor 축 대상이 아니다 — actor 축을 이식하지 않고 자체 Coordinator/Builder/Verifier/Reviewer 게이트 엔진으로 구현·검증·리뷰를 수행한다.
 >
-> **PM 설계 경로 (Task 157)**: `coordinator` 신규 태스크(opd·opds 공통, `pipeline-pm.json` 행)는 EXECUTE 진입 전 TASK 작성·TASK 확인·PLAN 작성(`## Findings` 포함)·TEST-SCENARIO 작성·설계 게이트·설계 확인 6행을 거친다. 설계 게이트는 `stage.design` 이벤트에서 결정론 검사와 독립 `opal-evaluator-agent`(`design-rubric` phase) 1회 판정을 함께 요구하며 `plan.design_gate` 행이 EXECUTE 진입을 구조적으로 차단한다. 저장 행으로 재개하는 기존 `coordinator` 태스크는 이 경로가 아니라 기존 방식을 그대로 쓴다. 원문 SSOT는 `opal/core/references/harness/design-gate.md`.
+> **PM 설계 경로 (Task 157)**: `coordinator` 신규 태스크(opd·opds 공통, `pipeline-pm.json` 행)는 EXECUTE 진입 전 TASK 작성·TASK 확인·PLAN 작성(`## Findings` 포함)·TEST-SCENARIO 작성·설계 게이트·설계 확인 6행을 거친다. 설계 게이트는 `stage.design` 이벤트에서 결정론 검사와 독립 `opal-evaluator-agent`(`design-rubric` phase)의 설계 판정·시나리오 판정 병렬 두 호출과 `combine`으로 판정하는 검사를 함께 요구하며 `plan.design_gate` 행이 EXECUTE 진입을 구조적으로 차단한다. 저장 행으로 재개하는 기존 `coordinator` 태스크는 이 경로가 아니라 기존 방식을 그대로 쓴다. 원문 SSOT는 `opal/core/references/harness/design-gate.md`.
 >
 > **신규 태스크 기본 실행 (Task 156)**: `opd`·`opds`·`oppd`·`oppl`·`oppb` 신규 태스크는 플래그 없이 agentic·worktree로 시작한다. 그 외 Pilot은 semi-agentic·허브다. 세 축(mode·workspace·actor)은 `state-tool resolve-start`가 원문 플래그로 판정하고, 재개는 저장값을 상속한다. worktree 생성 실패 시 허브로 폴백하지 않는다. 원문은 `harness/modes.md`·`harness/worktree.md`·`harness/actor.md`.
 
@@ -143,6 +143,7 @@
 | `op-gc-convention` | - | 단계 스킬 | CHECK 단계 컨벤션 검사 — `docs/CONVENTIONS.md` 우선, 부재 시 관측 기반 advisory 수행(생략 아님). 단독 호출 가능 |
 | `op-gc-report` | - | 단계 스킬 | REPORT 단계 결과 정규화·릴리스 판정 — 중복 병합·baseline delta·차단 계산·문서 업데이트 트리거 |
 | `opal-security-checker` | - | 서브에이전트 (thin role) | `op-gc-security`를 독립 컨텍스트에서 실행하는 read-only role. 검사 기준 미보유 |
+| `convention-precheck` | - | 도구 | 컨벤션 검사 전 기계 규칙 4종·변경 구간 산출(`scan`)과 모델 finding 결합(`merge`) CLI. `op-gc-convention`이 `base_ref`가 있을 때 호출 |
 | `opal-convention-checker` | - | 서브에이전트 (thin role) | `op-gc-convention`을 독립 컨텍스트에서 실행하는 read-only role. 검사 기준 미보유 |
 
 > finding schema·판정(PASS/PASS_WITH_ADVISORIES/FAIL/INCOMPLETE)·fingerprint·baseline delta의 SSOT는 `opal/core/references/harness/gc-finding-schema.md`다. 세 스킬과 두 role은 이 문서를 참조하고 필드·판정표를 복제하지 않는다.

@@ -23,6 +23,7 @@ OPAL이 배포하는 도구 전수 목록이다. 이 표는 **어떤 도구가 �
 | `brain-tool` | `.opal/brain/` 지식 위키의 인덱스·log·링크 무결성·frontmatter 결정론 집행 | `~/.opal/tools/brain-tool/run.sh` | `opal/tools/brain-tool/README.md` |
 | `cmux-tool` | cmux browser 명령을 캡슐화한 자동화 래퍼(단일 진입점 서브명령 디스패처) | `~/.opal/tools/cmux-tool/run.sh` | `opal/tools/cmux-tool/README.md` |
 | `code-scan` | 코드 파일의 `@header` 메타블록 스캔·조회·검증·기록 | `~/.opal/tools/code-scan/run.sh` | `opal/tools/code-scan/README.md` |
+| `convention-precheck` | 컨벤션 검사 전 기계 규칙 4종·변경 구간을 결정론으로 산출하고 모델 검사 결과와 결합 | `~/.opal/tools/convention-precheck/run.sh` | `opal/tools/convention-precheck/README.md` |
 | `date` | KST(Asia/Seoul) 기준 시점 문자열을 평문 한 줄로 출력하는 공용 시점 취득 창구 | `node ~/.opal/tools/date/date.js` | `opal/tools/date/README.md` |
 | `doctor` | OPAL 환경 상태 진단(Dependencies·OPAL Paths·MCP Registration·Bootstrappers) | `~/.opal/tools/doctor/run.sh` | `opal/tools/doctor/README.md` |
 | `ego-browser-tool` | Ego Lite 설치 상태 조회·검증 설치·실제 브라우저 텍스트 assertion을 JSON 계약으로 제공 | `~/.opal/tools/ego-browser-tool/run.sh` | `opal/tools/ego-browser-tool/README.md` |

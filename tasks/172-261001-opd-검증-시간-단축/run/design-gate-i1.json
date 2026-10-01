@@ -1,0 +1,29 @@
+{
+ "input_bundle_hash": "c19eae7054596d4c679473ee8f224ab84883d29798483c320eed8c2fee44f4e4",
+ "iteration": 1,
+ "design": {
+  "axes": {
+   "completeness": "FAIL",
+   "decision_clarity": "FAIL",
+   "executability": "FAIL",
+   "recoverability": "PASS"
+  },
+  "gaps": [
+   "completeness-1: PLAN.md:49-52 (## Findings > 문서 갱신) — 단일 디스패치를 서술하는 opal-pilot-dev/SKILL.md:64, README.md:33, docs/PROJECT.md:82 가 Findings·Work item에 없음",
+   "decision_clarity-1: PLAN.md:66 (D-1) — 빈 gaps에서 멈출 때·파일 누락 시 previous_gaps_iteration 값 미정의",
+   "executability-1: PLAN.md:78,95 (D-13/W-10) 및 TEST-SCENARIO S-13 — 헤드리스 --agent는 설치본을 쓰므로 W-11 배포 전 신규 정의·스킬·도구를 측정에 공급하는 경로 미정"
+  ]
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "verdict": "fail",
+ "rewrite_target": "plan",
+ "advisories": []
+}

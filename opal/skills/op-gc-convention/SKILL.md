@@ -24,6 +24,7 @@ finding 필드·판정·legacy adapter·fingerprint는 `opal/core/references/har
 | `element` | X | 산출물 파일명 suffix. 병렬 호출 시 파일명 충돌을 막는다 |
 | `baseline` | X | 직전 실행의 `gc-report.json` 경로 또는 `none` |
 | `project_documents` | X | 호출자가 선별해 주입한 기준 문서 경로 목록 |
+| `base_ref` | X | 변경 구간 검사용 기준 브랜치·ref. 있으면 아래 "`base_ref`가 있을 때" 분기를 따른다. 없으면 기존 흐름을 유지한다 |
 
 ## 기준 선택 순서
 
@@ -46,6 +47,17 @@ finding 필드·판정·legacy adapter·fingerprint는 `opal/core/references/har
 4. **파일 순회** — 각 파일을 Read하고 로드한 기준을 적용해 finding을 생성한다.
 5. **산출** — 같은 데이터에서 Markdown 보고서와 finding JSON을 함께 만든다.
    보고서 골격은 `references/report-template.md`, 작성 예시는 `references/sample-report.md`를 따른다.
+
+### `base_ref`가 있을 때
+
+3~4단계를 아래로 대체한다. 1·2·5단계와 출력은 같다. `base_ref`가 없으면 위 1~5단계를 그대로 수행한다.
+
+1. **사전 검사** — `~/.opal/tools/convention-precheck/run.sh scan --project-root {project_root} --base-ref {base_ref} --output-dir {output_dir} --timestamp {timestamp} --target-files {target_files 쉼표 목록}`을 실행한다.
+   산출물은 `gc-findings-convention-precheck-{timestamp}.json`(기계 규칙 finding)과 `convention-review-input-{timestamp}.json`(검사 입력)이다. 호출 형식·산출 필드는 `opal/tools/convention-precheck/README.md`가 소유한다.
+2. **변경 구간 모델 검사** — 검사 입력 JSON의 `files[]`만 순회한다. `whole_file`이 `false`이면 `ranges`의 줄만 Read(offset/limit)하고 전체 파일을 읽지 않는다. `whole_file`이 `true`이면 전체를 읽는다.
+   `mechanical_rule_ids`에 있는 규칙은 판정하지 않는다. 결과는 모델 finding JSON으로 쓴다(검사 입력에 없는 파일·구간의 finding은 만들지 않는다).
+3. **결합** — `~/.opal/tools/convention-precheck/run.sh merge --precheck <사전 검사 JSON> --review-input <검사 입력 JSON> --model-findings <모델 finding JSON|none> --output {output_dir}/gc-findings-convention-{timestamp}[-{element}].json`으로 최종 JSON을 만든다.
+   Markdown 보고서는 이 최종 JSON에서 작성한다.
 
 ## 출력
 
@@ -71,6 +83,7 @@ finding 필드·판정·legacy adapter·fingerprint는 `opal/core/references/har
 
 1. **read-only** — 검사 대상 소스 파일을 수정하지 않는다. `changed_files`에는 이 실행이 만든 산출물만 넣는다.
 2. **대상 고정** — 입력 `target_files`를 그대로 쓰고 git 상태로 재선별하지 않는다.
+   `target_files` 중 기준 커밋 대비 변경이 없는 파일은 `checked_files`에 포함하고 검사 입력에서 건너뛴다.
    `checked_files`가 `target_files`와 다르면 `status: partial`로 낮추고 사유를 `missing_capabilities`에 적는다.
 3. **기준 문서 부재는 중단 사유가 아니다** — `docs/CONVENTIONS.md`가 없으면 검사를 생략하지 않고
    실행 설정·인접 코드에서 관측한 규칙으로 수행한다. 이때 모든 finding의 `disposition`은 `advisory`,

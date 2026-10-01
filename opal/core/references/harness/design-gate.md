@@ -17,8 +17,9 @@ PM 경로 태스크에만 적용한다. PM 경로 판정은 `state.json` `rows`�
 2. `TEST-SCENARIO.md`를 작성한다.
 3. `op-scenario-gate`를 `gate: design` 입력으로 호출한다. 내부에서 다음 순서로 진행한다.
    1. `state-tool design-gate start <task> --iteration N`
-   2. evaluator `design-rubric` phase를 1회 디스패치 — 입력에 `start` 응답의 `bundle_hash`를 `input_bundle_hash`로 함께 전달한다.
-   3. `state-tool design-gate record <task> --iteration N --verdict <verdict> --evaluator-result <json> [--rewrite-target ...] [--advisory-responses <json>]` — evaluator 결과 JSON 최상위는 전달받은 `input_bundle_hash`와 `iteration`을 그대로 반환해야 한다(ADD-1, verdict pass|rewrite 전용, input_error 제외). evaluator 결과의 `advisories[]`가 1건 이상이고 이번 회차가 refinement가 아니면 `--verdict pass` 기록에 `--advisory-responses`(PM이 쓴 `[{id, response: apply|retain, reason}]`, 파일은 `run/design-gate-i<N>-responses.json`)가 필요하다.
+   2. evaluator `design-rubric` phase를 `scope: design`·`scope: scenario` 두 호출로 한 메시지에서 동시에 디스패치 — 두 호출 모두 입력에 `start` 응답의 `bundle_hash`를 `input_bundle_hash`로, 같은 `iteration`·`refinement`를 전달하고, `previous_gaps`는 `start` 응답의 `previous_gaps_by_scope[scope]`가 비어 있지 않을 때만 보낸다. 두 부분 결과는 `run/design-gate-i<N>-design.json`·`run/design-gate-i<N>-scenario.json`에 저장한다.
+   3. `state-tool design-gate combine <task> --iteration N --design-result <json> --scenario-result <json> --output run/design-gate-i<N>.json` — 두 부분 결과를 단일 `design-rubric` 결과 형식 파일로 결합하고 verdict·rewrite_target을 계산한다(`state.json` 불변). 한 호출이라도 blocked·형식 불일치이거나 `combine`이 `design_gate_partial_invalid`·`design_gate_result_stale`을 반환하면 `record --verdict input_error`로 기록한다.
+   4. `state-tool design-gate record <task> --iteration N --verdict <verdict> --evaluator-result <json> [--rewrite-target ...] [--advisory-responses <json>]` — 결합 결과 JSON 최상위는 전달받은 `input_bundle_hash`와 `iteration`을 그대로 가져야 한다(ADD-1, verdict pass|rewrite 전용, input_error 제외). evaluator 결과의 `advisories[]`가 1건 이상이고 이번 회차가 refinement가 아니면 `--verdict pass` 기록에 `--advisory-responses`(PM이 쓴 `[{id, response: apply|retain, reason}]`, 파일은 `run/design-gate-i<N>-responses.json`)가 필요하다.
 4. `record`가 `pass`를 반환하면 설계 확인(`plan.user_confirm`)을 진행하고 EXECUTE로 넘어간다. 응답에 `apply`가 1건 이상이면 도구가 이를 history `verdict: rewrite`·`reason: advisory_apply`로 자동 변환해 기록하므로(`--rewrite-target` 필수), 이 경우 4가 아니라 아래 §advisory 반영과 refinement를 따른다.
 5. `record`가 `pass`가 아니고 `reason: advisory_apply`가 아니면 `rewrite-target` 문서를 고쳐 다시 1부터 반복한다. `reason: advisory_apply`면 apply한 advisory 전부를 `rewrite_target` 문서에 한 번에 반영한 뒤 다음 `start`를 호출한다 — 그 `start`가 refinement 회차(`refinement: true`)다. 대상 문서가 바뀌지 않았으면 기존 `rewrite_target_unchanged`로 거부된다.
 
@@ -28,6 +29,8 @@ PM 경로 태스크에만 적용한다. PM 경로 판정은 `state.json` `rows`�
 
 - 현재 문서 묶음 hash가 열린 시도의 `bundle_hash`와 **같으면** `design_gate_attempt_open`으로 거부한다(먼저 `record` 필요).
 - 현재 문서 묶음 hash가 열린 시도의 `bundle_hash`와 **다르면**(PM이 record 전에 문서를 다시 고친 경우) 그 열린 시도를 history에 `verdict: superseded`로 닫아 회차를 소비하고, `gate.resolved`(`summary`에 superseded 명시, `data.verdict: rejected`)를 남긴 뒤 새 `start` 절차를 계속 진행한다.
+
+`combine`도 열린 시도(`status=evaluating`)가 있고 `--iteration`이 그 시도 번호와 같을 때만 동작한다. 아니면 `design_gate_iteration_invalid`로 거부하며, 부분 결과의 `input_bundle_hash`·`iteration`이 열린 시도와 다르면 `design_gate_result_stale`로 거부한다. `combine`은 `state.json`을 쓰지 않으므로 거부·성공 모두 열린 시도와 회차에 영향이 없다.
 
 ## run-log 계약
 
@@ -124,7 +127,7 @@ PM 경로 설계 구간(`plan.plan_md`~`plan.user_confirm`)은 agentic 대행 �
 
 ## 실패 코드
 
-아래 17종은 `DESIGN_GATE_ERROR_CODES`(ERROR_CODES와 물리 분리된 별도 테이블) 소속이다. `design_gate_iteration_invalid`는 `--iteration N`이 `iteration+1`이 아닐 때와, 열린 시도 없이 `record`를 호출했을 때(먼저 `start` 필요) 두 경우 모두에 쓴다.
+아래 18종은 `DESIGN_GATE_ERROR_CODES`(ERROR_CODES와 물리 분리된 별도 테이블) 소속이다. `design_gate_iteration_invalid`는 `--iteration N`이 `iteration+1`이 아닐 때와, 열린 시도 없이(또는 번호가 다른 열린 시도로) `record`·`combine`을 호출했을 때(먼저 `start` 필요) 두 경우 모두에 쓴다.
 
 | 코드 | 의미 |
 |---|---|
@@ -133,13 +136,14 @@ PM 경로 설계 구간(`plan.plan_md`~`plan.user_confirm`)은 agentic 대행 �
 | `design_gate_attempt_open` | `status=evaluating`인 채 열린 시도가 있고 현재 문서 묶음이 그 시도와 같은 상태에서 새 `start` 호출(먼저 `record` 필요) |
 | `design_gate_retry_limit` | 반복 상한 도달(결정론 실패 포함), `reset` 전에는 `start` 불가 |
 | `task_reconfirm_required` | TASK 요구 hash가 `task_confirm_req_hash`와 불일치 |
-| `design_gate_iteration_invalid` | `--iteration N`이 `iteration+1`이 아니거나, 열린 시도 없이 `record` 호출 |
+| `design_gate_iteration_invalid` | `--iteration N`이 `iteration+1`이 아니거나, 열린 시도 없이(또는 번호가 다른 열린 시도로) `record`·`combine` 호출 |
 | `rewrite_target_unchanged` | 직전 rewrite 대상 문서(both는 둘 중 하나)의 hash가 직전 시도와 동일 |
 | `design_gate_deterministic_fail` | 결정론 검사(①~⑦) 실패 |
 | `design_gate_input_missing` | 대상 문서(TASK/PLAN/TEST-SCENARIO) 부재 |
 | `design_gate_input_changed` | `record` 시점 현재 묶음 hash가 `current_attempt.bundle_hash`와 불일치 |
-| `design_gate_result_stale` | evaluator 결과 JSON 최상위 `input_bundle_hash`·`iteration`이 현재 열린 시도와 불일치 또는 부재 (pass·rewrite에만 적용, ADD-1) |
+| `design_gate_result_stale` | evaluator 결과 JSON 최상위 `input_bundle_hash`·`iteration`이 현재 열린 시도와 불일치 또는 부재 (`record`는 pass·rewrite에만 적용, ADD-1. `combine`은 두 부분 결과 모두에 적용) |
 | `design_gate_result_invalid` | evaluator 결과 JSON에 필수 축 누락 또는 rewrite인데 `--rewrite-target` 누락 (pass·rewrite에만 적용) |
+| `design_gate_partial_invalid` | `combine` 부분 결과의 `scope`·축·점수·`resolved_gaps` 형식 위반, 또는 `resolved_gaps` id 집합이 해당 scope의 이전 지적(`previous_gaps_by_scope`)과 불일치(`combine` 소속, `detail` 동봉) |
 | `design_gate_verdict_mismatch` | `--verdict pass`인데 설계 4축·시나리오 기준 미충족 |
 | `design_gate_not_passed` | `status≠pass`인 상태에서 `plan.design_gate`를 done 처리 시도 |
 | `design_bundle_mismatch` | 현재 묶음 hash가 `passed_bundle_hash`/`approved_bundle_hash`와 불일치 |

@@ -198,12 +198,13 @@ builder를 쓰지 않는다. `<run_root>/acceptance.json`을 읽어 §2가 그�
 - `design_gate_retry_limit`, `task_reconfirm_required`: 사용자에게 에스컬레이션한다.
 - 그 외 입력 오류: 중단한다.
 
-start 응답의 `refinement`(bool)를 그대로 보관한다 — ②의 evaluator 입력으로 넘긴다.
+start 응답의 `bundle_hash`·`refinement`·`previous_gaps_by_scope`를 그대로 보관한다 — ②의 evaluator 입력으로 넘긴다. 이전 지적의 조회·id 계산은 `start`가 소유한다(`previous_gaps`·`previous_gaps_by_scope`·`previous_gaps_iteration`).
 
-② `worker.dispatch`로 `opal-evaluator-agent`를 로드·검증한 뒤 다음 입력으로 1회 디스패치한다.
+② `worker.dispatch`로 `opal-evaluator-agent`를 로드·검증한 뒤, `scope: design`과 `scope: scenario` 두 호출을 **한 메시지에서 동시에** 디스패치한다. 두 호출은 `iteration`·`input_bundle_hash`·`refinement`가 같고 `scope`와 `previous_gaps`만 다르다.
 
 ```yaml
 phase: design-rubric
+scope: <design | scenario>
 task_folder: <task_folder>
 task_md: <task_folder>/TASK.md
 plan_md: <task_folder>/PLAN.md
@@ -211,26 +212,22 @@ scenario_source: <producer_artifact 또는 TEST-SCENARIO.md>
 iteration: <N>
 input_bundle_hash: <①start 응답의 bundle_hash>
 refinement: <①start 응답의 refinement>
-previous_gaps: <조회 규칙상 존재할 때만 포함 — 아래 참조>
+previous_gaps: <①start 응답의 previous_gaps_by_scope[scope]. 비어 있지 않을 때만 포함>
 ```
 
-`previous_gaps` 조회 규칙: `state.json`의 `design_gate.history`를 최신부터 역순 순회해 `verdict`가
-`deterministic_fail`·`input_error`·`superseded`가 아닌 **가장 최근** 회차를 찾고, 그 회차의
-`run/design-gate-i{k}.json`에서 design+scenario gaps를 합쳐 가져온다. 그 회차의 파일이 없어도 더
-이전 회차를 계속 본다. **그 회차의 gaps 배열이 비어 있으면 순회를 멈추고 생략한다** — 더 이전
-회차로 거슬러 올라가지 않는다. 끝까지 없으면 생략한다.
+③ 두 호출의 반환 JSON을 각각 `<task_folder>/run/design-gate-i<N>-design.json`·`<task_folder>/run/design-gate-i<N>-scenario.json`에 저장한다. 한 호출이라도 `status: blocked`이거나 결과가 계약 형식의 JSON이 아니면 ④를 건너뛰고 `--verdict input_error`로 `record`한다.
 
-gaps 항목 id는 "문자열에서 첫 번째 `: ` 앞부분 전체. `: `가 없으면 전체 문자열이 id다"로 정의한다
-(신규·레거시 포맷 모두에 적용되는 단일 규칙 — `opal-evaluator-agent/AGENT.md`의 정의와 바이트
-동일, 두 곳을 따로 유지하지 않고 그대로 복사해 둔다).
+④ 결합한다. 결합·판정 계산·`resolved_gaps` 완전성 검사는 도구가 소유하므로 PM은 산문으로 다시 검증하지 않는다.
 
-`previous_gaps`를 보냈다면, ③의 stale 확인에 앞서 응답 `resolved_gaps`의 완전성을 검증한다:
-`resolved_gaps[].id` 집합이 보낸 `previous_gaps` 각 항목의 id(위 id 정의 적용) 집합과 정확히
-같아야 한다. 다르면(누락 또는 초과) `--verdict input_error`로 기록한다.
+```bash
+~/.opal/tools/state-tool/run.sh design-gate combine <task_folder> --iteration <N> --design-result <task_folder>/run/design-gate-i<N>-design.json --scenario-result <task_folder>/run/design-gate-i<N>-scenario.json --output <task_folder>/run/design-gate-i<N>.json
+```
 
-③ evaluator 반환 JSON을 `<task_folder>/run/design-gate-i<N>.json`에 저장하기 전에, 그 JSON 최상위 `input_bundle_hash`·`iteration`이 ②에서 전달한 값과 같은지 확인한다. 다르거나 없으면(evaluator가 값을 누락·오기했다는 뜻이므로) `--verdict input_error`로 기록한다(`state-tool`이 이 stale 결과를 `design_gate_result_stale`로 다시 거부하지 않도록 사전에 걸러낸다). 그 외 인자 매핑: evaluator `verdict: pass` → `--verdict pass`, `verdict: fail` → `--verdict rewrite --rewrite-target <evaluator rewrite_target>`, evaluator `status: blocked` 또는 결과 JSON이 계약 형식이 아니면 `--verdict input_error`로 기록한다.
+`combine`이 `design_gate_partial_invalid` 또는 `design_gate_result_stale`을 반환하면 `--verdict input_error`로 `record`한다(`input_error`는 결과 파일을 읽지 않지만 `--evaluator-result` 인자는 필수이므로 `run/design-gate-i<N>.json` 경로를 그대로 넘긴다). 그 외 오류(`design_gate_iteration_invalid` 등)는 중단한다.
 
-evaluator 결과의 `advisories[]`가 1건 이상이고 refinement 회차가 아니면 pass 기록 전에 응답을
+⑤ 기록한다. `combine` 성공 시 출력 파일의 `verdict`·`rewrite_target`을 인자로 옮긴다: `verdict: pass` → `--verdict pass`, `verdict: fail` → `--verdict rewrite --rewrite-target <출력 파일의 rewrite_target>`.
+
+결합 결과의 `advisories[]`가 1건 이상이고 refinement 회차가 아니면 pass 기록 전에 응답을
 요구한다. PM은 `<task_folder>/run/design-gate-i<N>-responses.json`에 `[{id, response: apply|retain, reason}]`를
 써서 `--advisory-responses`로 넘긴다.
 
@@ -242,7 +239,7 @@ evaluator 결과의 `advisories[]`가 1건 이상이고 refinement 회차가 아
 `reason: advisory_apply`로 자동 변환해 기록한다(스킬이 verdict를 직접 바꾸지 않는다). 이때
 `--rewrite-target`은 필수다.
 
-④ 반환
+⑥ 반환
 
 ```json
 {"verdict": "pass | rewrite | escalate", "reason": "... | advisory_apply | advisory_refinement_failed", "rewrite_target": "plan|scenario|both|null", "iteration": 1, "refinement": false}

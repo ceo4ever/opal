@@ -230,6 +230,8 @@ OPAL frontmatter → 플랫폼 frontmatter:
 
 > `effort` 값역: 공통 `low`/`medium`/`high`/`xhigh`/`max`는 적용 대상인 Claude·Codex에서 항등 변환한다. 기존 OPAL 값 `minimal`은 Codex의 GPT-5.6 값역에 맞춰 `none`으로 변환한다. 스펙에 없는 미정의 값은 stderr 경고 후 해당 필드만 생략(종료코드 0, 나머지 필드는 정상 emit).
 
+> `effort` 선언 정책: 에이전트가 `effort`를 선언하지 않으면 호출한 세션의 effort를 상속하며, 이는 의도된 상태다. 선언할 때는 `low`·`medium`·`high`·`xhigh`·`max` 중 하나여야 하며(Codex 변환용 `minimal`도 허용), `default`는 어댑터가 조용히 버리므로 사용할 수 없다. 선언 대상은 측정을 거쳐 값을 정한 에이전트로 한정하고, 측정 근거가 없는 에이전트는 미선언을 유지한다. 이 정책은 `scripts/tests/test_agent_effort_policy.sh`가 검증한다.
+
 > `effort` 행을 포함해 이 표의 셀 값은 **사람이 읽는 미러**이며 SSOT가 아니다. 실제 변환 규칙의 SSOT는 코드 상수다 — `scripts/install-mac.sh`의 `OPAL_ADAPTER_FIELD_SPEC`(센티넬 `# >>> OPAL_ADAPTER_FIELD_SPEC >>>` ~ `# <<< OPAL_ADAPTER_FIELD_SPEC <<<` 구간)과 `scripts/install/windows.ps1`의 `$OpalAdapterFieldSpec`(`$OpalAdapterFieldSpecMirror` here-string, 동일 센티넬 마커)이며, 양자는 **바이트 동일**해야 하는 규약이다(TS-011). 표와 스펙이 어긋나면 스펙이 옳다 — 표를 스펙에 맞춰 정정한다.
 
 > 배치 모드 3종 (`OPAL_ADAPTER_FIELD_SPEC`의 `platforms.<platform>.mode`):
