@@ -71,7 +71,7 @@
 .opal/brain/pages/entity/op-scenario-gate-skill.md
 .opal/brain/pages/concept/design-gate-gaps-resolution-roundtrip.md
 .opal/brain/pages/entity/state-tool.md
-.opal/brain/pages/concept/evaluator-eval-set-label-fixture-measurement-lesson.md (ADD-3·4·5)
+.opal/brain/pages/concept/evaluator-eval-set-label-fixture-measurement-lesson.md
 
 ## 참고
 
