@@ -4,7 +4,7 @@
   "module": "skill_tester",
   "layer": "util",
   "domain": "opal-skill-tester",
-  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report)·tasks/ 기록(record)·대시보드 링크 재생성(refresh)을 수행한다. 기록 폴더에는 record.json과 report.html(요약/비교+스킬별 이력 탭)이 생기고, 이력은 tasks/와 tasks/backup/의 모든 record.json에서 모은다. run은 끝나면 보고서·지표·실행별 핵심 산출물을 진행 중 태스크의 skill-tests/ 또는 tasks/ 아래 YYMMDD-opst-{대상}-{모드}-{제목} 폴더에 기록하며(모의 저장소는 복사하지 않음), 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd·oppb)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, OPPB는 canonical 태스크의 닫힌 .oppb-run 보존본과 legacy .opal-runs 미생성을 추가로 판정한다. 체크포인트 커밋은 worktree 태스크에만 요구한다.",
+  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report)·tasks/ 기록(record)·대시보드 링크 재생성(refresh)을 수행한다. 기록 폴더에는 record.json과 report.html(요약/비교+스킬별 이력 탭)이 생기고, 이력은 tasks/와 tasks/backup/의 모든 record.json에서 모은다. run은 끝나면 보고서·지표·실행별 핵심 산출물을 진행 중 태스크의 skill-tests/ 또는 tasks/ 아래 YYMMDD-opst-{대상}-{모드}-{제목} 폴더에 기록하며(모의 저장소는 복사하지 않음), 시나리오는 Pilot과 무관하게 고를 수 있고 변형은 PROFILES에 있는 Pilot만 허용하며, 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd·oppb·opd2)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, OPPB는 canonical 태스크의 닫힌 .oppb-run 보존본과 legacy .opal-runs 미생성을 추가로 판정한다. 체크포인트 커밋은 worktree 태스크에만 요구한다.",
   "exports": ["main", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report", "record_results", "collect_history"]
 }
 """
@@ -43,10 +43,12 @@ PROFILES = {
                             "p5.worktree_finalize"],
               "scenario_json": False, "archive_required": True,
               "checkpoint_policy": "finalized"},
+    "opd2":  {"exec": "execute.implement", "test_done": "verify.review", "gate_source": "rows",
+              "gate_rows": ["verify.verifier_evidence", "verify.review"], "scenario_json": False},
 }
 PILOT_SKILL_DIRS = {"opd": "opal-pilot-dev", "opds": "opal-pilot-dev", "opsdd": "opal-pilot-sdd", "opp": "opal-pilot-project",
                     "oppd": "opal-pilot-project-dev", "oppl": "opal-pilot-project-loop", "opwt": "opal-pilot-write-tech",
-                    "oppb": "opal-pilot-project-build"}
+                    "oppb": "opal-pilot-project-build", "opd2": "opal-pilot-dev2"}
 REQUIRED_BASE = ["_opal/AGENT.md", "_opal/code-scan.json", "_opal/MEMORY.json", "docs/PROJECT.md", "_gitignore"]
 
 
@@ -149,11 +151,10 @@ def run_scenario(sid, variants, repeat, outdir, task_dir=None, project_root=None
         out({"ok": False, "command": "run", "error": "scenario_invalid", "detail": errs}, 1)
     s = json.loads((SCENARIOS / sid / "scenario.json").read_text(encoding="utf-8"))
     variants = variants or [s["default_variant"]]
-    targets = set(s.get("target_pilots") or [])
-    off = [v for v in variants if targets and v.split()[0].lstrip("/") not in targets]
-    if off:
-        out({"ok": False, "command": "run", "error": "variant_not_targeted", "variants": off,
-             "target_pilots": sorted(targets)}, 1)
+    unprofiled = [v for v in variants if v.split()[0].lstrip("/") not in PROFILES]
+    if unprofiled:
+        out({"ok": False, "command": "run", "error": "variant_unprofiled", "variants": unprofiled,
+             "profiles": sorted(PROFILES)}, 1)
     if shutil.which("claude") is None:
         out({"ok": False, "command": "run", "error": "claude_cli_missing"}, 1)
     outdir = pathlib.Path(outdir or f"/tmp/opal-skill-tester/{sid}-{datetime.datetime.now():%Y%m%d-%H%M%S}")
