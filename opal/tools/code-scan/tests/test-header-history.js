@@ -3,7 +3,7 @@
  *   "module": "test-header-history",
  *   "layer": "test",
  *   "domain": "code-scan",
- *   "description": "`code-scan validate` 이력 누적 비차단 감지기(header_history) CLI 블랙박스 테스트 — 표기 6종 판정·distinct 임계값 경계·counts 가산성·exit code 불변·description/note 진입 가드·채택 end-to-end·특수문자 파싱을 검증한다",
+ *   "description": "`code-scan validate` 이력 누적 차단 감지기(header_history) CLI 블랙박스 테스트 — 표기 6종 판정·distinct 임계값 경계·counts 가산성·차단 exit code(전체·--changed)·description/note 진입 가드·채택 end-to-end·특수문자 파싱을 검증한다",
  *   "exports": [],
  *   "depends": ["node:test", "node:assert/strict", "node:child_process", "node:fs", "node:os", "node:path"],
  *   "task": "107",
@@ -21,8 +21,8 @@
 // TC ↔ TS-ID 매핑:
 // | TC 묶음                                   | TS-ID  |
 // |--------------------------------------------|--------|
-// | 이력 패턴만 있는 프로젝트 — exit 0/counts>=1 | TS-010 |
-// | 이력 패턴 + 실제 차단 위반 동시              | TS-011 |
+// | 이력 패턴만 있는 프로젝트 — exit 2/counts>=1 | TS-010 |
+// | 이력 패턴 + 다른 차단 위반 동시              | TS-011 |
 // | violations[] 5키 형태                       | TS-012 |
 // | 오탐 후보 세트 A (F-005 등)                  | TS-013 |
 // | 오탐 후보 세트 B (400/127.0.0.1 등)          | TS-014 |
@@ -152,10 +152,10 @@ function initGitRepo(dir) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// TS-010: 이력 패턴만 있는 프로젝트 — exit 0 · ok:true · counts.header_history >= 1
+// TS-010: 이력 패턴만 있는 프로젝트 — exit 2 · ok:false · counts.header_history >= 1
 // ═══════════════════════════════════════════════════════════════════════
 
-test('[T107/F-002] TS-010: description 이력 누적(distinct2) 단독 위반 — exit 0 + ok:true + counts.header_history>=1', () => {
+test('[T107/F-002] TS-010: description 이력 누적(distinct2) 단독 위반 — 차단 exit 2 + ok:false + counts.header_history>=1', () => {
   const dir = mkProject('ts010');
   writeSrcFile(dir, 'HistOnly.js', baseHeader({
     module: 'hist-only',
@@ -164,8 +164,8 @@ test('[T107/F-002] TS-010: description 이력 누적(distinct2) 단독 위반 �
   }));
   const { exitCode, json } = run(dir, ['validate', '--json']);
   assert.ok(json, `validate --json 출력이 파싱 가능해야 함, stdout=${JSON.stringify(json)}`);
-  assert.strictEqual(exitCode, 0, `이력 위반은 비차단이므로 exit 0, got ${exitCode}`);
-  assert.strictEqual(json.ok, true, `ok:true, got ${JSON.stringify(json && json.ok)}`);
+  assert.strictEqual(exitCode, 2, `header_history는 차단이므로 exit 2, got ${exitCode}`);
+  assert.strictEqual(json.ok, false, `ok:false, got ${JSON.stringify(json && json.ok)}`);
   assert.strictEqual(typeof json.counts.header_history, 'number',
     `counts.header_history가 number 키로 존재해야 함(현재 미구현이면 undefined), got ${JSON.stringify(json.counts)}`);
   assert.ok(json.counts.header_history >= 1, `counts.header_history >= 1, got ${JSON.stringify(json.counts)}`);
@@ -176,10 +176,10 @@ test('[T107/F-002] TS-010: description 이력 누적(distinct2) 단독 위반 �
 
 // ═══════════════════════════════════════════════════════════════════════
 // TS-011: 이력 패턴 + 실제 차단 위반(uncovered:newly_uncovered) 동시 —
-//   exit 2이되 사유는 차단 위반이며 header_history는 blockingViolations에 없다.
+//   두 차단 위반이 함께 보고되고, 이력 위반 단독 대조군도 exit 2다.
 // ═══════════════════════════════════════════════════════════════════════
 
-test('[T107/F-002] TS-011: header_history + uncovered:newly_uncovered 혼재 — exit 2는 uncovered 때문이지 header_history 때문이 아니다', () => {
+test('[T107/F-002] TS-011: header_history + uncovered:newly_uncovered 혼재 — 둘 다 차단 사유로 보고되고 이력 단독 대조군도 exit 2다', () => {
   const dir = mkProject('ts011');
   initGitRepo(dir);
   writeSrcFile(dir, 'HistOnly.js', baseHeader({
@@ -200,15 +200,18 @@ test('[T107/F-002] TS-011: header_history + uncovered:newly_uncovered 혼재 —
   assert.strictEqual(uncoveredHit.sub, 'newly_uncovered', `sub:'newly_uncovered', got ${JSON.stringify(uncoveredHit)}`);
   const histHit = json.violations.find(v => v.code === 'header_history' && v.file === 'src/HistOnly.js');
   assert.ok(histHit, `HistOnly.js header_history 위반도 함께 검출, got ${JSON.stringify(json.violations)}`);
-  // header_history 자체는 비차단임을 대조 검증한다: HistOnly.js 단독(TS-010, 이력 위반만 있는 상태)은
-  // exit 0이었다 — 즉 이 케이스의 exit 2는 오로지 newly_uncovered에서 온다.
+  // header_history 자체가 차단임을 대조 검증한다: HistOnly.js 단독(이력 위반만 있는 상태)도 exit 2이고
+  // blocking 위반은 header_history뿐이다(uncovered 없음).
   const onlyHistDir = mkProject('ts011-control');
   writeSrcFile(onlyHistDir, 'HistOnly.js', baseHeader({
     module: 'hist-only', exports: ['hist-only'],
     description: '이 파일은 [T088] 최초 도입되고 [T104] 개정되었다',
   }));
   const control = run(onlyHistDir, ['validate', '--json']);
-  assert.strictEqual(control.exitCode, 0, `대조군(이력 위반만) exit 0 — header_history가 blockingViolations에 없음을 증명, got ${control.exitCode}`);
+  assert.strictEqual(control.exitCode, 2, `대조군(이력 위반만) exit 2 — header_history가 차단임을 증명, got ${control.exitCode}`);
+  assert.strictEqual(control.json.ok, false, `대조군 ok:false, got ${JSON.stringify(control.json && control.json.ok)}`);
+  assert.ok(!control.json.violations.some(v => v.code === 'uncovered'), `대조군에 uncovered 위반이 없어야 함(차단 사유는 header_history 단독), got ${JSON.stringify(control.json.violations)}`);
+  assert.ok(control.json.violations.some(v => v.code === 'header_history'), `대조군에 header_history 위반이 있어야 함, got ${JSON.stringify(control.json.violations)}`);
 });
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -286,7 +289,7 @@ test('[T107/F-002] TS-015: 진성 표기 4형태(대괄호 마커/콜론 나열/
     writeSrcFile(dir, c.file, baseHeader({ module: c.file.replace('.js', ''), exports: [c.file.replace('.js', '')], description: c.description }));
   }
   const { exitCode, json } = run(dir, ['validate', '--json']);
-  assert.strictEqual(exitCode, 0, `이력 위반은 전부 비차단이므로 exit 0, got ${exitCode}`);
+  assert.strictEqual(exitCode, 2, `이력 위반은 전부 차단이므로 exit 2, got ${exitCode}`);
   for (const c of cases) {
     const hit = json.violations.find(v => v.code === 'header_history' && v.file === `src/${c.file}`);
     assert.ok(hit, `${c.file} — header_history 탐지되어야 함("${c.description}"), got ${JSON.stringify(json.violations)}`);
@@ -308,7 +311,7 @@ test('[T107/F-002] TS-016: distinct 1(단발 출처) 미탐지 / distinct 2 탐�
     module: 'distinct2', exports: ['distinct2'], description: '[T061] 최초 도입. [T103] 갱신.',
   }));
   const { exitCode, json } = run(dir, ['validate', '--json']);
-  assert.strictEqual(exitCode, 0, `이력 위반은 비차단, got ${exitCode}`);
+  assert.strictEqual(exitCode, 2, `distinct2 이력 위반이 있으므로 차단 exit 2, got ${exitCode}`);
   const hit1 = json.violations.find(v => v.code === 'header_history' && v.file === 'src/Distinct1.js');
   assert.ok(!hit1, `distinct1(단발 출처)은 미탐지여야 함, got ${JSON.stringify(json.violations)}`);
   const hit2 = json.violations.find(v => v.code === 'header_history' && v.file === 'src/Distinct2.js');
@@ -359,7 +362,7 @@ test('[T107/F-002] TS-019: description 깨끗 + note만 이력 누적 — sub:"n
     note: '[T061] 최초 작성 [T103] 개정.',
   }));
   const { exitCode, json } = run(dir, ['validate', '--json']);
-  assert.strictEqual(exitCode, 0, `이력 위반은 비차단, got ${exitCode}`);
+  assert.strictEqual(exitCode, 2, `note 이력 위반은 차단 exit 2, got ${exitCode}`);
   const noteHit = json.violations.find(v => v.code === 'header_history' && v.file === 'src/NoteOnly.js' && v.sub === 'note');
   assert.ok(noteHit, `sub:'note' 위반이 검출되어야 함, got ${JSON.stringify(json.violations)}`);
   const descHit = json.violations.find(v => v.code === 'header_history' && v.file === 'src/NoteOnly.js' && v.sub === 'description');
@@ -458,17 +461,17 @@ test('[T107/F-002] TS-043: 큰따옴표·역슬래시·이스케이프 개행·�
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// TS-052: changelog 엔트리 1개만 있어도 탐지 — countTaskTags 임계값 미적용, 비차단(exit 0)
+// TS-052: changelog 엔트리 1개만 있어도 탐지 — countTaskTags 임계값 미적용, 차단(exit 2)
 // ═══════════════════════════════════════════════════════════════════════
 
-test('[T107/F-002] TS-052: changelog 엔트리 1개 — sub:"changelog" 탐지 + counts.header_history>=1 + exit 0', () => {
+test('[T107/F-002] TS-052: changelog 엔트리 1개 — sub:"changelog" 탐지 + counts.header_history>=1 + 차단 exit 2', () => {
   const dir = mkProject('ts052');
   writeSrcFile(dir, 'ChangelogOne.js', baseHeader({
     module: 'changelog-one', exports: ['changelog-one'],
     changelog: ['[T107] 최초 도입'],
   }));
   const { exitCode, json } = run(dir, ['validate', '--json']);
-  assert.strictEqual(exitCode, 0, `changelog 위반은 비차단이므로 exit 0, got ${exitCode}`);
+  assert.strictEqual(exitCode, 2, `changelog 위반은 차단이므로 exit 2, got ${exitCode}`);
   const hit = json.violations.find(v => v.code === 'header_history' && v.file === 'src/ChangelogOne.js');
   assert.ok(hit, `changelog 엔트리 1개도 위반으로 검출되어야 함, got ${JSON.stringify(json.violations)}`);
   assert.strictEqual(hit.sub, 'undeclared_field', `sub:'undeclared_field', got ${JSON.stringify(hit)}`);
@@ -511,7 +514,7 @@ test('[T107/F-002] TS-054: description/note 깨끗 + changelog만 이력 — sub
     changelog: ['[T061] 최초 작성', '[T103] 개정'],
   }));
   const { exitCode, json } = run(dir, ['validate', '--json']);
-  assert.strictEqual(exitCode, 0, `changelog 위반은 비차단, got ${exitCode}`);
+  assert.strictEqual(exitCode, 2, `changelog 위반은 차단 exit 2, got ${exitCode}`);
   const clHit = json.violations.find(v => v.code === 'header_history' && v.file === 'src/ChangelogOnly.js' && v.sub === 'undeclared_field');
   assert.ok(clHit, `sub:'changelog' 위반이 검출되어야 함, got ${JSON.stringify(json.violations)}`);
   const descHit = json.violations.find(v => v.code === 'header_history' && v.file === 'src/ChangelogOnly.js' && v.sub === 'description');
@@ -532,7 +535,7 @@ test('[T107/F-002] TS-055: history/revisions/updates 등 임의 이름의 이력
       [fieldName]: ['[T107] 최초 도입'],
     }));
     const { exitCode, json } = run(dir, ['validate', '--json']);
-    assert.strictEqual(exitCode, 0, `${fieldName}: 비차단이므로 exit 0, got ${exitCode}`);
+    assert.strictEqual(exitCode, 2, `${fieldName}: 차단이므로 exit 2, got ${exitCode}`);
     const hit = json.violations.find(v => v.code === 'header_history' && v.file === 'src/NamedField.js');
     assert.ok(hit, `${fieldName}: 이름 불문 탐지되어야 함, got ${JSON.stringify(json.violations)}`);
     assert.strictEqual(hit.sub, 'undeclared_field', `${fieldName}: sub:'undeclared_field', got ${JSON.stringify(hit)}`);
@@ -577,7 +580,7 @@ test('[T107/F-002] TS-056 (b): 선언 8필드만 있는 깨끗한 헤더 — hea
 test('[T107/F-002] TS-057 (a): manifest 모드 draft:true — header_history/undeclared_field 미탐지(draft 위반은 그대로 발생)', () => {
   const dir = mkManifestProject('ts057a', { description: '', exports: [], draft: true });
   const { exitCode, json } = run(dir, ['validate', '--json']);
-  assert.strictEqual(exitCode, 2, `draft는 차단 위반이므로 exit 2 (header_history는 비차단이지만 draft가 남아있음), got ${exitCode}`);
+  assert.strictEqual(exitCode, 2, `draft는 차단 위반이므로 exit 2 (draft 차단 위반이 남아있음), got ${exitCode}`);
   const hhHit = json.violations.find(v => v.code === 'header_history' && v.file === 'svc/mod/Target.java');
   assert.ok(!hhHit, `draft는 §7.2 도구 관할 필드이므로 undeclared_field 미탐지, got ${JSON.stringify(json.violations)}`);
   const draftHit = json.violations.find(v => v.code === 'draft' && v.file === 'svc/mod/Target.java');
@@ -602,9 +605,81 @@ test('[T107/F-002] TS-057 (b): inline 모드에서 임의 필드명 "draft"는 �
     draft: '[T107] 임의로 붙인 draft라는 이름의 인라인 필드 — 매니페스트 draft와 무관',
   }));
   const { exitCode, json } = run(dir, ['validate', '--json']);
-  assert.strictEqual(exitCode, 0, `header_history는 비차단이므로 exit 0, got ${exitCode}`);
+  assert.strictEqual(exitCode, 2, `header_history는 차단이므로 exit 2, got ${exitCode}`);
   const hit = json.violations.find(v => v.code === 'header_history' && v.file === 'src/InlineDraftField.js');
   assert.ok(hit, `inline 모드에서는 draft 예외가 적용되지 않아야 함(mode 게이트), got ${JSON.stringify(json.violations)}`);
   assert.strictEqual(hit.sub, 'undeclared_field', `sub:'undeclared_field', got ${JSON.stringify(hit)}`);
   assert.strictEqual(hit.detail, 'draft', `detail:'draft', got ${JSON.stringify(hit)}`);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// S-1: header_history 차단 — 전체·`--changed` 두 모드 모두 exit 2 / ok:false
+// ═══════════════════════════════════════════════════════════════════════
+
+test('[S-1] description에 서로 다른 태스크 번호 2개 — 전체·--changed 두 모드 모두 exit 2·ok:false·sub:description·counts>=1', () => {
+  const dir = mkProject('s1desc');
+  writeSrcFile(dir, 'TwoTasks.js', baseHeader({
+    module: 'two-tasks', exports: ['two-tasks'],
+    description: '설정을 읽어 검증한다. 태스크 138에서 도입, 태스크 145에서 확장',
+  }));
+  const full = run(dir, ['validate', '--json']);
+  const changed = run(dir, ['validate', '--changed', 'src/TwoTasks.js', '--json']);
+  for (const [label, r] of [['전체', full], ['--changed', changed]]) {
+    assert.ok(r.json, `${label}: JSON 파싱 가능해야 함, stdout=${r.stdout}`);
+    assert.strictEqual(r.exitCode, 2, `${label}: header_history 차단 exit 2, got ${r.exitCode}`);
+    assert.strictEqual(r.json.ok, false, `${label}: ok:false, got ${JSON.stringify(r.json.ok)}`);
+    const hit = r.json.violations.find(v => v.code === 'header_history' && v.file === 'src/TwoTasks.js');
+    assert.ok(hit, `${label}: header_history 위반 필요, got ${JSON.stringify(r.json.violations)}`);
+    assert.strictEqual(hit.sub, 'description', `${label}: sub:'description', got ${JSON.stringify(hit)}`);
+    assert.ok(r.json.counts.header_history >= 1, `${label}: counts.header_history>=1, got ${JSON.stringify(r.json.counts)}`);
+  }
+  assert.strictEqual(changed.json.mode, 'changed', `--changed 모드 확인, got ${JSON.stringify(changed.json.mode)}`);
+});
+
+test('[S-1] 미정의 필드(track)만 가진 파일 — 전체·--changed 두 모드 모두 exit 2·sub:undeclared_field·detail:track', () => {
+  const dir = mkProject('s1undeclared');
+  writeSrcFile(dir, 'Tracked.js', baseHeader({
+    module: 'tracked', exports: ['tracked'], track: 'sdlc',
+  }));
+  const full = run(dir, ['validate', '--json']);
+  const changed = run(dir, ['validate', '--changed', 'src/Tracked.js', '--json']);
+  for (const [label, r] of [['전체', full], ['--changed', changed]]) {
+    assert.ok(r.json, `${label}: JSON 파싱 가능해야 함, stdout=${r.stdout}`);
+    assert.strictEqual(r.exitCode, 2, `${label}: 미정의 필드는 차단 exit 2, got ${r.exitCode}`);
+    assert.strictEqual(r.json.ok, false, `${label}: ok:false`);
+    const hit = r.json.violations.find(v => v.code === 'header_history' && v.file === 'src/Tracked.js');
+    assert.ok(hit, `${label}: header_history 위반 필요, got ${JSON.stringify(r.json.violations)}`);
+    assert.strictEqual(hit.sub, 'undeclared_field', `${label}: sub:'undeclared_field', got ${JSON.stringify(hit)}`);
+    assert.strictEqual(hit.detail, 'track', `${label}: detail:'track', got ${JSON.stringify(hit)}`);
+    assert.ok(r.json.counts.header_history >= 1, `${label}: counts.header_history>=1`);
+  }
+});
+
+test('[S-1] 이력 파일을 포함한 전체 validate — 깨끗한 파일과 섞여도 exit 2이고 위반은 이력 파일에만 붙는다', () => {
+  const dir = mkProject('s1mixed');
+  writeSrcFile(dir, 'Clean.js', baseHeader({ module: 'clean', exports: ['clean'], description: '깨끗한 설명' }));
+  writeSrcFile(dir, 'Dirty.js', baseHeader({
+    module: 'dirty', exports: ['dirty'], description: '태스크 138 도입, 태스크 145 확장',
+  }));
+  const { exitCode, json } = run(dir, ['validate', '--json']);
+  assert.strictEqual(exitCode, 2, `전체 모드 exit 2, got ${exitCode}`);
+  assert.strictEqual(json.ok, false);
+  const hh = json.violations.filter(v => v.code === 'header_history');
+  assert.deepStrictEqual(hh.map(v => v.file), ['src/Dirty.js'], `이력 위반은 Dirty.js 1건뿐, got ${JSON.stringify(hh)}`);
+  assert.strictEqual(json.counts.header_history, 1, `counts.header_history === 1, got ${JSON.stringify(json.counts)}`);
+});
+
+test('[S-1] 태스크 번호가 1개뿐인 파일 — 전체·--changed 모두 exit 0·ok:true·header_history 0건', () => {
+  const dir = mkProject('s1one');
+  writeSrcFile(dir, 'OneTask.js', baseHeader({
+    module: 'one-task', exports: ['one-task'], description: '설정을 읽어 검증한다 (태스크 138)',
+  }));
+  const full = run(dir, ['validate', '--json']);
+  const changed = run(dir, ['validate', '--changed', 'src/OneTask.js', '--json']);
+  for (const [label, r] of [['전체', full], ['--changed', changed]]) {
+    assert.strictEqual(r.exitCode, 0, `${label}: 번호 1개는 통과 exit 0, got ${r.exitCode}`);
+    assert.strictEqual(r.json.ok, true, `${label}: ok:true`);
+    assert.strictEqual(r.json.counts.header_history, 0, `${label}: counts.header_history === 0`);
+    assert.ok(!r.json.violations.some(v => v.code === 'header_history'), `${label}: header_history 위반 없음`);
+  }
 });

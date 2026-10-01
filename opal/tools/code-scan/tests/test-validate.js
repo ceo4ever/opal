@@ -718,9 +718,13 @@ function buildBoundaryHeaderJava(mod, endByteTarget) {
   throw new Error(`[T106/ADD-2] 경계 픽스처 구성 실패(창문 경계를 한글 중간에 놓지 못함): ${mod}`);
 }
 
-// 3케이스 + 회귀 대조군이 **하나의 임시 git 레포와 2회의 CLI 실행을 공유**한다.
+// 5케이스(+HEAD 범위 밖 닫힘 대체 픽스처)가 **하나의 임시 git 레포와 4회의 CLI 실행을 공유**한다.
 // (레포 생성·커밋이 비용의 대부분이고, 이 파일은 메타테스트 3건에 중첩 실행되므로 시간 예산이
 //  합산된다 — 케이스마다 새 레포를 만들지 않는다.)
+// 실행은 셋으로 나눈다: `same`(창문 안 winIn만 — 통과), `overflow`(winOut·winEdge — 머리말이 읽기
+// 범위 밖에서 닫히므로 header_overflow 차단), `regress`/`headOut`(작업본에서 머리말을 제거한 대체
+// 픽스처 — uncovered 분류 경로 classifyUncovered가 HEAD 창문을 판정). 서로의 exit code가
+// 상대 단언을 가리지 않게 분리한다.
 let _boundaryEnv = null;
 function boundaryEnv() {
   if (_boundaryEnv) return _boundaryEnv;
@@ -733,7 +737,8 @@ function boundaryEnv() {
     winIn: ['HanWinIn', 24001],        // c1: 블록이 창문 **안**에서 종료
     winOut: ['HanWinOut', 25001],      // c2: 블록이 창문 **밖**에서 종료
     winEdge: ['HanWinEdge', 24583],    // c3: 창문 경계가 JSON 블록 **내부**
-    regressCtl: ['HanRegressCtl', 24001], // 대조군: 진짜 회귀(커밋엔 헤더, 워킹엔 제거)
+    regressCtl: ['HanRegressCtl', 24001], // 대조군: 진짜 회귀(커밋엔 헤더(창문 안 닫힘), 워킹엔 제거)
+    headOut: ['HanHeadOut', 25001],    // 대체 픽스처: 커밋 사본의 머리말이 창문 밖에서 닫힘, 워킹엔 제거
   };
   const fx = {};
   for (const [key, [mod, target]] of Object.entries(specs)) {
@@ -748,21 +753,26 @@ function boundaryEnv() {
   const c = git(dir, ['commit', '-q', '-m', 'boundary fixtures (working copy == HEAD copy)']);
   if (c.status !== 0) throw new Error(`git commit failed: ${c.stderr}`);
 
-  // 대조군만 워킹 사본에서 헤더를 제거한다 — 이것이 **진짜** 회귀다.
-  fs.writeFileSync(fx.regressCtl.abs, `package svc.mod;\npublic class ${fx.regressCtl.mod} {}\n`);
+  // 대조군(regressCtl)과 대체 픽스처(headOut)만 워킹 사본에서 헤더를 제거한다.
+  for (const key of ['regressCtl', 'headOut']) {
+    fs.writeFileSync(fx[key].abs, `package svc.mod;\npublic class ${fx[key].mod} {}\n`);
+  }
 
-  // c1/c2/c3는 워킹==커밋이므로 한 번에 판정해도 서로 오염되지 않는다(대조군만 분리 실행 —
-  // 대조군의 차단(exit 2)이 3케이스의 exit 0 단언을 가리지 않게 하기 위함).
-  const same = run(dir, ['validate', '--changed',
-    [fx.winIn.rel, fx.winOut.rel, fx.winEdge.rel].join(','), '--json']);
+  const same = run(dir, ['validate', '--changed', fx.winIn.rel, '--json']);
+  const overflow = run(dir, ['validate', '--changed', [fx.winOut.rel, fx.winEdge.rel].join(','), '--json']);
   const regress = run(dir, ['validate', '--changed', fx.regressCtl.rel, '--json']);
+  const headOut = run(dir, ['validate', '--changed', fx.headOut.rel, '--json']);
 
-  _boundaryEnv = { dir, fx, same, regress };
+  _boundaryEnv = { dir, fx, same, overflow, regress, headOut };
   return _boundaryEnv;
 }
 
 function uncoveredHit(result, rel) {
   return ((result.json && result.json.violations) || []).find(v => v.code === 'uncovered' && v.file === rel);
+}
+
+function overflowHits(result, rel) {
+  return ((result.json && result.json.violations) || []).filter(v => v.code === 'header_overflow' && (rel === undefined || v.file === rel));
 }
 
 test('[T106/ADD-2] c1: @header 블록이 창문 **안**에서 종료 + 워킹==커밋 → covered · exit 0 · newly_uncovered 0', () => {
@@ -784,14 +794,16 @@ test('[T106/ADD-2] c1: @header 블록이 창문 **안**에서 종료 + 워킹==�
     `[거짓 회귀 방지] counts.newly_uncovered === 0, got ${JSON.stringify(same.json && same.json.counts)}`);
   assert.strictEqual(uncoveredHit(same, f.rel), undefined,
     `${f.rel}은 covered이므로 uncovered 위반이 없어야 함, got ${JSON.stringify(uncoveredHit(same, f.rel))}`);
+  assert.strictEqual(overflowHits(same).length, 0,
+    `창문 안에서 닫히는 머리말은 header_overflow가 아님, got ${JSON.stringify(same.json && same.json.violations)}`);
   assert.strictEqual(same.json && same.json.coverage.covered, 1,
     `창문 안에서 종료한 블록 1건만 covered로 계상, got ${JSON.stringify(same.json && same.json.coverage)}`);
   assert.strictEqual(same.json && same.json.coverage.inline, 1,
     `inline 소스 covered 1건, got ${JSON.stringify(same.json && same.json.coverage)}`);
 });
 
-test('[T106/ADD-2] c2: @header 블록이 창문 **밖**에서 종료 + 워킹==커밋 → pre_existing · exit 0(비차단)', () => {
-  const { fx, same } = boundaryEnv();
+test('[T106/ADD-2] c2: @header 블록이 창문 **밖**에서 종료 + 워킹==커밋 → header_overflow 1건 · uncovered 없음 · exit 2', () => {
+  const { fx, overflow } = boundaryEnv();
   const f = fx.winOut;
 
   assert.ok(f.closeByte > HEADER_WINDOW_BYTES,
@@ -799,14 +811,16 @@ test('[T106/ADD-2] c2: @header 블록이 창문 **밖**에서 종료 + 워킹==�
   assert.ok(splitsMultibyteAt(f.content, HEADER_WINDOW_BYTES),
     `창문 경계가 한글 문자 중간을 잘라야 함`);
 
-  assert.strictEqual(same.exitCode, 0, `pre_existing만이므로 비차단 exit 0, got ${same.exitCode}`);
-  const hit = uncoveredHit(same, f.rel);
-  assert.strictEqual(hit && hit.sub, 'pre_existing',
-    `라이브·HEAD 두 창문이 모두 못 보므로 회귀가 아니다 — sub:'pre_existing', got ${JSON.stringify(hit)}`);
+  assert.strictEqual(overflow.exitCode, 2,
+    `읽기 범위 밖에서 닫히는 머리말은 header_overflow 차단 exit 2, got ${overflow.exitCode} (stdout: ${overflow.stdout})`);
+  assert.strictEqual(overflowHits(overflow, f.rel).length, 1,
+    `${f.rel}에 header_overflow 위반 정확히 1건, got ${JSON.stringify(overflow.json && overflow.json.violations)}`);
+  assert.strictEqual(uncoveredHit(overflow, f.rel), undefined,
+    `header_overflow 파일에는 uncovered를 중복 기록하지 않음(pre_existing으로 흐르지 않음), got ${JSON.stringify(uncoveredHit(overflow, f.rel))}`);
 });
 
-test('[T106/ADD-2] c3: 창문 경계가 JSON 블록 **내부**(닫는 `}`가 창문 밖) → end === -1 정상 null → pre_existing · exit 0', () => {
-  const { fx, same } = boundaryEnv();
+test('[T106/ADD-2] c3: 창문 경계가 JSON 블록 **내부**(닫는 `}`가 창문 밖) → 절단 U+FFFD 무해 · header_overflow 1건 · uncovered 없음 · exit 2', () => {
+  const { fx, overflow } = boundaryEnv();
   const f = fx.winEdge;
 
   // 경계가 블록 내부에 있다 = 여는 `{`는 창문 안, 닫는 `}`는 창문 밖.
@@ -817,38 +831,53 @@ test('[T106/ADD-2] c3: 창문 경계가 JSON 블록 **내부**(닫는 `}`가 창
   assert.ok(splitsMultibyteAt(f.content, HEADER_WINDOW_BYTES),
     `경계가 블록 내부의 한글 문자 중간을 잘라야 함 — 절단 U+FFFD가 중괄호로 오인되면 안 된다`);
 
-  assert.strictEqual(same.exitCode, 0, `pre_existing만이므로 비차단 exit 0, got ${same.exitCode}`);
-  const hit = uncoveredHit(same, f.rel);
-  assert.strictEqual(hit && hit.sub, 'pre_existing',
-    `닫는 '}'를 못 찾아 양 경로 모두 null — 회귀가 아니다, got ${JSON.stringify(hit)}`);
-  assert.strictEqual(same.json && same.json.counts.newly_uncovered, 0,
-    `절단 U+FFFD가 '}'로 오인돼 한쪽만 파싱에 성공하면 거짓 회귀가 난다, got ${JSON.stringify(same.json && same.json.counts)}`);
+  assert.strictEqual(overflow.exitCode, 2,
+    `닫는 '}'를 못 찾는 머리말은 header_overflow 차단 exit 2, got ${overflow.exitCode} (stdout: ${overflow.stdout})`);
+  assert.strictEqual(overflowHits(overflow, f.rel).length, 1,
+    `${f.rel}에 header_overflow 위반 정확히 1건, got ${JSON.stringify(overflow.json && overflow.json.violations)}`);
+  assert.strictEqual(uncoveredHit(overflow, f.rel), undefined,
+    `uncovered 중복 기록 없음, got ${JSON.stringify(uncoveredHit(overflow, f.rel))}`);
+  assert.strictEqual(overflow.json && overflow.json.counts.newly_uncovered, 0,
+    `절단 U+FFFD가 '}'로 오인돼 한쪽만 파싱에 성공하면 거짓 회귀가 난다, got ${JSON.stringify(overflow.json && overflow.json.counts)}`);
+  assert.strictEqual(overflow.json && overflow.json.counts.header_overflow, 2,
+    `winOut·winEdge 2건이 counts.header_overflow로 집계됨, got ${JSON.stringify(overflow.json && overflow.json.counts)}`);
 });
 
 test('[T106/ADD-2] 불변식: 라이브 창문과 HEAD 비교 창문은 **같은 바이트 창문**을 본다(플립 지점 일치)', () => {
-  const { dir, fx, same, regress } = boundaryEnv();
+  const { dir, fx, same, overflow, regress, headOut } = boundaryEnv();
 
-  // (1) 전제 — c1/c2/c3는 워킹 사본과 커밋 사본이 **바이트 동일**하다. 이것이 성립해야
-  //     이들에게서 나오는 newly_uncovered가 "거짓 회귀"임이 증명된다.
+  // (1) 전제 — winIn/winOut/winEdge는 워킹 사본과 커밋 사본이 **바이트 동일**하다.
   for (const key of ['winIn', 'winOut', 'winEdge']) {
     const f = fx[key];
     const shown = spawnSync('git', ['show', `HEAD:${f.rel}`],
       { cwd: dir, encoding: 'buffer', maxBuffer: 16 * 1024 * 1024 });
     assert.strictEqual(shown.status, 0, `git show HEAD:${f.rel} 성공해야 함`);
     assert.ok(Buffer.compare(shown.stdout, fs.readFileSync(f.abs)) === 0,
-      `${f.rel}의 워킹 사본과 커밋 사본이 바이트 동일해야 함(거짓 회귀 성립 조건)`);
+      `${f.rel}의 워킹 사본과 커밋 사본이 바이트 동일해야 함`);
   }
+  // 대체 픽스처 전제 — 커밋 사본의 머리말은 창문 밖에서 닫히고, 워킹본에는 머리말이 없다.
+  const headShown = spawnSync('git', ['show', `HEAD:${fx.headOut.rel}`],
+    { cwd: dir, encoding: 'buffer', maxBuffer: 16 * 1024 * 1024 });
+  assert.strictEqual(headShown.status, 0, `git show HEAD:${fx.headOut.rel} 성공해야 함`);
+  assert.ok(fx.headOut.closeByte > HEADER_WINDOW_BYTES, `HEAD 사본 머리말이 창문 밖에서 닫혀야 함, closeByte=${fx.headOut.closeByte}`);
+  assert.ok(headShown.stdout.includes(Buffer.from('@header')), 'HEAD 사본에 @header가 있어야 함');
+  assert.ok(!fs.readFileSync(fx.headOut.abs, 'utf8').includes('@header'), '워킹본에서 머리말이 제거되어 있어야 함');
 
-  // (2) 두 경로의 "보인다/안 보인다" 플립 지점이 같은 바이트에서 일어난다.
-  //     라이브 창문: closeByte=${winIn}는 보고(covered) closeByte=${winOut}는 못 본다(uncovered).
-  //     HEAD  창문: 같은 closeByte의 대조군을 보고(newly_uncovered) winOut은 못 본다(pre_existing).
-  //     한쪽이 문자 단위였다면 winIn(문자 8천대)은 HEAD에서만 보여 거짓 회귀가 되고,
-  //     HEAD 창문이 라이브보다 좁았다면 대조군의 **진짜** 회귀가 pre_existing으로 미탐된다.
+  // (2) 플립 지점 일치.
+  //     라이브: closeByte=winIn은 보고(covered), closeByte=winOut은 못 본다(header_overflow).
+  //     HEAD : 같은 크기(24001)의 대조군은 보고(newly_uncovered), 25001인 headOut은 못 본다(pre_existing).
   assert.strictEqual(uncoveredHit(same, fx.winIn.rel), undefined,
     `라이브 창문은 closeByte=${fx.winIn.closeByte}를 본다(covered)`);
-  const outHit = uncoveredHit(same, fx.winOut.rel);
+  assert.strictEqual(overflowHits(same).length, 0, `창문 안 닫힘은 overflow 아님`);
+  assert.strictEqual(overflowHits(overflow, fx.winOut.rel).length, 1,
+    `라이브 창문은 closeByte=${fx.winOut.closeByte}를 못 본다(header_overflow), got ${JSON.stringify(overflow.json && overflow.json.violations)}`);
+
+  const outHit = uncoveredHit(headOut, fx.headOut.rel);
+  assert.strictEqual(headOut.exitCode, 0,
+    `HEAD 창문 밖 닫힘 + 워킹 머리말 제거는 pre_existing이라 비차단 exit 0, got ${headOut.exitCode} (stdout: ${headOut.stdout})`);
   assert.strictEqual(outHit && outHit.sub, 'pre_existing',
-    `HEAD 창문도 closeByte=${fx.winOut.closeByte}를 못 본다 — 라이브보다 넓지 않다, got ${JSON.stringify(outHit)}`);
+    `HEAD 창문도 closeByte=${fx.headOut.closeByte}를 못 본다 — 라이브보다 넓지 않다, got ${JSON.stringify(outHit)}`);
+  assert.strictEqual(overflowHits(headOut).length, 0, `워킹본에 머리말이 없으므로 header_overflow 없음`);
 
   assert.strictEqual(regress.exitCode, 2,
     `대조군은 진짜 회귀이므로 차단돼야 함, got exit ${regress.exitCode} (stdout: ${regress.stdout})`);
@@ -857,4 +886,173 @@ test('[T106/ADD-2] 불변식: 라이브 창문과 HEAD 비교 창문은 **같은
     `HEAD 창문이 closeByte=${fx.regressCtl.closeByte}를 본다 — 라이브보다 좁지 않다(미탐 방지), got ${JSON.stringify(ctlHit)}`);
   assert.strictEqual(regress.json && regress.json.counts.newly_uncovered, 1,
     `진짜 회귀 1건, got ${JSON.stringify(regress.json && regress.json.counts)}`);
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// [S-2] header_overflow — 유효 JSON 머리말이 읽기 범위(24,576바이트)를 넘어 닫히는 파일
+//   2종: 닫는 `}`가 범위 직후 / 범위를 한참 넘음. 전체·--changed 두 모드 모두 차단.
+// ─────────────────────────────────────────────────────────────────────────
+
+let _overflowEnv = null;
+function overflowEnv() {
+  if (_overflowEnv) return _overflowEnv;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'opal-s2-overflow-'));
+  cleanupDirs.push(dir);
+  initGitRepo(dir);
+  writeGitClassConfig(dir);
+  const specs = { near: ['OverNear', 24583], far: ['OverFar', 40001] };
+  const fx = {};
+  for (const [key, [mod, target]] of Object.entries(specs)) {
+    const built = buildBoundaryHeaderJava(mod, target);
+    const rel = `svc/mod/${mod}.java`;
+    const abs = path.join(dir, rel);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, built.content);
+    fx[key] = Object.assign({ mod, rel, abs }, built);
+  }
+  // 커밋해 둔다 — 현행 코드에서는 uncovered:pre_existing(비차단)으로 숨는 바로 그 상태다.
+  git(dir, ['add', '.']);
+  const c = git(dir, ['commit', '-q', '-m', 'overflow fixtures']);
+  if (c.status !== 0) throw new Error(`git commit failed: ${c.stderr}`);
+  const full = run(dir, ['validate', '--json']);
+  const changed = run(dir, ['validate', '--changed', [fx.near.rel, fx.far.rel].join(','), '--json']);
+  _overflowEnv = { dir, fx, full, changed };
+  return _overflowEnv;
+}
+
+test('[S-2] 픽스처 전제: 닫는 `}`가 범위 직후(near)와 범위를 한참 넘는 위치(far), 둘 다 유효 JSON 머리말이고 파일 크기가 범위보다 크다', () => {
+  const { fx } = overflowEnv();
+  assert.ok(fx.near.closeByte > HEADER_WINDOW_BYTES && fx.near.closeByte - HEADER_WINDOW_BYTES < 32,
+    `near: 범위 직후(+32 미만)에서 닫혀야 함, closeByte=${fx.near.closeByte}`);
+  assert.ok(fx.far.closeByte > HEADER_WINDOW_BYTES + 10000,
+    `far: 범위를 한참 넘어 닫혀야 함, closeByte=${fx.far.closeByte}`);
+  for (const key of ['near', 'far']) {
+    const buf = Buffer.from(fx[key].content, 'utf8');
+    assert.ok(buf.length > HEADER_WINDOW_BYTES, `${key}: 파일 크기 > 읽기 범위, size=${buf.length}`);
+    const text = fx[key].content;
+    const start = text.indexOf('{', text.indexOf('@header'));
+    const end = text.indexOf('\n * }', start);
+    assert.ok(start !== -1 && end !== -1, `${key}: 머리말 블록이 닫혀 있어야 함`);
+    const json = text.slice(start, end + 5).split('\n').map(l => l.replace(/^\s*\*\s?/, '')).join('\n');
+    assert.doesNotThrow(() => JSON.parse(json), `${key}: 머리말은 유효 JSON이어야 함(범위만 문제)`);
+  }
+});
+
+for (const mode of ['full', 'changed']) {
+  test(`[S-2] ${mode === 'full' ? '전체 validate' : 'validate --changed'}: 범위 밖에서 닫히는 머리말 2종 → header_overflow 파일당 1건 · uncovered 없음 · pre_existing 아님 · exit 2`, () => {
+    const env = overflowEnv();
+    const r = env[mode];
+    assert.ok(r.json, `JSON 파싱 가능해야 함, stdout=${r.stdout}`);
+    assert.strictEqual(r.exitCode, 2, `header_overflow는 차단 exit 2, got ${r.exitCode} (stdout: ${r.stdout.slice(0, 400)})`);
+    assert.strictEqual(r.json.ok, false, `ok:false, got ${JSON.stringify(r.json.ok)}`);
+    for (const key of ['near', 'far']) {
+      const f = env.fx[key];
+      assert.strictEqual(overflowHits(r, f.rel).length, 1,
+        `${f.rel}: header_overflow 정확히 1건, got ${JSON.stringify(r.json.violations)}`);
+      assert.strictEqual(uncoveredHit(r, f.rel), undefined,
+        `${f.rel}: 같은 파일의 uncovered 위반 없음, got ${JSON.stringify(uncoveredHit(r, f.rel))}`);
+    }
+    assert.ok(r.json.counts.header_overflow >= 1, `counts.header_overflow >= 1, got ${JSON.stringify(r.json.counts)}`);
+    assert.strictEqual(r.json.counts.header_overflow, 2, `counts.header_overflow === 2, got ${JSON.stringify(r.json.counts)}`);
+    assert.strictEqual(r.json.counts.pre_existing, 0, `pre_existing으로 분류되지 않음, got ${JSON.stringify(r.json.counts)}`);
+    if (mode === 'changed') assert.strictEqual(r.json.mode, 'changed', `mode:'changed', got ${JSON.stringify(r.json.mode)}`);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// [S-3] header_overflow 비해당 경계 — ① 닫는 `}`가 범위 직전 ② `@header` 없는 대형 md
+//   ③ `@header`를 산문으로 인용하는 대형 md. (④ 106 ADD-1 대체 픽스처는 위 불변식 테스트가 소유)
+// ─────────────────────────────────────────────────────────────────────────
+
+let _nonOverflowEnv = null;
+function nonOverflowEnv() {
+  if (_nonOverflowEnv) return _nonOverflowEnv;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'opal-s3-nonoverflow-'));
+  cleanupDirs.push(dir);
+  initGitRepo(dir);
+  writeGitClassConfig(dir, { extensions: ['.java', '.md'] });
+
+  // 닫는 `}`가 정확히 24570바이트(범위 직전)에 오는 ASCII 머리말 + 범위를 넘기는 꼬리 주석.
+  const preB = '/**\n * @header {\n *   "module": "BeforeEdge",\n *   "layer": "util",\n *   "domain": "demo",\n *   "exports": ["BeforeEdge"],\n *   "description": "';
+  const postB = '"\n * ';
+  const padB = 24570 - Buffer.byteLength(preB) - Buffer.byteLength(postB);
+  const before = {
+    closeByte: 24570,
+    content: preB + 'x'.repeat(padB) + postB + '}\n */\npackage svc.mod;\npublic class BeforeEdge {}\n// ' + 'y'.repeat(400) + '\n',
+  };
+  assert.strictEqual(before.content.indexOf('}\n */\npackage'), 24570 - 0, '닫는 } 바이트 위치 전제');
+  const files = {
+    beforeEdge: { rel: 'svc/mod/BeforeEdge.java', content: before.content },
+    plainMd: { rel: 'svc/docs/BigPlain.md', content: '# 대형 문서\n\n' + '머리말이 없는 평범한 본문 줄입니다. '.repeat(1200) + '\n' },
+    proseMd: {
+      rel: 'svc/docs/BigProse.md',
+      content: '# 머리말 규칙 해설\n\n`@header` 블록은 파일 맨 위에 둔다. @header 규칙은 JSON 객체를 요구한다.\n\n' +
+        '설정 예시는 다음과 같다.\n\n```json\n{ "headerSource": "inline" }\n```\n\n' +
+        '`@header`를 산문으로 여러 번 인용한다. '.repeat(40) + '\n\n' +
+        '머리말이 없는 평범한 본문 줄입니다. '.repeat(1200) + '\n',
+    },
+  };
+  for (const f of Object.values(files)) {
+    f.abs = path.join(dir, f.rel);
+    fs.mkdirSync(path.dirname(f.abs), { recursive: true });
+    fs.writeFileSync(f.abs, f.content);
+  }
+  git(dir, ['add', '.']);
+  const c = git(dir, ['commit', '-q', '-m', 'non-overflow fixtures']);
+  if (c.status !== 0) throw new Error(`git commit failed: ${c.stderr}`);
+  // 커밋하지 않은 대형 md — HEAD에 없으므로 기존 분류는 newly_uncovered(차단)다.
+  files.newMd = { rel: 'svc/docs/BigNew.md', content: '# 신규 대형 문서\n\n' + '머리말이 없는 신규 본문 줄입니다. '.repeat(1200) + '\n' };
+  files.newMd.abs = path.join(dir, files.newMd.rel);
+  fs.writeFileSync(files.newMd.abs, files.newMd.content);
+
+  const all = Object.values(files).map(f => f.rel).join(',');
+  const full = run(dir, ['validate', '--json']);
+  const changed = run(dir, ['validate', '--changed', all, '--json']);
+  _nonOverflowEnv = { dir, files, before, full, changed };
+  return _nonOverflowEnv;
+}
+
+for (const mode of ['full', 'changed']) {
+  test(`[S-3] ${mode === 'full' ? '전체' : '--changed'}: 비해당 3종은 header_overflow가 없고 counts.header_overflow === 0 (키 존재)`, () => {
+    const env = nonOverflowEnv();
+    const r = env[mode];
+    assert.ok(r.json, `JSON 파싱 가능해야 함, stdout=${r.stdout}`);
+    assert.strictEqual(overflowHits(r).length, 0, `header_overflow 위반 0건, got ${JSON.stringify(r.json.violations)}`);
+    assert.strictEqual(r.json.counts.header_overflow, 0,
+      `counts.header_overflow === 0 (키가 존재해야 함), got ${JSON.stringify(r.json.counts)}`);
+  });
+}
+
+test('[S-3] ① 닫는 `}`가 범위 직전(24576 미만) + 파일이 범위를 가득 채움 → 정상 커버, overflow 아님', () => {
+  const { before, files, full } = nonOverflowEnv();
+  assert.ok(before.closeByte < HEADER_WINDOW_BYTES && HEADER_WINDOW_BYTES - before.closeByte < 16,
+    `범위 직전에서 닫혀야 함, closeByte=${before.closeByte}`);
+  assert.ok(Buffer.byteLength(before.content) > HEADER_WINDOW_BYTES, '파일이 범위를 가득 채워야 함');
+  assert.strictEqual(overflowHits(full, files.beforeEdge.rel).length, 0, '범위 직전 닫힘은 overflow 아님');
+  assert.strictEqual(uncoveredHit(full, files.beforeEdge.rel), undefined,
+    `정상 커버(uncovered 없음), got ${JSON.stringify(uncoveredHit(full, files.beforeEdge.rel))}`);
+  assert.strictEqual(full.json.coverage.inline, 1, `inline covered 1건(BeforeEdge), got ${JSON.stringify(full.json.coverage)}`);
+});
+
+test('[S-3] ② `@header` 없는 24,576바이트 초과 md → header_overflow 없이 기존 분류 유지(커밋됨 pre_existing / 미커밋 newly_uncovered)', () => {
+  const { files, full } = nonOverflowEnv();
+  assert.ok(Buffer.byteLength(files.plainMd.content) > HEADER_WINDOW_BYTES, `대형 md여야 함, size=${Buffer.byteLength(files.plainMd.content)}`);
+  assert.ok(!files.plainMd.content.includes('@header'), 'md에 @header가 없어야 함');
+  assert.strictEqual(overflowHits(full, files.plainMd.rel).length, 0, 'header_overflow 아님');
+  const hit = uncoveredHit(full, files.plainMd.rel);
+  assert.strictEqual(hit && hit.sub, 'pre_existing', `커밋된 헤더 없는 md는 기존대로 pre_existing, got ${JSON.stringify(hit)}`);
+  const newHit = uncoveredHit(full, files.newMd.rel);
+  assert.strictEqual(newHit && newHit.sub, 'newly_uncovered', `미커밋 헤더 없는 대형 md는 기존대로 newly_uncovered, got ${JSON.stringify(newHit)}`);
+  assert.strictEqual(overflowHits(full, files.newMd.rel).length, 0, '미커밋 대형 md도 header_overflow 아님');
+});
+
+test('[S-3] ③ `@header`를 산문으로 인용하는 대형 md(근접 `{` 없음) → header_overflow 없이 기존 분류(pre_existing) 유지', () => {
+  const { files, full } = nonOverflowEnv();
+  const text = files.proseMd.content;
+  assert.ok(Buffer.byteLength(text) > HEADER_WINDOW_BYTES, 'md가 읽기 범위를 넘어야 함');
+  assert.ok(text.includes('@header'), 'md가 @header를 산문으로 인용해야 함');
+  assert.ok(!/@header\s*\{/.test(text), '표준 포맷 "@header {" 근접 패턴은 없어야 함(산문 인용)');
+  assert.strictEqual(overflowHits(full, files.proseMd.rel).length, 0, '산문 인용은 header_overflow 아님');
+  const hit = uncoveredHit(full, files.proseMd.rel);
+  assert.strictEqual(hit && hit.sub, 'pre_existing', `기존 분류 pre_existing 유지, got ${JSON.stringify(hit)}`);
 });

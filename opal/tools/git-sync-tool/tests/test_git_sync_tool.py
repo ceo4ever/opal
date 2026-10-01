@@ -3,7 +3,7 @@
   "module": "test_git_sync_tool",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "git-sync-tool RED-first 테스트. 052 블록(S-1~S-10,S-16~S-18 + S-19~S-22 root 저장소)과 139 블록(opws 워크스페이스 선언 — 선언 로더·org/repo 정규화·3진 대조·6상태·init/clone)을 담는다. CLI(subprocess) 공개 인터페이스로만 검증하고 mock/patch를 쓰지 않으며 실 git 저장소 fixture(conftest.py)를 사용한다. 139 S-1~S-7은 구현 전 RED로 작성해 14건 실패를 확인한 뒤 GREEN으로 전환했고(선언 로더·정규화 부재가 유일한 실패 사유), 원격 좌표와 fetch 도달성을 동시에 요구하는 시나리오는 url.<base>.insteadOf 재작성으로 구성한다 — 도구는 config 원문을 읽으므로 재작성이 판정에 새지 않는다.",
+  "description": "git-sync-tool 테스트. sync 블록(S-1~S-10,S-16~S-18 + S-19~S-22 root 저장소)과 워크스페이스 선언 블록(선언 로더·org/repo 정규화·3진 대조·6상태·init/clone)을 담는다. CLI(subprocess) 공개 인터페이스로만 검증하고 mock/patch를 쓰지 않으며 실 git 저장소 fixture(conftest.py)를 사용한다. 원격 좌표와 fetch 도달성을 동시에 요구하는 시나리오는 url.<base>.insteadOf 재작성으로 구성한다 — 도구는 config 원문을 읽으므로 재작성이 판정에 새지 않는다.",
   "exports": [],
   "depends": ["conftest.py", "git_sync_tool.py"]
 }
