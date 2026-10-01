@@ -4,8 +4,8 @@
   "task": "127-260912-oppl-E2E-하네스-구현",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "W-12 (T12) SUT HTTP 표면 전수 E2E 시나리오 스위트 — surfaces.json이 선언한 kind=\"http\" 표면 16건(sut-health는 S-10 소유)을 실제 임대 SUT 위에서 `e2e run`으로 관통한다. 각 표면은 자기 fixture 시나리오를 임시 폴더에 쓰고 api profile로 실행해 status·응답 필드·후속 observable state를 검증하며, 공통 필수 증적 5종과 assertion expected/actual을 남긴다. surfaces.json·test-scenario.json은 읽기 전용으로만 소비한다(C-8).",
-  "scenarios": ["S-45", "S-46", "S-47", "S-48", "S-49", "S-50", "S-51", "S-52", "S-53", "S-54", "S-55", "S-56", "S-57", "S-58", "S-59", "S-60"],
+  "description": "W-12 (T12) SUT HTTP 표면 전수 E2E 시나리오 스위트 — surfaces.json이 선언한 kind=\"http\" 표면 16건(sut-health는 S-10 소유)을 실제 임대 SUT 위에서 `e2e run`으로 관통한다. task 172(S-15) 이후 모든 run은 `.opal/e2e/environment.json`의 `session_bootstrap`으로 인증된 세션을 전제하고(쿠키·CSRF·Origin 헤더 자동 병합), 구형 Brain prime·query는 403 `legacy_brain_disabled`, 무세션 401·Origin 없는 POST 403 `origin_required`·/health `auth` 필드·증적 내 세션 평문 부재를 추가로 단언한다. 각 표면은 자기 fixture 시나리오를 임시 폴더에 쓰고 api profile로 실행해 status·응답 필드·후속 observable state를 검증하며, 공통 필수 증적 5종과 assertion expected/actual을 남긴다. surfaces.json·test-scenario.json은 읽기 전용으로만 소비한다(C-8).",
+  "scenarios": ["S-45", "S-46", "S-47", "S-48", "S-49", "S-50", "S-51", "S-52", "S-53", "S-54", "S-55", "S-56", "S-57", "S-58", "S-59", "S-60", "S-15"],
   "exports": ["TestSutHttpSurfaces", "TestUserEnvironmentUntouched", "SURFACE_LEDGER"]
 }
 
@@ -39,20 +39,25 @@
 
 6. [MUST] H-2 — 외부 의존이 없는 표면을 대역으로 채워 `pass`로 승격하지 않는다.
    brain 계열의 LLM 의존 경로(claude CLI 인증 세션)는 격리 `HOME` 아래에 존재하지
-   않는다. 그 사실은 `SURFACE_LEDGER`에 구조화 사유로 남고, 확인되지 않은 축을
-   확인된 것처럼 세지 않는다. 특히 `sut-brain-query`는 선언 응답 필드(`job_id`)가
-   난수 UUID여서 `equals` 전용 매처로 단언할 수 없고 잡 완료는 LLM 의존이므로
-   **`blocked`로 남긴다** — 전송 계층만 실측하고 표면 판정을 승격하지 않는다.
+   않는다. task 172(S-15)부터 구형 Brain은 기본 꺼짐이므로 `sut-brain-prime`·
+   `sut-brain-query`는 결정적 403 `legacy_brain_disabled`(envelope)를 단언한다 —
+   정책 꺼짐 경로는 외부 의존 없이 실측되고 `claude` 프로세스가 생기지 않음을 SUT
+   로그로 함께 확인한다. 켜진 경로(LLM 의존)는 이 스위트의 대상이 아니다.
 
-7. POST 계열(`sut-brain-prime`·`sut-brain-query`·`sut-config-prewarm`)은 부수효과를
-   만든다. 전부 격리 `HOME`과 run 단위 namespace(session_id에 run 토큰) 안에서만
-   수행하며, 쓰기 대상은 임시 홈의 `console.config.json`뿐이다.
+7. S-15 인증 전제 — `e2e run`은 `session_bootstrap`(D-20)이 backend health 통과 뒤
+   발급·교환한 `Cookie`·`X-CSRF-Token`·`Origin`을 모든 API 요청에 병합한다. 무세션
+   검증은 스텝 헤더 값 `null`로 병합 헤더를 제거해 같은 SUT에서 수행한다(S-14 계약).
+   모든 증적에는 세션·CSRF·진입 token 평문이 없어야 한다(`_assert_no_session_secrets`).
+
+8. POST 계열(`sut-config-prewarm`)은 부수효과를 만든다. 격리 `HOME`과 run 단위
+   namespace 안에서만 수행하며, 쓰기 대상은 임시 홈의 `console.config.json`뿐이다.
 """
 from __future__ import annotations
 
 import json
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -125,7 +130,7 @@ _COVERED_BY_TEST = {
     "sut-brain-auth": "test_sut_brain_auth",
     "sut-brain-status": "test_sut_brain_status",
     "sut-brain-prime": "test_sut_brain_prime",
-    "sut-brain-query": "test_sut_brain_query_transport_only",
+    "sut-brain-query": "test_sut_brain_query",
     "sut-brain-job": "test_sut_brain_job",
     "sut-config-get": "test_sut_config_get",
     "sut-config-prewarm": "test_sut_config_prewarm",
@@ -187,6 +192,50 @@ def _record(surface_id: str, verdict: str, *, evidence: str = "", reason=None) -
             "blocked_reason": reason,
         }
     )
+
+
+_SECRET_PATTERNS = (
+    re.compile(r"opal_console_session=(?!\[REDACTED\])[A-Za-z0-9_-]{10,}"),
+    re.compile(r"(?i)x-csrf-token[\"']?\s*[:=]\s*[\"']?(?!\[REDACTED\])[A-Za-z0-9_-]{16,}"),
+    re.compile(r"entry=(?!\[REDACTED\])[A-Za-z0-9_-]{20,}"),
+)
+
+
+def _assert_no_session_secrets(testcase, artifact_dir: pathlib.Path) -> None:
+    """[MUST] S-15 — 증적 전체(요청·응답·actions·서버 로그·run.json)에 세션·CSRF·진입 token 평문이 없다."""
+    for path in sorted(artifact_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for pattern in _SECRET_PATTERNS:
+            testcase.assertIsNone(
+                pattern.search(text),
+                f"세션 비밀 평문이 증적에 남았다: {path.name} / {pattern.pattern}",
+            )
+
+
+_SPAWN_TRACES = re.compile(r"(?i)\bPopen\b|spawned|claude -p|\bclaude\b.*--output-format")
+
+
+def _assert_no_claude_spawn(testcase, artifact_dir: pathlib.Path) -> None:
+    """응답과 SUT 로그에 `claude` 프로세스 spawn 흔적이 없다(정책 꺼짐, AC-3)."""
+    for log in sorted((artifact_dir / "server").glob("*.log")):
+        testcase.assertIsNone(
+            _SPAWN_TRACES.search(log.read_text(encoding="utf-8", errors="replace")),
+            f"SUT 로그에 spawn 흔적이 있다: {log.name}",
+        )
+
+
+def _field_at(assertion_id: str, seq: int, field: str, expected) -> dict:
+    """`seq`번째 행동의 응답에서 `field`를 읽어 `equals` 비교한다(다단계 시나리오용)."""
+    return {
+        "id": assertion_id,
+        "verifier": "response",
+        "match": "equals",
+        "source_seq": seq,
+        "field": field,
+        "expected": expected,
+    }
 
 
 class _Isolated:
@@ -400,7 +449,8 @@ class TestSutHttpSurfaces(unittest.TestCase):
         }
         return proc, payload, artifacts, artifact_dir, workspace
 
-    def _verify(self, scenario: dict, home: pathlib.Path, *, expect_path: str, expect_method="GET"):
+    def _verify(self, scenario: dict, home: pathlib.Path, *, expect_path: str, expect_method="GET",
+                expect_status=200, extra_check=None):
         """표면 1건을 관통하고 §A.1·§A.5·§A.11·§C.3 증적을 전부 확인한다."""
         proc, payload, art, artifact_dir, workspace = self._run(scenario, home)
         try:
@@ -446,11 +496,16 @@ class TestSutHttpSurfaces(unittest.TestCase):
                 calls,
                 f"{expect_method} {expect_path} 실 호출 기록이 없다: {art['actions.jsonl']}",
             )
-            self.assertEqual(calls[0]["response"]["status"], 200)
+            self.assertEqual(calls[0]["response"]["status"], expect_status)
             # 임대 SUT를 쳤다는 근거 — 사용자 Console 포트가 아니다(C-2).
             leased = urllib.parse.urlparse(calls[0]["request"]["url"])
             self.assertEqual(leased.hostname, "127.0.0.1")
             self.assertNotEqual(leased.port, 7823, "사용자 Console을 SUT로 쓰면 안 된다(C-2)")
+
+            # ── 세션 비밀 평문 부재(S-15) ────────────────────────────────────
+            _assert_no_session_secrets(self, artifact_dir)
+            if extra_check is not None:
+                extra_check(artifact_dir, art)
 
             # ── 정리(§C.3) ───────────────────────────────────────────────────
             self.assertEqual(art["cleanup.json"]["result"], "complete")
@@ -783,10 +838,10 @@ class TestSutHttpSurfaces(unittest.TestCase):
         ]
 
     def test_sut_brain_prime(self):
-        """POST — run 단위 session_id namespace와 격리 HOME 안에서만 수행한다.
+        """구형 Brain 기본 꺼짐 — 인증된 세션의 POST도 403 `legacy_brain_disabled`다(AC-3).
 
-        부수효과는 그 session_id의 인메모리 세션 1건과, 격리 HOME을 보는 백그라운드
-        claude 시도뿐이다. 사용자 세션·설정은 이름 공간이 겹치지 않는다(C-2).
+        요청은 정책 게이트에서 거절되므로 `claude` 프로세스가 생기지 않는다. 응답과
+        SUT 로그에 spawn 흔적이 없음을 함께 확인한다.
         """
         fx = _Isolated()
         self.addCleanup(fx.dispose)
@@ -795,58 +850,34 @@ class TestSutHttpSurfaces(unittest.TestCase):
             "w12-sut-brain-prime", "sut-brain-prime",
             _post("/api/brain/prime", {"project": fx.project_path, "session_id": sid}),
             [
-                _field("a-status", "status", 200),
-                _field("a-priming", "priming", True),
+                _field("a-status", "status", 403),
+                _field("a-code", "error.code", "legacy_brain_disabled"),
             ],
-        ), fx.home, expect_path="/api/brain/prime", expect_method="POST")
-        SURFACE_LEDGER[-1]["unverified_aspects"] = [
-            {
-                "field": "prime 이후 state=ready 전이",
-                "reason": "brain_llm_dependency_absent_in_isolated_home",
-                "detail": "동기 계약({priming:true} 즉시 반환)은 실측했다. 웜 전이는 인증된 "
-                          "claude 세션을 요구하므로 실측하지 않았고 승격하지 않았다(H-2). "
-                          "전이 관측을 assertion으로 넣지 않은 또 다른 이유는 경합이다 — "
-                          "백그라운드 스레드가 즉시 실패하면 priming/error 중 무엇이 보일지 "
-                          "결정되지 않으며, equals 매처로 그 비결정을 단언할 수 없다.",
-            }
-        ]
+        ), fx.home, expect_path="/api/brain/prime", expect_method="POST",
+            expect_status=403, extra_check=lambda d, a: _assert_no_claude_spawn(self, d))
 
-    def test_sut_brain_query_transport_only(self):
-        """[MUST] H-2 — `sut-brain-query`는 `blocked`다. pass로 승격하지 않는다.
+    def test_sut_brain_query(self):
+        """구형 Brain 기본 꺼짐 — query도 403 `legacy_brain_disabled`로 결정적이다.
 
-        선언 응답 필드 `job_id`는 난수 UUID이고 assertion 매처는 `equals`뿐이다
-        (`e2e_contract.py` C-1 동결 — `contains`는 `validate_pass_requirements`가
-        뒤집는다). 즉 이 표면이 선언한 응답 필드를 단언할 수단이 없다. 잡 완료 역시
-        인증된 claude 세션을 요구하며 격리 HOME에는 없다. 따라서 여기서는 전송 계층만
-        실측하고 표면 판정은 `blocked`로 남긴다.
+        이전에는 난수 `job_id`·LLM 의존으로 `blocked`였으나, 꺼짐 경로는 응답 필드가
+        고정이므로 `equals`로 단언해 pass 판정한다. spawn 0회를 로그로 확인한다.
         """
         fx = _Isolated()
         self.addCleanup(fx.dispose)
         sid = f"w12-query-{uuid.uuid4()}"
-        scenario = _api_scenario(
+        self._surface("sut-brain-query", _api_scenario(
             "w12-sut-brain-query", "sut-brain-query",
             _post("/api/brain/query", {
-                "question": "w12 surface transport probe",
+                "question": "w12 surface disabled probe",
                 "project": fx.project_path,
                 "session_id": sid,
             }),
-            [_field("a-status", "status", 200)],
-        )
-        _payload, art = self._verify(
-            scenario, fx.home, expect_path="/api/brain/query", expect_method="POST"
-        )
-        # 전송은 실제로 일어났다 — 그 사실만 증적으로 남긴다.
-        self.assertEqual(art["actions.jsonl"][0]["response"]["status"], 200)
-        _record("sut-brain-query", "blocked", evidence=f"run_id={_payload['run_id']} POST 200 실측", reason={
-            "code": "declared_response_field_unassertable_and_llm_dependency_absent",
-            "detail": "응답 필드 job_id는 난수 UUID다. e2e_contract C-1이 동결한 판정은 "
-                      "expected == actual 직접 비교뿐이라(§A.5) 형태 단언이 불가능하고, "
-                      "job 완료는 인증된 claude 세션을 요구하는데 격리 HOME에 없다. "
-                      "전송 계층(POST 200)만 실측했고 표면은 승격하지 않았다.",
-            "verified_axis": ["HTTP POST 도달", "status 200"],
-            "unverified_axis": ["job_id 값·형태", "job status=done", "answer/citations"],
-        })
-        SURFACE_LEDGER[-1]["verdict_json"] = self._preserve("sut-brain-query", art)
+            [
+                _field("a-status", "status", 403),
+                _field("a-code", "error.code", "legacy_brain_disabled"),
+            ],
+        ), fx.home, expect_path="/api/brain/query", expect_method="POST",
+            expect_status=403, extra_check=lambda d, a: _assert_no_claude_spawn(self, d))
 
     # ── 표면 3: 쓰기 계열 ────────────────────────────────────────────────────
     def test_sut_config_prewarm(self):
@@ -877,6 +908,59 @@ class TestSutHttpSurfaces(unittest.TestCase):
         ), fx.home, expect_path="/api/config/prewarm", expect_method="POST")
         # 디스크에도 반영됐다. 바뀐 파일은 격리 HOME의 것뿐이다.
         self.assertEqual(fx.config_snapshot()["prewarm_projects"], [])
+
+
+    # ── S-15 ① 인증 게이트·/health ───────────────────────────────────────────
+    # 같은 SUT에 무세션·무Origin 요청을 보내 default-deny를 실측한다.
+    def test_sut_unauthenticated_requests_are_rejected_and_config_untouched(self):
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        before = (fx.home / ".opal" / "console.config.json").read_bytes()
+        no_session = {"Cookie": None, "X-CSRF-Token": None}      # Origin은 허용값 그대로
+        no_origin = {"Cookie": None, "X-CSRF-Token": None, "Origin": None}
+        steps = [
+            {"id": "st-get", "executor": "api", "step_role": "verify", "method": "GET",
+             "url": "/api/projects", "headers": no_session, "timeout_ms": 30000},
+            {"id": "st-post", "executor": "api", "step_role": "verify", "method": "POST",
+             "url": "/api/config/prewarm", "headers": no_session,
+             "body": {"project": fx.project_path, "enabled": False}, "timeout_ms": 30000},
+            {"id": "st-post-no-origin", "executor": "api", "step_role": "verify", "method": "POST",
+             "url": "/api/config/prewarm", "headers": no_origin,
+             "body": {"project": fx.project_path, "enabled": False}, "timeout_ms": 30000},
+        ]
+        self._verify(_api_scenario(
+            "s15-auth-gate", "sut-auth-gate", steps,
+            [
+                _field_at("a-get-status", 1, "status", 401),
+                _field_at("a-get-code", 1, "error.code", "auth_required"),
+                _field_at("a-post-status", 2, "status", 401),
+                _field_at("a-post-code", 2, "error.code", "auth_required"),
+                _field_at("a-no-origin-status", 3, "status", 403),
+                _field_at("a-no-origin-code", 3, "error.code", "origin_required"),
+            ],
+        ), fx.home, expect_path="/api/projects", expect_status=401)
+        after = (fx.home / ".opal" / "console.config.json").read_bytes()
+        self.assertEqual(before, after, "거절된 POST가 격리 console.config.json을 바꿨다")
+
+    def test_sut_health_exposes_only_the_auth_marker(self):
+        """`/health`는 `status`·`version`·`auth`만 싣는다(D-11). 정보성 키는 없어야 한다.
+
+        참고: 응답 필드 `status`는 harness가 HTTP status로 특수 취급해 본문 `status`는
+        단언할 수 없으므로(`_extract`), `auth` 값과 금지 키 부재를 단언한다.
+        """
+        fx = _Isolated()
+        self.addCleanup(fx.dispose)
+        self._verify(_api_scenario(
+            "s15-health", "sut-health-auth",
+            _get("/health"),
+            [
+                _field("a-status", "status", 200),
+                _field("a-auth", "auth", "required"),
+                _field("a-no-projects", "projects", None),
+                _field("a-no-config", "scan_roots", None),
+                _field("a-no-account", "account", None),
+            ],
+        ), fx.home, expect_path="/health")
 
 
 class TestVerdictLedger(unittest.TestCase):
@@ -912,21 +996,6 @@ class TestVerdictLedger(unittest.TestCase):
                 # 달성 충실도가 표면의 요구치(real-http) 이상이어야 표시가 성립한다.
                 self.assertEqual(run_json["fidelity"], e2e_orchestrator.FIDELITY_REAL_HTTP)
                 self.assertEqual(scenario["required_fidelity"], e2e_orchestrator.FIDELITY_REAL_HTTP)
-
-    def test_brain_query_is_recorded_blocked_and_not_promoted(self):
-        """[MUST] H-2 — 근거가 게이트를 통과한다는 사실이 승격 사유가 되지 않는다.
-
-        `sut-brain-query`의 run은 status 200만 단언하므로 게이트는 통과한다. 그러나
-        표면이 선언한 응답 필드(`job_id`)는 판정되지 않았다. 원장이 그 사실을
-        `blocked`로 유지하는지를 못 박아, 다음 단계가 게이트 통과만 보고 표시하는 일을
-        막는다.
-        """
-        entry = next(
-            (row for row in SURFACE_LEDGER if row["surface_id"] == "sut-brain-query"), None
-        )
-        self.assertIsNotNone(entry, "sut-brain-query 판정이 원장에 없다")
-        self.assertEqual(entry["verdict"], "blocked")
-        self.assertIn("unverified_axis", entry["blocked_reason"])
 
     def test_ledger_covers_every_declared_http_surface_once(self):
         doc = json.loads(_SURFACES_PATH.read_text(encoding="utf-8"))

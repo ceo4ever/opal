@@ -1,0 +1,823 @@
+{
+  "schema_version": "2.0",
+  "task_id": "172-261001-opd-콘솔-POST-인증-게이트",
+  "locked": true,
+  "created_at": "2026-10-01T14:49:54+09:00",
+  "locked_at": "2026-10-01T15:17:48+09:00",
+  "scenarios": [
+    {
+      "id": "S-1",
+      "acceptance_ref": "AC-1, C-1",
+      "type": "integration",
+      "expected": "①은 401 `auth_required`, ②는 403 `origin_required`, ③은 403 `origin_not_allowed`, ④는 403 `host_not_allowed`, ⑤는 403 `csrf_invalid`, ⑥은 401. 변형 ①~⑥ 동안 `Popen` 대체 호출 0회, 임시 `console.config.json` 바이트 불변, 라우트 핸들러 본체 미진입(호출 카운터 0). ⑦은 200대(정상 처리)로 각 핸들러가 1회 진입한다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "~/.opal/.venv/bin/python -m pytest dashboard/backend/tests/test_auth_gate.py -k test_s1; exit=1 40 failed; assert 200 == 401 (prime/no_session: 200 {priming:true}), ImportError entry_token/brain_policy",
+      "red_at": "2026-10-01T15:17:47+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_auth_gate.py: s1 rejected_before_any_work 36 params(4 routes x 9 variants) + control group 4 PASS; 125 passed exit 0 in 5-file run (7.13s)",
+      "marked_at": "2026-10-01T16:09:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-2",
+      "acceptance_ref": "AC-1",
+      "type": "integration",
+      "expected": "①~④는 accept 전에 close code 1008로 끝나고 라우트 본체가 실행되지 않는다. ⑤만 연결이 수립된다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "~/.opal/.venv/bin/python -m pytest dashboard/backend/tests/test_auth_gate.py -k test_s2; exit=1 5 failed; ImportError: cannot import name entry_token",
+      "red_at": "2026-10-01T15:17:47+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_auth_gate.py s2_websocket 5 tests(no_session/no_origin/cross_origin/bad_host rejected before accept, valid connects) PASS; 125 passed exit 0",
+      "marked_at": "2026-10-01T16:09:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-3",
+      "acceptance_ref": "AC-1, H-2",
+      "type": "integration",
+      "expected": "① 200대, `Access-Control-Allow-Origin`이 요청 origin과 정확히 같고(`*` 아님) `Access-Control-Allow-Credentials: true`, 허용 헤더에 `x-csrf-token` 포함. ② 정상 처리. ③ `Access-Control-Allow-Origin` 부재. 미들웨어 등록 순서상 preflight는 세션 없이 통과한다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "~/.opal/.venv/bin/python -m pytest test_auth_gate.py test_cors_env.py -k 'test_s3 or cors_middleware_options'; exit=1 4 failed; KeyError access-control-allow-credentials; test_cors_env.py:75 assert False is True",
+      "red_at": "2026-10-01T15:17:47+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_auth_gate.py s3 (preflight exact origin x2, unlisted origin no ACAO, credentialed request) + test_cors_env.py 5 PASS; 125 passed exit 0",
+      "marked_at": "2026-10-01T16:09:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-4",
+      "acceptance_ref": "AC-5",
+      "type": "integration",
+      "expected": "`/health`는 200이며 응답 키가 정확히 `status`·`version`·`auth`이고 프로젝트 경로·설정·계정 값을 포함하지 않는다. `/api/*` GET 15종은 모두 401이며 응답 본문에 fixture 프로젝트명·경로가 없다. `/`와 정적 자산은 세션 없이 200대. 유효 세션의 GET은 갱신된 기존 테스트(`test_routers.py`·`test_skill_docs.py`의 `authed_client`)가 기대하는 기존 응답 그대로다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "~/.opal/.venv/bin/python -m pytest test_auth_gate.py -k test_s4; exit=1 4 failed; /health keys {status,version} 에 auth 없음; /api/dashboard 무세션 200; 허용 밖 Host 200",
+      "red_at": "2026-10-01T15:17:47+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_auth_gate.py s4 5 tests (all /api GET 401, minimal /health, foreign host, SPA/static open, valid session GET) PASS; full backend run: test_routers/test_skill_docs authed pass except 36 pre-existing non-auth failures",
+      "marked_at": "2026-10-01T16:09:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-5",
+      "acceptance_ref": "AC-2, C-2",
+      "type": "integration",
+      "expected": "① 디렉터리 `0700`, 파일 `0600`, 파일명은 token이 아닌 SHA-256 16진 문자열이고 내용에 token이 없다. ② 200, `{\"authenticated\": true, \"csrf_token\": ...}`, `Set-Cookie`에 `opal_console_session`·`HttpOnly`·`SameSite=Strict`·`Path=/`·`Max-Age=43200`. ③·④·⑤·⑦은 모두 동일한 401 `entry_token_invalid`(사유 비구별). ⑥은 발급 거부·교환 거부. ⑧은 403 `origin_required`. 전 과정의 로그·예외 메시지·응답 본문(성공 응답 제외)에 token·세션 값이 없다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "~/.opal/.venv/bin/python -m pytest test_auth_gate.py test_entry_token.py -k 'test_s5 or issue or cli'; exit=1 22 failed; ImportError entry_token; No module named dashboard.backend.entry_token",
+      "red_at": "2026-10-01T15:17:47+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_entry_token.py 12 + test_auth_gate.py s5 11 tests (hardened cookie, replay, expiry, ttl cap, tampered dir, unknown token, no credential echo, origin required, concurrent exchange once) PASS; 125 passed exit 0",
+      "marked_at": "2026-10-01T16:09:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-6",
+      "acceptance_ref": "AC-3, C-3",
+      "type": "integration",
+      "expected": "꺼짐 구성(키 없음·비불리언·prewarm만 있음): ①은 403 `legacy_brain_disabled`, ②는 선프라임 스레드 0개, ③은 `LegacyBrainDisabled` 또는 무동작(`prewarm`), ④·⑤는 `LegacyBrainDisabled`이며 어느 경우에도 `Popen` 대체 호출 0회. 업그레이드 구성(키 없는 기존 `console.config.json`, `prewarm_projects` 있음)도 꺼짐이다. `true` 구성: ①이 200대로 처리되고 `Popen`이 정해진 argv(`shell=False`, `--allowedTools Bash,Read,Grep,Glob`)로 호출되며 `GET /api/brain/legacy`가 `enabled: true`를 반환한다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "~/.opal/.venv/bin/python -m pytest test_legacy_brain_policy.py test_brain_legacy_api.py -k 's6 or loader or policy or legacy_get'; exit=1 33 failed; ImportError brain_policy; GET /api/brain/legacy 404",
+      "red_at": "2026-10-01T15:17:47+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_legacy_brain_policy.py s6 (off blocks every entry point x6 configs, lifespan no preprime x6, on spawns fixed argv, lifespan preprimes when on) + test_brain_legacy_api.py s6 (off 403 x5 configs, on via Popen) PASS; 125 passed exit 0",
+      "marked_at": "2026-10-01T16:09:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-7",
+      "acceptance_ref": "AC-3, C-3, H-5",
+      "type": "integration",
+      "expected": "① 응답 `enabled:false`, `running_turns:1`, 풀 핸들 폐기. ② 전부 거절되고 끄기 응답 이후의 `Popen` 호출 수 증가 0. ③ 진행 중이던 turn은 결과를 정상 반환하고 `running_turns`가 0으로 돌아온다. ④ 끄기 호출이 반환된 시점의 `Popen` 누적 횟수가 이후 종료 시점까지 변하지 않는다(100회 모두)",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "~/.opal/.venv/bin/python -m pytest test_legacy_brain_policy.py -k s7; exit=1 2 failed; ImportError: cannot import name brain_policy",
+      "red_at": "2026-10-01T15:17:48+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_legacy_brain_policy.py s7_disable_during_turn... and s7_disable_races_with_concurrent_spawn_attempts (range(100) loop) PASS; 125 passed exit 0",
+      "marked_at": "2026-10-01T16:09:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-8",
+      "acceptance_ref": "AC-3, C-3",
+      "type": "contract",
+      "expected": "① 400 `risk_not_acknowledged`, 상태·디스크 불변. ② 401 또는 403, 상태·디스크 불변. ③ 응답과 `GET`이 `{\"enabled\": true, \"running_turns\": 0}`, `console.config.json`의 `legacy_brain_enabled`가 JSON `true`이고 다른 키는 보존. ④ `false` 저장·풀 폐기. ⑤ 500이지만 메모리 상태는 꺼짐이고 이후 prime·query는 403",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "~/.opal/.venv/bin/python -m pytest test_brain_legacy_api.py -k s8; exit=1 9 failed; ImportError: cannot import name entry_token",
+      "red_at": "2026-10-01T15:17:48+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_brain_legacy_api.py s8 tests (400 risk_not_acknowledged x2 bodies, non-boolean x3, auth required, enable persists preserving keys, disable drops pool, save failure 500 memory off) PASS; 125 passed exit 0",
+      "marked_at": "2026-10-01T16:09:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-9",
+      "acceptance_ref": "H-1, AC-3",
+      "type": "regression",
+      "expected": "어댑터 계약이 전과 같다: `shell=False`, `cwd=project_path`, `--session-id`(콜드)/`--resume`(웜), `--allowedTools Bash,Read,Grep,Glob`, 타임아웃 시 `RuntimeError(\"prime_and_ask timeout after ...\")`과 자식 프로세스 종료, 비JSON·`is_error`·`result` 부재의 기존 `RuntimeError` 의미, JSON 펜스 추출, 기동 선프라임 테스트(정책 켜짐 전제). 전 항목 PASS, 실제 `claude` 호출 0회",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_brain.py test_brain_spike.py: 145 passed exit 0, no real claude (spawn guard)",
+      "marked_at": "2026-10-01T16:09:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-10",
+      "acceptance_ref": "AC-2, C-2",
+      "type": "unit",
+      "expected": "① `history.replaceState`가 교환 `fetch`가 해결되기 전에 호출되어 주소창 fragment가 제거되고, 교환 `fetch`는 StrictMode 이중 마운트에서도 정확히 1회이며 성공 시 인증 상태가 된다. ② 잠금 화면. ③' 라우터가 마운트되어 인증된 화면이 보이고 교환 요청은 0회이며 `csrf_token`은 메모리에만 보관된다. ③ 잠금 화면, 이 동안 `/api/auth/session` 외 API 호출 0회, 잠금 화면 DOM에 프로젝트·설정·계정 정보 없음, `opal-cli console open` 안내 문구 존재. ④ 모든 요청이 `credentials: \"include\"`, POST만 `X-CSRF-Token`을 싣고 값은 `localStorage`·`sessionStorage`·`document.cookie`에 저장되지 않는다. ⑤ 인증 상태가 잠금으로 전환. ⑥ `index.html`에 `<meta name=\"referrer\" content=\"no-referrer\">`가 있다",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "cd dashboard/frontend && npx vitest run src/lib/auth.test.ts src/components/auth/LockScreen.test.tsx; exit=1; Failed to resolve import ./auth, ./LockScreen (모듈 미구현, Test Files 2 failed)",
+      "red_at": "2026-10-01T14:52:50+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "vitest auth.test.ts LockScreen.test.tsx brain-legacy-gate brain-navigation-guard: 4 files 28 tests passed; index.html line 6 meta referrer no-referrer present",
+      "marked_at": "2026-10-01T16:09:04+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-11",
+      "acceptance_ref": "AC-3, AC-4",
+      "type": "unit",
+      "expected": "① 화면에 \"새 Brain 출시 전까지 기본적으로 사용할 수 없음\", 업그레이드로 기본 꺼짐이 되었다는 안내, 위험 3종(파일 읽기 범위 비제한·임의 Bash·네트워크 유출), \"새 경로 출시를 기다린다\"는 선택지가 함께 보이고 `/api/brain/prime`·`status`·`query` 호출 0회. ② 체크 전 버튼 비활성, 체크 후 활성. ③ `POST /api/brain/legacy`가 `{enabled:true, risk_acknowledged:true}`로 정확히 1회 호출된다. ④ 대화 UI와 `legacy` 배지·\"구형 Brain 끄기\"가 보인다. ⑤ \"진행 중인 2개 질의는 끝까지 진행됩니다\" 표시. ⑥ 동작하지 않는다는 안내가 보인다. 기존 이탈 가드 4경로 테스트는 갱신된 mock으로 계속 PASS",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "cd dashboard/frontend && npx vitest run src/pages/brain/brain-legacy-gate.test.tsx; exit=1; 5 failed: Unable to find text /새 Brain 출시 전까지/, legacy 배지, 구형 Brain 끄기 버튼, /동작하지 않/ (BrainLegacyGate·Settings 안내 미구현)",
+      "red_at": "2026-10-01T14:52:50+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "vitest brain-legacy-gate.test.tsx + brain-navigation-guard.test.tsx within 4 files 28 passed exit 0; full vitest 16 files 170 passed",
+      "marked_at": "2026-10-01T16:09:04+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-12",
+      "acceptance_ref": "AC-2, C-2, C-4, H-4",
+      "type": "integration",
+      "expected": "① `open` 대체가 받은 URL이 `http://127.0.0.1:7823/#entry=<token>` 형식이고 token은 URL fragment에만 있으며 stdout·stderr 어디에도 token·fragment가 없다. 발급된 파일은 `OPAL_HOME/run/console-entry/<해시>`(디렉터리 `0700`, 파일 `0600`, 내용에 token 없음). 순서는 health 확인→(기동)→재확인→발급→열기. ② 기존 순서 보존. ③ 브라우저를 열지 않고 비0 종료, 재기동 안내 출력. ④ 브라우저를 열지 않고 비0 종료. ⑤ 구문 통과",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "bash scripts/tests/test_console_open.sh; exit=1 PASS=3 FAIL=7; opened='http://127.0.0.1:7823' (fragment 없음), 구버전 health·발급실패에서도 열림 rc=0 (token 발급·auth 마커 미구현)",
+      "red_at": "2026-10-01T14:55:43+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "bash scripts/tests/test_console_open.sh exit 0: PASS=10 FAIL=0 (order, old /health, issue failure cases)",
+      "marked_at": "2026-10-01T16:09:04+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-13",
+      "acceptance_ref": "C-4",
+      "type": "regression",
+      "expected": "두 스크립트 전 항목 PASS(PID 레코드 소유권·stop 판정표·scan 계약 불변)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "test_console_ownership.sh && test_console_scan.sh exit 0: PASS 16 FAIL 0 SKIP 0 verdict ALL PASS",
+      "marked_at": "2026-10-01T16:09:04+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-14",
+      "acceptance_ref": "AC-6, H-2",
+      "type": "contract",
+      "expected": "①은 유효 선언만 통과하고 기존 파일은 동작 불변. ②의 실패는 모두 `e2e_session_bootstrap_failed`이고 오류 메시지·증적에 stdout 내용이 없다. ③ 병합 헤더가 모든 요청에 실리고 스텝 헤더가 같은 이름을 덮는다. ④ 기본 경로 뒤에 `#entry=...`가 붙는다. ⑤ 증적의 `x-csrf-token` 헤더 값과 URL fragment의 `entry` 값이 `[REDACTED]`이고 `Cookie`도 마스킹된다. ⑥ frontend가 뒤에 기동돼도 순환 없이 렌더되고 URL이 임대 포트와 일치",
+      "red_required": true,
+      "red_confirmed": true,
+      "red_evidence": "~/.opal/.venv/bin/python -m pytest opal/tools/test-tool/tests/test_e2e_session_bootstrap.py -q; exit=1 36 failed 8 passed; AttributeError: lib.e2e.environment has no attribute render_session_bootstrap; unknown_field session_bootstrap; KeyError cookie",
+      "red_at": "2026-10-01T14:55:43+09:00",
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "pytest test_e2e_session_bootstrap.py: 38 passed, 8 subtests passed exit 0",
+      "marked_at": "2026-10-01T16:09:04+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-15",
+      "acceptance_ref": "AC-1, AC-3, AC-5, AC-6, C-2, H-3",
+      "type": "e2e",
+      "expected": "기존 표면 시나리오의 기대 상태·필드가 그대로 만족된다. ①의 `Origin` 있는 요청은 401, `Origin` 없는 POST는 403 `origin_required`이며 격리 `console.config.json` 바이트가 불변이다. ②는 403 `legacy_brain_disabled`이고 격리 HOME에서 `claude` 프로세스가 생기지 않는다(응답과 SUT 로그에 spawn 기록 없음). `/health`는 `status`·`version`·`auth`만 반환한다. 모든 증적(`requests.jsonl`·`responses.jsonl`·actions·로그) 전체에서 세션 쿠키·CSRF·진입 token 값이 평문으로 존재하지 않는다(`Cookie`·`X-CSRF-Token`은 `[REDACTED]`). 사용자 Console 7823의 health와 사용자 `console.config.json` 바이트가 실행 전후 같다(`TestUserEnvironmentUntouched`)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-http",
+      "surface_ref": null,
+      "surface_kind": "api",
+      "profile": "api",
+      "actors": [
+        "service"
+      ],
+      "steps": [
+        {
+          "id": "s15-authenticated-surfaces",
+          "executor": "api"
+        },
+        {
+          "id": "s15-unauthenticated-probes",
+          "executor": "api"
+        },
+        {
+          "id": "s15-legacy-brain-probes",
+          "executor": "api"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "A-15-1",
+          "expected": "무쿠키 요청 401, Origin 없는 POST 403, 설정 바이트 불변"
+        },
+        {
+          "id": "A-15-2",
+          "expected": "구형 Brain prime/query 403 legacy_brain_disabled"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "actions",
+        "requests",
+        "responses",
+        "redaction"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "api"
+      ],
+      "assertion_results": [
+        {
+          "id": "A-15-1",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "origin_required",
+          "actual": "origin_required",
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291620Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-1b",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 403,
+          "actual": 403,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291629Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-1c",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 401,
+          "actual": 401,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291638Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-1d",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 401,
+          "actual": 401,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291642Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-2",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "legacy_brain_disabled",
+          "actual": "legacy_brain_disabled",
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291648Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-2b",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 403,
+          "actual": 403,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291655Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-2c",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "legacy_brain_disabled",
+          "actual": "legacy_brain_disabled",
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291659Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-2d",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 403,
+          "actual": 403,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291663Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-3a",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291669Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-3b",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291673Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-3c",
+          "verifier": "response",
+          "executor": "api",
+          "expected": 200,
+          "actual": 200,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291677Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-4a",
+          "verifier": "response",
+          "executor": "api",
+          "expected": "required",
+          "actual": "required",
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291681Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-4b",
+          "verifier": "response",
+          "executor": "api",
+          "expected": null,
+          "actual": null,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291685Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-4c",
+          "verifier": "response",
+          "executor": "api",
+          "expected": null,
+          "actual": null,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291689Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        },
+        {
+          "id": "A-15-4d",
+          "verifier": "response",
+          "executor": "api",
+          "expected": null,
+          "actual": null,
+          "passed": true,
+          "at": "2026-10-01T07:05:15.291693Z",
+          "evidence_refs": [
+            "api/responses.jsonl"
+          ],
+          "observed_via_step": "s15-health"
+        }
+      ],
+      "observed_evidence": [
+        "actions",
+        "assertion_evidence",
+        "cleanup",
+        "metadata",
+        "probe",
+        "redaction",
+        "requests",
+        "responses",
+        "server_log"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "e2e run e2e-20261001-347 (api, real-http, 실제 uvicorn 임대포트, 격리 HOME) 15 assertions pass; config 바이트 불변; 7823 200->200; 증적 비밀 평문 0; spawn 흔적 0; pytest test_e2e_sut_http_surfaces 23 passed. artifacts: scratchpad/tb/s15-art",
+      "marked_at": "2026-10-01T16:05:27+09:00",
+      "fidelity": "real-http"
+    },
+    {
+      "id": "S-16",
+      "acceptance_ref": "C-1, C-4",
+      "type": "check",
+      "expected": "① 127.0.0.1 바인딩 계약 PASS. ② 새 소켓 바인딩·`0.0.0.0` 없음, 플랫폼 분기가 어댑터 격리 지점 밖에 추가되지 않음. ③ `~/.opal/` 하위 경로 변경 없음. ④ `ok: true`(신규·변경 코드 파일의 `@header` 유효)",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "mock",
+      "surface_ref": null,
+      "surface_kind": null,
+      "profile": null,
+      "actors": [],
+      "steps": [],
+      "assertions": [],
+      "required_evidence": [],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [],
+      "assertion_results": [],
+      "observed_evidence": [],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "재실행(마지막 수정 기준): test_main.py 6 passed; auth.py·entry_token.py·routers/auth.py·main.py에 소켓 .bind( 없음, 0.0.0.0은 main.py 주석뿐(host=127.0.0.1); git diff --name-only에 ~/.opal 경로 없음; code-scan validate --changed 51파일 ok:true newly_uncovered 0 (헤더 JSON 이스케이프 4건 수정 후)",
+      "marked_at": "2026-10-01T16:14:03+09:00",
+      "fidelity": "mock"
+    },
+    {
+      "id": "S-17",
+      "acceptance_ref": "AC-2, AC-5, C-2, H-2",
+      "type": "e2e",
+      "expected": "② 인증된 대시보드 화면이 렌더되고 주소창에 fragment가 없다. 이후 프로젝트 데이터 요청이 200이다. ③ 잠금 화면이 보이고 데이터 요청이 거절된다(401). ③' 교환 없이 바로 인증된 화면이 열린다(북마크 재진입). ④ 잠금 화면과 `opal-cli console open` 재진입 안내만 보이고 DOM에 프로젝트·설정·계정 정보가 없으며 `/api/*` 데이터 요청이 200으로 응답되지 않는다. 증적에 token·세션 값이 평문으로 남지 않는다",
+      "red_required": false,
+      "red_confirmed": false,
+      "red_evidence": null,
+      "red_at": null,
+      "required_fidelity": "real-usage",
+      "surface_ref": null,
+      "surface_kind": "web_ui",
+      "profile": "browser",
+      "actors": [
+        "user"
+      ],
+      "steps": [
+        {
+          "id": "s17-entry-fragment",
+          "executor": "browser"
+        },
+        {
+          "id": "s17-reused-token-new-context",
+          "executor": "browser"
+        },
+        {
+          "id": "s17-cookie-bookmark",
+          "executor": "browser"
+        },
+        {
+          "id": "s17-no-cookie-lock",
+          "executor": "browser"
+        }
+      ],
+      "assertions": [
+        {
+          "id": "A-17-1",
+          "expected": "fragment 제거·인증 화면"
+        },
+        {
+          "id": "A-17-2",
+          "expected": "무쿠키 잠금 화면, 민감 데이터 없음"
+        }
+      ],
+      "required_evidence": [
+        "metadata",
+        "actions",
+        "screenshot"
+      ],
+      "handoff": null,
+      "result": "pass",
+      "operational_status": null,
+      "observed_executors": [
+        "browser"
+      ],
+      "assertion_results": [
+        {
+          "id": "A-17-1",
+          "expected": {
+            "fragment_removed": true,
+            "authed_screen": true,
+            "data_api_200": true,
+            "bookmark_authed_no_exchange": true
+          },
+          "actual": {
+            "fragment_removed": true,
+            "authed_screen": true,
+            "data_api_200": true,
+            "bookmark_authed_no_exchange": true
+          },
+          "passed": true
+        },
+        {
+          "id": "A-17-2",
+          "expected": {
+            "reused_lock": true,
+            "reused_exchange_status": [
+              401
+            ],
+            "reused_data_200": false,
+            "nocookie_lock": true,
+            "nocookie_cli_hint": true,
+            "nocookie_data_200": false,
+            "nocookie_dom_leak": false,
+            "token_in_dom": false
+          },
+          "actual": {
+            "reused_lock": true,
+            "reused_exchange_status": [
+              401
+            ],
+            "reused_data_200": false,
+            "nocookie_lock": true,
+            "nocookie_cli_hint": true,
+            "nocookie_data_200": false,
+            "nocookie_dom_leak": false,
+            "token_in_dom": false
+          },
+          "passed": true
+        }
+      ],
+      "observed_evidence": [
+        "metadata",
+        "actions",
+        "screenshot"
+      ],
+      "handoff_state": null,
+      "run_id": null,
+      "evidence": "real chrome-headless-shell(CDP, 격리 browser context 3개)+실제 vite·uvicorn(임대 포트 63132/63133, 격리 HOME). e2e run 하네스는 단일 컨텍스트라 ③④ 불가 -> ad-hoc CDP 관찰. 증적: scratchpad/tb/s17-evidence (screenshots 4, result.json). token plaintext 파일 0, leaked pgid 0, 7823 200->200",
+      "marked_at": "2026-10-01T16:05:27+09:00",
+      "fidelity": "real-usage"
+    }
+  ]
+}

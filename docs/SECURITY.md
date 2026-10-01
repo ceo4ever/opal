@@ -224,3 +224,50 @@ OWASP A08 기준을 함께 적용한다.
 ## §9 취약점 보고
 
 보안 취약점 발견 시 GitHub Issues를 통해 보고하거나 `ceo4ever/opal` 저장소 관리자에게 직접 연락한다.
+
+---
+
+## §10 Console 로컬 인증 경계 (태스크 172)
+
+OPAL Console(`127.0.0.1:7823`)은 로컬 데몬이지만 브라우저가 중간에 있어 같은 PC의 다른 웹 페이지가 요청을 보낼 수 있다. 이 절은 그 경계를 정한다. 구조는 `docs/ARCHITECTURE.md §인증 게이트`가 소유한다.
+
+### 위협 모델
+
+| 위협 | 설명 |
+|------|------|
+| 타 사이트 요청 | 사용자가 연 다른 웹 사이트가 브라우저로 `127.0.0.1:7823`에 POST 등을 보내 Console을 조작한다(CSRF·교차 출처 요청) |
+| DNS rebinding | 공격자 도메인이 로컬 주소로 재해석되어 Host가 로컬이 아닌 요청이 Console에 도달한다 |
+| 무세션 접근 | 세션 없이 포트에 직접 접근해 프로젝트·설정 데이터를 읽거나 쓴다 |
+
+### 보호 범위
+
+- `/api/` 전체는 default-deny다. 세션 쿠키가 없으면 401 `auth_required`이며, 예외는 `POST /api/auth/exchange`와 `GET /api/auth/session` 2종뿐이다.
+- 모든 경로에서 Host(호스트명 `127.0.0.1`·`localhost`·`[::1]`, 추가는 `OPAL_CONSOLE_ALLOWED_HOSTS`)를 검사해 rebinding 요청을 403 `host_not_allowed`로 거절한다.
+- `/api/` 요청의 Origin은 요청 Host와 같은 출처이거나 허용 CORS origin이어야 하며, 상태 변경 메서드는 Origin이 없어도 거절한다(403 `origin_required`). 상태 변경 요청은 세션별 `X-CSRF-Token`도 일치해야 한다(403 `csrf_invalid`).
+- WebSocket handshake도 Host·Origin(필수)·세션을 검사하고 실패하면 accept 전에 close 1008로 끊는다.
+- 세션 쿠키는 `HttpOnly; SameSite=Strict; Path=/`, 12시간 절대 만료이며 서버 재시작 시 소멸한다. 로컬 HTTP라 `Secure`는 붙이지 않는다.
+- 진입은 `opal-cli console open`이 발급하는 1회용 token(기본 60초, 상한 300초)으로만 한다. token은 URL fragment로 전달되어 서버 요청·로그·Referrer에 실리지 않고, 소비는 원자적 1회이며 실패 사유는 구별하지 않는다. 채널 디렉터리(`OPAL_HOME/run/console-entry`)는 0700·소유자·symlink 검증을 통과해야 쓴다.
+- 인증 우회 스위치는 없다.
+
+### GET 점검 결과
+
+모든 `/api/` GET 경로(프로젝트·태스크·메모리·환경·doctor·스킬 문서·브레인 조회·설정)는 세션이 필요하다. 세션 없이 응답하는 것은 SPA 정적 파일, `/health`, FastAPI 기본 문서 표면(`/docs`·`/redoc`·`/openapi.json`)이다. `/health`는 `{status, version, auth}` 상태 마커만 싣고 프로젝트·설정·계정 정보를 싣지 않으며, 문서 표면은 라우트 스키마만 싣는다(데이터 없음). 다만 `/docs`·`/redoc`은 외부 CDN 스크립트를 Console 출처에서 로드하므로 이 두 경로의 차단은 후속 과제다(현재 E2E가 `openapi.json` 200을 표면 검증에 사용한다).
+
+### 구형 `claude -p` Brain의 위험
+
+구형 Brain은 로컬 `claude -p` 서브프로세스로 질의를 처리하며 다음 위험이 있다.
+
+1. 파일 읽기 범위가 프로젝트로 제한되지 않는다.
+2. 임의 Bash 명령을 실행할 수 있다.
+3. 읽은 내용이 네트워크로 유출될 수 있다.
+
+따라서 기본 꺼짐이다. 켜짐 여부는 서버 측(`console.config.json`의 `legacy_brain_enabled`)에 저장하며 JSON `true`만 켜짐으로 읽고, 키 없음·파손·업그레이드는 꺼짐이다. 사용자가 화면에서 위험 3종을 확인(`risk_acknowledged`)하고 켠 뒤에만 동작하며, 꺼진 동안 prime·query는 403 `legacy_brain_disabled`이고 `claude` 프로세스는 시작되지 않는다. 끄기는 요청이 완료된 뒤의 새 프로세스 시작을 막지만 **이미 시작된 turn은 끝까지 진행**한다(화면이 진행 중 개수를 알린다).
+
+### 한계
+
+- 같은 사용자 권한으로 실행되는 로컬 프로세스는 막지 못한다. token 채널·세션 쿠키·메모리를 읽을 수 있는 프로세스는 같은 신뢰 경계 안이다.
+- 구형 Brain이 켜진 동안 프로젝트 밖 파일 읽기를 차단하지 않는다.
+
+### 비밀 값 취급
+
+진입 token·세션 쿠키 값·CSRF 값은 로그·예외·URL·테스트 증적에 남기지 않는다. 디스크에는 token의 SHA-256 이름과 만료 시각만 있고, 세션 저장소 키도 해시다. E2E 증적은 `Cookie`·`X-CSRF-Token`·`#entry=` 값을 마스킹한다. 문서와 테스트에도 실제 값 예시를 적지 않는다.

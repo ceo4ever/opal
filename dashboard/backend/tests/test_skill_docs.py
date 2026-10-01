@@ -3,7 +3,7 @@
   "module": "tests.test_skill_docs",
   "layer": "test",
   "domain": "console",
-  "description": "Docs 스킬 문서 화면 공개 계약 RED-first 테스트 — S-3~S-10 (task 140 W-2). 임시 corpus fixture(축소 registry JSON + 형식이 다른 SKILL.md + pipeline.json)를 DI로 주입해 실제 GET 라우터를 FastAPI TestClient로 호출한다. mock 대체 금지, 실 파일 읽기. PLAN DEC-1·5·6·9·10·11 계약을 고정한다. 구현(routers/docs_skills.py·parsers/skill_parser.py·adapters/skill_docs_adapter.py)이 없는 현재 상태에서 전부 실패(RED)해야 한다.",
+  "description": "Docs 스킬 문서 화면 공개 계약 테스트 — S-3~S-10. 임시 corpus fixture(축소 registry JSON + 형식이 다른 SKILL.md + pipeline.json)를 DI로 주입해 실제 GET 라우터를 FastAPI TestClient로 호출한다. mock 대체 금지, 실 파일 읽기. 라우터(routers/docs_skills.py)·파서(parsers/skill_parser.py)·어댑터(adapters/skill_docs_adapter.py)의 공개 계약을 고정한다. 클라이언트는 authed_client(세션 쿠키 + 상태 변경 요청에 Origin·X-CSRF-Token 자동 부착)이며 인증 게이트 뒤에서도 모든 기대는 그대로다.",
   "exports": [
     "test_s3_list_no_filter_row_count",
     "test_s3_list_search_by_name_fragment",
@@ -45,6 +45,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from dashboard.backend.tests.auth_helpers import authed_client
+
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 CORPUS_ROOT = FIXTURES_DIR / "skill_docs_corpus"
 BROKEN_YAML_CORPUS_ROOT = FIXTURES_DIR / "skill_docs_corpus_broken_yaml"
@@ -77,7 +79,8 @@ def _client_for_corpus_root(corpus_root: Path) -> TestClient:
     from dashboard.backend.routers.docs_skills import get_skill_docs_corpus_root
 
     app.dependency_overrides[get_skill_docs_corpus_root] = lambda: corpus_root
-    return TestClient(app)
+    # 인증 게이트 뒤의 GET 표면 — 유효 세션이 있어야 기존 응답을 본다(172 D-22). 쓰기 메서드 405 검증은 Origin·CSRF가 자동 부착돼 미들웨어를 통과한다.
+    return authed_client(app)
 
 
 @pytest.fixture()

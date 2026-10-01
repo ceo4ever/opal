@@ -119,10 +119,14 @@ class _SutFixtureMixin:
     def _start(self, service_id: str, *, port: int, env_extra: dict | None = None):
         # D-11/D-13: port는 호출자가 확보해 필수 키워드 인자로 넘긴다.
         self.ports_by_id[service_id] = port
+        # 아직 기동하지 않은 서비스도 치환 토큰({service.<id>.url})이 해석되도록 자리 포트 0을 둔다
+        # (하네스는 전 서비스 포트를 먼저 임대하므로 실제 run_e2e 경로와 같은 조건).
+        known_ports = {svc["id"]: 0 for svc in self.config["services"]}
+        known_ports.update(self.ports_by_id)
         rendered = e2e_environment.render_service(
             _service(self.config, service_id),
             port=port,
-            ports_by_id=self.ports_by_id,
+            ports_by_id=known_ports,
             project_root=str(_SOURCE_ROOT),
         )
         rendered["env"].update(env_extra or {})
@@ -134,10 +138,11 @@ class _SutFixtureMixin:
         self.handles.append(handle)
         return handle, rendered
 
-    def _start_backend(self, *, port: int, cors_origin: str | None = None):
+    def _start_backend(self, *, port: int, cors_origin: str | None = None, extra_env: dict | None = None):
         env_extra = {}
         if cors_origin:
             env_extra["OPAL_CONSOLE_CORS_ORIGINS"] = cors_origin
+        env_extra.update(extra_env or {})
         handle, _ = self._start("backend", port=port, env_extra=env_extra)
         return handle
 
@@ -210,7 +215,21 @@ class TestBrowserRealUsage(_SutFixtureMixin, unittest.TestCase):
         fe_port = e2e_ports.find_free_port()          # ① frontend 포트 먼저
         be_port = e2e_ports.find_free_port()           # ② backend 포트
         fe_origin = f"http://127.0.0.1:{fe_port}"      # ③ ①의 정수로 origin 조립
-        backend = self._start_backend(port=be_port, cors_origin=fe_origin)  # ④ (start_service 내부에서 http health)
+        # 인증 게이트(태스크 172): 세션 없는 브라우저는 잠금 화면만 보고 데이터를 요청하지 않는다.
+        # 임시 HOME/OPAL_HOME의 backend에 1회성 진입 token을 발급해 fragment로 진입한다
+        # (사용자 ~/.opal·7823은 건드리지 않는다).
+        sut_home = pathlib.Path(tempfile.mkdtemp(prefix="opal-e2e-skeleton-home-"))
+        self.addCleanup(shutil.rmtree, sut_home, True)
+        (sut_home / ".opal").mkdir()
+        sut_env = {"HOME": str(sut_home), "OPAL_HOME": str(sut_home / ".opal")}
+        issued = subprocess.run(
+            [sys.executable, "-m", "dashboard.backend.entry_token", "issue"],
+            cwd=_SOURCE_ROOT, capture_output=True, text=True, timeout=30,
+            env={**os.environ, **sut_env, "PYTHONPATH": str(_SOURCE_ROOT)},
+        )
+        self.assertEqual(issued.returncode, 0, "entry token 발급 실패")
+        entry_token = issued.stdout.strip()
+        backend = self._start_backend(port=be_port, cors_origin=fe_origin, extra_env=sut_env)  # ④ (start_service 내부에서 http health)
         frontend = self._start_frontend(port=fe_port, backend_url=backend.url)  # ⑤
 
         # [MUST] ③에서 주입한 origin의 포트와 ⑤에서 vite가 실제로 바인딩한
@@ -227,7 +246,7 @@ class TestBrowserRealUsage(_SutFixtureMixin, unittest.TestCase):
         node_script.write_text(
             _CDP_PROBE_TEMPLATE.format(
                 chrome_path=chrome_path,
-                target_url=f"{frontend.url}/",
+                target_url=f"{frontend.url}/#entry={entry_token}",
                 expect_url=f"{backend.url}/api/dashboard",
             ),
             encoding="utf-8",

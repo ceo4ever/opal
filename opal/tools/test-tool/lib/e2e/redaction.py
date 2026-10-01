@@ -3,7 +3,7 @@
   "module": "redaction",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T05 증적 마스킹 — Authorization·Cookie·Set-Cookie 헤더와 URL query 비밀값을 저장 직전에 마스킹하고 §A.12 redaction 결과(artifact_path·redacted_fields·redaction_failed)를 반환한다. 저장 자체는 하지 않는다 — 호출자는 lib/e2e/evidence.py 단일 관문뿐이다.",
+  "description": "T05 증적 마스킹 — Authorization·Cookie·Set-Cookie·X-CSRF-Token 헤더와 URL query 비밀값, URL fragment `#entry=<token>`을 저장 직전에 마스킹하고 §A.12 redaction 결과(artifact_path·redacted_fields·redaction_failed)를 반환한다. 저장 자체는 하지 않는다 — 호출자는 lib/e2e/evidence.py 단일 관문뿐이다.",
   "exports": ["MASK", "RedactionError", "RedactionResult", "redact_headers", "redact_url", "redact_text", "redact_value"]
 }
 
@@ -31,6 +31,7 @@ SECRET_HEADER_NAMES = frozenset(
         "set-cookie",
         "x-api-key",
         "x-auth-token",
+        "x-csrf-token",
     }
 )
 
@@ -56,6 +57,10 @@ SECRET_QUERY_KEYS = frozenset(
         "sid",
         "auth",
         "key",
+        "csrf_token",
+        "entry",
+        "browser_entry_fragment",
+        "opal_console_session",
     }
 )
 
@@ -71,6 +76,9 @@ SECRET_VALUE_ACTIONS = frozenset({"fill", "type", "select"})
 _QUERY_PATTERN = re.compile(
     r"(?i)(?P<sep>[?&;]|\A)(?P<key>" + "|".join(sorted(SECRET_QUERY_KEYS)) + r")=(?P<value>[^&\s;\"']*)"
 )
+
+# URL fragment의 1회성 진입 token(`#entry=<값>`, 다른 fragment 파라미터 뒤여도 같다).
+_FRAGMENT_ENTRY_PATTERN = re.compile(r"(?P<pre>#(?:[^#\s&\"']*&)?)entry=(?P<value>[^&\s\"']*)")
 
 _HEADER_LINE_PATTERN = re.compile(
     r"(?im)^(?P<indent>[ \t>]*)(?P<name>" + "|".join(sorted(SECRET_HEADER_NAMES)) + r")(?P<sep>\s*:\s*)(?P<value>.*)$"
@@ -152,7 +160,13 @@ def redact_url(url: Any, *, path: str = "url") -> Tuple[Any, List[str]]:
         touched.append(f"{path}?{match.group('key')}")
         return f"{match.group('sep')}{match.group('key')}={MASK}"
 
-    return _QUERY_PATTERN.sub(_sub, url), touched
+    def _fragment_sub(match: "re.Match[str]") -> str:
+        if not match.group("value"):
+            return match.group(0)
+        touched.append(f"{path}#entry")
+        return f"{match.group('pre')}entry={MASK}"
+
+    return _FRAGMENT_ENTRY_PATTERN.sub(_fragment_sub, _QUERY_PATTERN.sub(_sub, url)), touched
 
 
 def redact_text(text: Any, *, path: str = "text") -> Tuple[str, List[str]]:
@@ -179,6 +193,12 @@ def redact_text(text: Any, *, path: str = "text") -> Tuple[str, List[str]]:
         touched.append(f"{path}?{match.group('key')}")
         return f"{match.group('sep')}{match.group('key')}={MASK}"
 
+    def _fragment_sub(match: "re.Match[str]") -> str:
+        if not match.group("value"):
+            return match.group(0)
+        touched.append(f"{path}#entry")
+        return f"{match.group('pre')}entry={MASK}"
+
     def _bearer_sub(match: "re.Match[str]") -> str:
         touched.append(f"{path}:bearer")
         return f"Bearer {MASK}"
@@ -186,6 +206,7 @@ def redact_text(text: Any, *, path: str = "text") -> Tuple[str, List[str]]:
     redacted = _JSON_FIELD_PATTERN.sub(_json_sub, text)
     redacted = _HEADER_LINE_PATTERN.sub(_header_sub, redacted)
     redacted = _QUERY_PATTERN.sub(_query_sub, redacted)
+    redacted = _FRAGMENT_ENTRY_PATTERN.sub(_fragment_sub, redacted)
     redacted = _BEARER_PATTERN.sub(_bearer_sub, redacted)
     return redacted, touched
 

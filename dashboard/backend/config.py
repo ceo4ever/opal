@@ -3,8 +3,8 @@
   "module": "config",
   "layer": "config",
   "domain": "console",
-  "description": "~/.opal/console.config.json 로드 및 기본값 추론. scan_roots/scan_depth/exclude/prewarm_projects 관리. prewarm_projects는 기동 선프라임 대상 프로젝트 절대경로 목록 — _coerce_str_list()로 비-list 값을 안전하게 []로 폴백한다. save_config — 원자적 쓰기(_atomic_write_json: temp write + os.replace) + _WRITE_LOCK(threading.Lock)으로 read-modify-write 사이클 직렬화. 쓰기 대상은 routers/config.py의 POST /api/config/prewarm이 검증한 prewarm_projects 갱신뿐이다. load_quiet_hours — 진행 통계 야간 제외 구간(집계 기준 17)을 OPAL setting 2층 머지로 로드한다. 전역 ~/.opal/setting.json의 quietHours 위에 {프로젝트}/.opal/setting.local.json의 quietHours를 하위 키 단위로 덮어쓰며(로컬 우선), 어느 층에도 없으면 DEFAULT_QUIET_HOURS(enabled true·00:00~09:00·timeZone Asia/Seoul)다. enabled != true거나 start == end면 None(보정 끔). 반환값은 QuietHours(tuple 서브클래스) — 튜플 값 자체는 (start_minute, end_minute) 2-tuple뿐이고 time_zone은 튜플 성분이 아니라 부착 속성(.time_zone)이다. __eq__·__hash__는 오버라이드하지 않고 tuple 상속 구현 그대로 쓴다 — QuietHours(0,540,\"UTC\") == (0,540)이 자연히 참이고 hash도 일치해(dict 키·set 원소로 안전) 기존 테스트(TestLoadQuietHours)의 2-tuple 비교와 완전히 호환된다. timeZone도 같은 2층 머지의 하위 키이며, 무효 IANA 이름은 예외 없이 Asia/Seoul로 폴백하고 설정 파일을 다시 쓰지 않는다(CONTRACT.md §2.8·§3.5). QuietHours는 config·라우터 계층에서만 흐른다 — 라우터가 stats.py에는 (시작 분, 끝 분)으로 좁혀 인자 주입한다(stats.py는 설정을 읽지 않는다, §2.8.1 B-1~B-3). quiet_hours_token은 캐시 키 서명 — isinstance(x, QuietHours)로 분기해 QuietHours 입력은 \"start-end@time_zone\", 평범한 2-tuple 레거시 입력은 \"start-end\", None은 \"off\". timeZone만 다른 두 설정은 반드시 다른 토큰을 만든다(MV-26). load_owner_name — 화면에 쓸 사용자 호칭의 단일 로더다. 원천은 ~/.opal/identity.md frontmatter의 owner_name(전역 1개, 프로젝트별 분기 없음)이며 파일 부재·frontmatter 부재·키 부재·값 공란·읽기 실패 전건을 DEFAULT_OWNER_NAME(\"사용자\")로 폴백하고 예외를 밖으로 던지지 않는다. 표준 라이브러리 정규식만 쓰며 state-tool을 import하지 않는다(콘솔이 도구에 의존하지 않는다). 호칭은 라우터 층에서 붙으며 stats.py는 이 값을 모른다.",
-  "exports": ["load_config", "ConsoleConfig", "save_config", "load_quiet_hours", "quiet_hours_token", "QuietHours", "load_owner_name"],
+  "description": "~/.opal/console.config.json 로드 및 기본값 추론. scan_roots/scan_depth/exclude/prewarm_projects 관리. prewarm_projects는 기동 선프라임 대상 프로젝트 절대경로 목록 — _coerce_str_list()로 비-list 값을 안전하게 []로 폴백한다. save_config — 원자적 쓰기(_atomic_write_json: temp write + os.replace) + _WRITE_LOCK(threading.Lock)으로 read-modify-write 사이클 직렬화. 쓰기 대상은 routers/config.py의 POST /api/config/prewarm이 검증한 prewarm_projects 갱신뿐이다. load_quiet_hours — 진행 통계 야간 제외 구간(집계 기준 17)을 OPAL setting 2층 머지로 로드한다. 전역 ~/.opal/setting.json의 quietHours 위에 {프로젝트}/.opal/setting.local.json의 quietHours를 하위 키 단위로 덮어쓰며(로컬 우선), 어느 층에도 없으면 DEFAULT_QUIET_HOURS(enabled true·00:00~09:00·timeZone Asia/Seoul)다. enabled != true거나 start == end면 None(보정 끔). 반환값은 QuietHours(tuple 서브클래스) — 튜플 값 자체는 (start_minute, end_minute) 2-tuple뿐이고 time_zone은 튜플 성분이 아니라 부착 속성(.time_zone)이다. __eq__·__hash__는 오버라이드하지 않고 tuple 상속 구현 그대로 쓴다 — QuietHours(0,540,\"UTC\") == (0,540)이 자연히 참이고 hash도 일치해(dict 키·set 원소로 안전) 기존 테스트(TestLoadQuietHours)의 2-tuple 비교와 완전히 호환된다. timeZone도 같은 2층 머지의 하위 키이며, 무효 IANA 이름은 예외 없이 Asia/Seoul로 폴백하고 설정 파일을 다시 쓰지 않는다(CONTRACT.md §2.8·§3.5). QuietHours는 config·라우터 계층에서만 흐른다 — 라우터가 stats.py에는 (시작 분, 끝 분)으로 좁혀 인자 주입한다(stats.py는 설정을 읽지 않는다, §2.8.1 B-1~B-3). quiet_hours_token은 캐시 키 서명 — isinstance(x, QuietHours)로 분기해 QuietHours 입력은 \"start-end@time_zone\", 평범한 2-tuple 레거시 입력은 \"start-end\", None은 \"off\". timeZone만 다른 두 설정은 반드시 다른 토큰을 만든다(MV-26). load_owner_name — 화면에 쓸 사용자 호칭의 단일 로더다. 원천은 ~/.opal/identity.md frontmatter의 owner_name(전역 1개, 프로젝트별 분기 없음)이며 파일 부재·frontmatter 부재·키 부재·값 공란·읽기 실패 전건을 DEFAULT_OWNER_NAME(\"사용자\")로 폴백하고 예외를 밖으로 던지지 않는다. 표준 라이브러리 정규식만 쓰며 state-tool을 import하지 않는다(콘솔이 도구에 의존하지 않는다). 호칭은 라우터 층에서 붙으며 stats.py는 이 값을 모른다. load_legacy_brain_enabled — 구형 Brain 사용 여부의 로더로, 호출 시점의 CONFIG_PATH에서 legacy_brain_enabled 키가 JSON true(불리언)일 때만 True이고 키 없음·문자열·1·null·false·파일 부재·파손은 모두 False이며 예외를 던지지 않는다. ConsoleConfig·load_config 시그니처는 바뀌지 않는다.",
+  "exports": ["load_config", "ConsoleConfig", "save_config", "load_quiet_hours", "quiet_hours_token", "QuietHours", "load_owner_name", "load_legacy_brain_enabled"],
   "depends": [],
   "task": "061"
 }
@@ -97,6 +97,20 @@ def load_config() -> ConsoleConfig:
         exclude=data.get("exclude", DEFAULT_EXCLUDE),
         prewarm_projects=_coerce_str_list(data.get("prewarm_projects", [])),
     )
+
+
+# ── 구형 Brain 사용 여부 ─────────────────────────────────────────────────────
+
+LEGACY_BRAIN_KEY = "legacy_brain_enabled"
+
+
+def load_legacy_brain_enabled() -> bool:
+    """console.config.json의 `legacy_brain_enabled`가 JSON `true`일 때만 True.
+
+    키 없음·문자열 "true"·1·null·false·파일 부재·파손은 모두 False(fail-closed).
+    호출 시점의 `CONFIG_PATH`를 읽으며 예외를 밖으로 던지지 않는다.
+    """
+    return _read_json_object(CONFIG_PATH).get(LEGACY_BRAIN_KEY) is True
 
 
 # ── 사용자 호칭 로드 ─────────────────────────────────────────────────────────

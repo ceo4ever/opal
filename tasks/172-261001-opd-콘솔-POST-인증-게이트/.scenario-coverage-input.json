@@ -1,0 +1,276 @@
+{
+  "goal": "- Console의 상태 변경 요청과 LLM 실행 요청은 정상 진입으로 발급받은 브라우저 세션에서, 허용된 Origin/Host와 CSRF 검증을 통과해야만 처리된다. 다른 사이트, DNS rebinding, 무세션 요청은 실제 작업 전에 거절된다. - 사용자는 `opal-cli console open`으로 Console을 열면 별도 입력 없이 인증된 상태가 된다. 세션이 없는 북마크로 접속하면 민감 데이터가 없는 잠금 화면과 재진입 안내만 본다. - 구형 `claude -p` Brain은 기본적으로 꺼져 있다. 인증된 사용자가 위험(파일 읽기 범위 비제한, 임의 Bash, 네트워크 유출)을 화면에서 확인하고 명시적으로 켰을 때만 동작한다. 꺼져 있으면 HTTP 요청, 서버 기동 선프라임, 내부 Registry 직접 호출 어느 경로로도 새 `claude -p` 프로세스가 생기지 않는다. - Brain 첫 진입 화면과 업그레이드 안내는 새 Brain이 나오기 전까지 Brain을 기본적으로 쓸 수 없다는 사실과, 구형 경로를 위험을 수락하고 켜는 선택지를 설명한다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "AC-6",
+    "C-1",
+    "C-2",
+    "C-3",
+    "C-4"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3",
+    "H-4",
+    "H-5"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-1",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-2",
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-3",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-3",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-3",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-9",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-10",
+      "type": "unit",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-2",
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-11",
+      "type": "unit",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-3",
+        "AC-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-12",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-2",
+        "C-2",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-4"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-13",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-14",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-15",
+      "type": "e2e",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1",
+        "AC-3",
+        "AC-5",
+        "AC-6",
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-16",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "C-1",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-17",
+      "type": "e2e",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-2",
+        "AC-5",
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

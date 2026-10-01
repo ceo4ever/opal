@@ -197,11 +197,11 @@ llm-wiki 사상을 융합한 프로젝트 지식 위키 — 프로젝트의 WHY�
 
 | 컴포넌트 | 유형 | 설명 |
 |----------|------|------|
-| `dashboard/frontend` | FE 앱 | React+TS+Vite+shadcn/ui — 8개 화면(대시보드/프로젝트/태스크 칸반/메모리/환경/프로젝트 브레인/OPAL Docs/설정) |
-| `dashboard/backend` | BE 데몬 | FastAPI — `.opal/AGENT.md` 마커 스캐너 + read-only 도구 어댑터 + 마크다운 파서 + 스킬 문서 어댑터(레지스트리·소스 병합) + 쓰기 예외 2종 격리(브레인 POST·설정 라우터) (127.0.0.1:7823) |
-| `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open/scan) — scan은 `console.config.json`(스캔 루트 설정)을 생성·머지 갱신하며 install이 1회 자동 실행 |
+| `dashboard/frontend` | FE 앱 | React+TS+Vite+shadcn/ui — 8개 화면(대시보드/프로젝트/태스크 칸반/메모리/환경/프로젝트 브레인/OPAL Docs/설정) + 세션이 없으면 API 호출 없이 정적 안내만 보이는 잠금 화면 |
+| `dashboard/backend` | BE 데몬 | FastAPI — `.opal/AGENT.md` 마커 스캐너 + read-only 도구 어댑터 + 마크다운 파서 + 스킬 문서 어댑터(레지스트리·소스 병합) + 쓰기 예외 2종 격리(브레인 POST·설정 라우터) + `/api/` 인증 게이트(Host·Origin·세션·CSRF, 1회용 진입 token 교환) + 구형 Brain 정책(기본 꺼짐, 켜기 전 `claude -p` 프로세스 0회) (127.0.0.1:7823) |
+| `opal-cli console` | CLI | 데몬 기동/관리 서브커맨드 (start/stop/status/open/scan) — `open`은 인증 게이트가 있는 데몬에만 1회용 진입 token을 URL fragment에 실어 브라우저를 연다(구버전 데몬은 열지 않고 재기동 안내). scan은 `console.config.json`(스캔 루트 설정)을 생성·머지 갱신하며 install이 1회 자동 실행 |
 
-> 소스는 `dashboard/`, 배포는 install 경유 `~/.opal/dashboard-server/`. 읽기 전용(쓰기/편집·브레인 화면은 2차). 시그니처 3색은 `:root` 전역 CSS 변수로 교체 용이.
+> 소스는 `dashboard/`, 배포는 install 경유 `~/.opal/dashboard-server/`. 읽기 중심(쓰기 예외는 브레인 POST·설정 라우터 2종, 모든 `/api/` 요청은 세션 필요). 시그니처 3색은 `:root` 전역 CSS 변수로 교체 용이.
 
 ## 주요 컴포넌트 (PM 개선 루프)
 

@@ -3,9 +3,9 @@
  *   "module": "settings-page",
  *   "layer": "page",
  *   "domain": "settings",
- *   "description": "OPAL Console 설정 화면 — 프라임 풀 토글 단일 섹션: contextProject 대상 선프라임 ON/OFF Switch(GET /api/config로 상태 로드, POST /api/config/prewarm으로 변경 후 invalidateQueries 재조회) + 현재 prewarm_projects 목록 읽기 전용 표시 + console.config.json·프로젝트 로컬 설정(setting.local.json)은 파일 직접 편집으로 관리한다는 안내 문구만 포함한다. console.config 전반 관리·프로젝트 로컬 설정 편집 섹션 및 그 쓰기 API(POST /api/config/console, GET/POST /api/config/project-local)는 포함하지 않는다.",
+ *   "description": "OPAL Console 설정 화면 — 프라임 풀 토글 단일 섹션(구형 Brain이 꺼짐이면 GET /api/brain/legacy 결과로 선프라임이 동작하지 않는다는 안내를 덧붙임): contextProject 대상 선프라임 ON/OFF Switch(GET /api/config로 상태 로드, POST /api/config/prewarm으로 변경 후 invalidateQueries 재조회) + 현재 prewarm_projects 목록 읽기 전용 표시 + console.config.json·프로젝트 로컬 설정(setting.local.json)은 파일 직접 편집으로 관리한다는 안내 문구만 포함한다. console.config 전반 관리·프로젝트 로컬 설정 편집 섹션 및 그 쓰기 API(POST /api/config/console, GET/POST /api/config/project-local)는 포함하지 않는다.",
  *   "exports": ["SettingsPage"],
- *   "depends": ["api-client", "ui-store", "card", "switch", "label", "separator", "alert", "badge", "skeleton"],
+ *   "depends": ["api-client", "brain-legacy-gate", "ui-store", "card", "switch", "label", "separator", "alert", "badge", "skeleton"],
  *   "task": "061"
  * }
  */
@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BRAIN_LEGACY_QUERY_KEY } from "@/pages/brain/BrainLegacyGate";
 
 /* ------------------------------------------------------------------ */
 /* 타입                                                                  */
@@ -97,6 +98,13 @@ function PrimePoolSection({
     onError: (err) => setError(errorMessage(err)),
   });
 
+  const { data: legacy } = useQuery<{ enabled: boolean; running_turns: number }>({
+    queryKey: BRAIN_LEGACY_QUERY_KEY,
+    queryFn: () => apiClient("/api/brain/legacy"),
+    retry: 1,
+  });
+  const legacyOff = legacy?.enabled === false;
+
   const enabled = !!(contextProject && config?.prewarm_projects.includes(contextProject));
 
   return (
@@ -134,6 +142,12 @@ function PrimePoolSection({
           </div>
         )}
         {error && <SaveFailureAlert message={error} />}
+
+        {legacyOff && (
+          <p className="text-xs text-status-stale">
+            구형 Brain이 꺼져 있어 선프라임 설정은 켜도 동작하지 않습니다. Brain 화면에서 구형 경로를 켠 뒤에 적용됩니다.
+          </p>
+        )}
 
         <Separator />
 

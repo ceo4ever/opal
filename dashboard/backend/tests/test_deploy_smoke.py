@@ -3,7 +3,7 @@
   "module": "tests.test_deploy_smoke",
   "layer": "test",
   "domain": "console",
-  "description": "S-10 보강: 배포 컨텍스트 기동 smoke 테스트. --app-dir 배포 구조(dashboard-server/) 기준으로 app import + /health·/ 200 확인. [T021/L2-R7deploy]",
+  "description": "S-10 보강: 배포 컨텍스트 기동 smoke 테스트. --app-dir 배포 구조(dashboard-server/) 기준으로 app import + /health·/ 200 확인. [T021/L2-R7deploy] 모든 TestClient는 허용 Host(base_url=http://127.0.0.1:7823)로 접근한다.",
   "exports": [
     "test_deploy_package_structure",
     "test_deploy_app_importable_from_package",
@@ -154,7 +154,7 @@ class TestDeployEndpoints:
         """/health 가 배포 컨텍스트에서 200 + {status:ok} 반환."""
         from fastapi.testclient import TestClient
         mod = importlib.import_module("dashboard.backend.main")
-        client = TestClient(mod.app)
+        client = TestClient(mod.app, base_url="http://127.0.0.1:7823")
         resp = client.get("/health")
         assert resp.status_code == 200
         data = resp.json()
@@ -174,7 +174,7 @@ class TestDeployEndpoints:
         ds = _dashboard_server_path()
 
         mod = importlib.import_module("dashboard.backend.main")
-        client = TestClient(mod.app, raise_server_exceptions=False)
+        client = TestClient(mod.app, base_url="http://127.0.0.1:7823", raise_server_exceptions=False)
 
         # /health 는 dist 존재 여부와 무관하게 항상 200
         resp = client.get("/health")

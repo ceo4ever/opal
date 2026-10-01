@@ -3,9 +3,9 @@
  *   "module": "brain-page",
  *   "layer": "page",
  *   "domain": "brain",
- *   "description": "프로젝트 브레인 화면 — 인증 분기(GET /api/brain/auth) + 프로젝트 필수 게이팅(미선택 시 폼 비활성·안내) + 단일 휘발성 세션(FE가 mount마다 crypto.randomUUID()로 session_id 발급 — 이력 비영속, 재오픈/새로고침마다 새 세션) + 자동 prime(POST /api/brain/prime {project, session_id}) + 상태 폴링(GET /api/brain/status?project=<절대경로>&session_id=<id>, 2초 간격, TanStack Query key에 project+session_id 포함) + 연동 상태 배지(priming/ready/error/idle) + 질문 게이팅(state≠ready면 disabled) + 멀티턴(동일 session_id로 연속 질의 — BE --resume 웜 재개) + 질의(POST /api/brain/query {question,project,session_id}) + 낙관적 턴(제출 즉시 pending→done/error 갱신, 캡처 session_id 귀속 가드 — 세션 전환 중 잡 완료 시 폐기) + 답변/인용 렌더 + '새 대화' 클릭 시 turns 초기화+새 session_id 발급+즉시 재prime. localStorage 미사용(비영속, R-2) — 단일 대화창(사이드바 없음). 이탈 가드 — turns.length>0일 때: ①콘솔 메뉴 전환은 react-router useBlocker(pathname 변경만 감지)로 가로채 AlertDialog 확인 ②브라우저 새로고침·탭 닫기는 beforeunload에서 preventDefault ③프로젝트 스위처 전환은 ui-store brainDirty 플래그로 노출해 AppShell이 가로챔(본 파일은 turns.length 변화·언마운트 시 brainDirty를 동기화만 함) ④'새 대화' 버튼은 handleNewSessionClick이 turns.length>0이면 pendingNewSession AlertDialog로 확인 후 handleNewSession 실행(라우트 이탈이 아니므로 useBlocker와 무관, 독립 상태로 처리) — turns=0이면 확인 없이 즉시 실행.",
+ *   "description": "프로젝트 브레인 화면 — BrainPage는 BrainLegacyGate(구형 Brain 꺼짐이면 대화 UI 미마운트·첫 진입 안내)로 감싼 BrainConversation이며, 대화 구현은 다음과 같다: 인증 분기(GET /api/brain/auth) + 프로젝트 필수 게이팅(미선택 시 폼 비활성·안내) + 단일 휘발성 세션(FE가 mount마다 crypto.randomUUID()로 session_id 발급 — 이력 비영속, 재오픈/새로고침마다 새 세션) + 자동 prime(POST /api/brain/prime {project, session_id}) + 상태 폴링(GET /api/brain/status?project=<절대경로>&session_id=<id>, 2초 간격, TanStack Query key에 project+session_id 포함) + 연동 상태 배지(priming/ready/error/idle) + 질문 게이팅(state≠ready면 disabled) + 멀티턴(동일 session_id로 연속 질의 — BE --resume 웜 재개) + 질의(POST /api/brain/query {question,project,session_id}) + 낙관적 턴(제출 즉시 pending→done/error 갱신, 캡처 session_id 귀속 가드 — 세션 전환 중 잡 완료 시 폐기) + 답변/인용 렌더 + '새 대화' 클릭 시 turns 초기화+새 session_id 발급+즉시 재prime. localStorage 미사용(비영속, R-2) — 단일 대화창(사이드바 없음). 이탈 가드 — turns.length>0일 때: ①콘솔 메뉴 전환은 react-router useBlocker(pathname 변경만 감지)로 가로채 AlertDialog 확인 ②브라우저 새로고침·탭 닫기는 beforeunload에서 preventDefault ③프로젝트 스위처 전환은 ui-store brainDirty 플래그로 노출해 AppShell이 가로챔(본 파일은 turns.length 변화·언마운트 시 brainDirty를 동기화만 함) ④'새 대화' 버튼은 handleNewSessionClick이 turns.length>0이면 pendingNewSession AlertDialog로 확인 후 handleNewSession 실행(라우트 이탈이 아니므로 useBlocker와 무관, 독립 상태로 처리) — turns=0이면 확인 없이 즉시 실행.",
  *   "exports": ["BrainPage", "addPendingTurn", "resolvePendingTurn", "makeSessionId", "projectDisplayName", "jobResponseToResolution", "jobPollingInterval", "BrainJobResponse", "BrainState", "BrainTurn", "BRAIN_LEAVE_GUARD_TITLE", "BRAIN_LEAVE_GUARD_DESCRIPTION"],
- *   "depends": ["api-client", "textarea", "button", "alert", "alert-dialog", "badge", "skeleton", "markdown-view", "ui-store"],
+ *   "depends": ["api-client", "brain-legacy-gate", "textarea", "button", "alert", "alert-dialog", "badge", "skeleton", "markdown-view", "ui-store"],
  *   "task": "063"
  * }
  */
@@ -44,6 +44,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownView } from "@/components/markdown-view";
+import { BrainLegacyGate } from "@/pages/brain/BrainLegacyGate";
 
 /* eslint-disable react-refresh/only-export-components */
 
@@ -280,7 +281,8 @@ function TurnContent({ turn }: { turn: BrainTurn }) {
 /* BrainPage                                                             */
 /* ------------------------------------------------------------------ */
 
-export function BrainPage() {
+/** 기존 대화 구현 — BrainLegacyGate가 켜짐일 때만 마운트한다(prime·status·query는 여기서만 발생). */
+function BrainConversation() {
   const [searchParams] = useSearchParams();
   const contextProject = useUiStore((s) => s.contextProject);
   const setBrainDirty = useUiStore((s) => s.setBrainDirty);
@@ -847,5 +849,13 @@ export function BrainPage() {
       </AlertDialogContent>
     </AlertDialog>
     </>
+  );
+}
+
+export function BrainPage() {
+  return (
+    <BrainLegacyGate>
+      <BrainConversation />
+    </BrainLegacyGate>
   );
 }

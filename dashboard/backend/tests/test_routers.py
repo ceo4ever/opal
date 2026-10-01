@@ -3,7 +3,7 @@
   "module": "tests.test_routers",
   "layer": "test",
   "domain": "console",
-  "description": "S-6: 5개 엔드포인트 200 + Pydantic 응답 스키마 계약 검증. httpx TestClient. RED-first — 작성자(opal-test-agent, mode: red) != 구현자(opal-be-agent). 설정 라우터 계약 — 경로검증·화이트리스트(S-1, prewarm 대상 빈/비스캔 400만) · console.config GET 스냅샷(S-3 router측, GET만) · 프라임 풀 토글 멱등+prewarm 트리거 관측(S-5). S-5는 brain_session_registry.prewarm을 MagicMock으로 대체 관측 — 실 claude 서브프로세스 호출 0회(test_brain.py 격리 패턴 재사용). 태스크 진행 통계 API 계약 — PipelineRow 원천 5키+gate 객체(TS-010) · 사표 필드 row/updated_at 값 채움(TS-011) · 상세 stats 소요 파생(TS-012) · 실시간 현재 행 불변식(TS-013) · 산출물 전수 9건 4유형(TS-014) · 결측 200 + gate_recorded 구분(TS-015) · 캐시 경계 정적만(TS-018) · 대시보드 모수 항등(TS-020) · 코호트 필터 중앙값(TS-021) · 산출물 규모 항등(TS-022) · workflow 키 0건(TS-023). 기대값 원천은 STATS-BASELINE.md(E1)이며 이동값은 항등·하한·불변식으로 단정한다. 변경 전 응답 스키마 불변(TS-017: 카드 9필드·상세 10필드·그룹 5필드·행 4필드, artifact_count 값 증가는 P-4 4항 명시적 예외) · DashboardSummaryResponse 기존 8필드 불변(TS-024: 타입·중첩 형태·의미 항등 + additive 5필드 기본값 보유). 기대값 원천은 변경 전(git HEAD) models.py이며 구현 출력을 되쓰지 않는다. 전역 카운트는 응답 내부 항등으로 단정한다(이동값 규약). 소요 3계열 API 계약 — 미기록 태스크의 축퇴 항등 PM==작업·캡틴==대기(TS-106) · 기록 보유 태스크(동결 픽스처)의 실분해와 단계 합 항등(TS-107) · 워크플로우 집계 additive + 대표값 불변(TS-108). 진행 중 태스크의 total_minutes는 실시간 값이라 3계열 항등의 기준이 아니며(집계기준 11) 정적 합(work+wait)에 대해 단정한다. owner 라벨·owner_term 계약 — owner==user 행 라벨이 로더 값(스텁 \"테스터\")을 따르고, PM·auto 역할명은 불변이며, 상세·대시보드 응답 최상위 owner_term에 같은 값이 실리고, identity.md 부재 시 200 + \"사용자\" 폴백이 라벨·owner_term 양쪽에 도달함을 단정한다.",
+  "description": "S-6: 5개 엔드포인트 200 + Pydantic 응답 스키마 계약 검증. httpx TestClient. RED-first — 작성자(opal-test-agent, mode: red) != 구현자(opal-be-agent). 설정 라우터 계약 — 경로검증·화이트리스트(S-1, prewarm 대상 빈/비스캔 400만) · console.config GET 스냅샷(S-3 router측, GET만) · 프라임 풀 토글 멱등+prewarm 트리거 관측(S-5). S-5는 brain_session_registry.prewarm을 MagicMock으로 대체 관측 — 실 claude 서브프로세스 호출 0회(test_brain.py 격리 패턴 재사용). 태스크 진행 통계 API 계약 — PipelineRow 원천 5키+gate 객체(TS-010) · 사표 필드 row/updated_at 값 채움(TS-011) · 상세 stats 소요 파생(TS-012) · 실시간 현재 행 불변식(TS-013) · 산출물 전수 9건 4유형(TS-014) · 결측 200 + gate_recorded 구분(TS-015) · 캐시 경계 정적만(TS-018) · 대시보드 모수 항등(TS-020) · 코호트 필터 중앙값(TS-021) · 산출물 규모 항등(TS-022) · workflow 키 0건(TS-023). 기대값 원천은 STATS-BASELINE.md(E1)이며 이동값은 항등·하한·불변식으로 단정한다. 변경 전 응답 스키마 불변(TS-017: 카드 9필드·상세 10필드·그룹 5필드·행 4필드, artifact_count 값 증가는 P-4 4항 명시적 예외) · DashboardSummaryResponse 기존 8필드 불변(TS-024: 타입·중첩 형태·의미 항등 + additive 5필드 기본값 보유). 기대값 원천은 변경 전(git HEAD) models.py이며 구현 출력을 되쓰지 않는다. 전역 카운트는 응답 내부 항등으로 단정한다(이동값 규약). 소요 3계열 API 계약 — 미기록 태스크의 축퇴 항등 PM==작업·캡틴==대기(TS-106) · 기록 보유 태스크(동결 픽스처)의 실분해와 단계 합 항등(TS-107) · 워크플로우 집계 additive + 대표값 불변(TS-108). 진행 중 태스크의 total_minutes는 실시간 값이라 3계열 항등의 기준이 아니며(집계기준 11) 정적 합(work+wait)에 대해 단정한다. owner 라벨·owner_term 계약 — owner==user 행 라벨이 로더 값(스텁 \"테스터\")을 따르고, PM·auto 역할명은 불변이며, 상세·대시보드 응답 최상위 owner_term에 같은 값이 실리고, identity.md 부재 시 200 + \"사용자\" 폴백이 라벨·owner_term 양쪽에 도달함을 단정한다. 인증 게이트(172): 모든 요청은 authed_client(세션 쿠키 + 상태 변경 요청에 Origin·X-CSRF-Token 자동 부착, base_url=http://127.0.0.1:7823)로 보내며 기존 응답 계약은 그대로 검증한다. brain prime·query의 기존 입력 검증 계약은 구형 Brain 정책 켜짐을 전제로 한다.",
   "exports": [
     "test_api_dashboard_200",
     "test_api_dashboard_schema",
@@ -112,11 +112,27 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
+from dashboard.backend.tests.auth_helpers import (  # noqa: F401  (fixture 등록)
+    BASE_URL,
+    authed_client,
+    isolated_console_home,
+    set_legacy_brain_policy,
+)
+
 
 @pytest.fixture(scope="module")
 def client():
     from dashboard.backend.main import app
-    return TestClient(app)
+    # 인증 게이트 뒤의 기존 응답 계약을 검증한다 — 세션 쿠키 + 상태 변경 요청에 Origin·CSRF 자동 부착(172 D-22)
+    return authed_client(app)
+
+
+@pytest.fixture
+def legacy_brain_on(isolated_console_home):
+    """구형 Brain 정책 켜짐 전제 — prime·query 라우터의 기존 입력 검증(400/422) 계약을 보려면 정책이 켜져 있어야 한다."""
+    set_legacy_brain_policy(isolated_console_home, True)
+    yield
+    set_legacy_brain_policy(isolated_console_home, None)
 
 
 # ── /health ──────────────────────────────────────────────────────────────────
@@ -318,7 +334,7 @@ def test_task_card_column_valid_values(client):
 
 # ── brain 엔드포인트 존재 검증 (C-11) ─────────────────────────────────────────
 
-def test_brain_endpoints_exist(client):
+def test_brain_endpoints_exist(client, legacy_brain_on):
     """GET /api/brain/auth·POST /api/brain/query·POST /api/brain/prime 가 등록되어 있음을 검증 (C-11).
 
     격리 전략:
@@ -676,7 +692,7 @@ def test_detail_pipeline_groups(tmp_path):
     """S-011: get_task_detail 응답 pipeline[] 각 원소가 stage/done_count/total/status 필드 보유."""
     import json
     import urllib.parse
-    from fastapi.testclient import TestClient
+    from fastapi.testclient import TestClient  # noqa: F401  (이 테스트는 헬퍼만 호출한다 — 필요 시 base_url=BASE_URL)
     from dashboard.backend.main import app
 
     # 임시 프로젝트·태스크 구조 생성

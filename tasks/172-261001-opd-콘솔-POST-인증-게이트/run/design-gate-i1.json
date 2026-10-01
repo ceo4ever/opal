@@ -1,0 +1,4 @@
+{"verdict":"fail","rewrite_target":"plan","input_bundle_hash":"dd282c77e5817f17638aae3f1b4582edcee374a27b842e4b91c89128d604da29","iteration":1,
+"design":{"axes":{"completeness":"FAIL","decision_clarity":"FAIL","executability":"PASS","recoverability":"PASS"},
+"gaps":["completeness-1: Risks H-N과 TEST-SCENARIO S-ID 번호 불일치","completeness-2: AC-2 유효 세션 쿠키 북마크 경로 시나리오 부재","completeness-3: S-15 ① 기대값(401)이 D-4(Origin 없으면 403)와 어긋남, S-17 ③ 컨텍스트 미정","decision_clarity-1: Host 허용 정책과 기존 TestClient(testserver) 테스트(test_main, test_deploy_smoke) 충돌, authed_client base_url 미정"]},
+"scenario":{"scores":{"goal":2,"adoption":2,"boundary":2},"average":2.0,"gaps":[]},"advisories":[]}

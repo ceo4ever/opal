@@ -3,9 +3,9 @@
   "module": "adapters.brain_session",
   "layer": "service",
   "domain": "console",
-  "description": "대화별 BrainSession 상태기계 (B2). ConversationBrainSession: 단일 대화(conversation_id)의 인메모리 세션 핸들 + threading.Lock 직렬화. BrainSessionRegistry: dict[conversation_id → ConversationBrainSession] 전역 레지스트리 — 대화별 독립 세션 격리. 한 프로젝트에 복수 대화 공존 가능. state 필드: idle|priming|ready|error. prime(session_id, project_path)·ask(session_id, question, project_path)·status(session_id)·reset(session_id) — 모두 해당 session_id 세션에만 작용. project_path는 cwd 격리에만 사용(brain 검색 격리 유지). 5트리거 리셋은 대화(session_id)별 적용: ⓐ서버재실행(인메모리 소멸) ⓑturn_count≥임계(20) ⓒ유휴(30분) ⓓ크래시(resume 실패→새 uuid 콜드 재시도, 투명) ⓔ수동(reset(session_id)). [KEY] conversation_id(FE uuid)와 claude 세션 핸들(_claude_session_id)을 분리 — 콜드마다 새 uuid4 발급 → 'already in use' 충돌 근본 차단. conversation_id는 레지스트리 키·FE 계약 전용(opbr_adapter에 절대 전달 안 함). [MUST] backend 무상태 원칙 — Q&A 내용 저장 안 함. 세션 핸들만(휘발성 프로세스 상태) 보유, DB·파일 영속 금지. 동시성: dict 접근은 전역 _registry_lock으로 보호, 개별 세션 내부는 ConversationBrainSession._lock으로 보호. 비동기 잡 폴링(PLAN §3.1.2): submit_job(question)→job_id 즉시 반환·백그라운드 ask 실행, get_job(job_id)→스냅샷(done/error 수신 시 _current_job 제거=TTL). BrainSessionRegistry 위임: submit_job(session_id,question,project_path)·get_job(session_id,job_id). 프라임 연결 풀: BrainSessionRegistry._pool(project_path→[claude_session_id])·_pool_inflight·_prime_semaphore(동시 프라임 상한, DEFAULT_MAX_CONCURRENT_PRIME=2)를 `_pool_lock`(레지스트리 `_lock`과 분리)으로 보호. DEFAULT_POOL_SIZE=2(연속 새대화 콜드 폴백 방지). prewarm(project_path)→need=pool_size-have 만큼 daemon 스레드를 need개 기동(비블로킹, 락은 `_pool_inflight` 갱신 구간만 보유, subprocess는 각 스레드에서 락 밖 실행 후 재획득 append) — 단일 트리거로 풀이 pool_size까지 충전됨. checkout_warm_handle(project_path)→pop 후 백그라운드 리필 트리거, None이면 풀 empty. `_get_or_create`가 신규 세션 생성 시 레지스트리 락 해제 후 checkout_warm_handle→adopt_warm_handle로 웜 핸들 이식(락 순서 계약: `_lock`→`_pool_lock` 방향만 허용, 역순·세션 `_lock` 중첩 금지 — need-기반 다중 스레드 기동에도 불변). ConversationBrainSession.adopt_warm_handle(claude_session_id)—풀 핸들 이식, 이미 웜/priming 중이면 방어 가드로 no-op(핸들 폐기).",
+  "description": "대화별 BrainSession 상태기계 (B2). ConversationBrainSession: 단일 대화(conversation_id)의 인메모리 세션 핸들 + threading.Lock 직렬화. BrainSessionRegistry: dict[conversation_id → ConversationBrainSession] 전역 레지스트리 — 대화별 독립 세션 격리. 한 프로젝트에 복수 대화 공존 가능. state 필드: idle|priming|ready|error. prime(session_id, project_path)·ask(session_id, question, project_path)·status(session_id)·reset(session_id) — 모두 해당 session_id 세션에만 작용. project_path는 cwd 격리에만 사용(brain 검색 격리 유지). 5트리거 리셋은 대화(session_id)별 적용: ⓐ서버재실행(인메모리 소멸) ⓑturn_count≥임계(20) ⓒ유휴(30분) ⓓ크래시(resume 실패→새 uuid 콜드 재시도, 투명) ⓔ수동(reset(session_id)). [KEY] conversation_id(FE uuid)와 claude 세션 핸들(_claude_session_id)을 분리 — 콜드마다 새 uuid4 발급 → 'already in use' 충돌 근본 차단. conversation_id는 레지스트리 키·FE 계약 전용(opbr_adapter에 절대 전달 안 함). [MUST] backend 무상태 원칙 — Q&A 내용 저장 안 함. 세션 핸들만(휘발성 프로세스 상태) 보유, DB·파일 영속 금지. 동시성: dict 접근은 전역 _registry_lock으로 보호, 개별 세션 내부는 ConversationBrainSession._lock으로 보호. 비동기 잡 폴링(PLAN §3.1.2): submit_job(question)→job_id 즉시 반환·백그라운드 ask 실행, get_job(job_id)→스냅샷(done/error 수신 시 _current_job 제거=TTL). BrainSessionRegistry 위임: submit_job(session_id,question,project_path)·get_job(session_id,job_id). 프라임 연결 풀: BrainSessionRegistry._pool(project_path→[claude_session_id])·_pool_inflight·_prime_semaphore(동시 프라임 상한, DEFAULT_MAX_CONCURRENT_PRIME=2)를 `_pool_lock`(레지스트리 `_lock`과 분리)으로 보호. DEFAULT_POOL_SIZE=2(연속 새대화 콜드 폴백 방지). prewarm(project_path)→need=pool_size-have 만큼 daemon 스레드를 need개 기동(비블로킹, 락은 `_pool_inflight` 갱신 구간만 보유, subprocess는 각 스레드에서 락 밖 실행 후 재획득 append) — 단일 트리거로 풀이 pool_size까지 충전됨. checkout_warm_handle(project_path)→pop 후 백그라운드 리필 트리거, None이면 풀 empty. `_get_or_create`가 신규 세션 생성 시 레지스트리 락 해제 후 checkout_warm_handle→adopt_warm_handle로 웜 핸들 이식(락 순서 계약: `_lock`→`_pool_lock` 방향만 허용, 역순·세션 `_lock` 중첩 금지 — need-기반 다중 스레드 기동에도 불변). ConversationBrainSession.adopt_warm_handle(claude_session_id)—풀 핸들 이식, 이미 웜/priming 중이면 방어 가드로 no-op(핸들 폐기). 구형 Brain 정책 게이트: BrainSessionRegistry.prime·ask·submit_job은 꺼짐이면 brain_policy.LegacyBrainDisabled를 던지고(세션 생성 전), prewarm은 로그만 남기고 반환하며, checkout_warm_handle은 풀을 비우고 None을 돌려주되 리필하지 않고, 풀 리필 스레드 _prime_into_pool은 시작 시 정책을 재확인해 꺼짐이면 spawn 없이 종료하되 _pool_inflight는 정상 감소시킨다. clear_pool()은 모든 프로젝트의 풀 핸들을 폐기한다(끄기 시 호출용). 어댑터 spawn_guard가 마지막 방어선이다.",
   "exports": ["ConversationBrainSession", "BrainSessionRegistry", "brain_session_registry"],
-  "depends": ["adapters.opbr_adapter"],
+  "depends": ["adapters.opbr_adapter", "adapters.brain_policy"],
   "task": "060"
 }
 """
@@ -18,7 +18,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Literal
 
-from dashboard.backend.adapters import opbr_adapter
+from dashboard.backend.adapters import brain_policy, opbr_adapter
 
 logger = logging.getLogger(__name__)
 
@@ -564,6 +564,9 @@ class BrainSessionRegistry:
         Args:
             project_path: 선프라임할 OPAL 프로젝트 절대경로
         """
+        if not brain_policy.is_enabled():
+            logger.info("[brain] prewarm 건너뜀(legacy brain 꺼짐) project=%s", project_path)
+            return
         with self._pool_lock:                     # 비블로킹 구간만 락 보유
             have = len(self._pool.get(project_path, [])) + self._pool_inflight.get(project_path, 0)
             need = self.pool_size - have           # 부족분 계산 (T063 F-003, H-1)
@@ -584,6 +587,8 @@ class BrainSessionRegistry:
         """
         with self._prime_semaphore:               # 동시 프라임 상한 강제 (R3/H-3)
             try:
+                if not brain_policy.is_enabled():  # 꺼짐 재확인 — spawn 없이 종료(finally가 inflight 감소)
+                    return
                 handle = str(uuid.uuid4())        # opbr_adapter는 uuid 생성 안 함 — BE가 발급
                 result = opbr_adapter.prime_and_ask(
                     question=PREWARM_QUESTION, project_path=project_path,
@@ -611,12 +616,21 @@ class BrainSessionRegistry:
         Returns:
             str | None: 웜 claude 세션 핸들, 풀이 비어 있으면 None
         """
+        if not brain_policy.is_enabled():
+            with self._pool_lock:
+                self._pool.pop(project_path, None)      # 꺼짐 — 풀을 비우고 리필하지 않는다
+            return None
         with self._pool_lock:
             handles = self._pool.get(project_path)
             sid = handles.pop() if handles else None   # 동시 체크아웃 직렬화 → 중복 배정 차단
         if sid is not None:
             self.prewarm(project_path)                 # 락 해제 후 리필(내부에서 subprocess는 락 밖)
         return sid
+
+    def clear_pool(self) -> None:
+        """모든 프로젝트의 풀 웜 핸들을 폐기한다(구형 Brain 끄기 시 호출)."""
+        with self._pool_lock:
+            self._pool.clear()
 
     def prime(self, session_id: str, project_path: str) -> None:
         """해당 session_id 세션 콜드 프라임.
@@ -627,6 +641,7 @@ class BrainSessionRegistry:
             session_id: 프라임할 대화 식별자
             project_path: cwd 격리용 OPAL 프로젝트 절대경로
         """
+        brain_policy.require_enabled()  # 꺼짐이면 LegacyBrainDisabled (세션 생성 전)
         session = self._get_or_create(session_id, project_path)
         session.prime()
 
@@ -640,6 +655,7 @@ class BrainSessionRegistry:
             question: 사용자 질문
             project_path: cwd 격리용 OPAL 프로젝트 절대경로 (없는 세션 생성 시 사용)
         """
+        brain_policy.require_enabled()  # 꺼짐이면 LegacyBrainDisabled (세션 생성 전)
         session = self._get_or_create(session_id, project_path)
         return session.ask(question)
 
@@ -694,6 +710,7 @@ class BrainSessionRegistry:
         Returns:
             str: job_id (UUID 형식)
         """
+        brain_policy.require_enabled()  # 꺼짐이면 LegacyBrainDisabled (세션 생성 전)
         session = self._get_or_create(session_id, project_path)
         return session.submit_job(question)
 

@@ -265,6 +265,18 @@ SUT 기동은 대상 트리의 `.opal/e2e/environment.json` 설정을 그대로 
 `e2e_env_config_missing`/`e2e_env_config_invalid`/`e2e_env_surface_missing`/
 `e2e_env_surface_ambiguous`)로 안내한다.
 
+환경 설정의 선택 최상위 키 `session_bootstrap`(`{service, command, cwd?, env?, timeout_s?}`,
+`timeout_s` 기본 30)은 인증이 필요한 SUT를 위한 세션 발급 명령이다. 모든 서비스가 health를
+통과한 뒤 1회 실행하며(`{python}`·`{project_root}`·`{service.<id>.url}` 등 서비스와 같은 치환),
+stdout은 `{"headers": {이름: 값}, "browser_entry_fragment": "entry=<token>"}` 한 줄 JSON이어야
+하고 이 두 키 외에는 거부한다. `headers`는 api executor가 모든 요청(act·state assert·fixture
+정리)에 병합하며 스텝에 같은 이름(대소문자 무시)의 헤더가 있으면 스텝이 우선하고, 스텝 헤더
+값을 `null`로 주면 그 이름의 병합 헤더를 보내지 않는다. `browser_entry_fragment`는 web 표면
+`entry_url` 뒤에 `#`로 붙는다. 비JSON·비객체·비0 종료·타임아웃은 stdout·stderr 내용 없이
+`detail_code: e2e_session_bootstrap_failed`의 `infra_error`로 끝나며 기동한 서비스는 회수된다.
+증적에서는 `Cookie`·`X-CSRF-Token` 헤더 값과 URL fragment `#entry=<값>`이 마스킹된다.
+키가 없는 환경 파일의 동작은 변하지 않는다.
+
 `--task-path/test-scenario.json`에 같은 id가 없으면 `<project>/docs/e2e/journeys/<id>.md`를
 직접 읽는다. 여정의 `{fragment: <id>, with: {...}}` step은 `docs/e2e/fragments/<id>.md`의
 실제 연산과 필수 사후 조건으로 전개된다. 조각의 `fill`·`type` 값은 `value_ref`가 가리키는

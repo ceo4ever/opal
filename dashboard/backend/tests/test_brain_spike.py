@@ -3,7 +3,7 @@
   "module": "tests.test_brain_spike",
   "layer": "test",
   "domain": "console",
-  "description": "Phase 1 스파이크 L1 단위 테스트 (Phase 2 + B2 대화별 session_id 계약 반영). S-1(출력 파싱 정상), S-2(is_error/비JSON → RuntimeError → 잡 status=error 흡수, 비동기 계약), S-3(커맨드 배열 금지 플래그 부재 + shell=False). Phase 2: //opbr query --read-only(DECISION#23), B2: prime_and_ask 시그니처 session_id+cold 필수. [MUST] 실 claude 서브프로세스 호출 0회 — subprocess.run 전부 unittest.mock.patch 격리(H-8). 구독 토큰 소모 없음.",
+  "description": "Phase 1 스파이크 L1 단위 테스트 (Phase 2 + B2 대화별 session_id 계약 반영). S-1(출력 파싱 정상), S-2(is_error/비JSON → RuntimeError → 잡 status=error 흡수, 비동기 계약), S-3(커맨드 배열 금지 플래그 부재 + shell=False). Phase 2: //opbr query --read-only(DECISION#23), B2: prime_and_ask 시그니처 session_id+cold 필수. [MUST] 실 claude 서브프로세스 호출 0회 — subprocess.Popen 전부 unittest.mock.patch 격리(H-8). 구독 토큰 소모 없음. 172: subprocess.run 대신 subprocess.Popen 대체(communicate()가 (stdout, stderr)를 돌려주고 returncode 보유)로 같은 계약을 검증하며 타임아웃 시 RuntimeError(prime_and_ask timeout after ...)와 자식 프로세스 종료를 포함한다. 구형 Brain 정책 켜짐 전제, 인증 필요한 호출은 authed_client, 실제 spawn은 autouse 가드가 막는다.",
   "exports": [
     "test_parse_success",
     "test_parse_error_is_error",
@@ -23,18 +23,39 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from dashboard.backend.tests.auth_helpers import (  # noqa: F401  (fixture 등록)
+    BASE_URL,
+    authed_client,
+    isolated_console_home,
+    no_real_spawn,
+    set_legacy_brain_policy,
+)
+
+
+# ── 구형 Brain 정책 켜짐 전제 (172 D-15·D-16) ──────────────────────────────────────
+# 어댑터 spawn 게이트와 Registry 게이트는 정책이 켜져 있을 때만 통과한다. 이 파일의 기존 계약
+# (어댑터 인자·Registry 상태기계·라우터·기동 선프라임)은 구형 Brain 켜짐을 전제로 검증하며,
+# 임시 console.config.json의 legacy_brain_enabled=true로 켠다. 실제 claude는 호출하지 않는다.
+
+@pytest.fixture(autouse=True)
+def legacy_brain_on(isolated_console_home):
+    set_legacy_brain_policy(isolated_console_home, True)
+    yield
+    set_legacy_brain_policy(isolated_console_home, None)
+
 
 # ── fixture ──────────────────────────────────────────────────────────────────────
 
 @pytest.fixture(scope="module")
 def client():
     from dashboard.backend.main import app
-    return TestClient(app)
+    return authed_client(app)  # 상태 변경 요청에 Origin·CSRF 자동 부착(172 D-22)
 
 
 def _mock_proc(stdout: str, returncode: int = 0) -> MagicMock:
-    """subprocess.run 반환값 mock 헬퍼."""
+    """subprocess.Popen 반환 객체 mock 헬퍼 — communicate()가 (stdout, stderr)를 돌려주고 returncode를 가진다."""
     proc = MagicMock()
+    proc.communicate.return_value = (stdout, "")
     proc.stdout = stdout
     proc.stderr = ""
     proc.returncode = returncode
@@ -68,7 +89,7 @@ class TestParseSuccess:
 
     def test_parse_success(self):
         """성공형 고정 출력 → answer='답변텍스트', session_id='sid-1'. 실 claude 0회."""
-        with patch("subprocess.run", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run, \
+        with patch("subprocess.Popen", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run, \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
 
@@ -88,7 +109,7 @@ class TestParseSuccess:
 
     def test_parse_success_citations_empty_in_spike(self):
         """스파이크 최소본 — citations는 빈 리스트."""
-        with patch("subprocess.run", return_value=_mock_proc(_SUCCESS_OUTPUT)), \
+        with patch("subprocess.Popen", return_value=_mock_proc(_SUCCESS_OUTPUT)), \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
 
@@ -109,7 +130,7 @@ class TestParseError:
 
     def test_parse_error_is_error_raises(self):
         """is_error=true 고정 출력 → RuntimeError 발생."""
-        with patch("subprocess.run", return_value=_mock_proc(_ERROR_OUTPUT)), \
+        with patch("subprocess.Popen", return_value=_mock_proc(_ERROR_OUTPUT)), \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
 
@@ -123,7 +144,7 @@ class TestParseError:
 
     def test_parse_error_non_json_raises(self):
         """비JSON 출력 → RuntimeError 발생."""
-        with patch("subprocess.run", return_value=_mock_proc(_NON_JSON_OUTPUT)), \
+        with patch("subprocess.Popen", return_value=_mock_proc(_NON_JSON_OUTPUT)), \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
 
@@ -217,17 +238,17 @@ class TestCmdFlags:
     """S-3: prime_and_ask 커맨드 배열 캡처 — 금지 플래그 부재·필수 플래그 존재 (H-7, H-8)."""
 
     def _capture_cmd(self, session_id: str = "spike-sid-cold", cold: bool = True) -> list[str]:
-        """subprocess.run을 patch하여 호출된 커맨드 배열 캡처.
+        """subprocess.Popen을 patch하여 호출된 커맨드 배열 캡처.
 
         B2 시그니처: session_id + cold 모두 필수.
         """
-        with patch("subprocess.run", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run:
+        with patch("subprocess.Popen", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run:
             from dashboard.backend.adapters import opbr_adapter
 
             import importlib
             importlib.reload(opbr_adapter)
 
-            with patch("subprocess.run", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run2, \
+            with patch("subprocess.Popen", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run2, \
                  patch("os.path.isdir", return_value=True):
                 opbr_adapter.prime_and_ask(
                     question="테스트 질문",
@@ -266,8 +287,8 @@ class TestCmdFlags:
         assert "--bare" not in cmd, f"--bare MUST NOT be in cmd: {cmd}"
 
     def test_shell_false(self):
-        """[MUST] subprocess.run이 shell=False로 호출됨 (H-13 — 셸 인젝션 방지)."""
-        with patch("subprocess.run", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run, \
+        """[MUST] subprocess.Popen이 shell=False로 호출됨 (H-13 — 셸 인젝션 방지)."""
+        with patch("subprocess.Popen", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run, \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(
@@ -279,7 +300,7 @@ class TestCmdFlags:
 
         call_kwargs = mock_run.call_args[1]
         assert call_kwargs.get("shell") is False, (
-            f"subprocess.run must be called with shell=False, got shell={call_kwargs.get('shell')}"
+            f"subprocess.Popen must be called with shell=False, got shell={call_kwargs.get('shell')}"
         )
 
     def test_cold_session_uses_session_id_flag(self):
@@ -309,7 +330,7 @@ class TestCmdFlags:
         """[MUST] 읽기전용 가드가 커맨드에 포함됨 (H-1).
         Phase 2: --read-only 플래그가 opbr 계약으로 가드(접미사 제거, DECISION#23).
         """
-        with patch("subprocess.run", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run, \
+        with patch("subprocess.Popen", return_value=_mock_proc(_SUCCESS_OUTPUT)) as mock_run, \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(
@@ -327,6 +348,47 @@ class TestCmdFlags:
             f"--read-only contract not found in prompt: {prompt_arg!r}. "
             f"Phase 2 uses opbr --read-only contract instead of prompt suffix."
         )
+
+
+class TestAdapterProcessLifecycle:
+    """Popen+communicate 전환 후에도 유지되는 어댑터 오류 계약 — 타임아웃·result 부재 (172 D-16, H-1)."""
+
+    def test_timeout_raises_runtime_error_and_terminates_child(self):
+        import subprocess
+
+        proc = _mock_proc("")
+        proc.communicate.side_effect = [subprocess.TimeoutExpired(cmd="claude", timeout=0.01), ("", "")]
+        with patch("subprocess.Popen", return_value=proc), \
+             patch("os.path.isdir", return_value=True):
+            from dashboard.backend.adapters.opbr_adapter import prime_and_ask
+            with pytest.raises(RuntimeError, match=r"prime_and_ask timeout after"):
+                prime_and_ask(
+                    question="질문", project_path="/path", session_id="spike-sid",
+                    cold=True, timeout=0.01,
+                )
+
+        assert proc.kill.called or proc.terminate.called, "타임아웃 시 자식 프로세스를 종료해야 한다"
+
+    def test_missing_result_field_raises_runtime_error(self):
+        output = json.dumps({"type": "result", "subtype": "success", "is_error": False})
+        with patch("subprocess.Popen", return_value=_mock_proc(output)), \
+             patch("os.path.isdir", return_value=True):
+            from dashboard.backend.adapters.opbr_adapter import prime_and_ask
+            with pytest.raises(RuntimeError, match=r"'result' field missing"):
+                prime_and_ask(
+                    question="질문", project_path="/path", session_id="spike-sid", cold=True,
+                )
+
+    def test_spawn_uses_popen_not_run(self):
+        """spawn은 subprocess.Popen 경계에서만 일어난다 — subprocess.run은 호출되지 않는다."""
+        with patch("subprocess.Popen", return_value=_mock_proc(_SUCCESS_OUTPUT)) as popen, \
+             patch("subprocess.run") as run, \
+             patch("os.path.isdir", return_value=True):
+            from dashboard.backend.adapters.opbr_adapter import prime_and_ask
+            prime_and_ask(question="질문", project_path="/path", session_id="spike-sid", cold=True)
+
+        assert popen.call_count == 1
+        run.assert_not_called()
 
 
 # ── GET /api/brain/auth 경량 체크 ────────────────────────────────────────────────
@@ -355,8 +417,8 @@ class TestBrainAuth:
 
     def test_auth_no_real_claude_call(self, client):
         """[MUST] auth 엔드포인트가 실 claude -p 서브프로세스 호출 0회 (H-8)."""
-        with patch("subprocess.run") as mock_run, \
+        with patch("subprocess.Popen") as mock_run, \
              patch("shutil.which", return_value="/usr/local/bin/claude"):
             resp = client.get("/api/brain/auth")
         assert resp.status_code == 200
-        mock_run.assert_not_called(), "auth endpoint must NOT call subprocess.run (real claude)"
+        mock_run.assert_not_called(), "auth endpoint must NOT call subprocess.Popen (real claude)"

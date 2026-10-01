@@ -3,8 +3,8 @@
   "module": "orchestrator",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T03 run 수명주기 — created→context_resolved→ports_leased→(sut_starting→sut_ready)→최종 상태→cleanup_* 상태 머신을 돌리고 run.json(§A.1)·journal.json(§A.2)·owned.json(§A.3)을 프로젝트 로컬 기본 경로 또는 명시적 격리 경로에 기록한다. SUT는 프로젝트 설정(`.opal/e2e/environment.json`, lib.e2e.environment)의 서비스를 의존 순서로 기동하며, 포트 임대 역할은 설정 서비스 id(설정 부재·무효면 backend·frontend 호환 역할)다. 설정 부재·무효·표면 선택 실패와 서비스 render 단계의 설정 위반(path_escape 등, 첫 기동 전에 전 서비스를 render)은 SUT 기동 시점에 서비스를 띄우지 않고 blocked(render 위반은 e2e_env_config_invalid, detail에는 위반 코드만)로 끝낸다. 브라우저 진입 URL은 선택된 web 표면, api executor 문맥은 선택된 api 표면에서 온다. 상태·exit·error 문자열은 전부 lib.e2e_contract의 상수·함수에서 끌어오며 리터럴로 만들지 않는다(CONTRACT.md 계약 규칙 C-125-1, TRD.md RK-8).",
-  "exports": ["RUN_ID_PATTERN", "run_e2e"],
+  "description": "T03 run 수명주기 — created→context_resolved→ports_leased→(sut_starting→sut_ready)→최종 상태→cleanup_* 상태 머신을 돌리고 run.json(§A.1)·journal.json(§A.2)·owned.json(§A.3)을 프로젝트 로컬 기본 경로 또는 명시적 격리 경로에 기록한다. SUT는 프로젝트 설정(`.opal/e2e/environment.json`, lib.e2e.environment)의 서비스를 의존 순서로 기동하며, 포트 임대 역할은 설정 서비스 id(설정 부재·무효면 backend·frontend 호환 역할)다. 설정 부재·무효·표면 선택 실패와 서비스 render 단계의 설정 위반(path_escape 등, 첫 기동 전에 전 서비스를 render)은 SUT 기동 시점에 서비스를 띄우지 않고 blocked(render 위반은 e2e_env_config_invalid, detail에는 위반 코드만)로 끝낸다. 브라우저 진입 URL은 선택된 web 표면, api executor 문맥은 선택된 api 표면에서 온다. 설정에 `session_bootstrap`이 있으면 SUT health 통과 뒤 1회 실행해(run_session_bootstrap) api 요청 헤더(session_headers)와 web 진입 URL fragment를 runtime context에 싣고, 실패는 stdout·stderr 없이 e2e_session_bootstrap_failed로 infra_error 종료하며 기동한 서비스를 회수한다. 상태·exit·error 문자열은 전부 lib.e2e_contract의 상수·함수에서 끌어오며 리터럴로 만들지 않는다(CONTRACT.md 계약 규칙 C-125-1, TRD.md RK-8).",
+  "exports": ["RUN_ID_PATTERN", "run_e2e", "DETAIL_SESSION_BOOTSTRAP_FAILED", "SessionBootstrapError", "run_session_bootstrap"],
   "depends": ["e2e_contract", "environment", "ports", "runtime", "drivers", "executors", "evidence", "freshness", "target"]
 }
 
@@ -92,6 +92,9 @@ _FALLBACK_ROLES = ("backend", "frontend")
 # e2e_contract의 `blocked`이며 이 모듈은 새 status·exit 값을 만들지 않는다(C-1).
 DETAIL_ENV_CONFIG_MISSING = "e2e_env_config_missing"
 DETAIL_ENV_CONFIG_INVALID = "e2e_env_config_invalid"
+# 세션 부트스트랩(D-20) 실패의 run.json `detail_code`. 최종 status는 infra_error다.
+DETAIL_SESSION_BOOTSTRAP_FAILED = "e2e_session_bootstrap_failed"
+_SESSION_BOOTSTRAP_KEYS = frozenset({"headers", "browser_entry_fragment"})
 _ENV_SETUP_HINT = (
     "inspect the project with `test-tool e2e env-inspect` and write the config with `//e2e setup`"
 )
@@ -765,6 +768,35 @@ def _run_e2e(
 
     journal.to(STATE_SUT_READY, {"urls": _urls(leases)})
 
+    # ── 세션 부트스트랩(D-20) — SUT health 통과 뒤 1회. 실패는 SUT 기동 실패와 같은 경로다. ──
+    session_bootstrap: Optional[Dict[str, Any]] = None
+    bootstrap_spec = (config or {}).get("session_bootstrap")
+    # 대상 서비스가 실제로 기동된 경우에만 실행한다(기동된 서비스가 없으면 발급할 세션도 없다).
+    if bootstrap_spec and any(h.role == bootstrap_spec.get("service") for h in handles):
+        try:
+            rendered_bootstrap = _render_session_bootstrap(config, leases, context.project_root)
+            session_bootstrap = run_session_bootstrap(rendered_bootstrap)
+        except SessionBootstrapError as exc:
+            journal.to(STATUS_INFRA_ERROR, {"detail_code": exc.code})
+            return _finalize(
+                status=STATUS_INFRA_ERROR,
+                journal=journal,
+                writer=writer,
+                context=context,
+                leases=leases,
+                reclaimed=reclaimed,
+                handles=handles,
+                candidates=candidates,
+                artifact_root=resolved_root,
+                artifact_dir=artifact_dir,
+                run_id=resolved_run_id,
+                scenario_id=scenario_id,
+                scenario=scenario,
+                started_at=started_at,
+                detail_code=exc.code,
+                detail=exc.detail,
+            )
+
     if needs_sut_for_probe:
         # §A.8 [MUST] — api probe는 실제 SUT `/health`를 호출해야 가용성을 확정한다.
         # 설정값 존재로 추정하지 않으므로 여기서야 후보를 해석할 수 있다(NR-7).
@@ -775,6 +807,7 @@ def _run_e2e(
                 project_root=context.project_root,
                 surfaces=surfaces,
                 action_log=action_log, run_id=resolved_run_id,
+                session_bootstrap=session_bootstrap,
             ),
             driver_cache=driver_cache,
         )
@@ -844,6 +877,7 @@ def _run_e2e(
             artifact_dir, task_path, writer,
             surfaces=surfaces,
             action_log=action_log, run_id=resolved_run_id,
+            session_bootstrap=session_bootstrap,
         ),
         action_log=action_log,
         urls=_urls(leases),
@@ -1434,6 +1468,7 @@ def _executor_runtime_context(
     surfaces: Optional[Dict[str, Dict[str, Any]]] = None,
     action_log: Optional[e2e_executors.ActionLog] = None,
     run_id: Optional[str] = None,
+    session_bootstrap: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """executor·driver가 소비하는 runtime context(§B.3 `probe` 입력, §B.2 동일).
 
@@ -1462,6 +1497,13 @@ def _executor_runtime_context(
         context["health_path"] = api_surface.get("health_path")
     if web_surface:
         context["entry_url"] = web_surface.get("entry_url")
+    if session_bootstrap:
+        # 부트스트랩이 발급한 세션 헤더는 api executor가 모든 요청에 병합하고, 진입 token은
+        # 브라우저 진입 URL fragment로만 전달한다(서버로 전송되지 않는다).
+        context["session_headers"] = dict(session_bootstrap.get("headers") or {})
+        fragment = session_bootstrap.get("browser_entry_fragment")
+        if context.get("entry_url") and fragment:
+            context["entry_url"] = f"{context['entry_url']}#{fragment}"
     return context
 
 
@@ -1728,6 +1770,76 @@ def _start_sut(
         handles.append(handle)
         e2e_ports.confirm_lease(artifact_root, _lease_of(leases, service_id))
     return handles
+
+
+class SessionBootstrapError(Exception):
+    """세션 부트스트랩 실패. 명령의 stdout·stderr 내용은 싣지 않는다(C-2) — 사유 분류만 보유한다."""
+
+    def __init__(self, reason: str) -> None:
+        detail = f"session bootstrap failed ({reason})"
+        super().__init__(detail)
+        self.code = DETAIL_SESSION_BOOTSTRAP_FAILED
+        self.detail = detail
+
+
+def _render_session_bootstrap(
+    config: Dict[str, Any], leases: List[e2e_ports.LeaseRecord], project_root: str
+) -> Dict[str, Any]:
+    port_of = {record.role: record.port for record in leases}
+    try:
+        rendered = e2e_environment.render_session_bootstrap(
+            config, ports_by_id=port_of, project_root=project_root
+        )
+    except (ValueError, KeyError):
+        raise SessionBootstrapError("render_invalid") from None
+    if rendered is None:
+        raise SessionBootstrapError("render_invalid")
+    return rendered
+
+
+def run_session_bootstrap(
+    rendered: Dict[str, Any], *, base_env: Optional[Dict[str, str]] = None
+) -> Dict[str, Any]:
+    """렌더된 부트스트랩 명령을 1회 실행해 `{headers, browser_entry_fragment}`를 돌려준다.
+
+    stdout은 JSON 객체 한 개이며 키는 `headers`(문자열 값만)·`browser_entry_fragment`(문자열)
+    둘뿐이다. 비JSON·비객체·추가 키·비0 종료·타임아웃·실행 실패는 전부 SessionBootstrapError다.
+    stdout·stderr 원문은 예외·로그에 남기지 않는다.
+    """
+    env = dict(os.environ if base_env is None else base_env)
+    env.update(rendered.get("env") or {})
+    try:
+        proc = subprocess.run(
+            list(rendered["argv"]),
+            cwd=rendered.get("cwd"),
+            env=env,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=float(rendered.get("timeout_s") or e2e_environment.DEFAULT_SESSION_BOOTSTRAP_TIMEOUT_S),
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        raise SessionBootstrapError("timeout") from None
+    except (OSError, ValueError):
+        raise SessionBootstrapError("spawn_failed") from None
+    if proc.returncode != 0:
+        raise SessionBootstrapError(f"exit_{proc.returncode}")
+    try:
+        payload = json.loads(proc.stdout.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        raise SessionBootstrapError("output_not_json") from None
+    if not isinstance(payload, dict) or set(payload) != _SESSION_BOOTSTRAP_KEYS:
+        raise SessionBootstrapError("output_shape_invalid")
+    headers = payload["headers"]
+    fragment = payload["browser_entry_fragment"]
+    if (
+        not isinstance(headers, dict)
+        or not all(isinstance(k, str) and isinstance(v, str) for k, v in headers.items())
+        or not isinstance(fragment, str)
+    ):
+        raise SessionBootstrapError("output_shape_invalid")
+    return {"headers": dict(headers), "browser_entry_fragment": fragment}
 
 
 def _lease_of(leases: List[e2e_ports.LeaseRecord], role: str) -> e2e_ports.LeaseRecord:

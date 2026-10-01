@@ -1,0 +1,5 @@
+{"input_bundle_hash":"de4d17a2a18c5fbfa5293ee6031321eced2fc01d0f302814196d56f0a1a15784","iteration":2,
+"design":{"axes":{"completeness":"PASS","decision_clarity":"PASS","executability":"PASS","recoverability":"PASS"},"gaps":[]},
+"scenario":{"scores":{"goal":2,"adoption":2,"boundary":2},"average":2.0,"gaps":[]},
+"resolved_gaps":[{"id":"completeness-1","status":"resolved"},{"id":"completeness-2","status":"resolved"},{"id":"completeness-3","status":"resolved"},{"id":"decision_clarity-1","status":"resolved"}],
+"verdict":"pass","rewrite_target":null,"advisories":[]}

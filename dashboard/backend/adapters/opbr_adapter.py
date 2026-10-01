@@ -3,9 +3,9 @@
   "module": "adapters.opbr_adapter",
   "layer": "service",
   "domain": "console",
-  "description": "Phase 2 하드닝 + cwd 격리 + 대화별 session_id: claude --model sonnet --effort medium -p '[ASSISTANT]\\n//opbr query --read-only <질의>' --output-format json 서브프로세스 구동. 모델=sonnet+effort medium 고정 — haiku는 JSON 상자 안 마크다운 이스케이프를 지키지 못해 citations 유실(raw 마크다운 출력) → sonnet+medium이 JSON 계약 준수+적응형 마크다운 구조+haiku급 속도(콜드 ~56s) 3박자 충족(2026-07-13 실측). 프롬프트 첫 줄 [ASSISTANT] 마커로 headless 호출을 비서 tier(Phase A)로 캡 — PM tier(Phase B) 승격을 억제해 읽기전용 브레인 워커의 tier 오염을 방지한다. subprocess.run에 cwd=project_path 설정 → opbr/brain-tool이 해당 프로젝트의 .opal/brain을 검색(격리 보장). project_path 존재 검증(NotADirectoryError). 세션 핸들(cold=True→--session-id FE제공session_id / cold=False→--resume session_id) + JSON 코드펜스 추출(preamble 견고). session_id는 항상 호출자(BE)가 전달 — opbr_adapter가 uuid를 생성하지 않음. [MUST] --safe-mode·--bare·anthropic SDK·API 키 절대 금지. --allowedTools Bash,Read,Grep,Glob 단일 콤마값으로 주입(단일 인자 → 뒤 플래그 삼킴 방지). read-only 가드는 opbr --read-only 계약으로 보장(접미사 제거). backend는 얇은 프록시 — opbr이 brain 검색/페이지 Read/인용 전담(DRY).",
+  "description": "구형 Brain 정책 게이트: subprocess 시작은 brain_policy.spawn_guard() 안에서 subprocess.Popen(shell=False, cwd=project_path)으로만 하며(꺼짐이면 LegacyBrainDisabled, 켜짐이면 running_turns 증가), communicate(timeout)는 락 밖에서 기다리고 타임아웃은 자식 kill 후 RuntimeError(\"prime_and_ask timeout after ...\")로 올리며 turn 종료(finally)에 running_turns를 되돌린다. Phase 2 하드닝 + cwd 격리 + 대화별 session_id: claude --model sonnet --effort medium -p '[ASSISTANT]\\n//opbr query --read-only <질의>' --output-format json 서브프로세스 구동. 모델=sonnet+effort medium 고정 — haiku는 JSON 상자 안 마크다운 이스케이프를 지키지 못해 citations 유실(raw 마크다운 출력) → sonnet+medium이 JSON 계약 준수+적응형 마크다운 구조+haiku급 속도(콜드 ~56s) 3박자 충족(2026-07-13 실측). 프롬프트 첫 줄 [ASSISTANT] 마커로 headless 호출을 비서 tier(Phase A)로 캡 — PM tier(Phase B) 승격을 억제해 읽기전용 브레인 워커의 tier 오염을 방지한다. subprocess.run에 cwd=project_path 설정 → opbr/brain-tool이 해당 프로젝트의 .opal/brain을 검색(격리 보장). project_path 존재 검증(NotADirectoryError). 세션 핸들(cold=True→--session-id FE제공session_id / cold=False→--resume session_id) + JSON 코드펜스 추출(preamble 견고). session_id는 항상 호출자(BE)가 전달 — opbr_adapter가 uuid를 생성하지 않음. [MUST] --safe-mode·--bare·anthropic SDK·API 키 절대 금지. --allowedTools Bash,Read,Grep,Glob 단일 콤마값으로 주입(단일 인자 → 뒤 플래그 삼킴 방지). read-only 가드는 opbr --read-only 계약으로 보장(접미사 제거). backend는 얇은 프록시 — opbr이 brain 검색/페이지 Read/인용 전담(DRY).",
   "exports": ["prime_and_ask", "extract_json_fence"],
-  "depends": []
+  "depends": ["adapters.brain_policy"]
 }
 """
 from __future__ import annotations
@@ -16,6 +16,8 @@ import os
 import re
 import subprocess
 import time
+
+from dashboard.backend.adapters import brain_policy
 
 logger = logging.getLogger(__name__)
 
@@ -165,39 +167,55 @@ def prime_and_ask(
     )
     t0 = time.monotonic()
 
-    try:
-        proc = subprocess.run(
+    # 시작 구간만 정책 락으로 직렬화(D-16) — 꺼짐이면 LegacyBrainDisabled, spawn 0회
+    with brain_policy.spawn_guard() as turn:
+        proc = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=timeout,
             shell=False,  # [MUST] shell=False — 셸 인젝션 방지 (H-13)
             cwd=project_path if project_path else None,  # 프로젝트 brain 격리
         )
-    except subprocess.TimeoutExpired as exc:
-        logger.error("[brain] claude 타임아웃 %.0fs cold=%s sid=%s", timeout, cold, session_id[:8])
-        raise RuntimeError(
-            f"prime_and_ask timeout after {timeout}s"
-        ) from exc
+
+    # communicate는 락 밖에서 대기 — 끄기 요청이 막히지 않는다. turn 종료 시 항상 회수.
+    try:
+        try:
+            stdout_text, stderr_text = proc.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired as exc:
+            proc.kill()
+            try:
+                proc.communicate(timeout=5)
+            except Exception:  # noqa: BLE001 — 회수 실패는 타임아웃 오류 의미를 바꾸지 않는다
+                pass
+            logger.error("[brain] claude 타임아웃 %.0fs cold=%s sid=%s", timeout, cold, session_id[:8])
+            raise RuntimeError(
+                f"prime_and_ask timeout after {timeout}s"
+            ) from exc
+    finally:
+        turn.finish()
+
+    stdout_text = stdout_text or ""
+    stderr_text = stderr_text or ""
 
     elapsed_s = time.monotonic() - t0
     logger.info(
         "[brain] claude 호출 종료 elapsed=%.1fs rc=%s stdout_len=%d",
-        elapsed_s, proc.returncode, len(proc.stdout or ""),
+        elapsed_s, proc.returncode, len(stdout_text),
     )
 
     # 비JSON 출력 처리
-    stdout = proc.stdout.strip()
+    stdout = stdout_text.strip()
     try:
         parsed = json.loads(stdout)
     except (json.JSONDecodeError, ValueError) as exc:
         logger.error(
             "[brain] claude non-JSON 출력 rc=%s stderr=%r stdout=%r",
-            proc.returncode, (proc.stderr or "")[:300], stdout[:300],
+            proc.returncode, stderr_text[:300], stdout[:300],
         )
         raise RuntimeError(
             f"prime_and_ask: non-JSON output from claude. "
-            f"returncode={proc.returncode}, stderr={proc.stderr[:200]!r}"
+            f"returncode={proc.returncode}, stderr={stderr_text[:200]!r}"
         ) from exc
 
     # is_error 판정 (H-6)

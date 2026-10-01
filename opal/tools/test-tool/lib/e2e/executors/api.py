@@ -3,7 +3,7 @@
   "module": "api",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "T09 API executor — CONTRACT.md §B.3 probe·prepare·act·assert·capture·cleanup 6연산을 실제 임대 SUT의 공개 HTTP endpoint에 대해 수행한다(C-API-1, mock server 대체 금지). 요청·응답 증적은 §A.11 api/requests.jsonl·api/responses.jsonl과 §A.4 actions.jsonl로 남기고 전부 evidence.py redaction 관문을 통과한다(§A.12). retry는 C-API-2의 transport 오류 화이트리스트에만 적용하고 제품 4xx/5xx를 숨기지 않는다. fixture는 run_id namespace 소유분만 정리한다(C-API-3·§C.3).",
+  "description": "T09 API executor — CONTRACT.md §B.3 probe·prepare·act·assert·capture·cleanup 6연산을 실제 임대 SUT의 공개 HTTP endpoint에 대해 수행한다(C-API-1, mock server 대체 금지). runtime_context의 `session_headers`(세션 부트스트랩 결과)는 act·fixture 정리 요청에 병합되며, 같은 이름(대소문자 무시)은 스텝 헤더가 우선하고 스텝 헤더 값이 null이면 병합 헤더를 제거한다. 요청·응답 증적은 §A.11 api/requests.jsonl·api/responses.jsonl과 §A.4 actions.jsonl로 남기고 전부 evidence.py redaction 관문을 통과한다(§A.12). retry는 C-API-2의 transport 오류 화이트리스트에만 적용하고 제품 4xx/5xx를 숨기지 않는다. fixture는 run_id namespace 소유분만 정리한다(C-API-3·§C.3).",
   "exports": [
     "ApiExecutor", "ApiHandle", "TRANSPORT_ERROR_CODES", "DEFAULT_MAX_ATTEMPTS",
     "API_REQUESTS_PATH", "API_RESPONSES_PATH", "classify_transport_error", "register"
@@ -290,7 +290,7 @@ class ApiExecutor(e2e_executors.Executor):
         step_role = str(action.get("step_role"))
         method = str(action.get("method") or "GET").upper()
         url = _absolute_url(handle.base_url, str(action.get("url") or ""))
-        headers = dict(action.get("headers") or {})
+        headers = self._merge_session_headers(action.get("headers"))
         body = action.get("body")
         timeout_ms = int(action.get("timeout_ms") or DEFAULT_TIMEOUT_MS)
         seq = self._log.next_seq
@@ -510,7 +510,7 @@ class ApiExecutor(e2e_executors.Executor):
                 response = self._send(
                     method=fixture.method,
                     url=_absolute_url(handle.base_url, fixture.endpoint),
-                    headers={},
+                    headers=self._merge_session_headers(None),
                     body=None,
                     timeout_ms=DEFAULT_TIMEOUT_MS,
                     allow_retry=True,
@@ -530,7 +530,7 @@ class ApiExecutor(e2e_executors.Executor):
                 request={
                     "method": fixture.method,
                     "url": _absolute_url(handle.base_url, fixture.endpoint),
-                    "headers": {},
+                    "headers": self._merge_session_headers(None),
                     "body_ref": None,
                     "timeout_ms": DEFAULT_TIMEOUT_MS,
                 },
@@ -549,6 +549,23 @@ class ApiExecutor(e2e_executors.Executor):
         return {"released": released, "leaked": leaked, "skipped_user_owned": skipped}
 
     # ── 전송 ─────────────────────────────────────────────────────────────────
+    def _merge_session_headers(self, step_headers: Optional[Mapping[str, Any]]) -> Dict[str, Any]:
+        """runtime_context의 `session_headers`를 스텝 헤더 아래에 깐다.
+
+        같은 이름(대소문자 무시)은 스텝 헤더가 우선하고, 스텝 헤더 값이 None이면 그 이름의
+        병합 헤더를 보내지 않는다(인증 없는 요청 검증용). 세션 헤더가 없으면 스텝 헤더 사본뿐이다.
+        """
+        step = dict(step_headers or {})
+        session = self.runtime_context.get("session_headers") or {}
+        if not session:
+            return step
+        step_names = {str(name).lower() for name in step}
+        merged: Dict[str, Any] = {
+            str(name): value for name, value in session.items() if str(name).lower() not in step_names
+        }
+        merged.update({name: value for name, value in step.items() if value is not None})
+        return merged
+
     def _send(
         self,
         *,

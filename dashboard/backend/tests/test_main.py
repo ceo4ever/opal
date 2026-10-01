@@ -3,7 +3,7 @@
   "module": "tests.test_main",
   "layer": "test",
   "domain": "console",
-  "description": "S-5: FastAPI main.py 보안 바인딩(127.0.0.1) + /health 엔드포인트 계약 검증. RED-first. [T021/L2-R4sec]",
+  "description": "S-5: FastAPI main.py 보안 바인딩(127.0.0.1) + /health 엔드포인트 계약 검증. RED-first. [T021/L2-R4sec] 모든 TestClient는 허용 Host(base_url=http://127.0.0.1:7823)로 접근한다 — 기본 Host(testserver)는 인증 미들웨어의 Host 검사에서 거절된다.",
   "exports": ["test_health_endpoint", "test_host_binding_is_localhost", "test_no_0000_in_code"],
   "depends": ["main"]
 }
@@ -52,7 +52,8 @@ def test_no_0000_in_uvicorn_call():
 @pytest.fixture
 def client():
     from dashboard.backend.main import app
-    return TestClient(app)
+    # 허용 Host(127.0.0.1)로 접근한다 — 기본 Host(testserver)는 Host 검사에서 거절된다(172 D-22)
+    return TestClient(app, base_url="http://127.0.0.1:7823")
 
 
 def test_health_endpoint_returns_200(client):

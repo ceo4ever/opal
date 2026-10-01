@@ -3,9 +3,9 @@
   "module": "routers.brain",
   "layer": "router",
   "domain": "console",
-  "description": "대화별 session_id 격리: GET /api/brain/auth — shutil.which(claude) 경량 체크. GET /api/brain/status?project=<경로>&session_id=<id> — project·session_id 필수, BrainSessionRegistry.status(session_id) 반환. session_id 미등록 시 state=idle 응답(아직 프라임 안 된 대화). POST /api/brain/prime — project·session_id 필수, 빈값/무효→400, 그 session_id 세션만 콜드 프라임(다른 세션 불변), 백그라운드 스레드로 트리거(prime-on-intent). POST /api/brain/query — project·session_id 필수, 빈값/무효→400, BrainSessionRegistry.submit_job 호출 → job_id 즉시 반환(BrainJobSubmitResponse). 미등록 session_id로 query 오면 콜드 잡 자동 등록(robust). GET /api/brain/job/{job_id}?project=<>&session_id=<> — 잡 상태 폴링, BrainJobResponse(job_id,status,answer,citations,error_msg). 잡 소멸/미존재 시 graceful error 응답. [MUST] LLM 호출은 이 라우터에만 격리. project·session_id 빈값·무효 → 명시적 400 반환.",
-  "exports": ["GET /api/brain/auth", "GET /api/brain/status", "POST /api/brain/prime", "POST /api/brain/query", "GET /api/brain/job/{job_id}"],
-  "depends": ["adapters.brain_session", "adapters.opbr_adapter", "models", "scanner", "config"]
+  "description": "구형 Brain 정책 게이트: GET /api/brain/legacy → {enabled, running_turns}. POST /api/brain/legacy {enabled, risk_acknowledged} — 켜기는 risk_acknowledged가 엄격 JSON true일 때만(아니면 400 risk_not_acknowledged), 저장(legacy_brain_enabled) 성공 후 메모리 켬; 끄기는 메모리 끔 → 풀 폐기(clear_pool) → 저장 순이며 저장 실패 시 500이어도 메모리는 꺼진 채 유지. 꺼진 상태의 prime·query는 함수 첫 줄에서 403 legacy_brain_disabled(error envelope), LegacyBrainDisabled 경합 예외도 같은 403(503/502 매핑보다 먼저). 오류 본문 {error:{code,message}}. 아래는 기존 계약: 대화별 session_id 격리: GET /api/brain/auth — shutil.which(claude) 경량 체크. GET /api/brain/status?project=<경로>&session_id=<id> — project·session_id 필수, BrainSessionRegistry.status(session_id) 반환. session_id 미등록 시 state=idle 응답(아직 프라임 안 된 대화). POST /api/brain/prime — project·session_id 필수, 빈값/무효→400, 그 session_id 세션만 콜드 프라임(다른 세션 불변), 백그라운드 스레드로 트리거(prime-on-intent). POST /api/brain/query — project·session_id 필수, 빈값/무효→400, BrainSessionRegistry.submit_job 호출 → job_id 즉시 반환(BrainJobSubmitResponse). 미등록 session_id로 query 오면 콜드 잡 자동 등록(robust). GET /api/brain/job/{job_id}?project=<>&session_id=<> — 잡 상태 폴링, BrainJobResponse(job_id,status,answer,citations,error_msg). 잡 소멸/미존재 시 graceful error 응답. [MUST] LLM 호출은 이 라우터에만 격리. project·session_id 빈값·무효 → 명시적 400 반환.",
+  "exports": ["GET /api/brain/auth", "GET /api/brain/status", "POST /api/brain/prime", "POST /api/brain/query", "GET /api/brain/job/{job_id}", "GET /api/brain/legacy", "POST /api/brain/legacy"],
+  "depends": ["adapters.brain_session", "adapters.brain_policy", "adapters.opbr_adapter", "models", "scanner", "config"]
 }
 """
 from __future__ import annotations
@@ -15,10 +15,13 @@ import shutil
 import threading
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import JSONResponse
 
 from dashboard.backend.adapters.base import ToolError
+from dashboard.backend.adapters import brain_policy
+from dashboard.backend.adapters.brain_policy import LegacyBrainDisabled
 from dashboard.backend.adapters.brain_session import brain_session_registry
-from dashboard.backend.config import load_config
+from dashboard.backend.config import load_config, save_config
 from dashboard.backend.models import (
     BrainAuthResponse,
     BrainJobResponse,
@@ -26,12 +29,66 @@ from dashboard.backend.models import (
     BrainPrimeResponse,
     BrainQueryRequest,
     BrainStatusResponse,
+    LegacyBrainStatusResponse,
+    LegacyBrainToggleRequest,
 )
 from dashboard.backend.scanner import scan_projects
 
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
+
+
+# ── 구형 Brain 정책 헬퍼 ──────────────────────────────────────────────────────────
+
+def _error(status: int, code: str, message: str) -> JSONResponse:
+    """error envelope {"error":{"code","message"}} 응답."""
+    return JSONResponse(status_code=status, content={"error": {"code": code, "message": message}})
+
+
+def _disabled_response() -> JSONResponse:
+    return _error(
+        403,
+        "legacy_brain_disabled",
+        "구형 Brain이 꺼져 있습니다. 설정에서 위험을 확인하고 켠 뒤 사용하세요.",
+    )
+
+
+def _legacy_status() -> dict:
+    return {"enabled": brain_policy.is_enabled(), "running_turns": brain_policy.running_turns()}
+
+
+# ── GET·POST /api/brain/legacy ───────────────────────────────────────────────────
+
+@router.get("/api/brain/legacy", response_model=LegacyBrainStatusResponse)
+def get_brain_legacy() -> dict:
+    """구형 Brain 켜짐 여부와 진행 중 turn 수."""
+    return _legacy_status()
+
+
+@router.post("/api/brain/legacy", response_model=LegacyBrainStatusResponse)
+def post_brain_legacy(body: LegacyBrainToggleRequest):
+    """구형 Brain 켜기/끄기. 켜기는 risk_acknowledged가 JSON true여야 한다."""
+    if body.enabled:
+        if body.risk_acknowledged is not True:
+            return _error(400, "risk_not_acknowledged", "구형 Brain을 켜려면 위험 확인(risk_acknowledged=true)이 필요합니다.")
+        try:
+            save_config({"legacy_brain_enabled": True})
+        except Exception:
+            logger.exception("[brain] legacy_brain_enabled 저장 실패(켜기)")
+            return _error(500, "config_save_failed", "설정 저장에 실패해 켜지 않았습니다.")
+        brain_policy.set_enabled(True)
+        return _legacy_status()
+
+    # 끄기: 메모리 먼저 끄고 풀 폐기 후 저장. 저장 실패해도 메모리는 꺼진 채 유지.
+    brain_policy.set_enabled(False)
+    brain_session_registry.clear_pool()
+    try:
+        save_config({"legacy_brain_enabled": False})
+    except Exception:
+        logger.exception("[brain] legacy_brain_enabled 저장 실패(끄기) — 메모리는 꺼짐 유지")
+        return _error(500, "config_save_failed", "설정 저장에 실패했습니다. 현재 실행 중에는 꺼진 상태입니다.")
+    return _legacy_status()
 
 
 # ── project 경로 결정 헬퍼 ────────────────────────────────────────────────────────
@@ -153,7 +210,7 @@ def get_brain_status(
 # ── POST /api/brain/prime ────────────────────────────────────────────────────────
 
 @router.post("/api/brain/prime", response_model=BrainPrimeResponse)
-def post_brain_prime(body: dict | None = None) -> BrainPrimeResponse:
+def post_brain_prime(body: dict | None = None):
     """prime-on-intent: session_id 세션만 콜드 프라임을 백그라운드 스레드로 트리거, 즉시 반환.
 
     다른 session_id 세션은 완전히 독립 — 영향 없음.
@@ -172,6 +229,8 @@ def post_brain_prime(body: dict | None = None) -> BrainPrimeResponse:
     Raises:
         HTTPException(400): project·session_id 빈 값 또는 project 미존재
     """
+    if not brain_policy.is_enabled():
+        return _disabled_response()
     project = ""
     session_id = ""
     if body and isinstance(body, dict):
@@ -205,7 +264,7 @@ def _prime_background(session_id: str, project_path: str) -> None:
 # ── POST /api/brain/query ────────────────────────────────────────────────────────
 
 @router.post("/api/brain/query", response_model=BrainJobSubmitResponse)
-def post_brain_query(body: BrainQueryRequest) -> BrainJobSubmitResponse:
+def post_brain_query(body: BrainQueryRequest):
     """opbr 질의 — 비동기 잡 제출. job_id를 즉시 반환하고 백그라운드에서 ask를 실행한다.
 
     session_id가 레지스트리에 없으면 (서버재시작 후 등) 콜드 잡으로 자동 등록(robust).
@@ -222,6 +281,8 @@ def post_brain_query(body: BrainQueryRequest) -> BrainJobSubmitResponse:
     Raises:
         HTTPException(400): project·session_id 빈 값 또는 project 미존재
     """
+    if not brain_policy.is_enabled():
+        return _disabled_response()
     project_path = _require_project_path(body.project)
     sid = _require_session_id(body.session_id)
 
@@ -238,6 +299,8 @@ def post_brain_query(body: BrainQueryRequest) -> BrainJobSubmitResponse:
             question=body.question,
             project_path=project_path,
         )
+    except LegacyBrainDisabled:
+        return _disabled_response()
     except ToolError as exc:
         raise HTTPException(
             status_code=503,

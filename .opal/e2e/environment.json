@@ -5,6 +5,7 @@
       "id": "backend",
       "command": ["{python}", "-m", "uvicorn", "dashboard.backend.main:app", "--host", "{host}", "--port", "{port}"],
       "cwd": ".",
+      "env": {"OPAL_CONSOLE_CORS_ORIGINS": "{service.frontend.url}"},
       "health": {"type": "http", "path": "/health", "expect_status": 200, "json_field": "status"},
       "startup_timeout_s": 60
     },
@@ -21,5 +22,11 @@
   "surfaces": [
     {"id": "console", "kind": "web", "service": "frontend", "path": "/"},
     {"id": "console-api", "kind": "api", "service": "backend", "health_path": "/health"}
-  ]
+  ],
+  "session_bootstrap": {
+    "service": "backend",
+    "command": ["{python}", ".opal/e2e/console_session.py", "--base-url", "{service.backend.url}"],
+    "cwd": ".",
+    "env": {"PYTHONPATH": "{project_root}"}
+  }
 }

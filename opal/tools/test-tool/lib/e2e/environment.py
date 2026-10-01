@@ -3,8 +3,8 @@
   "module": "environment",
   "layer": "util",
   "domain": "opal-tools",
-  "description": "프로젝트 E2E 환경 설정(`.opal/e2e/environment.json`)의 스키마 원본. 파일 적재(load)·순수 검증(validate, 위반 {path,code,detail} 11종)·서비스 의존 순서(service_order)·서비스 기동 값 확정(render_service: 치환 토큰 6종과 from_env 해석, cwd 실제 경로의 루트 내부 확인)·표면 선택(select_surface)을 제공한다. 비밀 원문 판정은 lib/e2e/redaction.redact_text를 재사용한다. 파일을 쓰지 않고 프로세스를 띄우지 않으며 OS 분기를 두지 않는다.",
-  "exports": ["SCHEMA_VERSION", "CONFIG_RELPATH", "SURFACE_KINDS", "DESKTOP_KINDS", "VIOLATION_CODES", "load", "validate", "normalize", "service_order", "render_service", "select_surface"],
+  "description": "프로젝트 E2E 환경 설정(`.opal/e2e/environment.json`)의 스키마 원본. 파일 적재(load)·순수 검증(validate, 위반 {path,code,detail} 11종)·서비스 의존 순서(service_order)·서비스 기동 값 확정(render_service: 치환 토큰 6종과 from_env 해석, cwd 실제 경로의 루트 내부 확인)·선택 키 session_bootstrap(SUT health 통과 뒤 1회 실행할 세션 발급 명령) 선언 검증과 render_session_bootstrap·표면 선택(select_surface)을 제공한다. 비밀 원문 판정은 lib/e2e/redaction.redact_text를 재사용한다. 파일을 쓰지 않고 프로세스를 띄우지 않으며 OS 분기를 두지 않는다.",
+  "exports": ["SCHEMA_VERSION", "CONFIG_RELPATH", "SURFACE_KINDS", "DESKTOP_KINDS", "VIOLATION_CODES", "load", "validate", "normalize", "service_order", "render_service", "render_session_bootstrap", "select_surface"],
   "depends": ["redaction"]
 }
 
@@ -63,10 +63,12 @@ _PLACEHOLDER_PATTERN = re.compile(r"\{\{|\}\}|\{([^{}]*)\}")
 _SIMPLE_TOKENS = ("host", "port", "python", "project_root")
 _SERVICE_TOKEN_PATTERN = re.compile(r"^service\.([a-z][a-z0-9-]*)\.(url|port)$")
 
-_TOP_KEYS = ("schema_version", "services", "surfaces", "secrets", "data", "external_integrations")
+_TOP_KEYS = ("schema_version", "services", "surfaces", "secrets", "data", "external_integrations", "session_bootstrap")
 _TOP_REQUIRED = ("schema_version", "services", "surfaces")
 _SERVICE_KEYS = ("id", "command", "cwd", "env", "depends_on", "health", "startup_timeout_s")
 _HTTP_HEALTH_KEYS = ("type", "path", "expect_status", "json_field")
+_SESSION_BOOTSTRAP_KEYS = ("service", "command", "cwd", "env", "timeout_s")
+DEFAULT_SESSION_BOOTSTRAP_TIMEOUT_S = 30
 _SECRET_KEYS = ("name", "purpose")
 _DATA_KEYS = ("prepare", "restore", "notes")
 _INTEGRATION_KEYS = ("name", "policy", "notes")
@@ -163,6 +165,8 @@ def validate(config: Any) -> List[Dict[str, str]]:
         for index, surface in enumerate(surfaces):
             _validate_surface(surface, f"surfaces[{index}]", service_ids, out)
 
+    if "session_bootstrap" in config:
+        _validate_session_bootstrap(config["session_bootstrap"], service_ids, out)
     if "secrets" in config:
         _validate_secrets(config["secrets"], out)
     if "data" in config:
@@ -259,6 +263,45 @@ def _validate_service(service: Any, path: str, service_ids: List[str], out) -> N
 
     if "startup_timeout_s" in service and not _is_positive_number(service["startup_timeout_s"]):
         out.append(_v(f"{path}.startup_timeout_s", "invalid_type", "startup_timeout_s must be a positive number"))
+
+
+def _validate_session_bootstrap(spec: Any, service_ids: List[str], out) -> None:
+    """선택 키 `session_bootstrap` — SUT health 통과 뒤 1회 실행하는 세션 발급 명령 선언."""
+    path = "session_bootstrap"
+    if not isinstance(spec, dict):
+        out.append(_v(path, "invalid_type", "session_bootstrap must be an object"))
+        return
+    _check_keys(spec, path, _SESSION_BOOTSTRAP_KEYS, out)
+
+    if "service" not in spec:
+        out.append(_v(f"{path}.service", "required_field_missing", "'service' is required"))
+    elif not isinstance(spec["service"], str):
+        out.append(_v(f"{path}.service", "invalid_type", "service must be a service id"))
+    elif spec["service"] not in service_ids:
+        out.append(_v(f"{path}.service", "unknown_service_ref", f"unknown service '{spec['service']}'"))
+
+    if "command" not in spec:
+        out.append(_v(f"{path}.command", "required_field_missing", "'command' is required"))
+    elif not _is_string_list(spec["command"], non_empty=True):
+        out.append(_v(f"{path}.command", "invalid_type", "command must be a non-empty array of strings"))
+    else:
+        for index, arg in enumerate(spec["command"]):
+            _check_placeholders(arg, f"{path}.command[{index}]", service_ids, out)
+
+    if "cwd" in spec:
+        cwd = spec["cwd"]
+        if not isinstance(cwd, str):
+            out.append(_v(f"{path}.cwd", "invalid_type", "cwd must be a string"))
+        else:
+            _check_placeholders(cwd, f"{path}.cwd", service_ids, out)
+            if _cwd_escapes(cwd):
+                out.append(_v(f"{path}.cwd", "path_escape", "cwd must stay inside the project root"))
+
+    if "env" in spec:
+        _validate_env(spec["env"], f"{path}.env", service_ids, out)
+
+    if "timeout_s" in spec and not _is_positive_number(spec["timeout_s"]):
+        out.append(_v(f"{path}.timeout_s", "invalid_type", "timeout_s must be a positive number"))
 
 
 def _is_secret_key(name: str) -> bool:
@@ -687,6 +730,41 @@ def render_service(
         "host": host,
         "port": int(port),
         "url": _service_url(host, port),
+    }
+
+
+def render_session_bootstrap(
+    config: Mapping[str, Any],
+    *,
+    ports_by_id: Mapping[str, int],
+    project_root: str,
+    host: str = DEFAULT_HOST,
+) -> Optional[Dict[str, Any]]:
+    """`session_bootstrap` 선언을 `{argv, cwd, env, timeout_s}`로 확정한다. 키가 없으면 None.
+
+    치환 토큰·cwd 경계 확인은 `render_service`와 같은 규칙이다(선언의 `service`가 가리키는
+    서비스의 임대 포트가 `{port}`·`{service.<id>.*}`의 기준). `timeout_s` 기본은 30초다.
+    """
+    spec = config.get("session_bootstrap")
+    if not isinstance(spec, Mapping):
+        return None
+    rendered = render_service(
+        {
+            "id": spec["service"],
+            "command": spec["command"],
+            "cwd": spec.get("cwd", "."),
+            "env": spec.get("env", {}),
+        },
+        port=ports_by_id[spec["service"]],
+        host=host,
+        ports_by_id=ports_by_id,
+        project_root=project_root,
+    )
+    return {
+        "argv": rendered["argv"],
+        "cwd": rendered["cwd"],
+        "env": rendered["env"],
+        "timeout_s": spec.get("timeout_s", DEFAULT_SESSION_BOOTSTRAP_TIMEOUT_S),
     }
 
 

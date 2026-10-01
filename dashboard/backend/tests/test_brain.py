@@ -3,7 +3,7 @@
   "module": "tests.test_brain",
   "layer": "test",
   "domain": "console",
-  "description": "대화별 session_id 격리 단위·통합 테스트. opbr_adapter(query --read-only 플래그·allowedTools·extract_json_fence·shell=False·cwd=project_path·cold 플래그 명시·session_id 호출자 제공), BrainSessionRegistry(session_id 키잉·대화별 독립 세션·세션A prime→A만 ready B idle·A ask B 미오염·reset(A) B 불변·같은 프로젝트 a/b 두 세션 공존), TestSessionIdHandleSeparation(conversation_id↔claude핸들 분리·콜드마다 새 uuid4·already-in-use 폴백·재시도 1회 한정·실 claude 0회), 라우터(prime 즉시반환·session_id 필수·query session_id 필수·GET /api/brain/status?project=&session_id= 미등록→idle). project·session_id 모두 필수: 빈값/무효→400. [MUST] 서브프로세스 전부 mock — 실 claude/brain-tool 호출 0회(H-8). 기존 backend 전체 회귀 0. TestBrainPrimePool(프라임 풀 적재·체크아웃+리필·동시 프라임 상한·락 무중첩)·TestBrainWarmInjection(새 대화 웜 핸들 주입→ready+resume·stale resume 투명 재프라임·빈 풀 콜드 폴백)·TestBrainLifespanPrewarm(main.py lifespan 기동 선프라임 트리거·비블로킹)·TestBrainPoolFixtureRegression(reset_brain_registry 픽스처의 풀 상태 클리어 회귀) — PLAN.md §3.2.2 설계 시그니처(prewarm/checkout_warm_handle/adopt_warm_handle) 대상, GREEN(구현 완료). 플레이키 동기화: 체크아웃 직후 풀 비움 확인·동시 체크아웃 무중복 판정은 백그라운드 리필 완료를 threading.Event로 게이트해 결정론화, 신규 세션 웜 주입 시 콜드 프라임 미호출·투명 재프라임 호출 순서 검증은 registry.prewarm을 인스턴스 no-op으로 대체해 리필 부수효과와 분리(리필 자체는 S-3이 별도 담보).",
+  "description": "대화별 session_id 격리 단위·통합 테스트. opbr_adapter(query --read-only 플래그·allowedTools·extract_json_fence·shell=False·cwd=project_path·cold 플래그 명시·session_id 호출자 제공), BrainSessionRegistry(session_id 키잉·대화별 독립 세션·세션A prime→A만 ready B idle·A ask B 미오염·reset(A) B 불변·같은 프로젝트 a/b 두 세션 공존), TestSessionIdHandleSeparation(conversation_id↔claude핸들 분리·콜드마다 새 uuid4·already-in-use 폴백·재시도 1회 한정·실 claude 0회), 라우터(prime 즉시반환·session_id 필수·query session_id 필수·GET /api/brain/status?project=&session_id= 미등록→idle). project·session_id 모두 필수: 빈값/무효→400. [MUST] 서브프로세스 전부 mock — 실 claude/brain-tool 호출 0회(H-8). 기존 backend 전체 회귀 0. TestBrainPrimePool(프라임 풀 적재·체크아웃+리필·동시 프라임 상한·락 무중첩)·TestBrainWarmInjection(새 대화 웜 핸들 주입→ready+resume·stale resume 투명 재프라임·빈 풀 콜드 폴백)·TestBrainLifespanPrewarm(main.py lifespan 기동 선프라임 트리거·비블로킹)·TestBrainPoolFixtureRegression(reset_brain_registry 픽스처의 풀 상태 클리어 회귀) — PLAN.md §3.2.2 설계 시그니처(prewarm/checkout_warm_handle/adopt_warm_handle) 대상, GREEN(구현 완료). 플레이키 동기화: 체크아웃 직후 풀 비움 확인·동시 체크아웃 무중복 판정은 백그라운드 리필 완료를 threading.Event로 게이트해 결정론화, 신규 세션 웜 주입 시 콜드 프라임 미호출·투명 재프라임 호출 순서 검증은 registry.prewarm을 인스턴스 no-op으로 대체해 리필 부수효과와 분리(리필 자체는 S-3이 별도 담보). 172: 어댑터 단언은 subprocess.Popen 대체(communicate()가 (stdout, stderr)를 돌려주고 returncode 보유) 기반이며 구형 Brain 정책 켜짐을 전제로 하고, 인증이 필요한 라우터 호출은 authed_client(Origin·X-CSRF-Token 자동 부착), 모든 TestClient는 base_url=http://127.0.0.1:7823이다. 실제 subprocess.run·Popen 호출은 autouse 가드가 AssertionError로 막는다.",
   "exports": [
     "TestExtractJsonFence",
     "TestOpbrAdapterCmd",
@@ -50,6 +50,26 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from dashboard.backend.tests.auth_helpers import (  # noqa: F401  (fixture 등록)
+    BASE_URL,
+    authed_client,
+    isolated_console_home,
+    no_real_spawn,
+    set_legacy_brain_policy,
+)
+
+
+# ── 구형 Brain 정책 켜짐 전제 (172 D-15·D-16) ──────────────────────────────────────
+# 어댑터 spawn 게이트와 Registry 게이트는 정책이 켜져 있을 때만 통과한다. 이 파일의 기존 계약
+# (어댑터 인자·Registry 상태기계·라우터·기동 선프라임)은 구형 Brain 켜짐을 전제로 검증하며,
+# 임시 console.config.json의 legacy_brain_enabled=true로 켠다. 실제 claude는 호출하지 않는다.
+
+@pytest.fixture(autouse=True)
+def legacy_brain_on(isolated_console_home):
+    set_legacy_brain_policy(isolated_console_home, True)
+    yield
+    set_legacy_brain_policy(isolated_console_home, None)
+
 
 # ── 테스트용 가짜 프로젝트 경로 ────────────────────────────────────────────────────
 # 실제 존재하지 않아도 됨: scan_projects·_resolve_project_path를 mock 처리
@@ -82,7 +102,7 @@ def _mock_scan_projects_with(*paths):
 @pytest.fixture(scope="module")
 def client():
     from dashboard.backend.main import app
-    return TestClient(app)
+    return authed_client(app)  # 상태 변경 요청에 Origin·CSRF 자동 부착(172 D-22)
 
 
 @pytest.fixture(autouse=True)
@@ -108,8 +128,9 @@ def reset_brain_registry():
 
 
 def _mock_proc(stdout: str, returncode: int = 0) -> MagicMock:
-    """subprocess.run 반환값 mock 헬퍼."""
+    """subprocess.Popen 반환 객체 mock 헬퍼 — communicate()가 (stdout, stderr)를 돌려주고 returncode를 가진다."""
     proc = MagicMock()
+    proc.communicate.return_value = (stdout, "")
     proc.stdout = stdout
     proc.stderr = ""
     proc.returncode = returncode
@@ -219,7 +240,7 @@ class TestOpbrAdapterCmd:
     """opbr_adapter.prime_and_ask 커맨드 배열 검증 (cold/warm 플래그)."""
 
     def _capture_cmd(self, **kwargs) -> list[str]:
-        """subprocess.run을 patch하여 호출된 커맨드 배열 캡처.
+        """subprocess.Popen을 patch하여 호출된 커맨드 배열 캡처.
 
         기본값: cold=True, session_id=_SID_A1
         """
@@ -228,7 +249,7 @@ class TestOpbrAdapterCmd:
         result_text = '```json\n{"answer": "테스트 답변", "citations": []}\n```'
         mock_stdout = _make_claude_output(result_text)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)) as mock_run, \
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)) as mock_run, \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(question="테스트 질문", project_path="/some/path", **kwargs)
@@ -272,11 +293,11 @@ class TestOpbrAdapterCmd:
         assert "--bare" not in cmd, f"--bare MUST NOT be in cmd: {cmd}"
 
     def test_shell_false(self):
-        """[MUST] subprocess.run이 shell=False로 호출됨 (H-13)."""
+        """[MUST] subprocess.Popen이 shell=False로 호출됨 (H-13)."""
         result_text = '```json\n{"answer": "답변", "citations": []}\n```'
         mock_stdout = _make_claude_output(result_text)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)) as mock_run, \
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)) as mock_run, \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(
@@ -288,7 +309,7 @@ class TestOpbrAdapterCmd:
 
         call_kwargs = mock_run.call_args[1]
         assert call_kwargs.get("shell") is False, (
-            f"subprocess.run must be called with shell=False, got shell={call_kwargs.get('shell')}"
+            f"subprocess.Popen must be called with shell=False, got shell={call_kwargs.get('shell')}"
         )
 
     def test_result_contains_answer_and_citations(self):
@@ -296,7 +317,7 @@ class TestOpbrAdapterCmd:
         result_text = '```json\n{"answer": "답변입니다", "citations": [{"page": "p1", "title": "t1", "type": "concept"}]}\n```'
         mock_stdout = _make_claude_output(result_text, session_id=_SID_A1)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)), \
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)), \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             result = prime_and_ask(
@@ -315,7 +336,7 @@ class TestOpbrAdapterCmd:
         """is_error=true → RuntimeError."""
         mock_stdout = _make_claude_output("", is_error=True)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)), \
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)), \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             with pytest.raises(RuntimeError, match="is_error=true"):
@@ -328,7 +349,7 @@ class TestOpbrAdapterCmd:
 
     def test_non_json_output_raises(self):
         """비JSON stdout → RuntimeError."""
-        with patch("subprocess.run", return_value=_mock_proc("not-json")), \
+        with patch("subprocess.Popen", return_value=_mock_proc("not-json")), \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             with pytest.raises(RuntimeError):
@@ -349,7 +370,7 @@ class TestOpbrAdapterColdWarm:
         result_text = '```json\n{"answer": "테스트 답변", "citations": []}\n```'
         mock_stdout = _make_claude_output(result_text)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)) as mock_run, \
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)) as mock_run, \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(question="테스트 질문", project_path="/some/path", **kwargs)
@@ -390,7 +411,7 @@ class TestOpbrAdapterColdWarm:
         result_text = '```json\n{"answer": "답변", "citations": []}\n```'
         mock_stdout = _make_claude_output(result_text, session_id=_SID_A1)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)), \
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)), \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             result = prime_and_ask(
@@ -407,11 +428,11 @@ class TestOpbrAdapterColdWarm:
         )
 
     def test_cwd_set_to_project_path(self):
-        """subprocess.run이 cwd=project_path로 호출됨 (격리 핵심)."""
+        """subprocess.Popen이 cwd=project_path로 호출됨 (격리 핵심)."""
         result_text = '```json\n{"answer": "답변", "citations": []}\n```'
         mock_stdout = _make_claude_output(result_text)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)) as mock_run, \
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)) as mock_run, \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(
@@ -423,7 +444,7 @@ class TestOpbrAdapterColdWarm:
 
         call_kwargs = mock_run.call_args[1]
         assert call_kwargs.get("cwd") == _PROJ_A, (
-            f"subprocess.run must be called with cwd={_PROJ_A!r}, "
+            f"subprocess.Popen must be called with cwd={_PROJ_A!r}, "
             f"got cwd={call_kwargs.get('cwd')!r}"
         )
 
@@ -438,7 +459,7 @@ class TestOpbrAdapterColdWarm:
             captured_cwds.append(kwargs.get("cwd"))
             return _mock_proc(mock_stdout)
 
-        with patch("subprocess.run", side_effect=capture_run), \
+        with patch("subprocess.Popen", side_effect=capture_run), \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(question="질문A", project_path=_PROJ_A, session_id=_SID_A1, cold=True)
@@ -466,7 +487,7 @@ class TestOpbrAdapterColdWarm:
         result_text = '```json\n{"answer": "답변", "citations": []}\n```'
         mock_stdout = _make_claude_output(result_text)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)) as mock_run:
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)) as mock_run:
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(
                 question="질문",
@@ -485,11 +506,11 @@ class TestOpbrAdapterCwd:
     """opbr_adapter.prime_and_ask cwd=project_path 격리 검증 (cold=True 기본)."""
 
     def test_cwd_set_to_project_path(self):
-        """subprocess.run이 cwd=project_path로 호출됨 (격리 핵심)."""
+        """subprocess.Popen이 cwd=project_path로 호출됨 (격리 핵심)."""
         result_text = '```json\n{"answer": "답변", "citations": []}\n```'
         mock_stdout = _make_claude_output(result_text)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)) as mock_run, \
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)) as mock_run, \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(
@@ -501,7 +522,7 @@ class TestOpbrAdapterCwd:
 
         call_kwargs = mock_run.call_args[1]
         assert call_kwargs.get("cwd") == _PROJ_A, (
-            f"subprocess.run must be called with cwd='{_PROJ_A}', "
+            f"subprocess.Popen must be called with cwd='{_PROJ_A}', "
             f"got cwd={call_kwargs.get('cwd')!r}"
         )
 
@@ -1243,7 +1264,7 @@ class TestOpbrAdapterAllowedTools:
         result_text = '```json\n{"answer": "테스트 답변", "citations": []}\n```'
         mock_stdout = _make_claude_output(result_text)
 
-        with patch("subprocess.run", return_value=_mock_proc(mock_stdout)) as mock_run, \
+        with patch("subprocess.Popen", return_value=_mock_proc(mock_stdout)) as mock_run, \
              patch("os.path.isdir", return_value=True):
             from dashboard.backend.adapters.opbr_adapter import prime_and_ask
             prime_and_ask(question="테스트 질문", project_path="/some/path", **kwargs)
@@ -1539,7 +1560,7 @@ class TestSessionIdHandleSeparation:
             conversation_id=_SID_A1, project_path=_PROJ_A
         )
 
-        with patch("subprocess.run") as mock_subprocess, \
+        with patch("subprocess.Popen") as mock_subprocess, \
              patch(
                 "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
                 return_value=self._make_result("some-handle"),
@@ -1657,7 +1678,7 @@ class TestBrainRouterPrime:
     def test_prime_no_real_claude(self, client):
         """[MUST] prime 트리거 시 실 claude 호출 0회 (mock 격리 — H-8)."""
         with _mock_scan_projects_with(_PROJ_A), \
-             patch("subprocess.run") as mock_run:
+             patch("subprocess.Popen") as mock_run:
             resp = client.post(
                 "/api/brain/prime",
                 json={"project": _PROJ_A, "session_id": _SID_A1},
@@ -1780,7 +1801,7 @@ class TestBrainRouterQuery:
         }
 
         with _mock_scan_projects_with(_PROJ_A), \
-             patch("subprocess.run") as subprocess_mock, \
+             patch("subprocess.Popen") as subprocess_mock, \
              patch(
                 "dashboard.backend.adapters.brain_session.opbr_adapter.prime_and_ask",
                 return_value=mock_result,
@@ -1919,8 +1940,8 @@ class TestBrainRouterErrors:
         )
 
     def test_auth_no_real_subprocess(self, client):
-        """GET /api/brain/auth — subprocess.run 호출 0회 (H-8)."""
-        with patch("subprocess.run") as mock_run, \
+        """GET /api/brain/auth — subprocess.Popen 호출 0회 (H-8)."""
+        with patch("subprocess.Popen") as mock_run, \
              patch("shutil.which", return_value="/usr/local/bin/claude"):
             resp = client.get("/api/brain/auth")
         assert resp.status_code == 200
@@ -3123,7 +3144,7 @@ class TestBrainLifespanPrewarm:
                 "dashboard.backend.main.brain_session_registry.prewarm",
                 side_effect=lambda p: calls.append(p),
              ):
-            with TestClient(app) as lifespan_client:
+            with TestClient(app, base_url=BASE_URL) as lifespan_client:
                 resp = lifespan_client.get("/health")
 
         assert resp.status_code == 200
@@ -3144,7 +3165,7 @@ class TestBrainLifespanPrewarm:
                 "dashboard.backend.main.brain_session_registry.prewarm",
                 side_effect=lambda p: calls.append(p),
              ):
-            with TestClient(app) as lifespan_client:
+            with TestClient(app, base_url=BASE_URL) as lifespan_client:
                 resp = lifespan_client.get("/health")
 
         assert resp.status_code == 200
@@ -3166,7 +3187,7 @@ class TestBrainLifespanPrewarm:
                 side_effect=slow_prewarm,
              ):
             t0 = time.monotonic()
-            with TestClient(app) as lifespan_client:
+            with TestClient(app, base_url=BASE_URL) as lifespan_client:
                 elapsed = time.monotonic() - t0
                 resp = lifespan_client.get("/health")
 

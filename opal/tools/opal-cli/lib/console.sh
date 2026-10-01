@@ -6,7 +6,7 @@
 #   opal-cli console start   — OPAL Console 대시보드 백그라운드 기동 (포트 7823)
 #   opal-cli console stop    — 실행 중인 대시보드 데몬 종료
 #   opal-cli console status  — /health 엔드포인트로 기동 상태 확인
-#   opal-cli console open    — 서버 준비 확인 후 브라우저에서 대시보드 열기
+#   opal-cli console open    — 서버 준비·auth 확인 후 1회용 진입 token을 실어 브라우저 열기
 #   opal-cli console scan [기준경로...] [--prune] [--depth N]
 #                             — console.config.json 자동 생성·머지 (기본 base=$HOME, depth=3)
 #   opal-cli console log [-n N] — 로그 실시간 팔로우 (기본 최근 50줄부터, Ctrl+C 종료)
@@ -189,6 +189,30 @@ _console_wait_for_health() {
         fi
     done
     return 1
+}
+
+# _console_health_has_auth <health_url> — /health 응답 본문에 "auth" 필드가 있으면 0.
+# 없으면(구버전 데몬) 1. 인증 게이트 이전 데몬에는 진입 token이 소용없으므로 open이 이 결과로 분기한다.
+_console_health_has_auth() {
+    local health_resp
+    health_resp="$(curl -fsS --max-time 2 "$1" 2>/dev/null)" || return 1
+    [[ "$health_resp" == *'"auth"'* ]]
+}
+
+# _console_issue_entry_token <opal_home> <dashboard_server> — 1회용 진입 token을 stdout 한 줄로 출력한다.
+# OPAL 공유 venv python(없으면 python3)으로 entry_token CLI를 실행하며, 실패하면 stdout 없이 return 1.
+_console_issue_entry_token() {
+    local opal_home="$1" dashboard_server="$2" py token
+    if [[ -x "$opal_home/.venv/bin/python" ]]; then
+        py="$opal_home/.venv/bin/python"
+    elif command -v python3 &>/dev/null; then
+        py="python3"
+    else
+        return 1
+    fi
+    token="$(PYTHONPATH="$dashboard_server" "$py" -m dashboard.backend.entry_token issue 2>/dev/null)" || return 1
+    [[ -n "$token" ]] || return 1
+    printf '%s\n' "$token"
 }
 
 # ─── console 서브커맨드 ───────────────────────────────────────
@@ -422,13 +446,29 @@ cmd_console() {
                     return 1
                 fi
             fi
+            if ! _console_health_has_auth "$health_url"; then
+                warn "실행 중인 Console이 인증 게이트 이전 버전입니다 (/health에 auth 필드 없음). 브라우저를 열지 않습니다."
+                if [[ -f "$(console_record_path "$opal_home")" ]]; then
+                    info "재기동: opal-cli console stop 후 opal-cli console open"
+                else
+                    info "소유 PID 레코드가 없습니다 — 'lsof -ti tcp:${port}' 로 확인해 수동 종료한 뒤 opal-cli console open 으로 재기동하세요."
+                fi
+                return 1
+            fi
+            local entry_token
+            if ! entry_token="$(_console_issue_entry_token "$opal_home" "$dashboard_server")"; then
+                error "진입 token 발급에 실패했습니다. 브라우저를 열지 않습니다."
+                return 1
+            fi
             # macOS: open, Linux: xdg-open (플랫폼 분기 — CONVENTIONS §플랫폼 분기 격리)
+            # token은 URL fragment로만 전달하며 출력에는 기본 URL만 쓴다.
             if command -v open &>/dev/null; then
-                open "$dashboard_url" 2>/dev/null && success "브라우저 열기: $dashboard_url"
+                open "${dashboard_url}/#entry=${entry_token}" 2>/dev/null && success "브라우저 열기: $dashboard_url"
             elif command -v xdg-open &>/dev/null; then
-                xdg-open "$dashboard_url" 2>/dev/null && success "브라우저 열기: $dashboard_url"
+                xdg-open "${dashboard_url}/#entry=${entry_token}" 2>/dev/null && success "브라우저 열기: $dashboard_url"
             else
-                info "브라우저에서 직접 여세요: $dashboard_url"
+                error "브라우저를 열 수 있는 명령(open/xdg-open)이 없습니다. 진입 token은 1회용이라 URL을 출력하지 않습니다: $dashboard_url"
+                return 1
             fi
             ;;
 
@@ -613,7 +653,7 @@ OPAL Console 대시보드 (포트 7823) 관리 명령어입니다.
   start    대시보드 백그라운드 기동
   stop     대시보드 데몬 종료
   status   기동 상태 확인 (/health)
-  open     서버 준비 확인 후 브라우저에서 대시보드 열기
+  open     서버 준비·auth 확인 후 1회용 진입 token을 실어 브라우저 열기
   scan     console.config.json 자동 생성/머지 (기준경로 탐색)
   log      로그 실시간 팔로우 (기본 최근 50줄부터, -n N 으로 조정, Ctrl+C 종료)
 

@@ -3,9 +3,9 @@
   "module": "main",
   "layer": "router",
   "domain": "console",
-  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 + 127.0.0.1:5173(기본 2종, 불변) + OPAL_CONSOLE_CORS_ORIGINS(쉼표 구분) 환경 변수로 추가 허용된 정확한 origin 문자열(T01 W-2, TRD.md TD-7) / prod=동일 오리진. /health. 8개 라우터 등록(5개 read-only + brain POST + config POST/GET + docs_skills — GET 전용 읽기 전용 공개 표면 GET /api/docs/skills, GET /api/docs/skills/{skill_id}, SPA fallback보다 앞에 등록). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback. lifespan asynccontextmanager — 기동 시 load_config().prewarm_projects를 순회하며 brain_session_registry.prewarm(project_path)를 호출한다(비블로킹, daemon 스레드 내부 분리 — lifespan 본문은 즉시 yield). prewarm_projects 미지정 시 생략 로그만 남긴다.",
+  "description": "FastAPI app 진입점. uvicorn host=127.0.0.1:7823(외부 노출 금지, H-7/S-5). CORS dev=localhost:5173 + 127.0.0.1:5173(기본 2종, 불변) + OPAL_CONSOLE_CORS_ORIGINS(쉼표 구분) 환경 변수로 추가 허용된 정확한 origin 문자열(T01 W-2, TRD.md TD-7) / prod=동일 오리진. CORS는 allow_credentials=True·allow_methods GET/POST·allow_headers Content-Type/X-CSRF-Token이며 AuthMiddleware(cors_origins=CORS_ORIGINS)를 CORSMiddleware보다 먼저 등록해 CORS가 바깥에서 감싼다(인증 거절 응답에도 CORS 헤더 부착). auth 라우터(/api/auth/exchange·session) 등록. /health는 {status, version, auth: required}. 바인딩은 127.0.0.1:7823 유지. 8개 라우터 등록(5개 read-only + brain POST + config POST/GET + docs_skills — GET 전용 읽기 전용 공개 표면 GET /api/docs/skills, GET /api/docs/skills/{skill_id}, SPA fallback보다 앞에 등록). StaticFiles SPA 서빙(dist 존재 시): 알 수 없는 경로 → index.html fallback. lifespan asynccontextmanager — 기동 시 brain_policy.reload_from_config()로 구형 Brain 정책을 읽고, 켜짐일 때만 load_config().prewarm_projects를 순회하며 brain_session_registry.prewarm(project_path)를 호출한다(비블로킹, daemon 스레드 내부 분리 — lifespan 본문은 즉시 yield). prewarm_projects 미지정이거나 구형 Brain이 꺼짐이면 스레드를 만들지 않고 생략 로그만 남긴다.",
   "exports": ["app"],
-  "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor", "routers.brain", "routers.config", "routers.docs_skills", "config", "adapters.brain_session"],
+  "depends": ["routers.dashboard", "routers.projects", "routers.tasks", "routers.memory", "routers.doctor", "routers.brain", "routers.config", "routers.docs_skills", "routers.auth", "auth", "config", "adapters.brain_session", "adapters.brain_policy"],
   "task": "061"
 }
 """
@@ -23,9 +23,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from dashboard.backend.adapters import brain_policy
 from dashboard.backend.adapters.brain_session import brain_session_registry
+from dashboard.backend.auth import AuthMiddleware
 from dashboard.backend.config import load_config
 from dashboard.backend.routers import (
+    auth,
     brain,
     config,
     dashboard,
@@ -63,7 +66,9 @@ async def lifespan(app: FastAPI):
     """
     cfg = load_config()
     targets = cfg.prewarm_projects            # F-1 필드
-    if targets:
+    if not brain_policy.reload_from_config():
+        logger.info("[brain] 구형 Brain 꺼짐 — 선프라임 생략")
+    elif targets:
         logger.info("[brain] 기동 선프라임 대상 %d개: %s", len(targets), targets)
         threading.Thread(target=_prewarm_targets, args=(targets,), daemon=True).start()
     else:
@@ -86,7 +91,7 @@ app = FastAPI(
 # prod 모드: 동일 오리진(정적 서빙)이므로 CORS 불요 — allow_origins=[""] 로 제한
 # T01 W-2 (TRD.md TD-7, CONTRACT.md §C.9): 기본 2종은 코드에 남기고 OPAL_CONSOLE_CORS_ORIGINS
 # (쉼표 구분)로 주입된 정확한 origin 문자열만 추가 허용한다. 와일드카드·정규식·전체 허용은
-# 도입하지 않는다(NR-4). allow_credentials/allow_methods/allow_headers는 변경하지 않는다(D-6).
+# 도입하지 않는다(NR-4). allow_credentials=True(쿠키 세션)·allow_headers는 Content-Type/X-CSRF-Token으로 좁힌다(172 D-8).
 _DEFAULT_DEV_ORIGINS = [
     "http://localhost:5173",   # Vite dev server
     "http://127.0.0.1:5173",
@@ -123,16 +128,19 @@ def _parse_extra_origins(raw: str | None) -> list[str]:
 
 CORS_ORIGINS = _DEFAULT_DEV_ORIGINS + _parse_extra_origins(os.getenv("OPAL_CONSOLE_CORS_ORIGINS"))
 
+# 인증 미들웨어를 먼저 등록한다 — Starlette는 나중 등록이 바깥이므로 CORS가 Auth를 감싼다(D-8).
+app.add_middleware(AuthMiddleware, cors_origins=CORS_ORIGINS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["GET", "POST"],  # brain 라우터 POST 격리 허용 (기존 5라우터는 POST 핸들러 미등록 → 405 유지)
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "X-CSRF-Token"],
 )
 
 # ── 라우터 등록 ───────────────────────────────────────────────────────────────
 
+app.include_router(auth.router)  # 172 — /api/auth/exchange·session
 app.include_router(dashboard.router)
 app.include_router(projects.router)
 app.include_router(tasks.router)
@@ -148,7 +156,7 @@ app.include_router(docs_skills.router)  # T140 W-7 — GET 전용 Docs 스킬 �
 @app.get("/health")
 def health() -> dict:
     """/health — 데몬 상태 확인 엔드포인트."""
-    return {"status": "ok", "version": "0.1.0"}
+    return {"status": "ok", "version": "0.1.0", "auth": "required"}
 
 
 # ── 정적 파일 서빙 + SPA fallback ─────────────────────────────────────────────

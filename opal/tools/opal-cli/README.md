@@ -27,7 +27,7 @@ PATH에 `~/.opal/bin`이 등록되어야 `opal-cli` 명령이 동작한다.
 | `doctor` | 환경 진단 (의존성·경로·MCP·부트스트래퍼) |
 | `uninstall [--yes]` | OPAL 완전 제거 |
 | `mcp <list\|add\|remove\|install-all>` | MCP 서버 관리 |
-| `console <start\|stop\|status\|open\|scan\|log>` | OPAL Console 대시보드 관리 (포트 7823). `log`는 실시간 로그 팔로우(`-n N`, Ctrl+C 종료) |
+| `console <start\|stop\|status\|open\|scan\|log>` | OPAL Console 대시보드 관리 (포트 7823). `log`는 실시간 로그 팔로우(`-n N`, Ctrl+C 종료). `open`은 인증된 진입 경로이며 계약은 아래 「console open — 진입 계약」 참조 |
 
 ---
 
@@ -160,6 +160,16 @@ opal/tools/opal-cli/
 | v1.0 | 2026-05-08 11:00 | 초기 구현 — run.sh 디스패처 + 5개 서브커맨드 (install/update/doctor/uninstall/mcp) (139) |
 | v1.1 | 2026-07-10 10:00 | install 서브커맨드 제거 — dispatch/help/문서 정리 + lib/install.sh 삭제 (055) |
 | v1.2 | 2026-07-13 17:43 | console log 서브명령 신설 — tail -F 실시간 팔로우(-n N) + README console 항목 보강 (L2) |
+
+## console open — 진입 계약 (172)
+
+`opal-cli console open`은 Console 인증 게이트(`/api/` 세션 필요)를 통과하는 유일한 권장 진입 경로다.
+
+1. `/health` 확인 — 미기동이면 기동한 뒤 준비될 때까지 대기한다(기존 동작).
+2. 구버전 데몬 거부 — `/health` 본문에 `auth` 필드가 없으면 인증 게이트 이전 버전이므로 경고와 재기동 안내(`console stop` 후 `console open`, PID 레코드가 없으면 수동 종료 안내)만 출력하고 브라우저를 열지 않은 채 비0으로 끝난다.
+3. 1회용 진입 token 발급 — OPAL 공유 venv python(없으면 `python3`)으로 `python -m dashboard.backend.entry_token issue`를 실행해 token을 받는다. 발급에 실패하면 오류를 출력하고 브라우저를 열지 않으며 비0으로 끝난다.
+4. 브라우저 열기 — `http://127.0.0.1:7823/#entry=<token>` 형태의 fragment URL을 `open`(macOS)·`xdg-open`(Linux)에 전달한다. 두 명령이 모두 없으면 token이 1회용이라 URL을 출력하지 않고 오류로 끝난다.
+5. token 비출력 — token과 fragment는 터미널 출력·로그에 쓰지 않으며 출력에는 기본 URL만 나온다.
 
 ## console stop — stale 레코드 판정 (127)
 

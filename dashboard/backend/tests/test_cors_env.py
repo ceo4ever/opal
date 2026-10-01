@@ -3,9 +3,9 @@
   "module": "test_cors_env",
   "layer": "test",
   "domain": "console",
-  "description": "S-4 — OPAL_CONSOLE_CORS_ORIGINS env 주입 CORS 허용 목록 계약을 검증한다. main.py가 os.getenv(OPAL_CONSOLE_CORS_ORIGINS)를 소비해 미주입 시 기존 고정 2종을, 주입 시 유효 origin만 추가 허용하는지 확인한다.",
-  "task": "127-260912-oppl-E2E-하네스-구현",
-  "scenarios": ["S-4"],
+  "description": "S-4 — OPAL_CONSOLE_CORS_ORIGINS env 주입 CORS 허용 목록 계약을 검증한다. main.py가 os.getenv(OPAL_CONSOLE_CORS_ORIGINS)를 소비해 미주입 시 기존 고정 2종을, 주입 시 유효 origin만 추가 허용하는지 확인한다. CORS 미들웨어 옵션은 allow_credentials true(쿠키 세션 전달), allow_methods GET·POST, allow_headers Content-Type·X-CSRF-Token 고정, 와일드카드·정규식 origin 금지다(172 D-8).",
+  "task": "172-261001-opd-콘솔-POST-인증-게이트",
+  "scenarios": ["S-3", "S-4"],
   "exports": ["test_env_unset_keeps_default_origins", "test_env_single_origin_appended", "test_env_multiple_origins_appended", "test_env_invalid_entries_excluded", "test_cors_middleware_options_unchanged"]
 }
 """
@@ -72,7 +72,8 @@ def test_cors_middleware_options_unchanged(reload_main):
         mw for mw in m.app.user_middleware if "CORSMiddleware" in str(mw.cls)
     )
     kwargs = cors_entry.kwargs
-    assert kwargs["allow_credentials"] is False
+    assert kwargs["allow_credentials"] is True  # 쿠키 세션 전달(D-8) — origin은 정확 일치 목록 그대로
     assert kwargs["allow_methods"] == ["GET", "POST"]
+    assert kwargs["allow_headers"] == ["Content-Type", "X-CSRF-Token"]  # 와일드카드 금지, 고정 2종
     assert kwargs.get("allow_origin_regex") is None
     assert "*" not in kwargs["allow_origins"]

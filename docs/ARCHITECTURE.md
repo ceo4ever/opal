@@ -274,7 +274,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 
 ## OPAL Console (로컬 프로젝트 관리 대시보드)
 
-로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다.
+로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 중심 대시보드**(태스크 021 신설, 쓰기·LLM 경로는 브레인·설정 라우터 2곳에 격리하고 모든 `/api/` 요청은 로컬 세션을 요구한다). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다.
 
 > **기동·종료 소유권 (127)**: Console 데몬의 PID 레코드는 `$OPAL_HOME/run/console.pid`가
 > 소유하며, `opal-cli console stop`은 **레코드에 등재된 프로세스만** 종료한다. 패턴 매칭
@@ -287,27 +287,43 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 > 대장에 등재된 자원만 대상으로 하며 `user_owned=true`는 제외한다 — 사용자가 상시 띄워 둔
 > Console과 E2E run이 서로 간섭하지 않는 근거다.
 
-로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 전용 대시보드**(태스크 021 신설). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다. 네이티브 폴더 선택, PM Coordination 작업 공간, 독립 Terminal, 파일 트리 UI는 Console이 아니라 `workstudio/`의 **OPAL WorkStudio** 데스크톱 앱이 소유한다.
+로컬에서 OPAL로 작업하는 모든 프로젝트를 한 웹 화면에서 조망하는 **읽기 중심 대시보드**(태스크 021 신설, 쓰기·LLM 경로는 브레인·설정 라우터 2곳에 격리하고 모든 `/api/` 요청은 로컬 세션을 요구한다). 데이터 SSOT를 새로 만들지 않고, OPAL 도구의 read-only 커맨드 + 마크다운 파서로 각 프로젝트 데이터를 수집·렌더한다. 네이티브 폴더 선택, PM Coordination 작업 공간, 독립 Terminal, 파일 트리 UI는 Console이 아니라 `workstudio/`의 **OPAL WorkStudio** 데스크톱 앱이 소유한다.
 
 ```
 ┌─ Web UI (React + shadcn/ui, 8개 화면) ──────────────────┐
 │  대시보드·프로젝트·태스크(칸반)·메모리·환경·프로젝트 브레인·OPAL Docs·설정 │
 └───────────────┬──────────────────────────────────────────┘
-                │ HTTP (127.0.0.1:7823)
+                │ HTTP (127.0.0.1:7823) — `opal-cli console open`이 연 세션으로만 진입
 ┌───────────────▼──────────────────────────────────────────┐
 │  FastAPI 데몬 (~/.opal/dashboard-server/backend)          │
+│  • 인증 게이트 미들웨어: Host → Origin → 세션 → CSRF        │
 │  • 프로젝트 스캐너 (.opal/AGENT.md 마커 디스크 스캔)        │
 │  • read-only 어댑터: state-tool/code-scan/skill-registry/doctor │
 │  • 파서: MEMORY.json(JSON)·memory/*·PROJECT/AGENT.md      │
-│  • TTL 캐시(mtime 무효화) · 읽기 전용                       │
-│  • [예외·격리] 브레인 질의 라우터만 POST + opbr CLI(태스크036)│
+│  • TTL 캐시(mtime 무효화) · 읽기 중심                        │
+│  • [예외·격리] 브레인 질의 라우터만 POST + opbr CLI(태스크036) — 구형 Brain 기본 꺼짐(태스크172)│
 │  • [예외·격리] 설정 라우터만 파일 쓰기 — 화이트리스트 2종(태스크061)│
 └───────────────────────────────────────────────────────────┘
 ```
 
+### 인증 게이트 (태스크 172)
+
+모든 `/api/` 요청과 WebSocket handshake는 로컬 세션이 있어야 한다(근거와 위협 모델은 `docs/SECURITY.md §10`). 코드는 `dashboard/backend/auth.py`·`entry_token.py`·`routers/auth.py`가 소유한다.
+
+| 항목 | 값 |
+|------|-----|
+| 미들웨어 | 순수 ASGI `AuthMiddleware`가 라우팅·본문 읽기 전에 **Host → Origin → 세션 → CSRF** 순으로 검사한다. 등록 순서는 인증이 먼저·CORS가 나중이라 CORS가 바깥을 감싸 인증 거절 응답에도 CORS 헤더가 붙는다. 오류 본문은 `{"error":{"code","message"}}`(`host_not_allowed`·`origin_not_allowed`·`origin_required`·`auth_required` 401·`csrf_invalid`) |
+| 적용 범위 | Host는 전 경로(허용: `127.0.0.1`·`localhost`·`[::1]`, `OPAL_CONSOLE_ALLOWED_HOSTS` 추가분). `/api/`는 default-deny — 예외는 `POST /api/auth/exchange`·`GET /api/auth/session` 2종뿐이며 Origin은 이 2종도 검사한다. 상태 변경 메서드는 Origin 없이는 거절한다. SPA 정적 경로와 `/health`는 Host만 검사한다 |
+| CORS | `allow_credentials=True`, 메서드 GET·POST, 헤더 `Content-Type`·`X-CSRF-Token`. 허용 origin은 기본 2종 + `OPAL_CONSOLE_CORS_ORIGINS` |
+| 세션 | 교환 성공 시 인메모리 세션 저장소(키는 SHA-256 해시, 12시간 절대 만료, 최대 256개, 재시작 시 소멸)에 세션을 만들고 쿠키 `opal_console_session`(`HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`, `Secure` 없음 — 로컬 HTTP)을 발급한다. 세션마다 별도 `csrf_token`이 있고 상태 변경 요청은 `X-CSRF-Token` 일치(상수 시간 비교)를 요구한다 |
+| 진입 token 채널 | `OPAL_HOME/run/console-entry/`(0700, 소유자·권한·symlink 검증 실패 시 발급·소비 거부). `entry_token issue`가 token을 만들어 token 전체의 SHA-256을 이름으로 하는 0600 파일에 만료 시각만 저장한다(기본 TTL 60초·상한 300초, token 원문은 디스크·로그에 없음). 소비는 `os.rename` 원자 연산으로 1회만 성공하며 만료·재사용·위조는 구별 없이 401 `entry_token_invalid`다 |
+| 교환·부트스트랩 | `POST /api/auth/exchange {"token"}` → 200 `{"authenticated":true,"csrf_token"}` + 쿠키. `GET /api/auth/session`은 항상 200이며 `{"authenticated":false}` 또는 csrf 포함 응답만 돌려준다. 프런트(`lib/auth.ts`)는 `#entry=` fragment를 교환 요청 전에 `history.replaceState`로 지우고 csrf 값을 메모리에만 둔다. `apiClient`는 `credentials: "include"`와 상태 변경 요청의 `X-CSRF-Token`을 싣고, 401 `auth_required`는 잠금 화면(`LockScreen`)으로 전환한다 |
+| `/health` | `{status, version, auth:"required"}` — `auth` 필드가 `console open`의 구버전 데몬 식별 마커다 |
+| E2E SUT 접합 | `test-tool e2e`는 `environment.json`의 선택 키 `session_bootstrap` 명령을 SUT backend health 통과 뒤 1회 실행해 `Cookie`·`X-CSRF-Token`·`Origin` 헤더와 브라우저용 `entry` fragment를 받는다. 임대 SUT는 격리 `OPAL_HOME`을 상속해 같은 token 디렉터리를 쓰고(사용자 Console 7823과 간섭 없음), backend에는 `OPAL_CONSOLE_CORS_ORIGINS`로 SUT 프런트 origin을 허용한다. 세션·csrf·entry 값은 증적에서 마스킹된다 |
+
 ### 프로젝트 브레인 질의 (태스크 036)
 
-콘솔에서 프로젝트 brain 지식을 질의·답변받는 6번째 메뉴. **읽기 전용 대시보드의 유일한 POST·LLM 경로**이며 brain 질의 라우터 하나에만 격리한다(기존 5라우터·어댑터는 GET·read-only 불변).
+콘솔에서 프로젝트 brain 지식을 질의·답변받는 6번째 메뉴. **LLM을 호출하는 유일한 경로**이며 brain 질의 라우터 하나에만 격리한다(기존 5라우터·어댑터는 GET·read-only 불변; 상태를 바꾸는 POST는 이 라우터와 설정 라우터뿐이다). 이 경로는 구형 `claude -p` Brain이며 **기본 꺼짐**이다 — 꺼진 동안 `claude` 프로세스를 시작하지 않고, 사용자가 위험을 확인하고 켠 뒤에만 동작한다(위험 3종은 `docs/SECURITY.md §10`).
 
 | 항목 | 값 |
 |------|-----|
@@ -315,12 +331,13 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 | opbr 계약 | `opal-brain` SKILL.md `//opbr query --read-only`(v1.4): 자동 선별·항상 최종답변·순수 read-only(brain 무변경)·JSON 출력 |
 | 세션 | `BrainSession`(B1): 일회성 `claude -p` + 디스크 세션 `--session-id`(콜드 프라임)→`--resume`(웜). prime-on-intent(메뉴 진입 시 백그라운드 프라임) + 5트리거 리셋(서버재실행·컨텍스트임계·유휴·크래시·수동) + `threading.Lock` 직렬화. 실측 콜드~90s/웜~20s |
 | 프라임 연결 풀 (태스크 060·063) | `console.config.json`의 `prewarm_projects`(절대경로 배열, 기본 `[]`)에 지정한 프로젝트만 서버 기동 시(lifespan 훅) 백그라운드 선프라임하여 **프로젝트별 웜 핸들 풀**(크기 2 — 태스크 063 상향)에 적재. 새 대화 첫 진입(`BrainSessionRegistry._get_or_create`)·"새 대화" 시 풀에서 lock 하 체크아웃→세션에 이식(즉시 ready·첫 질의 `--resume` 웜)하고 `prewarm()`이 `need=pool_size-have`만큼 충전(태스크 063 — 상수만 올리면 풀이 1까지만 차던 결함 수정, 연속 새대화 즉시 웜 배정). 동시 프라임은 `Semaphore(2)` 상한, 풀 비면 기존 콜드 폴백(API 5종 계약·FE 불변). 풀은 인메모리 전용(무상태 원칙) |
-| 엔드포인트 | `GET /api/brain/auth`(claude CLI 가용·인증) · `POST /api/brain/prime`(백그라운드 프라임) · `POST /api/brain/query`(질의→`{answer, citations}`) |
+| 엔드포인트 | `GET /api/brain/auth`(claude CLI 가용·인증) · `POST /api/brain/prime`(백그라운드 프라임) · `POST /api/brain/query`(질의→`{answer, citations}`) · `GET /api/brain/legacy`(`{enabled, running_turns}`) · `POST /api/brain/legacy`(`{enabled, risk_acknowledged}`). 구형 Brain이 꺼짐이면 prime·query는 403 `legacy_brain_disabled`로 답한다 |
+| 구형 Brain 정책 (태스크 172) | 프로세스 단일 정책(`adapters/brain_policy.py`)이 `console.config.json`의 `legacy_brain_enabled`를 소유한다 — JSON `true`일 때만 켜짐이고 키 없음·비불리언·파손은 꺼짐(업그레이드·`prewarm_projects`와 무관, 서버 측 저장). 켜기는 `risk_acknowledged`가 JSON `true`일 때만 허용(아니면 400 `risk_not_acknowledged`)하며 저장 성공 후 메모리에 반영한다. 끄기는 메모리 반영 → 프라임 풀 폐기(`clear_pool`) → 저장 순이며 저장 실패(500)여도 메모리는 꺼진 채 유지된다. 게이트는 라우터가 아니라 subprocess 경계에 있다: `opbr_adapter`가 `spawn_guard()` 안에서만 `subprocess.Popen`을 시작하고(시작 구간만 락, `communicate` 대기는 락 밖), `BrainSessionRegistry`의 prime·ask·submit_job·prewarm·풀 리필도 정책을 확인한다. 끄기가 반환된 뒤에는 새 프로세스가 시작되지 않고 이미 시작된 turn은 끝까지 진행한다. 프런트는 꺼짐일 때 대화 UI·폴링 없이 위험 안내와 켜기 확인 화면을 보인다 |
 | 세션 수명·이력 (태스크 063) | **휘발성 단일 세션(미영속)**. FE는 메뉴 mount·"새 대화"마다 새 `session_id`(UUID)를 발급하고, 단일 대화창에서 그 세션이 살아있는 동안 멀티턴(`--resume`)을 이어간다. 대화 이력은 저장하지 않는다(localStorage 이력·멀티대화 관리 제거) — 새로고침·재오픈·타 브라우저 접속 시 백지에서 시작(의도된 동작). "새 대화"는 재오픈과 동일 동작(내역 초기화 + 새 session_id + 즉시 웜). backend·brain 무상태/무변경 |
 
 ### 프로젝트별 환경 설정 화면 (태스크 061)
 
-콘솔 7번째 메뉴 `/settings`. 읽기 전용 원칙의 두 번째 예외로, 브레인 POST 격리 선례를 따라 **설정 라우터(`routers/config.py`) 1곳에만 파일 쓰기를 허용**한다. 이번 범위는 **프라임 풀 토글 단일 기능**(캡틴 확정 — 화면 기능은 필요 시 하나씩 추가, JSON 설정은 파일 수동 편집 유지).
+콘솔 7번째 메뉴 `/settings`. 읽기 중심 원칙의 두 번째 예외로, 브레인 POST 격리 선례를 따라 **설정 라우터(`routers/config.py`) 1곳에만 파일 쓰기를 허용**한다. 이번 범위는 **프라임 풀 토글 단일 기능**(캡틴 확정 — 화면 기능은 필요 시 하나씩 추가, JSON 설정은 파일 수동 편집 유지).
 
 | 항목 | 값 |
 |------|-----|
@@ -328,6 +345,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 | 기능 | 프라임 풀(사전 예열) 토글 — `GET /api/config`(상태 조회) + `POST /api/config/prewarm` {project, enabled}: ON 시 `prewarm_projects` 머지 반영(멱등) + 목록 신규 추가 시 `BrainSessionRegistry.prewarm()` 즉시 호출(재기동 불요), OFF 시 목록 제거. 화면은 토글 + prewarm_projects 읽기 전용 표시 |
 | 동시 쓰기 방어 | 모듈 `threading.Lock`(read-modify-write 직렬화) + temp 파일 후 `os.replace`(atomic rename) — 머지 보존(미지 키 유지) |
 | 범위 제외(후속) | console.config 전반 편집·프로젝트 로컬 `.opal/setting.local.json` 편집 — 파일 수동 편집으로 관리, 미사용 쓰기 API는 표면 최소화 위해 미노출 |
+| 선프라임과 구형 Brain | 선프라임은 구형 Brain이 꺼짐이면 동작하지 않는다 — lifespan이 정책을 읽어 꺼짐이면 선프라임 스레드를 만들지 않고, 설정 화면은 꺼짐일 때 그 사실을 안내한다. 토글 자체(설정 파일 쓰기)는 꺼짐에서도 가능하다 |
 | 불변 | LLM 호출 0회(브레인 라우터 격리 유지) · 기존 read-only 5종 + 브레인 POST 계약 불변 · 127.0.0.1 바인딩 |
 
 ### 태스크 진행 통계 (태스크 103)
@@ -366,9 +384,9 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 |------|-----|
 | 소스 | `{프로젝트}/dashboard/` (frontend: React+TS+Vite+shadcn / backend: FastAPI) |
 | 배포 | `~/.opal/dashboard-server/` (install이 FE 빌드+BE 복사, venv는 `~/.opal/.venv` 공유) |
-| 기동 | `opal-cli console {start\|stop\|status\|open\|scan\|log}` (127.0.0.1:7823) — `open`은 `/health` 응답을 확인하고 미기동이면 기동한 뒤 최대 10초 동안 준비를 기다린 후 브라우저를 열며, `log`는 데몬 로그 조회 |
+| 기동 | `opal-cli console {start\|stop\|status\|open\|scan\|log}` (127.0.0.1:7823) — `open`은 `/health` 응답을 확인하고 미기동이면 기동한 뒤 최대 10초 동안 준비를 기다린다. `/health`에 `auth` 필드가 없는 구버전 데몬이면 브라우저를 열지 않고 재기동을 안내하며 실패한다. 있으면 1회용 진입 token을 발급해 `http://127.0.0.1:7823/#entry=<token>`(URL fragment)으로 브라우저를 연다. 포트 직접 URL 입력은 세션이 없어 잠금 화면만 열린다. `log`는 데몬 로그 조회 |
 | 프로젝트 식별 | `.opal/AGENT.md` 마커 디스크 스캔 (`~/.opal/console.config.json` scan_roots/depth/exclude) — config는 `opal-cli console scan [기준경로...]`이 생성·머지 갱신(기존 roots 보존, `--prune` 옵트인)하며 install(`install_dashboard`)이 1회 자동 실행. `start`는 config 부재 시 scan 안내 출력 |
-| 원칙 | 읽기 전용(쓰기/편집은 2차) · 데이터 SSOT는 각 프로젝트 파일 · 데몬은 도구 오케스트레이터 |
+| 원칙 | 읽기 중심(쓰기 예외는 브레인 POST·설정 라우터 2종) · 모든 `/api/` 요청은 세션 필요 · 데이터 SSOT는 각 프로젝트 파일 · 데몬은 도구 오케스트레이터 |
 | 디자인 토큰 | 시그니처 3색(`--brand-primary/secondary/tertiary`)을 `:root` 1곳 전역 CSS 변수화 (교체 용이) |
 
 ## 외부 의존 서비스

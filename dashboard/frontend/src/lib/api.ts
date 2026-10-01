@@ -3,13 +3,14 @@
  *   "module": "api-client",
  *   "layer": "api-client",
  *   "domain": "core",
- *   "description": "OPAL Console API 클라이언트 — fetch 래퍼(선택적 timeoutMs AbortController 타임아웃 가드 + AbortError→사용자 친화 메시지 변환) + TanStack QueryClient (refetchInterval 30s, staleTime 30s). API_BASE_URL은 import.meta.env.VITE_API_BASE_URL(빌드·기동 시점 주입)이며 미주입 시 빈 문자열(동일 오리진 상대 경로)로 폴백한다 — base에 /api 접두사를 넣지 않는다(TRD.md TD-6, TASK.md C-8). 비정상 응답 시 JSON body의 detail 필드(FastAPI HTTPException=문자열, Pydantic 422=배열)를 파싱해 에러 메시지 뒤에 덧붙인다 — 파싱 실패 시 기존 메시지 그대로 폴백(안전 폴백).",
+ *   "description": "OPAL Console API 클라이언트 — fetch 래퍼(선택적 timeoutMs AbortController 타임아웃 가드 + AbortError→사용자 친화 메시지 변환) + TanStack QueryClient (refetchInterval 30s, staleTime 30s). API_BASE_URL은 import.meta.env.VITE_API_BASE_URL(빌드·기동 시점 주입)이며 미주입 시 빈 문자열(동일 오리진 상대 경로)로 폴백한다 — base에 /api 접두사를 넣지 않는다(TRD.md TD-6, TASK.md C-8). 모든 요청에 credentials include를 싣고 GET·HEAD 외에는 메모리 보관 csrf_token을 X-CSRF-Token 헤더로 싣는다(D-13). 401 auth_required 응답은 인증 상태를 locked로 전환한다. 비정상 응답 시 JSON body의 detail 필드(FastAPI HTTPException=문자열, Pydantic 422=배열)를 파싱해 에러 메시지 뒤에 덧붙인다 — 파싱 실패 시 기존 메시지 그대로 폴백(안전 폴백).",
  *   "exports": ["apiClient", "queryClient", "API_BASE_URL", "ApiError"],
  *   "task": "061"
  * }
  */
 
 import { QueryClient } from "@tanstack/react-query";
+import { getCsrfToken, markLocked } from "@/lib/auth";
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -114,10 +115,20 @@ export async function apiClient<T>(
     : undefined;
 
   try {
+    const { headers: extraHeaders, ...restInit } = rest;
+    const headers = new Headers({ "Content-Type": "application/json" });
+    new Headers(extraHeaders).forEach((value, key) => headers.set(key, value));
+    const method = (restInit.method ?? "GET").toUpperCase();
+    const csrf = getCsrfToken();
+    if (method !== "GET" && method !== "HEAD" && csrf) {
+      headers.set("X-CSRF-Token", csrf);
+    }
+
     const res = await fetch(`${API_BASE_URL}${path}`, {
-      headers: { "Content-Type": "application/json" },
       signal: controller?.signal,
-      ...rest,
+      ...restInit,
+      headers,
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -129,6 +140,9 @@ export async function apiClient<T>(
         detail = envelope?.message ?? extractErrorDetail(parsedBody);
       } catch {
         // body가 JSON이 아니거나 파싱 실패 — 기존 메시지로 안전 폴백
+      }
+      if (res.status === 401 && envelope?.code === "auth_required") {
+        markLocked();
       }
       const baseMessage = `API error ${res.status}: ${res.statusText} (${path})`;
       throw new ApiError(detail ? `${baseMessage} — ${detail}` : baseMessage, {
