@@ -250,7 +250,7 @@ TEST-SCENARIO 단계를 "목표 달성 검증"으로 재정의 — 루브릭 채
 
 > tool-gated: 게이트 PASS는 coverage-check exit 0 AND evaluator verdict pass 두 증거 필수. Producer(PM+캡틴)≠Evaluator(opal-evaluator-agent) 매반복 분리. 루프 상한 수치 SSOT는 `opal/core/references/harness/guards.md`, 게이트 절차 SSOT는 `opal/core/references/harness/scenario-gate.md`다. opd STEP 3.5의 pipeline.json `test_scenario.scenario_gate` 행이 EXECUTE 진입을 구조적으로 차단한다. PM 경로(`coordinator` 신규)는 이 게이트 대신 `plan.design_gate`(설계 게이트, `pipeline-pm.json`)가 EXECUTE 진입을 구조적으로 차단한다 — 원문 `opal/core/references/harness/design-gate.md`. `state-tool mark`는 `test_scenario.scenario_gate`·`plan.scenario_gate` 완료 전에 형제 `scenario-gate-verify`를 요구하며, 기록 생략이나 통과 후 문서 변경은 `--force`·`--auto-pass`로도 우회할 수 없다. evaluator advisory는 pass 점수와 분리되고, PM의 apply/retain 응답 없이는 두 게이트 경로 모두 완료할 수 없다(167). 원문 SSOT는 `opal/core/references/harness/scenario-gate.md`·`design-gate.md`.
 >
-> **목표계열 선작성 트랙 (Task 095)**: 도출 입력을 Block A(TASK 유래 — 목표·R·채택/잔존 → 축 ①②⑤⑥)와 Block B(PLAN 유래 — F·H → 축 ③④)로 분리하고, Block A를 PLAN 워커 실행과 **병렬 선작성**할 수 있다. opt-in이며 목적은 효율이 아니라 **관점 편향 차단**(070 실패모드 방어)이다. 보강 없이는 게이트가 `coverage_unmet`으로 거부하고, 게이트는 보강 완료 후 1회만 호출한다. 접합: opds STEP 2 · opd STEP 3/3.5. SSOT: `opal/core/references/harness/red-first.md` §1.6 · 절차: `op-dev-test-scenario/references/test-scenario-guide.md` §Step 1.
+> **목표계열 선작성 (Task 095 → Task 111 축소)**: sdlc-v2 기본 경로는 PLAN 확정 후 TEST-SCENARIO를 한 번 작성하며 선작성을 기본 수행하지 않는다. 사용자가 명시했거나 legacy 태스크 재개일 때만 TASK의 목표와 AC/C만으로 PLAN과 병렬 초안을 만들 수 있다. 이 시점에는 게이트를 호출하지 않고, PLAN 확정 뒤 실제 H와 변경 경계로 초안을 정리한 다음 게이트를 호출한다. 작성자는 PM이며 PLAN 작성자와 분리한다. SSOT: `opal/core/references/harness/red-first.md` §1.6 · 배선: `opal/skills/opal-pilot-dev/SKILL.md` STEP 3.5.
 
 ## 프로젝트 구성
 
