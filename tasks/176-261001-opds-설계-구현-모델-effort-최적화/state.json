@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-10-01 23:15:08",
-  "updated_at": "2026-10-02 07:32:10",
+  "updated_at": "2026-10-02 07:36:38",
   "current_status": "blocked",
   "rows": [
     {
@@ -36,9 +36,10 @@
       "key": "plan.plan_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-10-01 23:19:18",
+      "timestamp": "2026-10-02 07:34:19",
       "owner": "PM",
-      "note": null
+      "note": null,
+      "worker_duration_unknown": true
     },
     {
       "row_id": 4,
@@ -136,20 +137,20 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:33:40",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
     },
     {
       "row_id": 11,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:34:19",
       "owner": "PM",
       "note": null
     },
@@ -158,11 +159,11 @@
       "stage": "CLOSE",
       "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
       "key": "close.docs_sync",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:34:26",
       "owner": "PM",
-      "note": null,
+      "note": "대상 없음: 갱신이 필요한 문서(opst·launcher README, worktree.md)는 태스크 변경 파일에 포함",
       "conditional": true
     },
     {
@@ -170,21 +171,22 @@
       "stage": "CLOSE",
       "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
       "key": "close.brain_ingest",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:36:07",
       "owner": "PM",
       "note": null,
-      "conditional": true
+      "conditional": true,
+      "worker_duration_unknown": true
     },
     {
       "row_id": 14,
       "stage": "CLOSE",
       "item": "회고/개선 후보 기록",
       "key": "close.retrospective",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:36:38",
       "owner": "PM",
       "note": null
     },
@@ -212,7 +214,7 @@
       "note": null
     }
   ],
-  "next_action": "CLOSE DONE.md 생성 진입",
+  "next_action": "CLOSE worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행) 진입",
   "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_176",
   "actor": "coordinator",
   "run_log": {

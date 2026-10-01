@@ -1,7 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-10-01 21:25
-> 갱신: 2026-10-01 14:45
-> 갱신: 2026-10-01 16:00
+> 갱신: 2026-10-02 07:35
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -119,6 +117,7 @@
 - [[context-tag-suppresses-false-positive-without-removing-hit]] — 오탐 억제는 hit를 배열에서 빼지 않고 context 태그로 분류한다 #false-positive #pattern-scan #risk-detection #task-105
 - [[contract-absent-from-harness-docs-passes-review]] — 규범 문서에 없는 계약은 리뷰를 통과한다 #contract #harness #review #deployment-gap #task-150 #lesson
 - [[count-notation-scattered-across-docs]] — 개수·열거 표기는 문서 여러 곳에 흩어져 조용히 낡는다 #documentation #drift #task-122 #lesson
+- [[crud-scenario-fails-checkpoint-commits-at-baseline]] — 할일-crud 시나리오는 현행에서도 checkpoint_commits 불합격 #opst #scenario #measurement
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[decision-vs-fact-claim-separation]] — 결정과 사실 주장의 분리 — 결정은 근거 판정 대상이 아니다 #evidence #citation #decision #opds
 - [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
@@ -132,6 +131,7 @@
 - [[design-gate-scope-parallel-judgement-combine]] — 설계 게이트 scope 병렬 판정과 combine 결합 #design-gate #evaluator #state-tool
 - [[dev-pilot-profile-unification]] — 개발 Pilot Full/Short profile 통합 계약 #pilot #dev #opd #opds #compatibility
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
+- [[dispatch-model-overrides-agent-frontmatter]] — 디스패치 model 지정이 에이전트 frontmatter보다 우선 #agent #model #dispatch
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-candidate-order-and-fidelity-ownership]] — E2E 후보 순서·충실도 소유 경계 — 계약이 소유하고 코드가 복제하지 않는다 #e2e #driver #fidelity #contract #ownership
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
@@ -194,6 +194,7 @@
 - [[manual-scenario-verbatim-output-evidence]] — M3 수동 시나리오는 출력 원문을 증거로 남긴다 #testing #verification #evidence #manual-scenario
 - [[mark-force-decision-log-scope]] — 강제 처리의 실제 거동 — 사유는 필수지만 의사결정 로그에는 자동 기재되지 않는다 #state-tool #pipeline #decision-log #doc-correction #task-090 #task-094
 - [[marker-literal-check-meta-circular-false-positive]] — 마커 리터럴 검사의 메타-순환 오탐 — 표기 문맥 제거 전처리를 규칙과 함께 정의 #false-positive #verification #documentation #scenario-gate #task-095
+- [[measurement-framework-fingerprint-drift-invalidates-comparison]] — 측정 중 FW 지문 변경은 비교를 오염 #opst #measurement #framework
 - [[measurement-tool-more-fallible-than-artifact-lesson]] — 판정식이 산출물보다 자주 틀린다 — 측정 결함 4례 + 정규식 전종매치 계수 #lesson #measurement #verification #opds
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
 - [[mirror-gate-must-not-hostage-ssot-record]] — 미러 게이트가 SSOT 기록을 인질로 잡지 않는다 — fail-open 저널 쓰기 경계 #state-tool #ssot #mirror #fail-open #defensive-design #task-094
@@ -201,6 +202,8 @@
 - [[mitigation-recurs-without-ssot-registration]] — 완화책은 SSOT 미등재 시 재발한다 #governance #worker #infra-failure #ssot #resilience
 - [[mock-only-adapter-verification-passes-schema-drift]] — 목킹 전용 어댑터 검증은 응답 스키마 불일치를 통과시킨다 #테스트 #어댑터 #외부CLI #fixture
 - [[mode-aware-execution-continuity-contract]] — Mode-aware execution continuity contract #mode #state #pipeline #agentic #close
+- [[model-effort-customization-points-and-effort-mapping-gap]] — 모델·effort 커스텀 지점 7곳과 effort 매핑 층 부재 #model #effort #settings
+- [[model-effort-measurement-retains-current-config]] — 모델·effort 측정 결과와 현행 유지 결정 #model #effort #measurement #decision
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
@@ -283,6 +286,7 @@
 - [[oppl-two-loop-orchestrator]] — opal-pilot-project-loop(oppl) — 2-루프 수렴 오케스트레이터 #skill #pilot #orchestrator #loop #oppl
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opst-oppb-profile-detects-finalize-violation]] — opst OPPB 판정 프로필 — 종료 계약 위반 검출 #opst #oppb #task
+- [[opst-variant-design-impl-settings]] — opst 변형 설정 design=/impl= 문법 #opst #variant #model #effort
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[order-inversion-corrupts-derived-attribution]] — 순서 역전은 표기 문제가 아니다 — 파생 계산의 귀속까지 오염한다 #state-tool #incident #aggregation #lesson-learned
 - [[owner-honorific-contamination-prevention]] — 산출물 소유자 호칭 오염 차단 원칙 #state-tool #identity #harness #contamination #brain-ingest

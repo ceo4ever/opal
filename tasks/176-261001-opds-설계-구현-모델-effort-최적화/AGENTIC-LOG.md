@@ -32,3 +32,4 @@
 | 12 | 2026-10-02 | EXECUTE | DECISION | 캡틴이 모델·effort 커스텀 지점 검토(7곳)와 후속 방향(A effort 매핑 층, B 우선순위 문서화, C 측정 환경 개선 — FW 지문 고정·todo-crud 합격 불가 원인)에 동의. PLAN 범위 밖이라 CLOSE의 개선 후보로 기록하고 이번 태스크는 문서 변경하지 않음 | 캡틴 발화 |
 | 13 | 2026-10-02 | TEST | ERROR | PM이 `test.pm_gate`를 컨벤션 자동 진단 완료 전에 mark함(순서 실수). 이후 진단에서 High 1건(GC-001: 신규 테스트 파일 @header exports 공란) 발견 | GC-CONVENTION-2026-10-02T00-30-00.md |
 | 14 | 2026-10-02 | TEST | FIX | exports에 테스트 함수명 12개 기입(주석 영역만, RED assertion 불변). `convention-precheck` 재실행 findings 0, opst 테스트 27 passed. 컨벤션 진단 PASS | precheck 2026-10-02T01-00-00 |
+| 15 | 2026-10-02 | CLOSE | DECISION | 개선 후보 3건을 fw-inbox에 기록(effort 매핑 층, 우선순위 문서화·SSOT, 측정 환경 신뢰도). brain에 개념 페이지 6건 누적, lint 이슈 0건(신규 페이지 기준) | improve-tool record |

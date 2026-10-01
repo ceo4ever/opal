@@ -527,3 +527,11 @@
 - 신규: [[behavior-preserving-split-and-block-conversion-lessons]]
 - 출처: task:174
 
+## [2026-10-02] ingest | CLOSE ingest — 태스크 176 opds 설계·구현 모델·effort 최적화
+- 신규: [[dispatch-model-overrides-agent-frontmatter]], [[model-effort-customization-points-and-effort-mapping-gap]], [[opst-variant-design-impl-settings]], [[model-effort-measurement-retains-current-config]], [[todo-crud-scenario-fails-checkpoint-commits-at-baseline]], [[measurement-framework-fingerprint-drift-invalidates-comparison]]
+- 출처: task:176
+
+## [2026-10-02] ingest | CLOSE ingest 보정 — 태스크 176 crud 시나리오 페이지명 확정
+- 신규: [[crud-scenario-fails-checkpoint-commits-at-baseline]]
+- 출처: task:176
+
