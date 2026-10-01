@@ -34,7 +34,8 @@ sources:
 - task:094
 - task:167
 - task:170
-related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, close-history-auto-link-enforce-conversion, memory-tool, state-md-journal-redefinition, mirror-gate-must-not-hostage-ssot-record, mark-force-decision-log-scope, test-tool, op-scenario-gate-skill, scenario-economy-advisory-gate, design-gate-deterministic-pretier-separation]
+- task:174
+related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, close-history-auto-link-enforce-conversion, memory-tool, state-md-journal-redefinition, mirror-gate-must-not-hostage-ssot-record, mark-force-decision-log-scope, test-tool, op-scenario-gate-skill, scenario-economy-advisory-gate, design-gate-deterministic-pretier-separation, behavior-preserving-split-and-block-conversion-lessons]
 created: 2026-06-10
 updated: '2026-10-01'
 status: active
@@ -115,6 +116,16 @@ PM 경로 설계 게이트 advisory 응답·refinement, 목표-커버 게이트 
 - `state.json` 부재 시 다른 5개 게이트 플래그와 동일한 graceful skip(exit 0), PM 경로가 아닌 태스크(`plan.design_gate` 행 없음)면 `{"ok": true, "design_gate_check": "skipped", "reason": "not a PM design path"}`를 반환한다.
 - `_decision_clarity_lint()`는 `_design_gate_deterministic_check` 함수 정의 끝(`:6853`) 이후에 추가되어 태스크 168이 동시에 편집한 `apply_opd2_gate_mark_guard`(`:6702-6763`) 및 그 앞 상수 블록(`:6513-6534`)과 물리적으로 겹치지 않는다.
 
+## 코드 구조 — 진입점과 9개 모듈 (task:174)
+
+외부 계약은 그대로 두고 8천 줄대 단일 파일을 책임별 모듈로 나눴다. 진입점 `state_tool.py`는 얇은 껍데기이고 실제 코드는 `state_tool_parts/` 아래 9개 모듈(`codes`·`base`·`run_log`·`journal`·`guards`·`gates`·`commands_core`·`commands_run`·`cli`)에 있다(근거: task:174 DONE.md §결과).
+
+- 의존 방향은 한 방향이다: `codes` < `base` < `run_log` < `journal` < `guards` < `gates` < (`commands_core`·`commands_run`) < `cli`. 낮은 층은 높은 층을 알지 못한다(근거: task:174 PLAN).
+- 진입점은 분할 모듈의 공개 이름을 속성 순회로 다시 노출해, 기존에 `state_tool.<이름>`으로 접근하던 호출·테스트가 그대로 동작한다(근거: task:174 PLAN).
+- 테스트가 가로채는 주입점 3개(`get_kst_datetime`·`_import_ownership_lease`·`_import_run_log_core`)는 `base.<이름>` 한정 호출로 바꿨다. 그래서 테스트 patch의 겨냥 대상은 진입점이 아니라 `state_tool_parts.base`다. 코드 이동은 이 3개 이름 외에는 원문 그대로다(근거: task:174 DONE.md §결과).
+- 동작 보존은 분할 전 기준 트리와 대표 명령 19회(오류 경로 포함)의 출력·종료 코드·산출물을 비교해 차이 0건으로 확인했다(근거: task:174 DONE.md §검증).
+- 이 문서 본문의 `state_tool.py:N` 줄번호 인용은 분할 전 단일 파일 기준이므로, 분할 후 위치는 해당 기호 이름으로 `state_tool_parts/`에서 찾는다. 교훈은 [[behavior-preserving-split-and-block-conversion-lessons]] 참조.
+
 ## 관련 페이지
 
 - [[brain-tool]] — state-tool 패턴(run.sh+venv python, ERROR_CODES, KST date.js)을 복제한 동형 도구
@@ -133,3 +144,4 @@ PM 경로 설계 게이트 advisory 응답·refinement, 목표-커버 게이트 
 - [[op-scenario-gate-skill]] — 이 도구의 design-gate record/start를 호출하는 PM 경로 컨트롤 스킬
 - [[scenario-economy-advisory-gate]] — task:167 advisory 응답 게이트·목표-커버 기록·mark 가드 전체 계약
 - [[design-gate-deterministic-pretier-separation]] — task:170 결정론/evaluator 2-tier 분리 + 사전검사 아키텍처 결정
+- [[behavior-preserving-split-and-block-conversion-lessons]] — task:174 분할·차단 전환 교훈 2건
