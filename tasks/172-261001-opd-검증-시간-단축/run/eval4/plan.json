@@ -1,0 +1,112 @@
+{
+ "trials": [
+  {
+   "case": "e03",
+   "cand": "E1",
+   "rep": 2,
+   "token": "t38526a"
+  },
+  {
+   "case": "e02",
+   "cand": "E1",
+   "rep": 1,
+   "token": "te9fabb"
+  },
+  {
+   "case": "e02",
+   "cand": "E3",
+   "rep": 1,
+   "token": "tbd641a"
+  },
+  {
+   "case": "e01",
+   "cand": "E3",
+   "rep": 3,
+   "token": "tc87199"
+  },
+  {
+   "case": "e01",
+   "cand": "E3",
+   "rep": 1,
+   "token": "tf3e966"
+  },
+  {
+   "case": "e02",
+   "cand": "E3",
+   "rep": 3,
+   "token": "t0006e0"
+  },
+  {
+   "case": "e01",
+   "cand": "E1",
+   "rep": 1,
+   "token": "t8522ad"
+  },
+  {
+   "case": "e02",
+   "cand": "E1",
+   "rep": 2,
+   "token": "t8be7b3"
+  },
+  {
+   "case": "e03",
+   "cand": "E3",
+   "rep": 1,
+   "token": "tc7d7a5"
+  },
+  {
+   "case": "e03",
+   "cand": "E1",
+   "rep": 1,
+   "token": "t6011e3"
+  },
+  {
+   "case": "e01",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t7483f0"
+  },
+  {
+   "case": "e02",
+   "cand": "E3",
+   "rep": 2,
+   "token": "tfecb2b"
+  },
+  {
+   "case": "e03",
+   "cand": "E3",
+   "rep": 2,
+   "token": "t9a23c5"
+  },
+  {
+   "case": "e03",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t26da0a"
+  },
+  {
+   "case": "e03",
+   "cand": "E3",
+   "rep": 3,
+   "token": "t59ffa6"
+  },
+  {
+   "case": "e02",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t3919a4"
+  },
+  {
+   "case": "e01",
+   "cand": "E3",
+   "rep": 2,
+   "token": "t45c4b0"
+  },
+  {
+   "case": "e01",
+   "cand": "E1",
+   "rep": 2,
+   "token": "t7e692f"
+  }
+ ]
+}

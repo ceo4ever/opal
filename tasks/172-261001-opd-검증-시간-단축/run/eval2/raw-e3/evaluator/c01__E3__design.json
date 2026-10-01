@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "low",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "low",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/var/folders/0k/n9rvmztx6xs3xvjsvf0qqzdw0000gn/T/e3work/fx/c01",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 1643 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 29.8,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 24391,
+  "stop_reason": "end_turn",
+  "session_id": "f84cd14b-8ab6-4256-9a63-5198630b3266",
+  "total_cost_usd": 0.426831,
+  "usage": {
+   "input_tokens": 4,
+   "cache_creation_input_tokens": 46617,
+   "cache_read_input_tokens": 59295,
+   "output_tokens": 2101,
+   "output_tokens_details": {
+    "thinking_tokens": 509
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 46617,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1792,
+     "cache_read_input_tokens": 46913,
+     "cache_creation_input_tokens": 12086,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 12086
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 4,
+    "outputTokens": 2101,
+    "cacheReadInputTokens": 59295,
+    "cacheCreationInputTokens": 46617,
+    "webSearchRequests": 0,
+    "costUSD": 0.426831,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 509,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 2,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"96944daaa30a59a0389908d9bb8e3d78964623bae569758cc0f7d29117e9ed6f\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"FAIL\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"PASS\",\n      \"recoverability\": \"PASS\"\n    },\n    \"gaps\": [\n      \"completeness-1: PLAN.md §Work items W-6 — AC-6의 '태스크 162의 재기동 및 첫 checkpoint 경로의 실제 결과가 기록된다'를 맡은 Work item이 없다. W-6은 '설치본 검증 명령 준비'까지만 다루고, §Release and recovery는 '실행 전 중단·보고'만 적는다. 승인 뒤 install, 162 재기동, 첫 checkpoint를 누가 어떤 순서로 실행하고 결과를 어디에 기록할지가 구현자에게 남아 있다.\",\n      \"completeness-2: PLAN.md §Findings 회귀 확인 — test_adapter_cmux.py, test_adapter_generic.py, test_lease.py 재실행이 어느 Work item의 변경 대상이나 완료 기준에도 들어 있지 않다. 어느 작업이 이 회귀 확인을 맡는지 정해지지 않았다.\",\n      \"decision_clarity-1: PLAN.md §Findings 회귀 확인 및 W-1 — '새 상태가 이 소비자의 허용 집합에 닿는지 W-1에서 조사', '영향 판정 기록'까지만 정했다. 새 recovery_required 상태가 status·remove 가드, 허브 브리핑, Console의 허용 집합에 닿는 경우를 다루는 정책이 없다. 소비자 코드를 바꿀지, 이번 범위에서 뺄지, 차단 사유로 보고할지, 그리고 그때 맡을 Work item이 정해지지 않아 구현자가 선택해야 한다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\n설계 판정 요약 (`scope: design`, 1회차): 4축 중 2축이 FAIL입니다. `worker.dispatch` receipt는 `ok: true`로 검증했습니다.\n\n- **완전성 FAIL**\n  - AC-6의 실제 162 재기동과 첫 checkpoint 결과 기록을 맡은 Work item이 없습니다.\n  - 회귀 테스트 3개(`test_adapter_cmux.py`, `test_adapter_generic.py`, `test_lease.py`)를 재실행할 담당 작업이 정해지지 않았습니다.\n- **결정 명확성 FAIL**: 새 `recovery_required` 상태가 상태 소비자에 닿을 때의 처리 정책이 없습니다. 소비자 코드를 바꿀지, 범위에서 뺄지, 차단 사유로 보고할지가 W-1의 \"조사\"로만 남아 있습니다.\n- **실행 가능성 PASS**: 담당, 순서, 파일 소유권이 명확하고 raw CLI를 지정한 곳이 없습니다.\n- **적용·복구 가능성 PASS**: 적용 순서, 권한 경계에서의 중단, 실패 시 복구 경로가 있습니다.\n\n부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 쓰지 않았습니다. 두 값은 `design-gate combine`이 결정합니다. 파일은 만들지 않았습니다.",
+  "ttft_ms": 5874,
+  "type": "result",
+  "duration_ms": 25589,
+  "uuid": "b1208638-fab5-47bf-9abb-9d0d5ad4e5fd",
+  "ttft_stream_ms": 2228,
+  "time_to_request_ms": 159,
+  "first_content_frame_ms": 2228,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

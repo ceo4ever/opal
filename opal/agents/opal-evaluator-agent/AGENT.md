@@ -6,7 +6,7 @@ description: |
   oppl 태스크 파이프라인 G(명세 리뷰) 게이트 및 설계 루프 D6에서 디스패치.
   `design-rubric` phase로 opd/opds PM 경로의 설계 게이트(`op-scenario-gate` `gate: design`)에서도 디스패치.
 model: advanced
-effort: medium
+effort: low
 icon: "⚖️"
 tools: [Read, Grep, Glob, Bash]
 ---

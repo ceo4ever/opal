@@ -1,0 +1,5 @@
+--- eval-set/pass-163/PLAN.md
++++ eval3/clean-pass-163/PLAN.md
+@@ -20 +20 @@
+-`opal/tools/worktree-launcher/tests/test_adapter_cmux.py`, `opal/tools/worktree-launcher/tests/test_adapter_generic.py`, `opal/tools/ownership-tool/tests/test_lease.py`의 기존 행위를 재실행한다. 변경하지 않는 인접 소비자는 canonical task path 해석, status·remove 가드, 허브 브리핑·Console의 상태 표현이다. 새 상태가 이 소비자의 허용 집합에 닿는지 W-1에서 조사한다.
++`opal/tools/worktree-launcher/tests/test_adapter_cmux.py`, `opal/tools/worktree-launcher/tests/test_adapter_generic.py`, `opal/tools/ownership-tool/tests/test_lease.py`의 기존 행위를 재실행한다. 변경하지 않는 인접 소비자는 canonical task path 해석, status·remove 가드, 허브 브리핑·Console의 상태 표현이다. 새 상태가 이 소비자의 허용 집합에 닿는지 W-1에서 조사한다. 이 소비자들은 이번 변경 대상이 아니므로 영향이 확인돼도 소비자 코드는 바꾸지 않고, W-1의 영향 판정 기록에 닿는 위치와 후속 조치 필요 여부를 남겨 PM에 보고한다.

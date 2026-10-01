@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-10-01 12:48:37",
-  "updated_at": "2026-10-01 17:07:55",
+  "updated_at": "2026-10-01 21:17:31",
   "current_status": "additional_work_done",
   "rows": [
     {
@@ -243,6 +243,42 @@
       "owner": "PM",
       "note": "close.add_2 완료(ADD_DONE-1.md)",
       "worker_duration_unknown": true
+    },
+    {
+      "row_id": 19,
+      "stage": "CLOSE",
+      "item": "ADD-3: evaluator 평가 세트 정비와 low 포함 재측정(형식 오류 빈도)",
+      "key": "close.add_3",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 20:42:35",
+      "owner": "PM",
+      "note": "close.add_3 완료(ADD_DONE-2.md, EVAL-RESULT-4.md): 99 trial·형식 오류 0, 채택 가능 후보 없음(규칙 2 미달), 계정 한도로 71 trial 재실행(규칙 이탈 §5 선언)",
+      "worker_duration_minutes": 3
+    },
+    {
+      "row_id": 20,
+      "stage": "CLOSE",
+      "item": "ADD-4: clean 3건 보조 측정(REQUEST.md fixture 결손 보정, E1·E3 × 3회)",
+      "key": "close.add_4",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 21:09:56",
+      "owner": "PM",
+      "note": "close.add_4 완료(ADD_DONE-3.md, EVAL-RESULT-5.md): REQUEST.md 보정 후 clean fail E1 9/9·E3 2/9, 부재 지적 소멸",
+      "worker_duration_minutes": 5
+    },
+    {
+      "row_id": 21,
+      "stage": "CLOSE",
+      "item": "ADD-5: 캡틴 결정 반영 — evaluator effort medium→low(소스 AGENT.md·관련 문서), DONE 기록",
+      "key": "close.add_5",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 21:17:31",
+      "owner": "PM",
+      "note": "close.add_5 완료(ADD_DONE-4.md): evaluator effort low 반영(소스), 정책 테스트 PASS 4/0, 설치본은 머지 후 install",
+      "worker_duration_minutes": 1
     }
   ],
   "next_action": "태스크 완료",
@@ -255,7 +291,14 @@
     "completion_profile_receipt": null,
     "active_run_id": "run_f22100a0-3a14-49b5-a688-d44d7ede148e",
     "status": "active",
-    "pending_events": []
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_de00d1e3-3554-4ff0-8016-f1a8861b66a0",
+      "report_type": "decision_request",
+      "transition_action": "await_user",
+      "user_input_required": true,
+      "at": "2026-10-01T12:17:31.676Z"
+    }
   },
   "design_gate": {
     "status": "pass",

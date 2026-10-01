@@ -10,7 +10,7 @@
 - **이전 지적 조립 결정론화(AC-3).** `state-tool design-gate start` 응답이 `previous_gaps`·`previous_gaps_by_scope`·`previous_gaps_iteration`을 싣는다. PM의 회차별 추론이 사라졌다.
 - **설계 판정 병렬 분리와 결합(AC-8).** evaluator `design-rubric`에 `scope`(design/scenario/all)를 추가하고 신규 `design-gate combine`이 두 부분 결과를 결정론 규칙으로 기존 단일 판정과 같은 형식으로 결합한다. `design-gate record`는 바뀌지 않았다. `op-scenario-gate` §6.1은 병렬 두 호출 + `combine` 절차다.
 - **컨벤션 검사 경량화(AC-4·AC-5).** 신규 도구 `convention-precheck`가 기준 커밋(merge-base) 대비 변경 구간을 계산하고 기계 규칙 4종(@header, frontmatter 필수 키, 수기 변경이력 절, 네이밍)을 같은 finding 스키마로 판정한다. checker는 `base_ref`가 있으면 변경 구간만 읽는다. 162의 과거 High 2건이 재현된다.
-- **model·effort 고정(AC-6·AC-7).** 평가 세트 측정 후 캡틴이 결정: `opal-convention-checker` = `standard`(sonnet) + `effort: low`, `opal-evaluator-agent` = `advanced`(opus) + `effort: medium`. 표시용 `effort: default`는 제거했고 `scripts/tests/test_agent_effort_policy.sh`가 재발을 막는다. 나머지 14개 에이전트는 effort 미선언(호출 세션 상속)을 유지한다.
+- **model·effort 고정(AC-6·AC-7).** 평가 세트 측정 후 캡틴이 결정: `opal-convention-checker` = `standard`(sonnet) + `effort: low`, `opal-evaluator-agent` = `advanced`(opus) + `effort: medium`. 표시용 `effort: default`는 제거했고 `scripts/tests/test_agent_effort_policy.sh`가 재발을 막는다. 나머지 14개 에이전트는 effort 미선언(호출 세션 상속)을 유지한다. ADD-3·ADD-4 재측정(`run/EVAL-RESULT-4.md`·`run/EVAL-RESULT-5.md`) 뒤 캡틴 결정으로 `opal-evaluator-agent`는 `effort: low`로 변경했다(`ADD_DONE-4.md`).
 - **TEST 병렬 판정(AC-9).** 실측 결과: 한 에이전트 안에서 독립 시나리오 명령의 동시 실행은 가능(순차 8.05초 → 병렬 2.01초), 여러 `opal-test-agent`의 동시 `scenario-mark`는 불가(5라운드 8프로세스에서 6건 유실, 파일 잠금 없음). `test-cycle.md`에 "병렬 그룹 실행" 절을 두고 다중 에이전트 병렬은 채택하지 않았다. 이번 TEST의 S-1~S-11이 이 절차로 실행됐다.
 
 **유지한 것:** 설계 4축·시나리오 3축·pass 조건·반복 상한 3회·`reset --owner user`, `design-gate record`의 검사 순서와 기존 오류 코드, `gc-finding-schema.md`의 필드·판정표, `actor.md`의 독립 검증 경계.

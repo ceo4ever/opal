@@ -1,0 +1,5 @@
+--- eval-set/pass-161/TEST-SCENARIO.md
++++ eval3/clean-pass-161/TEST-SCENARIO.md
+@@ -26 +26 @@
+-| S-4 | AC-2 | (a) `tiers.unit.fe`가 빈 설정, (b) 모든 계층이 `run_files`만 쓰는 도구이고 `--changed-files`가 어떤 glob에도 맞지 않음 | (a) `unit --scope fe` (b) `unit --scope be --changed-files README.md` | (a) exit 21, `status:"incomplete"`, `reason:"no_layers_declared"`. (b) exit 21, 모든 계층 `status:"not_applicable"`·`reason:"no_matching_files"`, 전체 `reason:"no_check_executed"`, 어떤 stub도 호출되지 않음 | unit(CLI subprocess, stub) | 구현 전 RED |
++| S-4 | AC-2 | (a) `tiers.unit.fe`가 빈 설정, (b) 모든 계층이 `run`과 `run_files`를 함께 가진 도구이고 `--changed-files`가 어떤 glob에도 맞지 않음 | (a) `unit --scope fe` (b) `unit --scope be --changed-files README.md` | (a) exit 21, `status:"incomplete"`, `reason:"no_layers_declared"`. (b) exit 21, 모든 계층 `status:"not_applicable"`·`reason:"no_matching_files"`, 전체 `reason:"no_check_executed"`, `check` stub을 포함해 어떤 stub도 호출되지 않음 | unit(CLI subprocess, stub) | 구현 전 RED |

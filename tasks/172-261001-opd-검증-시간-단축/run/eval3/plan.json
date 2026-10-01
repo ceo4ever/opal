@@ -1,0 +1,598 @@
+{
+ "trials": [
+  {
+   "case": "d07",
+   "cand": "E1",
+   "rep": 1,
+   "token": "t2123f6"
+  },
+  {
+   "case": "d10",
+   "cand": "E3",
+   "rep": 2,
+   "token": "t5a87e9"
+  },
+  {
+   "case": "d02",
+   "cand": "E0",
+   "rep": 1,
+   "token": "t6996e6"
+  },
+  {
+   "case": "d03",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t23f990"
+  },
+  {
+   "case": "d08",
+   "cand": "E0",
+   "rep": 2,
+   "token": "tb2e4a4"
+  },
+  {
+   "case": "d01",
+   "cand": "E3",
+   "rep": 3,
+   "token": "tb25b49"
+  },
+  {
+   "case": "d04",
+   "cand": "E3",
+   "rep": 1,
+   "token": "t7b8831"
+  },
+  {
+   "case": "d10",
+   "cand": "E0",
+   "rep": 2,
+   "token": "tef18be"
+  },
+  {
+   "case": "d05",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t4cd2dc"
+  },
+  {
+   "case": "d11",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t43e880"
+  },
+  {
+   "case": "d05",
+   "cand": "E0",
+   "rep": 2,
+   "token": "tf5a818"
+  },
+  {
+   "case": "d05",
+   "cand": "E3",
+   "rep": 1,
+   "token": "tfb4bc4"
+  },
+  {
+   "case": "d02",
+   "cand": "E3",
+   "rep": 1,
+   "token": "t410e38"
+  },
+  {
+   "case": "d10",
+   "cand": "E3",
+   "rep": 3,
+   "token": "t4068fd"
+  },
+  {
+   "case": "d09",
+   "cand": "E0",
+   "rep": 3,
+   "token": "tf9001e"
+  },
+  {
+   "case": "d07",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t5059bd"
+  },
+  {
+   "case": "d11",
+   "cand": "E0",
+   "rep": 2,
+   "token": "t76f5f3"
+  },
+  {
+   "case": "d07",
+   "cand": "E1",
+   "rep": 2,
+   "token": "td1cceb"
+  },
+  {
+   "case": "d11",
+   "cand": "E3",
+   "rep": 1,
+   "token": "ta7e6fc"
+  },
+  {
+   "case": "d09",
+   "cand": "E3",
+   "rep": 1,
+   "token": "tde8fd7"
+  },
+  {
+   "case": "d06",
+   "cand": "E1",
+   "rep": 3,
+   "token": "tb3347f"
+  },
+  {
+   "case": "d01",
+   "cand": "E3",
+   "rep": 1,
+   "token": "tbbee22"
+  },
+  {
+   "case": "d08",
+   "cand": "E0",
+   "rep": 3,
+   "token": "t14aee2"
+  },
+  {
+   "case": "d04",
+   "cand": "E1",
+   "rep": 2,
+   "token": "td4979c"
+  },
+  {
+   "case": "d06",
+   "cand": "E1",
+   "rep": 2,
+   "token": "t7293d1"
+  },
+  {
+   "case": "d06",
+   "cand": "E0",
+   "rep": 3,
+   "token": "t93c373"
+  },
+  {
+   "case": "d05",
+   "cand": "E1",
+   "rep": 2,
+   "token": "tcbfdae"
+  },
+  {
+   "case": "d05",
+   "cand": "E0",
+   "rep": 1,
+   "token": "t49c6b5"
+  },
+  {
+   "case": "d11",
+   "cand": "E1",
+   "rep": 2,
+   "token": "tc5f872"
+  },
+  {
+   "case": "d04",
+   "cand": "E3",
+   "rep": 3,
+   "token": "tea5c54"
+  },
+  {
+   "case": "d11",
+   "cand": "E3",
+   "rep": 3,
+   "token": "t32ae31"
+  },
+  {
+   "case": "d07",
+   "cand": "E0",
+   "rep": 2,
+   "token": "ta7c338"
+  },
+  {
+   "case": "d06",
+   "cand": "E0",
+   "rep": 1,
+   "token": "t0b8913"
+  },
+  {
+   "case": "d07",
+   "cand": "E3",
+   "rep": 2,
+   "token": "tf367c5"
+  },
+  {
+   "case": "d11",
+   "cand": "E3",
+   "rep": 2,
+   "token": "teb00bf"
+  },
+  {
+   "case": "d06",
+   "cand": "E3",
+   "rep": 3,
+   "token": "tac6467"
+  },
+  {
+   "case": "d01",
+   "cand": "E3",
+   "rep": 2,
+   "token": "tac845c"
+  },
+  {
+   "case": "d02",
+   "cand": "E0",
+   "rep": 3,
+   "token": "t5a8722"
+  },
+  {
+   "case": "d10",
+   "cand": "E1",
+   "rep": 1,
+   "token": "t61c8b3"
+  },
+  {
+   "case": "d06",
+   "cand": "E3",
+   "rep": 1,
+   "token": "tf89e18"
+  },
+  {
+   "case": "d09",
+   "cand": "E0",
+   "rep": 1,
+   "token": "tebe324"
+  },
+  {
+   "case": "d10",
+   "cand": "E3",
+   "rep": 1,
+   "token": "t0d4114"
+  },
+  {
+   "case": "d08",
+   "cand": "E3",
+   "rep": 2,
+   "token": "t32694a"
+  },
+  {
+   "case": "d03",
+   "cand": "E0",
+   "rep": 1,
+   "token": "ta4ecae"
+  },
+  {
+   "case": "d09",
+   "cand": "E1",
+   "rep": 1,
+   "token": "t2924b9"
+  },
+  {
+   "case": "d01",
+   "cand": "E1",
+   "rep": 1,
+   "token": "td6a9ec"
+  },
+  {
+   "case": "d09",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t39f26a"
+  },
+  {
+   "case": "d03",
+   "cand": "E1",
+   "rep": 1,
+   "token": "ta3d18a"
+  },
+  {
+   "case": "d05",
+   "cand": "E3",
+   "rep": 2,
+   "token": "tc77c8a"
+  },
+  {
+   "case": "d02",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t3c9b88"
+  },
+  {
+   "case": "d07",
+   "cand": "E3",
+   "rep": 3,
+   "token": "t38977e"
+  },
+  {
+   "case": "d04",
+   "cand": "E1",
+   "rep": 1,
+   "token": "tf82ec6"
+  },
+  {
+   "case": "d08",
+   "cand": "E1",
+   "rep": 1,
+   "token": "t2f08f4"
+  },
+  {
+   "case": "d08",
+   "cand": "E1",
+   "rep": 2,
+   "token": "t150734"
+  },
+  {
+   "case": "d04",
+   "cand": "E0",
+   "rep": 2,
+   "token": "tfef97d"
+  },
+  {
+   "case": "d01",
+   "cand": "E0",
+   "rep": 3,
+   "token": "t4694c3"
+  },
+  {
+   "case": "d04",
+   "cand": "E3",
+   "rep": 2,
+   "token": "taa2f89"
+  },
+  {
+   "case": "d03",
+   "cand": "E3",
+   "rep": 3,
+   "token": "t582df7"
+  },
+  {
+   "case": "d03",
+   "cand": "E0",
+   "rep": 2,
+   "token": "td39df9"
+  },
+  {
+   "case": "d03",
+   "cand": "E0",
+   "rep": 3,
+   "token": "t195874"
+  },
+  {
+   "case": "d08",
+   "cand": "E0",
+   "rep": 1,
+   "token": "t83a7bc"
+  },
+  {
+   "case": "d09",
+   "cand": "E3",
+   "rep": 2,
+   "token": "t6a5713"
+  },
+  {
+   "case": "d01",
+   "cand": "E0",
+   "rep": 1,
+   "token": "td8aeaa"
+  },
+  {
+   "case": "d01",
+   "cand": "E1",
+   "rep": 2,
+   "token": "t888690"
+  },
+  {
+   "case": "d04",
+   "cand": "E0",
+   "rep": 3,
+   "token": "t36e220"
+  },
+  {
+   "case": "d10",
+   "cand": "E1",
+   "rep": 2,
+   "token": "td969e9"
+  },
+  {
+   "case": "d10",
+   "cand": "E0",
+   "rep": 3,
+   "token": "t1554fb"
+  },
+  {
+   "case": "d04",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t92224c"
+  },
+  {
+   "case": "d02",
+   "cand": "E1",
+   "rep": 2,
+   "token": "tacbd06"
+  },
+  {
+   "case": "d06",
+   "cand": "E3",
+   "rep": 2,
+   "token": "t0f31a5"
+  },
+  {
+   "case": "d09",
+   "cand": "E0",
+   "rep": 2,
+   "token": "t2e0633"
+  },
+  {
+   "case": "d02",
+   "cand": "E0",
+   "rep": 2,
+   "token": "t60351c"
+  },
+  {
+   "case": "d03",
+   "cand": "E1",
+   "rep": 2,
+   "token": "tafb61d"
+  },
+  {
+   "case": "d02",
+   "cand": "E1",
+   "rep": 1,
+   "token": "t25d18c"
+  },
+  {
+   "case": "d08",
+   "cand": "E3",
+   "rep": 3,
+   "token": "td98d12"
+  },
+  {
+   "case": "d08",
+   "cand": "E1",
+   "rep": 3,
+   "token": "t6dae6e"
+  },
+  {
+   "case": "d05",
+   "cand": "E0",
+   "rep": 3,
+   "token": "tb9748b"
+  },
+  {
+   "case": "d03",
+   "cand": "E3",
+   "rep": 2,
+   "token": "tacefbc"
+  },
+  {
+   "case": "d09",
+   "cand": "E3",
+   "rep": 3,
+   "token": "t9e7b64"
+  },
+  {
+   "case": "d10",
+   "cand": "E0",
+   "rep": 1,
+   "token": "t5661d2"
+  },
+  {
+   "case": "d10",
+   "cand": "E1",
+   "rep": 3,
+   "token": "tf9eac9"
+  },
+  {
+   "case": "d03",
+   "cand": "E3",
+   "rep": 1,
+   "token": "t483ff1"
+  },
+  {
+   "case": "d06",
+   "cand": "E0",
+   "rep": 2,
+   "token": "tb359bd"
+  },
+  {
+   "case": "d11",
+   "cand": "E0",
+   "rep": 3,
+   "token": "tcafaff"
+  },
+  {
+   "case": "d07",
+   "cand": "E3",
+   "rep": 1,
+   "token": "t27785a"
+  },
+  {
+   "case": "d01",
+   "cand": "E1",
+   "rep": 3,
+   "token": "tf23cfe"
+  },
+  {
+   "case": "d07",
+   "cand": "E0",
+   "rep": 1,
+   "token": "t3a90fc"
+  },
+  {
+   "case": "d02",
+   "cand": "E3",
+   "rep": 3,
+   "token": "t3af61b"
+  },
+  {
+   "case": "d05",
+   "cand": "E3",
+   "rep": 3,
+   "token": "t950ddf"
+  },
+  {
+   "case": "d06",
+   "cand": "E1",
+   "rep": 1,
+   "token": "t0bb782"
+  },
+  {
+   "case": "d04",
+   "cand": "E0",
+   "rep": 1,
+   "token": "ta4e560"
+  },
+  {
+   "case": "d05",
+   "cand": "E1",
+   "rep": 1,
+   "token": "tee12f9"
+  },
+  {
+   "case": "d11",
+   "cand": "E0",
+   "rep": 1,
+   "token": "tf9dc5d"
+  },
+  {
+   "case": "d07",
+   "cand": "E0",
+   "rep": 3,
+   "token": "t824786"
+  },
+  {
+   "case": "d08",
+   "cand": "E3",
+   "rep": 1,
+   "token": "tfc573c"
+  },
+  {
+   "case": "d01",
+   "cand": "E0",
+   "rep": 2,
+   "token": "t644526"
+  },
+  {
+   "case": "d11",
+   "cand": "E1",
+   "rep": 1,
+   "token": "tff59d8"
+  },
+  {
+   "case": "d02",
+   "cand": "E3",
+   "rep": 2,
+   "token": "t867055"
+  },
+  {
+   "case": "d09",
+   "cand": "E1",
+   "rep": 2,
+   "token": "t9c5c45"
+  }
+ ]
+}

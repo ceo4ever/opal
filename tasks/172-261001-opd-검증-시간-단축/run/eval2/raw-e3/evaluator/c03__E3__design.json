@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "low",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "low",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/var/folders/0k/n9rvmztx6xs3xvjsvf0qqzdw0000gn/T/e3work/fx/c03",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 1643 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 64.4,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 59065,
+  "stop_reason": "end_turn",
+  "session_id": "e58644c8-1547-42e3-b5dd-64fc691ae3fb",
+  "total_cost_usd": 0.49737020000000004,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 52043,
+   "cache_read_input_tokens": 163671,
+   "output_tokens": 2413,
+   "output_tokens_details": {
+    "thinking_tokens": 657
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 52043,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1750,
+     "cache_read_input_tokens": 52930,
+     "cache_creation_input_tokens": 11495,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 11495
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 2413,
+    "cacheReadInputTokens": 163671,
+    "cacheCreationInputTokens": 52043,
+    "webSearchRequests": 0,
+    "costUSD": 0.49737020000000004,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 657,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "receipt 검증 결과는 `ok: true`입니다.\n\n```json\n{\"input_bundle_hash\": \"8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b\", \"iteration\": 1, \"scope\": \"design\", \"status\": \"completed\", \"design\": {\"axes\": {\"completeness\": \"PASS\", \"decision_clarity\": \"FAIL\", \"executability\": \"PASS\", \"recoverability\": \"PASS\"}, \"gaps\": [\"decision_clarity-1: PLAN.md:73-74 (D-4·D-5) — `required: false` 계층이 `fail`일 때 전체 status를 정하지 않았다. D-4는 '필수 계층에 fail이 있으면 fail'만 정의하고, D-5는 선택 계층의 tool_unavailable·not_configured만 다룬다. 그래서 선택 계층이 fail이면 전체가 fail인지 pass인지 구현자가 골라야 한다.\", \"decision_clarity-2: PLAN.md:73 (D-4) — stop-on-fail로 필수 계층이 `not_run`(stopped_after_failure)이 되었는데 앞선 fail이 선택 계층인 경우의 전체 status를 정하지 않았다. incomplete 조건에는 tool_unavailable·not_configured와 pass 0개만 있고 필수 계층의 not_run은 없다. 그래서 앞 계층 하나가 pass이면 전체가 pass로 나올 수 있고, 이를 막을지 구현자가 골라야 한다. 이 경우 선택 계층 fail이 뒤 계층의 실행도 멈추는지 역시 정하지 않았다.\"]}, \"resolved_gaps\": [], \"advisories\": []}\n```\n\n판정 근거를 요약합니다.\n- **completeness PASS**: AC-1~8과 C-1~7이 Work item(`PLAN.md:86-88`)의 '완료 기준 연결' 열에 모두 이어집니다. Findings의 직접 변경 7건과 문서 갱신 3건은 W-1·W-2·W-3이 각각 맡습니다. 미확인 가정 H-1~H-3은 Risks(`PLAN.md:94-96`)에서 대응합니다.\n- **decision_clarity FAIL**: 선택 계층(`required: false`)이 fail일 때와, 그 뒤 필수 계층이 not_run일 때의 전체 상태 규칙이 빠져 있습니다(위 gaps 2건).\n- **executability PASS**: W-1~W-3마다 담당·선행·실행 그룹·변경 파일이 정해져 있습니다. P1 병렬 작업 사이에 파일이 겹치지 않고, RED 선행 순서는 `PLAN.md:100`에 명시돼 있습니다. raw CLI로 외부 에이전트를 호출하는 지시도 없습니다.\n- **recoverability PASS**: 설치 승인 경계와 배포본 검증 절차(`PLAN.md:80`, `:101`)가 있고, 설치 전후 복구 경로(`PLAN.md:102`)도 있습니다.",
+  "ttft_ms": 10763,
+  "type": "result",
+  "duration_ms": 60404,
+  "uuid": "d4d649e6-9e75-4069-adf8-a4db8e41c1ef",
+  "ttft_stream_ms": 6993,
+  "time_to_request_ms": 288,
+  "first_content_frame_ms": 6994,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}
