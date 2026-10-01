@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-28 18:03
+> 갱신: 2026-10-01 08:34
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -31,7 +31,7 @@
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[skill-registry-project-scope-4source-merge]] — skill-registry 프로젝트 스코프 4소스 병합 #tool #skill-registry #project-scope #task-114
 - [[state-tool]] — state-tool #tool #pipeline
-- [[test-tool]] — test-tool #tool #testing #pipeline
+- [[test-tool]] — test-tool #tool #testing #pipeline #scenario-gate
 - [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
 - [[workstudio-project-registry]] — WorkStudio Project Registry #desktop #workstudio #project-registry
 - [[worktree-tool]] — worktree-tool #tool #workspace #git #pipeline
@@ -290,6 +290,7 @@
 - [[report-norm-topology-10-types]] — 보고 규범 지형 — 10유형과 소유 문서 매핑 #reporting #agent-md #norm-ownership #minimal-guide #task-108
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
 - [[round-trip-pre-state-assertion-false-green-guard]] — 왕복 검증 사전 상태 단언 — false green 차단 장치 #testing #pattern #task-083
+- [[scenario-economy-advisory-gate]] — 테스트 시나리오 작성 경제성 — 중복·과잉 억제와 advisory 응답 게이트 #testing #scenario-gate #test-scenario #advisory #opd #opds
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
 - [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
@@ -389,6 +390,7 @@
 - [[asis-analysis-five-stage-workflow]] — AS-IS 분석 5단계 워크플로우 (PM 대화) #pm #asis-analysis #workflow #task-084
 - [[close-retrospective-hardstep]] — CLOSE 회고 하드스텝 (개선 루프 자동 enforce) #flow #close-pipeline #improvement #tool-gated #architecture-decision
 - [[opdd-pipeline-flow]] — opdd 파이프라인 흐름 — DB 설계 표준 3층 파이프라인 #pipeline #data-design #flow #opdd #db
+- [[test-cycle-early-human-handoff]] — TEST 단계 선요청 흐름 — 사람 협업 선요청과 자동 검사 병행 #testing #test-cycle #opd #opds #flow
 
 ## 합성
 - [[opal-first-use-guide]] — OPAL 첫 사용 가이드 — 설치부터 파이프라인까지 #guide #onboarding #first-use
