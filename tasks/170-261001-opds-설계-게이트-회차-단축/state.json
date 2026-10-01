@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-10-01 08:23:42",
-  "updated_at": "2026-10-01 09:59:18",
+  "updated_at": "2026-10-01 11:31:13",
   "current_status": "in_progress",
   "rows": [
     {
@@ -89,11 +89,12 @@
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "in_progress",
-      "status_label": "🔄",
-      "timestamp": "2026-10-01 09:59:18",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 11:31:13",
       "owner": "PM",
-      "note": "EXECUTE 진입 — P1(W-1·W-2·W-3) 디스패치 시작"
+      "note": "W-1~W-6 전부 완료(복수 워커 디스패치 + W-5·W-6 PM 직접 수행 혼합이라 단일 duration 집계 불가 — unknown 명시). main merge 완료(충돌 없음)",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 8,
@@ -210,7 +211,7 @@
       "note": null
     }
   ],
-  "next_action": "EXECUTE 작업 진행 중",
+  "next_action": "TEST 작업 진입",
   "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_170",
   "actor": "coordinator",
   "run_log": {
