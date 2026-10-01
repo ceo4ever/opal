@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-09-28 18:03
+> 갱신: 2026-10-01 10:58
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -31,7 +31,7 @@
 - [[skill-opal-pilot-data-design]] — opal-pilot-data-design (opdd) #pilot #orchestrator #data-design #db
 - [[skill-registry-project-scope-4source-merge]] — skill-registry 프로젝트 스코프 4소스 병합 #tool #skill-registry #project-scope #task-114
 - [[state-tool]] — state-tool #tool #pipeline
-- [[test-tool]] — test-tool #tool #testing #pipeline
+- [[test-tool]] — test-tool #tool #testing #pipeline #scenario-gate
 - [[tool-scan]] — tool-scan #tool #opal-tools #discovery #usage #capability
 - [[workstudio-project-registry]] — WorkStudio Project Registry #desktop #workstudio #project-registry
 - [[worktree-tool]] — worktree-tool #tool #workspace #git #pipeline
@@ -232,6 +232,7 @@
 - [[opal-project-definition]] — OPAL 프로젝트 정의 #project #overview #principle #component
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
 - [[opal-skill-classification-system]] — OPAL 스킬 분류 체계 — opal-pilot / op-* / opal-* 의미 계층 #skill-registry #classification #pilot #operator #architecture
+- [[opd2-state-tool-integration]] — opd2 state-tool 통합 #opd2 #state-tool #gate-guard #ssot #task-168
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
 - [[opdd-reverse-track-physical-first-order]] — 역공학 트랙 MODEL 순서는 물리가 먼저다 #architecture-decision #data-design #pipeline #reverse-engineering #task-104
 - [[opds-testscenario-producer-establishment]] — opds 시나리오 producer 확립 — 공용 스킬 미접촉 SSOT 상충 해소 #opds #ssot-conflict #producer #shared-skill #task-075
@@ -290,6 +291,7 @@
 - [[report-norm-topology-10-types]] — 보고 규범 지형 — 10유형과 소유 문서 매핑 #reporting #agent-md #norm-ownership #minimal-guide #task-108
 - [[rotating-log-correction-over-deletion]] — 회전 로그는 삭제 대신 정정 — FIFO 히스토리 무손실 가드 설계 #memory #fifo #data-integrity #design-pattern
 - [[round-trip-pre-state-assertion-false-green-guard]] — 왕복 검증 사전 상태 단언 — false green 차단 장치 #testing #pattern #task-083
+- [[scenario-economy-advisory-gate]] — 테스트 시나리오 작성 경제성 — 중복·과잉 억제와 advisory 응답 게이트 #testing #scenario-gate #test-scenario #advisory #opd #opds
 - [[scenario-gate-pilot-fit-criteria]] — 목표-커버 게이트 pilot 접합 판정 기준 #scenario-gate #pilot-fit #tool-gated #self-confirming #task-075
 - [[scenario-goal-coverage-gate-loop]] — TEST-SCENARIO 목표-커버리지 루브릭 게이트 루프 — 결정론+판단 분리 #testing #scenario-gate #tool-gated #rubric #opd #task-073 #task-075
 - [[scenario-normalized-contract-pilot-neutral]] — 시나리오 정규화 계약 — pilot-중립 페이로드 설계 #contract #scenario-gate #normalization #multi-pilot #task-073 #task-075
@@ -376,6 +378,7 @@
 - [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
 - [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
+- [[worktree-close-brain-write-contract]] — 워크트리 CLOSE brain 쓰기 계약 — 같은 브랜치 반영·merge 전파 #worktree #brain #architecture #workspace
 - [[worktree-locates-hub-by-issued-copy]] — 워크트리는 허브를 탐색하지 않고 발급값 사본으로 찾는다 #worktree #ownership #issued-value #hook #task-138
 - [[worktree-session-launch-order-and-ownership]] — 워크트리 세션 기동은 허브가 만들고 state init 이후에 띄운다 #worktree #세션 #런처 #소유권
 - [[worktree-slot-existence-to-occupancy-judgment]] — 워크트리 슬롯 판정 — 존재에서 점유로 #worktree #git #lesson #non-trivial-resolution
@@ -389,6 +392,7 @@
 - [[asis-analysis-five-stage-workflow]] — AS-IS 분석 5단계 워크플로우 (PM 대화) #pm #asis-analysis #workflow #task-084
 - [[close-retrospective-hardstep]] — CLOSE 회고 하드스텝 (개선 루프 자동 enforce) #flow #close-pipeline #improvement #tool-gated #architecture-decision
 - [[opdd-pipeline-flow]] — opdd 파이프라인 흐름 — DB 설계 표준 3층 파이프라인 #pipeline #data-design #flow #opdd #db
+- [[test-cycle-early-human-handoff]] — TEST 단계 선요청 흐름 — 사람 협업 선요청과 자동 검사 병행 #testing #test-cycle #opd #opds #flow
 
 ## 합성
 - [[opal-first-use-guide]] — OPAL 첫 사용 가이드 — 설치부터 파이프라인까지 #guide #onboarding #first-use

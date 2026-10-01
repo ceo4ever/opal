@@ -487,3 +487,16 @@
 - 신규: [[pages/entity/worktree-tool.md]], [[pages/entity/ownership-tool.md]], [[pages/concept/worktree-session-launch-order-and-ownership.md]]
 - 출처: task:164
 
+## [2026-10-01] ingest | CLOSE 누락 백필 — 태스크 161·162·167 brain 후보 반영
+- 신규: [[pages/flow/test-cycle-early-human-handoff.md]], [[pages/concept/scenario-economy-advisory-gate.md]]
+- 갱신: [[pages/entity/test-tool.md]], [[pages/concept/scenario-goal-coverage-gate-loop.md]], [[pages/entity/op-scenario-gate-skill.md]], [[pages/entity/state-tool.md]]
+- 출처: task:161, task:162, task:167
+
+## [2026-10-01] ingest | CLOSE ingest — 태스크 169 워크트리 CLOSE brain 쓰기 계약 반영
+- 신규: [[pages/concept/worktree-close-brain-write-contract.md]]
+- 출처: task:169
+
+## [2026-10-01] ingest | CLOSE ingest — 태스크 168 opd2 프레임워크 통합
+- 신규: [[pages/concept/opd2-state-tool-integration.md]]
+- 출처: task:168
+

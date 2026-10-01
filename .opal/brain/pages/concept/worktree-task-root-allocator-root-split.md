@@ -10,16 +10,10 @@ tags:
 sources:
 - task:118
 - task:119
-related:
-- worktree-workspace-isolation-axis
-- worktree-tasks-fixture-structural-limit
-- worktree-slot-existence-to-occupancy-judgment
-- worktree-tool
-- three-layer-memory-architecture
-- state-aware-path-resolution-unblocks-merge
-- switch-first-plumbing-later-verification
+- task:169
+related: [worktree-workspace-isolation-axis, worktree-tasks-fixture-structural-limit, worktree-slot-existence-to-occupancy-judgment, worktree-tool, three-layer-memory-architecture, state-aware-path-resolution-unblocks-merge, switch-first-plumbing-later-verification, worktree-close-brain-write-contract]
 created: '2026-09-12'
-updated: '2026-09-12'
+updated: '2026-10-01'
 status: draft
 ---
 ## 개요
@@ -36,7 +30,7 @@ status: draft
 ## 결정 내용
 
 - 해석용 탐색 함수는 시그니처째 개명해 목적을 이름에 못 박고, 동작은 바꾸지 않았다. 쓰기용 호출 1곳은 탐색 호출을 제거하고 허브 절대 경로를 인자로 받도록 바꿨다(`opal/tools/state-tool/state_tool.py:730`, PLAN D-4).
-- 허브 쓰기용 루트는 상대 경로나 미지정이면 추론하지 않고 즉시 거부한다. 브레인 도구의 회고적 학습 쓰기 경로도 같은 규율을 따라, 명시 인자 없는 쓰기를 전용 오류로 막는다(`opal/tools/brain-tool/brain_tool.py:304-318`, PLAN D-4·W-7).
+- 허브 쓰기용 루트는 상대 경로나 미지정이면 추론하지 않고 즉시 거부한다. 브레인 도구의 회고적 학습 쓰기 경로도 당시(task:118) 같은 규율을 따라, 명시 인자 없는 쓰기를 전용 오류로 막았다(`opal/tools/brain-tool/brain_tool.py:304-318` 당시 버전, PLAN D-4·W-7). **이 서술은 task:169에서 뒤집혔다**: brain-tool만 명시 인자(`--allocator-root`) 없는 기본 쓰기가 호출 시점의 작업본(task_root) 자신에 성공하도록 반전됐고, "명시 인자 없는 쓰기를 전용 오류로 막는다"는 규율은 `.opal/MEMORY.json`(memory-tool, 별도 코드 경로)에만 그대로 남았다. 이 페이지가 기록하는 task:118 시점의 설계 의도(허브 전용 쓰기 규율의 일관 적용)는 역사적 사실로 유지하되, brain-tool에 대한 현재 동작은 더 이상 이와 같지 않다(근거: task:169 PLAN D-1, 상세는 [[worktree-close-brain-write-contract]]·[[brain-tool]] 참조).
 - 완료 처리는 이력을 즉시 쓰지 않고 "머지 대기" 상태만 확정하며, 허브 메모리 이력 append는 허브 절대 경로를 명시로 받는 별도 귀속 명령이 전담한다(PLAN D-4b, AC-4).
 - 워크트리 생성 도구가 정규 경로 6종 필드를 발급하고, 소비자는 이 발급값을 전달받아 쓴다. 등록된 워크트리 태스크와 같은 이름의 태스크 폴더가 허브에도 있으면 자동 선택하지 않고 모호성 오류로 차단한다(계약: `harness/worktree.md` §canonical path 발급 계약).
 - 소유권 버전 필드가 없는 기존 태스크는 legacy로 판정해 실행 중 위치를 자동 이동하지 않는다. 이 태스크 진행 시점의 활성 슬롯 3건이 전부 legacy로 판정돼, 실제 허브에서 콘솔의 허용 루트 목록이 빈 배열을 반환하며 현행 동작이 유지됨을 실측했다(PLAN D-9, AGENTIC-LOG 엔트리 62).
@@ -47,6 +41,7 @@ status: draft
 - [[worktree-tasks-fixture-structural-limit]]이 기록한 구조적 한계(태스크 문서 디렉터리가 워크트리에 없어 픽스처 의존 테스트가 통과 불가)는 태스크 문서·설정 디렉터리를 cone에 실체화할 수 있게 되면서 해소 경로를 얻었다. 같은 조건의 픽스처에서 관련 16건이 전부 통과했다(근거: task:118 ANALYSIS Q1 AC-2 재기준선 행).
 - 재진입 가드는 [[worktree-slot-existence-to-occupancy-judgment]]의 "존재가 아니라 점유로 판정" 전환과 동형으로 설계됐다 — 워크트리 전체의 미커밋 여부가 아니라, 미커밋 대상 경로 집합이 완료 문서가 선언한 학습 후보 집합의 부분집합인지로 판정한다(PLAN D-3b).
 - 네 런타임의 보정 함수와 세 런타임이 공유하던 골든표가 제거되고 각 런타임의 착지 계약 테스트로 교체됐다.
+- brain-tool의 쓰기 루트 규율만 task:169에서 "해석과 동일하게 task_root 자신에 쓴다"로 반전됐다. 이 영향 범위는 [[worktree-close-brain-write-contract]]가 전담해 기록한다.
 
 - 이 결정이 만든 장치는 태스크 118 시점에는 실행되지 않았다. 캡슐 실체화 범위를 선언하는 설정 키가 비어 있어 해석용 루트가 워크트리가 아니라 허브로 탈출했고, 값이 들어간 태스크 119에서야 계약이 실제로 성립했다 — 경위는 [[switch-first-plumbing-later-verification]].
 - 태스크 119는 이 결정의 단일 복사본 차단 위에 귀속 진행 상태를 판정에 더해, 병합 이후 정상 상황까지 막던 연쇄를 풀었다. 차단은 진행 중 상태에만 적용되도록 좁혀졌을 뿐 사라지지 않았다 — [[state-aware-path-resolution-unblocks-merge]].
@@ -60,3 +55,4 @@ status: draft
 - [[three-layer-memory-architecture]]
 - [[state-aware-path-resolution-unblocks-merge]]
 - [[switch-first-plumbing-later-verification]]
+- [[worktree-close-brain-write-contract]]

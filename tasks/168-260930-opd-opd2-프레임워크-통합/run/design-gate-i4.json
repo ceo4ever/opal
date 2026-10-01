@@ -1,0 +1,25 @@
+{
+  "input_bundle_hash": "3c9bf3583b5b8aae02c78baf60b937dadcffac910ba4b678c8ac3e2478fabf7f",
+  "iteration": 4,
+  "verdict": "pass",
+  "rewrite_target": null,
+  "scores": {
+    "design": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"},
+    "scenario": {"goal": 2, "adoption": 2, "boundary": 2, "average": 2.0}
+  },
+  "design": {
+    "axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"},
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {"goal": 2, "adoption": 2, "boundary": 2},
+    "average": 2.0,
+    "gaps": []
+  },
+  "gaps": [],
+  "advisories": [],
+  "status": "completed",
+  "artifact_path": null,
+  "changed_files": [],
+  "blockers": []
+}

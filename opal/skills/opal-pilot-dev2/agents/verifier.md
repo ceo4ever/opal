@@ -1,3 +1,6 @@
+---
+model: standard
+---
 # Verifier
 
 입력: 원래 AC, spec/plan, diff, repo/task, actor ID.

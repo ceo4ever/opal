@@ -1,0 +1,10 @@
+{
+ "scenario": "smoke-version-flag",
+ "mode": "smoke",
+ "created_at": "2026-10-01 09:59",
+ "variants": [
+  "opd",
+  "opd2"
+ ],
+ "source": "/tmp/opal-skill-tester/smoke-version-flag-20261001-094401"
+}

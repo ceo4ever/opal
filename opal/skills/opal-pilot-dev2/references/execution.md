@@ -28,10 +28,19 @@ launch/read/recover/close를 기존 worktree-launcher에 그대로 전달한다.
 
 ## 재개
 
-opd2 상태는 <task>/.sdlc/events.jsonl이다. lifecycle.py status로 저장 mode/workspace/repo/stage를
-읽는다. 명시 모드 변경은 set-mode --mode ... --reason ... --reference ...로 기록한다.
+opd2 자체 상태(모드/workspace/repo/baseline·evidence·approvals·reviews·retries의 해시 체인
+원장)는 <task>/run/opd2-ledger.json이다. lifecycle.py status로 저장 mode/workspace/repo/stage를
+읽는다(Store.state()가 원장 마지막 이벤트의 state를 그 자리에서 파생하며 별도 조회 사본 파일은
+없다). 명시 모드 변경은 set-mode --mode ... --reason ... --reference ...로 기록한다.
 작업본은 변경하지 않는다. 기존 opd2.py resolve-start의 state.json 경로는 legacy 호환
-진단용이다. opd2 lifecycle를 기존 state-tool init/advance/mark에 넘기지 않는다.
+진단용이다.
+
+<task>/state.json(state-tool)이 단계 진행 상태(task_steps)의 유일한 SSOT다. lifecycle.py는
+자체 게이트(원장 전이 조건)를 먼저 판정하고, 통과한 전이에서만 대응 task_steps 키를
+`state-tool mark <task> --task-step <key> --done`으로 커밋한다 — Store.save()가 kind=='transition'
+이벤트마다 이 호출을 수행하며, state-tool mark가 비0 종료면 ValueError를 던져 원장도 커밋하지
+않는다("state-tool mark 성공 → 원장 커밋" 순서 고정). 즉 opd2 lifecycle는 기존 state-tool
+init/advance/mark를 우회하지 않고 그 위에서 동작한다.
 
 ## 소유권·세션 기동
 
@@ -45,6 +54,10 @@ Codex 기동은 설치된 codex --help의 --no-daemon 지원을 확인한다.
 
 기존 worktree-tool checkpoint를 호출한다. mode는 그대로 전달한다.
 단계 매핑: PLAN→PLAN, BUILD→EXECUTE, VERIFY/REVIEW→TEST, CLOSED→CLOSE.
+이 매핑은 `worktree-tool checkpoint --stage` 인자 전용이다 — `--stage`는 소유권·branch·staged
+scope 검사에만 쓰이는 자유 문자열(enum 아님)이라, pipeline.json 행 stage 어휘(TASK/DESIGN/
+PLAN/EXECUTE/VERIFY/CLOSE)와는 독립된 별개 분류이며 opd2가 신설한 `VERIFY` 행 stage와 충돌하지
+않는다.
 --owned-scope에 소유 파일만 전달한다. semi-agentic checkpoint는 기존 도구의 PLAN/CLOSE
 승인 경계를 따른다. --approved는 실제 승인 근거가 있어야 한다.
 registry_write_denied면 정확한 허브 메타 권한을 요청하고 같은 명령을 재실행한다.

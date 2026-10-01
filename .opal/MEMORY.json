@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 167,
+  "last_task_number": 170,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -161,9 +161,31 @@
       "status": "candidate",
       "file": "memory/RED_테스트_디스패치_시_PLAN_불변식_위반_fixture_점검.md",
       "summary": "태스크 167에서 RED 테스트가 advisory apply 직후 문서를 고치지 않고 start하는 fixture를 썼다. 구현 워커와 문서…"
+    },
+    {
+      "title": "자체 상태관리 파일럿을 SSOT로 편입할 때 동형 가드 패턴을 재사용한다",
+      "date": "2026-10-01",
+      "type": "architecture",
+      "status": "active",
+      "file": "memory/자체_상태관리_파일럿을_SSOT로_편입할_때_동형_가드_패턴을_재사용한다.md",
+      "summary": "새 우회방지 가드 대신 기존 scenario_gate 가드 패턴을 스코프 한정 복제"
     }
   ],
   "history": [
+    {
+      "title": "168 opd2 프레임워크 통합",
+      "date": "2026-10-01",
+      "stage": "완료",
+      "path": "tasks/168-260930-opd-opd2-프레임워크-통합/",
+      "result": "opd2를 //opd2 FW 공통 Pilot으로 등재. 단계 상태를 state-tool 단일 SSOT로 이전하고 lifecycle 게이트는 opd2 전용 mark 가드로 우회 불가하게 연결. ADD-1·2(Builder 라우팅·PLAN 사전심사) 포함, main 머지 완료."
+    },
+    {
+      "title": "169 워크트리 CLOSE 지식 반영",
+      "date": "2026-10-01",
+      "stage": "완료",
+      "path": "tasks/169-261001-opds-워크트리-CLOSE-지식-반영/",
+      "result": "brain-tool이 워크트리 작업본 brain 쓰기를 허용해 CLOSE에서 지식이 브랜치에 함께 커밋되도록 전환. DONE 템플릿·op-brain-ingest·opd CLOSE 절차 정합, log/index merge=union. brain-tool 159 passed, main 머지 완료. 설치본 재배포 전."
+    },
     {
       "title": "167 테스트 시나리오 작성 기준 개선",
       "date": "2026-09-29",
@@ -184,20 +206,6 @@
       "stage": "완료",
       "path": "tasks/162-260927-opd-TEST-단계-소요시간-단축/",
       "result": "opd/opds TEST에 사람 조치 선요청·자동 실행 병행·증거 재사용·최종 Gate 주기와 계측을 도입하고 병행 계측 유실을 잠금으로 수정함. 시나리오 10/10 통과, main 머지 완료."
-    },
-    {
-      "title": "163 코덱스 워크트리 부팅 소유권 복구",
-      "date": "2026-09-28",
-      "stage": "완료",
-      "path": "tasks/163-260927-opds-코덱스-워크트리-부팅-소유권-복구/",
-      "result": "Codex 자식 세션의 lease와 registry 소유권 확정 순서를 복구하고 실패 시 허브 복귀·진단을 구현함. 필수 시나리오 10/10 통과, 실제 Codex 작업본 기동 및 checkpoint 확인, main 머지 완료."
-    },
-    {
-      "title": "161 검증도구 실행정확성 복구",
-      "date": "2026-09-27",
-      "stage": "완료",
-      "path": "tasks/161-260927-opd-검증도구-실행정확성-복구/",
-      "result": "test-tool unit의 설치 확인과 실제 검사를 분리하고 미실행·실패·범위를 구조화해 기록함. 실도구 검증 13/13 통과, 회귀 테스트 569건 통과, main 머지 완료."
     }
   ]
 }

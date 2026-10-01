@@ -1,0 +1,19 @@
+{
+  "status": "completed",
+  "verdict": "pass",
+  "input_bundle_hash": "6af7a3f22658edfbb4d04b8ba7aaabd4defe044f54abf95e5410731cfe32a9e4",
+  "iteration": 6,
+  "design": {
+    "axes": {"completeness": "PASS", "decision_clarity": "PASS", "executability": "PASS", "recoverability": "PASS"},
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {"goal": 2, "adoption": 2, "boundary": 2},
+    "average": 2.0,
+    "gaps": []
+  },
+  "rewrite_target": null,
+  "advisories": [],
+  "blockers": [],
+  "changed_files": []
+}

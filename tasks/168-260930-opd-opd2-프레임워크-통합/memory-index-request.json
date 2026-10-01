@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "requests": [
+    {
+      "task_id": "168-260930-opd-opd2-프레임워크-통합",
+      "title": "자체 상태관리 파일럿을 SSOT로 편입할 때 동형 가드 패턴을 재사용한다",
+      "type": "architecture",
+      "status": "applied",
+      "file": "memory/자체_상태관리_파일럿을_SSOT로_편입할_때_동형_가드_패턴을_재사용한다.md",
+      "summary": "새 우회방지 가드 대신 기존 scenario_gate 가드 패턴을 스코프 한정 복제",
+      "body_sha256": "324721698ddaba3ff871cf0c04152901be7051ea9b717ae76be299178846291d",
+      "requested_at": "2026-10-01 06:40:49"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
   "module": "test_brain_tool",
   "layer": "test",
   "domain": "opal-brain",
-  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + term 동적로드·draft search 필터·lint term_duplicate/alias_collision 커버리지를 포함한다. tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트. validate_frontmatter 링크필드(related) 거부/통과 케이스와 add-page --related 지정/미지정 케이스를 포함한다. TestSpeculativeGate071(TS-201~209)은 add-page 미실체 마커 거부 게이트(--body-file/--force/--note, speculative_content)·lint speculative kind·draft-term 불변(M-3) 계약을 검증한다. TestTaskRootAndAllocatorRoot118은 조회 루트(task_root=cwd 작업본, 워크트리에서도 허브로 수렴하지 않음)와 회고적 학습 쓰기 루트(명시 allocator_root 전용, cwd 추론 거부)의 분리 계약을 실제 합성 워크트리 fixture로 검증한다(계약 SSOT: opal/core/references/harness/worktree.md §task root와 allocator root 계약). TestS19WorktreeTaskRootBrainResolution은 S-19 RED 계약(워크트리 cwd 기본 --brain-path 조회·명시 --brain-path 수렴 제외·명시 allocator_root 없는 쓰기 거부)을 고정한다.",
+  "description": "brain-tool 단위 테스트 — 10 서브커맨드 happy-path + ERROR_CODES 주요 14종 + 동적 타입 로드 + analyze/ingest-scan + term 동적로드·draft search 필터·lint term_duplicate/alias_collision 커버리지를 포함한다. tmp_path 기반 격리 실행. mock 금지 — 실제 brain_tool.py를 import 호출하는 진짜 테스트. validate_frontmatter 링크필드(related) 거부/통과 케이스와 add-page --related 지정/미지정 케이스를 포함한다. TestSpeculativeGate071(TS-201~209)은 add-page 미실체 마커 거부 게이트(--body-file/--force/--note, speculative_content)·lint speculative kind·draft-term 불변(M-3) 계약을 검증한다. TestTaskRootAndAllocatorRoot118은 조회 루트(task_root=cwd 작업본, 워크트리에서도 허브로 수렴하지 않음)와 회고적 학습 쓰기 루트(기본은 task_root 자신에 성공, allocator_root는 다른 루트를 명시할 때만 사용— task 169 반전)의 분리 계약을 실제 합성 워크트리 fixture로 검증한다(계약 SSOT: opal/core/references/harness/worktree.md §task root와 allocator root 계약). TestS19WorktreeTaskRootBrainResolution은 S-19 계약(워크트리 cwd 기본 --brain-path 조회·명시 --brain-path 수렴 제외·명시 allocator_root 없는 쓰기가 task_root 자신에 성공 — task 169 반전)을 고정한다.",
   "task": "027",
   "exports": [
     "TestInit", "TestAddPage", "TestIndex", "TestLog",
@@ -2548,7 +2548,7 @@ class TestLintFrontmatterInvalid(BrainTestCase):
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TestTaskRootAndAllocatorRoot118 — 조회 루트(task_root)와 회고적 학습 쓰기 루트
-# (명시 allocator_root)의 분리 계약.
+# (기본은 task_root 자신, allocator_root는 다른 루트 명시 시에만 — task 169 반전)의 분리 계약.
 # 계약 SSOT: opal/core/references/harness/worktree.md §task root와 allocator root 계약
 # (구 골든표 대조 스위트 TestHubRootGoldenCases·TestFindProjectRootConsistency의 교체본 —
 #  후자는 "워크트리 하위 경로에서 허브를 반환"을 단언해 전제 자체가 새 계약과 모순이었다)
@@ -2556,7 +2556,13 @@ class TestLintFrontmatterInvalid(BrainTestCase):
 
 class TestTaskRootAndAllocatorRoot118(unittest.TestCase):
     """조회는 cwd 작업본(task_root) 기준으로 해석되고 워크트리에서도 허브로 수렴하지
-    않으며, 회고적 학습 쓰기는 명시 allocator_root로만 수행된다는 계약을 검증한다.
+    않으며, 회고적 학습 쓰기는 기본적으로 task_root(cwd 작업본) 자신에 쓰고
+    allocator_root는 다른 루트를 명시적으로 지정할 때만 쓴다는 계약을 검증한다.
+
+    [task 169 반전] 워크트리 cwd 기본 쓰기를 전면 차단하던 이전 계약(task 118)을
+    반전했다 — `opal/core/references/harness/worktree.md` §task root와
+    allocator root 계약이 `.opal`(brain 포함)을 task_root 쓰기 대상으로 이미
+    규정하고 있어, task 118의 전면 차단이 그 계약과 모순됐다.
 
     mock 금지 — 실제 brain_tool.py를 호출한다. 실제 프로젝트 `.opal/brain`은 건드리지
     않고 합성 트리(<tmp>/hub, <tmp>/hub/.opal-worktrees/task_118fixture)만 쓴다.
@@ -2636,30 +2642,47 @@ class TestTaskRootAndAllocatorRoot118(unittest.TestCase):
         self.assertEqual(BT.resolve_brain_path(str(self.hub)),
                          (self.hub / ".opal" / "brain").resolve())
 
-    # ── 회고적 학습 쓰기 루트 = 명시 allocator_root ──────────────────────────
+    # ── 회고적 학습 쓰기 루트 = 기본 task_root(cwd 작업본) 자신 ──────────────
+    # [task 169 반전] worktree.md §task root와 allocator root 계약이 `.opal`을
+    # task_root 쓰기 대상으로 규정하므로, 워크트리 cwd 기본 쓰기는 거부되지 않고
+    # 워크트리 자신의 task_root에 성공해야 한다.
 
-    def test_write_from_worktree_without_allocator_root_is_rejected(self):
-        """워크트리 cwd에서 명시 루트 없는 add-page는 거부된다(cwd 추론 금지)."""
+    def test_write_from_worktree_without_allocator_root_lands_in_worktree_task_root(self):
+        """워크트리 cwd에서 명시 allocator_root 없는 add-page는 워크트리 자신의
+        task_root(`.opal/brain`)에 성공한다(cwd 추론 거부가 아니라 task_root 자신 쓰기)."""
         os.chdir(self.worktree)
         with _mock_kst():
             exit_code, result = self._call(
                 BT.cmd_add_page,
                 make_args(brain_path=BT.DEFAULT_BRAIN_PATH, path="no-alloc-page",
-                          type="concept", title="쓰기거부118"))
-        self.assertFalse(result.get("ok"), f"명시 루트 없는 쓰기가 성공했다: {result}")
-        self.assertEqual(result.get("error"), "allocator_root_required")
-        self.assertEqual(exit_code, 1)
+                          type="concept", title="워크트리기본쓰기118"))
+        self.assertTrue(result.get("ok"), f"워크트리 task_root 기본 쓰기가 실패했다: {result}")
+        self.assertEqual(exit_code, 0)
+        self.assertTrue((self.worktree / ".opal" / "brain" / "pages" / "concept"
+                         / "no-alloc-page.md").exists(),
+                        "워크트리 자신의 .opal/brain에 페이지가 생성되지 않았다")
 
-    def test_update_page_from_worktree_without_allocator_root_is_rejected(self):
-        """update-page도 같은 쓰기 계약을 따른다."""
+    def test_update_page_from_worktree_without_allocator_root_lands_in_worktree_task_root(self):
+        """update-page도 같은 쓰기 계약을 따른다 — 워크트리 자신의 task_root를 갱신한다.
+
+        setUp의 `alloc-hub-sentinel`은 허브에만 존재하므로(page_not_found를
+        피하기 위해), 이 테스트는 먼저 워크트리 자신의 task_root에 페이지를
+        만든 뒤 같은 기본 경로로 그 페이지를 갱신해 성공을 검증한다.
+        """
         os.chdir(self.worktree)
         with _mock_kst():
             exit_code, result = self._call(
+                BT.cmd_add_page,
+                make_args(brain_path=BT.DEFAULT_BRAIN_PATH, path="worktree-own-page",
+                          type="concept", title="워크트리자체페이지118"))
+        self.assertEqual(exit_code, 0, f"워크트리 task_root 사전 생성 실패: {result}")
+        with _mock_kst():
+            exit_code, result = self._call(
                 BT.cmd_update_page,
-                make_args(brain_path=BT.DEFAULT_BRAIN_PATH, path="alloc-hub-sentinel",
+                make_args(brain_path=BT.DEFAULT_BRAIN_PATH, path="worktree-own-page",
                           status="stale"))
-        self.assertFalse(result.get("ok"), f"명시 루트 없는 갱신이 성공했다: {result}")
-        self.assertEqual(result.get("error"), "allocator_root_required")
+        self.assertTrue(result.get("ok"), f"워크트리 task_root 기본 갱신이 실패했다: {result}")
+        self.assertEqual(exit_code, 0)
 
     def test_write_with_explicit_allocator_root_lands_there_not_in_cwd(self):
         """명시 allocator_root가 있으면 그 루트에만 쓴다 — cwd(워크트리)에는 쓰지 않는다."""
@@ -2716,19 +2739,26 @@ class TestTaskRootAndAllocatorRoot118(unittest.TestCase):
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [RED-118][S-19] 조회는 task_root 기준, --brain-path 명시값은 수렴 제외,
-# 회고적 학습 쓰기는 명시 allocator_root 없이 cwd 추론 금지 (W-7, ANALYSIS Q1 brain-tool 행)
+# 회고적 학습 쓰기는 기본적으로 task_root(cwd 작업본) 자신에 쓴다
+# (W-7, ANALYSIS Q1 brain-tool 행; [task 169 반전] allocator_root는 다른 루트를
+# 명시 지정할 때만 쓴다 — worktree.md §task root와 allocator root 계약이 `.opal`을
+# task_root 쓰기 대상으로 이미 규정하고 있어 task 118의 전면 차단이 그 계약과
+# 모순됐다)
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestS19WorktreeTaskRootBrainResolution(unittest.TestCase):
     """S-19 — brain-tool 조회(`search` 등)는 task_root(cwd 자신) 기준으로 해석돼야
     하고, `--brain-path` 명시값은 수렴 대상에서 제외돼야 하며, 회고적 학습 쓰기
-    (`add-page`)는 명시 allocator_root 없이는 수행되지 않고 cwd 추론도 하지
-    않아야 한다.
+    (`add-page`)는 명시 allocator_root 없이는 task_root(cwd 작업본) 자신에
+    성공해야 한다(cwd 추론이 아니라 task_root 자신 쓰기 — [task 169 반전]
+    `opal/core/references/harness/worktree.md` §task root와 allocator root
+    계약이 `.opal`(brain 포함)을 task_root 쓰기 대상으로 이미 규정하고 있어
+    task 118의 전면 차단이 그 계약과 모순됐다).
 
     현재 구현은 `resolve_brain_path`가 `.opal-worktrees` 세그먼트 유무와
-    무관하게 cwd 자신(task_root)을 기준으로 해석하며, 회고적 학습 쓰기는 명시
-    allocator_root 없이는 cwd로 추론되지 않는다(AC-3 — event-loader
-    `_roots()`·code-scan `findProjectRoot()`와 동형 계약). tmp 합성 트리를
+    무관하게 cwd 자신(task_root)을 기준으로 해석하며, 회고적 학습 쓰기도 같은
+    task_root 자신에 쓴다(AC-3 — event-loader `_roots()`·code-scan
+    `findProjectRoot()`와 동형 계약). tmp 합성 트리를
     쓰며(mock 금지 — 실제 brain_tool.py를 호출), 실제 프로젝트 `.opal/brain`은
     건드리지 않는다.
     """
@@ -2811,22 +2841,31 @@ class TestS19WorktreeTaskRootBrainResolution(unittest.TestCase):
             f"matches={result.get('matches')}",
         )
 
-    def test_add_page_default_brain_path_from_worktree_requires_explicit_allocator_root(self):
-        """[S-19] 회고적 학습 쓰기(add-page)는 명시 allocator_root 없이는
-        수행되지 않아야 하고 cwd로 추론하지도 않아야 한다.
+    def test_add_page_default_brain_path_from_worktree_lands_in_worktree_task_root(self):
+        """[S-19][task 169 반전] 회고적 학습 쓰기(add-page)는 명시 allocator_root
+        없이도 워크트리 자신의 task_root(`.opal/brain`)에 성공해야 한다.
 
-        GREEN 계약: `--brain-path` 미지정 시 add-page는 명시 allocator_root가
-        없으면 cwd로 추론해 쓰지 않고 거부(ok:false, error=allocator_root_required)한다.
+        GREEN 계약(반전 후): `--brain-path` 미지정 시 add-page는 allocator_root가
+        없으면 워크트리 자신의 task_root에 쓴다(ok:true) — cwd 추론이 아니라
+        task_root 자신 쓰기다. `opal/core/references/harness/worktree.md`
+        §task root와 allocator root 계약이 `.opal`(brain 포함)을 task_root
+        쓰기 대상으로 이미 규정하고 있어, task 118의 전면 차단이 그 계약과
+        모순됐기 때문에 반전한다.
         """
         os.chdir(self.worktree)
-        args = make_args(brain_path=BT.DEFAULT_BRAIN_PATH, path="cwd-inferred-page",
-                          type="concept", title="cwd추론쓰기금지118")
-        exit_code, result = self._call(BT.cmd_add_page, args)
-        self.assertFalse(
+        with _mock_kst():
+            args = make_args(brain_path=BT.DEFAULT_BRAIN_PATH, path="cwd-task-root-page",
+                              type="concept", title="cwd작업본쓰기성공118")
+            exit_code, result = self._call(BT.cmd_add_page, args)
+        self.assertTrue(
             result.get("ok"),
-            f"[FIX-PIN S-19] 명시 allocator_root 없이 cwd 추론으로 add-page가 성공했다"
-            f"(ok=true) — cwd 추론 금지 계약 위반. exit={exit_code} result={result}",
+            f"[FIX-PIN S-19] 명시 allocator_root 없는 add-page가 워크트리 task_root에 "
+            f"성공하지 못했다. exit={exit_code} result={result}",
         )
+        self.assertEqual(exit_code, 0)
+        self.assertTrue((self.worktree / ".opal" / "brain" / "pages" / "concept"
+                         / "cwd-task-root-page.md").exists(),
+                        "워크트리 자신의 .opal/brain에 페이지가 생성되지 않았다")
 
 
 if __name__ == "__main__":
