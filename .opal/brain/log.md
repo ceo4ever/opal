@@ -506,4 +506,7 @@
 
 ## [2026-10-01] ingest | 정정: 직전 ingest --all 기록의 수치를 실측으로 바로잡는다 — 신규 28페이지, 기존 17페이지 출처 보강, 반영 소스 47건(스킬 24·태스크 9·run-log 3·e2e 1·적용 제안서 10). 제외 17건: docs/backup 6·폐기/미적용 제안서 9·e2e 계약 데이터 2
 - 출처: ingest-scan:all
+## [2026-10-01] ingest | CLOSE ingest — 태스크 170 설계 게이트 회차 단축
+- 신규: [[pages/concept/design-gate-deterministic-pretier-separation.md]], [[pages/concept/design-gate-gaps-resolution-roundtrip.md]]
+- 출처: task:170
 

@@ -23,6 +23,8 @@ TASK 첫 frontmatter가 `template: sdlc-v2`이면
 legacy 태스크에 기존 TEST-SCENARIO.md가 있으면 재작성하지 않는다. legacy 산출물이 없으면
 호출한 pilot의 legacy 계약을 따른다. 신규 형식을 legacy 문서에 소급 적용하지 않는다.
 
+PM 경로에서 PLAN이 새 메커니즘을 추가/변경하면 같은 회차 안에서 TEST-SCENARIO도 갱신한다 — 원문은 `opal-pilot-dev/SKILL.md` §PM 경로
+
 ## 실행 계약
 
 - TASK의 AC/C와 PLAN Risks에 실제 H가 있을 때의 H만 검증 대상에 연결한다.

@@ -33,7 +33,8 @@ sources:
 - task:093
 - task:094
 - task:167
-related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, close-history-auto-link-enforce-conversion, memory-tool, state-md-journal-redefinition, mirror-gate-must-not-hostage-ssot-record, mark-force-decision-log-scope, test-tool, op-scenario-gate-skill, scenario-economy-advisory-gate]
+- task:170
+related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, close-history-auto-link-enforce-conversion, memory-tool, state-md-journal-redefinition, mirror-gate-must-not-hostage-ssot-record, mark-force-decision-log-scope, test-tool, op-scenario-gate-skill, scenario-economy-advisory-gate, design-gate-deterministic-pretier-separation]
 created: 2026-06-10
 updated: '2026-10-01'
 status: active
@@ -52,6 +53,7 @@ OPAL 파이프라인 현황판의 JSON SSOT(`state.json`)를 결정론적으로 
 - **행 재구성 (task 014)**: QA Gate/State Gate 행을 제거하고 PM Gate로 통합, gate-pass를 deprecate했다. 이 직후라 pilot STATE 행 일괄 변경은 회귀 위험이 크다 — 015가 CLOSE ingest를 opp 단독 파일럿으로 한정한 근거.
 - **미러가 SSOT를 인질로 잡던 구조 해소 (task:094)**: STATE.md에 마커가 없으면 상태 변경 자체를 거부하던 `marker_missing` 게이트는, 표시용 미러(STATE.md)의 결손이 원본 기록(`state.json` 갱신·의사결정 로그 기재)까지 막는 역방향 의존이었다. 094가 이 게이트를 제거해 STATE.md 삭제·손상·마커 제거 상태에서도 `advance`/`mark`/`block`이 정상 동작하도록 뒤집었다(상세: [[mirror-gate-must-not-hostage-ssot-record]]).
 - **목표-커버 게이트의 담당자 재량 재발 차단 (task:167)**: 목표-커버 게이트 행(`test_scenario.scenario_gate`·`plan.scenario_gate`)이 이력 기록 없이도 완료로 mark될 수 있던 구조는, PM 경로 설계 게이트에만 있던 completion guard(`apply_pm_design_guards`)가 목표-커버 경로에는 적용되지 않아 생긴 비대칭이었다. evaluator의 개선 제안(`advisories[]`)에 대한 응답도 강제되지 않아 반영 여부가 담당자 재량으로 소실됐다(근거: task:167 PLAN 확인 사실).
+- **설계 게이트 결정론/evaluator 2-tier 분리 (task:170)**: 과거 18회차(161~168) 실측에서 결정론 실패 5회가 evaluator 호출 전 규칙 검사에서 났는데도 `design-gate start`가 회차를 먼저 올려 반복 상한을 소모했다. 결정론 검사를 evaluator 호출 전에 회차·상태 소비 없이 미리 실행할 수 있도록 노출해 이 소모를 없앴다(상세: [[design-gate-deterministic-pretier-separation]]).
 
 ## 인터페이스
 
@@ -107,6 +109,12 @@ PM 경로 설계 게이트 advisory 응답·refinement, 목표-커버 게이트 
 - **목표-커버 게이트 mark 가드**: `apply_scenario_gate_mark_guard()`(`opal/tools/state-tool/state_tool.py:6658`)가 `cmd_mark`(`:4277`)에서 key `test_scenario.scenario_gate`·`plan.scenario_gate` 행을 미완에서 완료로 바꾸는 시점에 형제 test-tool의 `scenario-gate-verify --task-folder <task>`를 subprocess로 호출한다. exit 0이 아니면 `scenario_gate_record_required`로 state.json을 바꾸지 않고 거부하며, `--force`·`--auto-pass`·`--as-worker`로 우회할 수 없다. 이미 완료된 행·다른 key·`plan.design_gate`에는 적용하지 않는다.
 - `advisory_response_invalid`·`scenario_gate_record_required`가 `DESIGN_GATE_ERROR_CODES`(총 17종)에 추가됐다(`ERROR_CODES` 키 집합 동결은 유지).
 
+설계 게이트 결정론 사전검사 노출 (task:170 — 아키텍처 결정 상세는 [[design-gate-deterministic-pretier-separation]]):
+- `verify --design-gate-check` 플래그가 기존 `_gate_flags` 상호배타 그룹의 6번째 멤버로 추가됐다. PM 경로 태스크(`plan.design_gate` 행 보유)의 `state.json`에 대해 기존 `_design_gate_deterministic_check(task_path)`와 신규 `_decision_clarity_lint(task_path)`를 호출해 `{"ok": true, "design_gate_check": ("unmet" if deterministic_missing else "pass"), "deterministic_missing": [...], "decision_clarity_candidates": [...]}`를 항상 exit 0·회차·상태 변경 없이 반환한다(비차단, 사전 확인용).
+- `_decision_clarity_lint()`는 PLAN.md 본문에서 펜스 코드 블록·인라인 코드 스팬을 제외한 산문만 고정 패턴 12개로 줄 단위 스캔해 `"PLAN.md:<줄번호>: <해당 줄 발췌>"` 형식 후보 문자열을 반환한다 — 판정이 아니므로 `decision_clarity_candidates`가 있어도 그 자체로 `"unmet"`을 만들지 않는다.
+- `state.json` 부재 시 다른 5개 게이트 플래그와 동일한 graceful skip(exit 0), PM 경로가 아닌 태스크(`plan.design_gate` 행 없음)면 `{"ok": true, "design_gate_check": "skipped", "reason": "not a PM design path"}`를 반환한다.
+- `_decision_clarity_lint()`는 `_design_gate_deterministic_check` 함수 정의 끝(`:6853`) 이후에 추가되어 태스크 168이 동시에 편집한 `apply_opd2_gate_mark_guard`(`:6702-6763`) 및 그 앞 상수 블록(`:6513-6534`)과 물리적으로 겹치지 않는다.
+
 ## 관련 페이지
 
 - [[brain-tool]] — state-tool 패턴(run.sh+venv python, ERROR_CODES, KST date.js)을 복제한 동형 도구
@@ -124,3 +132,4 @@ PM 경로 설계 게이트 advisory 응답·refinement, 목표-커버 게이트 
 - [[test-tool]] — task:167부터 목표-커버 게이트 mark 가드가 형제 프로세스로 호출하는 검증 주체
 - [[op-scenario-gate-skill]] — 이 도구의 design-gate record/start를 호출하는 PM 경로 컨트롤 스킬
 - [[scenario-economy-advisory-gate]] — task:167 advisory 응답 게이트·목표-커버 기록·mark 가드 전체 계약
+- [[design-gate-deterministic-pretier-separation]] — task:170 결정론/evaluator 2-tier 분리 + 사전검사 아키텍처 결정

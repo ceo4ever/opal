@@ -12,15 +12,10 @@ sources:
 - skill:opal-pilot-dev
 - task:111
 - task:112
-related:
-- dev-pilot-profile-unification
-- sdlc-v2-development-artifact-contract
-- skill-opal-pilot-dev-short
-- op-dev-analysis
-- op-dev-plan
-- op-dev-test-scenario
+- task:170
+related: [dev-pilot-profile-unification, sdlc-v2-development-artifact-contract, skill-opal-pilot-dev-short, op-dev-analysis, op-dev-plan, op-dev-test-scenario, design-gate-deterministic-pretier-separation]
 created: '2026-06-11'
-updated: '2026-09-10'
+updated: '2026-10-01'
 status: active
 ---
 ## 개요
@@ -35,6 +30,7 @@ status: active
 - 신규 태스크는 [[sdlc-v2-development-artifact-contract]]를 사용한다.
 - PLAN `Work items`의 담당·파일 소유권·선행 관계·실행 그룹을 기준으로 구현을 순차 또는 병렬 디스패치한다.
 - interactive, semi-agentic, agentic의 사용자 확인과 CLOSE 경계는 기존 계약을 유지한다.
+- **설계 게이트 PM 경로 사전검사(task:170)**: §PM 경로(actor=coordinator 신규) 절차는 PLAN 작성 완료 후 `design-gate start` 호출 전에 `state-tool verify --design-gate-check`를 실행해 `deterministic_missing`을 해소하고 `decision_clarity_candidates`를 자가점검하도록 요구한다. PLAN이 새 가드·명령·상태·오류 코드 등 새 검증 대상을 추가/변경했으면 같은 회차 안에서 TEST-SCENARIO.md도 갱신해야 한다(상세: [[design-gate-deterministic-pretier-separation]]).
 
 ## 라우팅 계약
 
@@ -42,7 +38,7 @@ Full→Short 강등은 TASK 직후 1회 판단한다. Short→Full 승격은 PLA
 
 ## 근거
 
-`opal/skills/opal-pilot-dev/SKILL.md`, `opal/skills/opal-pilot-dev/references/pipeline.json`, `opal/skills/opal-pilot-dev/references/pipeline-short.json`, `opal/skills/opal-pilot-dev/references/track-escalation.md`, task:111, task:112.
+`opal/skills/opal-pilot-dev/SKILL.md`, `opal/skills/opal-pilot-dev/references/pipeline.json`, `opal/skills/opal-pilot-dev/references/pipeline-short.json`, `opal/skills/opal-pilot-dev/references/track-escalation.md`, task:111, task:112, task:170.
 
 ## 관련 페이지
 
@@ -52,3 +48,4 @@ Full→Short 강등은 TASK 직후 1회 판단한다. Short→Full 승격은 PLA
 - [[op-dev-analysis]]
 - [[op-dev-plan]]
 - [[op-dev-test-scenario]]
+- [[design-gate-deterministic-pretier-separation]]

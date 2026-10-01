@@ -75,6 +75,8 @@ attempt와 evaluator 입력·응답에 `refinement: true`를 싣는다(평소에
 6. `미확인 가정` 항목은 `없음` 또는 PLAN `## Risks`에 존재하는 `H-N` 참조를 포함
 7. `test-tool scenario-coverage-build --template sdlc-v2` + `scenario-coverage-check`를 subprocess로 실행해 exit 0을 요구(16→missing 병합, 17→`input_error`)
 
+`verify --design-gate-check`는 같은 ①~⑦ 전체를 회차·상태 변경 없이 실행한다(사전 확인용).
+
 `verify --plan-contract-check`는 strict 없이 기존 동작을 유지한다.
 
 ## EXECUTE 가드 적용 시점
