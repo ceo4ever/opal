@@ -1,12 +1,11 @@
 # Project Brain Index
-> 갱신: 2026-10-01 21:25
-> 갱신: 2026-10-01 14:45
-> 갱신: 2026-10-01 16:00
+> 갱신: 2026-10-02 00:41
 
 ## 도메인
 (아직 등록된 페이지 없음)
 
 ## 엔티티
+- [[agent-sections]] — agent_sections #tool #event-loader
 - [[brain-tool]] — brain-tool #tool #knowledge
 - [[code-scan-tool]] — code-scan #tool #util #code-scan
 - [[convention-precheck]] — convention-precheck (컨벤션 결정론 사전 검사 도구) #tool #convention #verification
@@ -147,6 +146,7 @@
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[evaluator-eval-set-label-fixture-measurement-lesson]] — 평가자 model·effort 측정의 세 가지 왜곡 경로 (라벨 노출·fixture 결손·한도 장애) #lesson #evaluator #measurement #eval-set
 - [[evaluator-self-weakness-disclosure-pattern]] — 평가자에 PM 자기약점 명시 전달 + 신고사실 감점면제 금지 명문화 #lesson #evaluator #governance #opds
+- [[event-response-single-body]] — 이벤트 응답 본문 단일화 #event-loader #bootstrap #token-economy
 - [[evidence-tier-asis-tobe-jurisdiction]] — 근거 등급 5단계 + AS-IS/TO-BE 관할 2축 #evidence #citation #architecture #opds
 - [[execution-observation-scope-citation-requirement]] — 실행 관측 인용은 스코프 병기 필수 — 단일파일 vs 디렉토리 수치 상이 #lesson #measurement #citation #opds
 - [[existence-check-not-version-check]] — 존재 검사와 버전 검사는 다른 게이트다 #gate #lesson #version #defect-class
@@ -185,6 +185,7 @@
 - [[knowledge-assets-as-flow-entrypoint]] — 지식 자산은 흐름의 끝이 아니라 시작점이다 — 참조 순서 기준 계층 배치 + 도구·자산 범주 분리 #architecture #knowledge-asset #layering #diagram #decision
 - [[lean-core-relocation-benefit-precondition]] — lean core 이관 이익의 전제 조건 — PM 전용 + Phase B 기 로드 #lean-core #agent-md #relocation #pm-tier #assistant-tier
 - [[lease-handoff-before-terminal-launch]] — 실행 주체 인계는 수신자 id가 아니라 대상 루트를 키로 한다 #lease #ownership #worktree #handoff #task-150 #pattern
+- [[legacy-dispatch-compat-sunset-observation]] — 구형 호출 원장과 관측 구간 기반 호환 종료 판정 #event-loader #dispatch #compat
 - [[legacy-row-address-gate-insertion-regression]] — 레거시 행번호 파이프라인에 게이트 행 삽입 시 전수 수정 결합 회귀 #state-tool #pipeline #legacy-row #regression #scenario-gate #task-075
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[literal-version-test-expectation-fragility]] — 리터럴 버전번호를 테스트 기대값으로 쓰면 동시 작업이 깨뜨린다 #testing #concurrency #test-scenario #lesson
@@ -418,6 +419,8 @@
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
 - [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
 - [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
+- [[worker-dispatch-contract-v2-binding]] — 디스패치 계약 2판 — 대상·역할·식별자·본문 결속 #event-loader #dispatch #verification
+- [[worker-dispatch-target-section-selection]] — 워커 디스패치 대상별 선별과 펜스 바깥 헤딩 절 경계 #event-loader #dispatch #token-economy
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
 - [[worktree-close-brain-write-contract]] — 워크트리 CLOSE brain 쓰기 계약 — 같은 브랜치 반영·merge 전파 #worktree #brain #architecture #workspace
 - [[worktree-locates-hub-by-issued-copy]] — 워크트리는 허브를 탐색하지 않고 발급값 사본으로 찾는다 #worktree #ownership #issued-value #hook #task-138

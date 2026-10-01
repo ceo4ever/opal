@@ -527,3 +527,7 @@
 - 신규: [[behavior-preserving-split-and-block-conversion-lessons]]
 - 출처: task:174
 
+## [2026-10-02] ingest | CLOSE ingest — 태스크 175 이벤트 로딩 경량화 1차
+- 신규: [[event-response-single-body]], [[worker-dispatch-target-section-selection]], [[worker-dispatch-contract-v2-binding]], [[legacy-dispatch-compat-sunset-observation]], [[agent-sections]]
+- 출처: task:175
+
