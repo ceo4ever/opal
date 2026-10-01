@@ -1,0 +1,158 @@
+{
+  "goal": "- opd2 절차 문서가 안내하는 PLAN 사전심사 재검증 방법을 그대로 따르면 BUILD로 넘어갈 수 있다. 문서가 실제 게이트와 다른 절차를 안내하지 않는다. - PLAN 사전심사 fail이 정해진 상한에 이르면 opd2가 더 진행하지 않고 사용자 결정을 기다린다. 사용자가 명시적으로 해제해야만 다시 진행된다. - Reviewer의 fail 지적은 정해진 형식으로 남고, 다음 회차 Reviewer는 직전 회차 지적 하나하나의 해소 여부를 보고한다. 보고가 빠지거나 맞지 않으면 그 심사 기록은 받아들여지지 않는다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "C-1",
+    "C-2",
+    "C-3"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "type": "integration",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1",
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "type": "regression",
+      "red_required": true,
+      "covers_requirements": [
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-9",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-10",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}
