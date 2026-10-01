@@ -46,7 +46,7 @@ block --reason은 차단을 기록하고 unblock --reference ... --reason ...은
   `--reference`는 실제 사용자 메시지다.
 - 기록 필드: 사전심사 기록은 `findings`(새 지적), `resolutions`(이전 지적 해소 보고),
   `open_findings`(그 기록 이후 남은 미해소 지적)를 가진다. 원장의 `plan_review_floor`는
-  집계·추적의 시작 지점이며 해제 시 현재 기록 수로 올라간다(기록 이력은 보존). rewind는 사전심사 기록과 `plan_review_floor`를
+  fail 집계의 시작 지점이며 해제 시 현재 기록 수로 올라간다(기록 이력은 보존). 이전 지적 추적은 floor와 무관하게 같은 Call의 최신 기록을 따르므로 해제 뒤에도 직전 미해소 지적의 해소 보고가 필요하다. rewind는 사전심사 기록과 `plan_review_floor`를
   초기화한다. 새 키가 없는 변경 전 기록은 집계·추적에서 제외한다.
 - 한계: `resolved` 보고의 내용상 진위는 도구가 검증하지 못하고 독립 Reviewer의 판단에
   맡긴다. 도구가 보증하는 것은 보고의 완전성(전건 보고·id 일치)이다.
