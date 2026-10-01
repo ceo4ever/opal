@@ -31,6 +31,8 @@ CLOSE 단계에서 디스패치되는 경량 워커다. 완료된 태스크의 �
 
 ### STEP 1 — brain 존재 확인
 
+이 STEP1~STEP6 절차는 워크트리·허브 구분 없이 동일하게 적용되며, STEP5의 brain-tool 기본 쓰기(`--brain-path` 미지정)는 호출 시점의 작업본(task_root) 자신에 성공한다.
+
 1. 태스크 폴더에서 프로젝트 루트를 추론한다 (태스크 폴더의 상위 디렉토리).
 2. `<프로젝트-루트>/.opal/brain/` 존재 여부를 확인한다.
    - **없으면**: 즉시 `{ "ingested_pages": [], "status": "skipped", "summary": "brain 미존재 — no-op" }`를 반환하고 종료한다. CLOSE를 막지 않는다.
@@ -275,6 +277,8 @@ status: active
 ```
 
 ### STEP 6 — 결과 반환
+
+`ingested_pages`는 STEP5-1 `add-page`로 신설한 page와 STEP5-1b `update-page`로 실제 내용을 보강한 기존 page를 모두 포함한다(brain 루트 기준 상대 경로, 예: `pages/concept/<name>.md`). `duplicate_page`이고 보강할 내용이 없어 멱등 skip한 page는 포함하지 않는다.
 
 아래 형식으로 결과를 반환한다:
 

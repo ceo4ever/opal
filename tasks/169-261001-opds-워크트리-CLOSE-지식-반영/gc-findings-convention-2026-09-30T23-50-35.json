@@ -1,0 +1,82 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/brain-tool/brain_tool.py",
+    "opal/tools/brain-tool/tests/test_brain_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-C001",
+      "fingerprint": "65aff1ae3284f3fc",
+      "category": "documentation-header-drift",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "header-standard.md §2.1",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/brain-tool/tests/test_brain_tool.py",
+        "line": 6,
+        "symbol": "@header.description"
+      },
+      "evidence": "line 6의 @header description이 'TestTaskRootAndAllocatorRoot118은 ... 회고적 학습 쓰기 루트(명시 allocator_root 전용, cwd 추론 거부)의 분리 계약을 ... 검증한다'·'TestS19WorktreeTaskRootBrainResolution은 ... 명시 allocator_root 없는 쓰기 거부를 고정한다'로 서술하나, 같은 파일 2557-2569행·2745-2757행 클래스 docstring은 task 169로 반전된 계약(allocator_root 미지정 시 task_root 자신에 쓰기 성공)으로 이미 갱신되어 있음 — git diff HEAD로 확인",
+      "impact": "@header.description이 code-scan/brain-tool analyze 등 헤더 소비 경로에서 이 파일의 테스트 계약을 조회하는 사람·도구에게 폐기된(task 118) 계약을 현재 사실처럼 전달한다",
+      "remediation": {
+        "guidance": "description의 TestTaskRootAndAllocatorRoot118·TestS19WorktreeTaskRootBrainResolution 요약 문장을 task 169 반전 후 계약으로 제자리 교체한다(이력 누적 금지, header-standard.md §2.1)",
+        "reference": "opal/core/references/header-standard.md#21-이력-비기재-원칙",
+        "auto_fixable": false
+      },
+      "verification": "수정 후 description 문장과 클래스 docstring(2557-2569, 2745-2757행)의 계약 서술이 일치하는지 재확인",
+      "suppression": null
+    },
+    {
+      "id": "GC-C002",
+      "fingerprint": "61f32fd4c084563f",
+      "category": "documentation-header-drift",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "header-standard.md §2.1 (취지 — 인접 docstring 일관성)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/brain-tool/tests/test_brain_tool.py",
+        "line": 2550,
+        "symbol": "TestTaskRootAndAllocatorRoot118 섹션 배너"
+      },
+      "evidence": "2549-2555행 섹션 배너 주석이 '조회 루트(task_root)와 회고적 학습 쓰기 루트(명시 allocator_root)의 분리 계약'으로 서술하나, 바로 아래 2557-2569행 클래스 docstring은 task 169 반전 계약으로 갱신되어 내부 모순 — git diff HEAD로 확인(배너는 diff에 포함되지 않아 갱신에서 누락됨)",
+      "impact": "동일 파일 내에서 섹션 배너와 클래스 docstring이 서로 다른 계약을 주장해 독자가 어느 쪽이 현재 사실인지 혼동할 수 있다",
+      "remediation": {
+        "guidance": "배너 주석을 클래스 docstring과 동일한 반전 후 계약 문구로 갱신한다",
+        "reference": "TBD — 프로젝트 문서화 관례(인접 docstring 일관성)",
+        "auto_fixable": false
+      },
+      "verification": "수정 후 배너 주석과 클래스 docstring의 계약 서술이 일치하는지 재확인",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "Read docs/CONVENTIONS.md (허브, 단일 문서 모델 확인 — 하단 §허브+링크 모델 참고문 존재, 링크 레지스트리 없음)",
+    "Read opal/core/references/conventions-hub-model.md",
+    "Read opal/core/references/header-standard.md",
+    "Read opal/skills/op-gc-convention/references/convention-categories.md, report-template.md, sample-report.md",
+    "Bash: cat .opal/code-scan.json (headerSource=inline 확인)",
+    "Bash: git diff --stat HEAD -- <3개 target_files>",
+    "Bash: git diff HEAD -- <3개 target_files> (전문 대조)",
+    "Read opal/tools/brain-tool/brain_tool.py (전체 헤더·require_write_root·finalize_brain_root 영역)",
+    "Read opal/tools/brain-tool/tests/test_brain_tool.py (헤더·TestTaskRootAndAllocatorRoot118·TestS19WorktreeTaskRootBrainResolution 영역)",
+    "Bash: grep -n 'merge 후 귀속' opal/tools/worktree-tool/worktree_tool.py (잔존 없음 확인)",
+    "Bash: grep -n '_inside_worktree|WORKTREE_SEGMENT' <3개 target_files> (잔존 참조 없음 확인)"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/conventions-hub-model.md",
+    "opal/core/references/header-standard.md",
+    "opal/skills/op-gc-convention/references/convention-categories.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    ".opal/code-scan.json"
+  ],
+  "missing_capabilities": [],
+  "report_path": "tasks/169-261001-opds-워크트리-CLOSE-지식-반영/GC-CONVENTION-2026-09-30T23-50-35.md"
+}

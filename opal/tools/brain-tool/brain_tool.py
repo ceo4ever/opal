@@ -3,7 +3,7 @@
   "module": "brain_tool",
   "layer": "util",
   "domain": "opal-brain",
-  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 11개 서브 명령(init/add-page/update-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5·init의 schema-template.md에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. lint는 term 일관성 위반 2종(term_duplicate·alias_collision)과 frontmatter_invalid kind(validate_frontmatter를 lint 경로에서도 호출하며 related 붕괴 페이지의 missing_link 중복 보고를 억제)를 판정하고, speculative kind를 SPECULATIVE_MARKERS 구조적 헤딩 탐지로 검사한다. related는 저장 시 단일행 인라인 배열(`related: []` 또는 `related: [a, b]`)로 고정하며, lint는 블록 배열 표기를 검출하고 명시적 --fix에서만 교정한다. search는 draft 필터(--include-draft, R-6 term 한정)를 지원한다. validate_frontmatter는 선택 필드(tags/sources/related)의 평탄성(flat string[])을 검사해 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행하고, 링크필드(related) 값을 검사해 '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행한다. add-page는 --related(CSV→평탄 리스트) 플래그와 미실체 거부 게이트(--body-file/--force/--note, speculative_content)를 갖는다. update-page는 기존 페이지 갱신 도구 경로다(부분 갱신·created 보존·updated 자동). 루트는 용도별로 분리한다(계약 SSOT: opal/core/references/harness/worktree.md §task root와 allocator root 계약): 조회의 cwd 파생 경로 조립 지점(_load_code_scan_json·ingest-scan 스캔 루트·--brain-path 기본값)은 _task_root_cwd()로 cwd 작업본(task_root) 기준으로 해석하며 허브로 수렴하지 않는다. 회고적 학습 쓰기(add-page·update-page)는 require_write_root/finalize_brain_root가 명시 allocator_root(허브 절대 경로)만 받고 cwd 추론을 거부한다(allocator_root_required). --brain-path 명시값은 _DefaultBrainPath 센티넬로 기본값과 구분해 cwd 파생 해석 대상에서 제외한다.",
+  "description": "OPAL Project Brain 지식 위키 결정론적 집행 CLI — 11개 서브 명령(init/add-page/update-page/index/log/search/sync-header/lint/validate/analyze/ingest-scan). index/log/링크 무결성을 brain-tool이 집행(LLM 직접 편집 금지). 페이지 타입은 SCHEMA §1.5·init의 schema-template.md에서 동적 로드(하드코딩 없음). frontmatter 파싱은 PyYAML, KST 타임스탬프는 date.js subprocess. sync-header는 code-scan @header → brain entity frontmatter 단방향 동기화만 수행. analyze는 code-scan @header 정량 집계 → JSON. ingest-scan은 docs/skills/tasks 목록 반환. lint는 term 일관성 위반 2종(term_duplicate·alias_collision)과 frontmatter_invalid kind(validate_frontmatter를 lint 경로에서도 호출하며 related 붕괴 페이지의 missing_link 중복 보고를 억제)를 판정하고, speculative kind를 SPECULATIVE_MARKERS 구조적 헤딩 탐지로 검사한다. related는 저장 시 단일행 인라인 배열(`related: []` 또는 `related: [a, b]`)로 고정하며, lint는 블록 배열 표기를 검출하고 명시적 --fix에서만 교정한다. search는 draft 필터(--include-draft, R-6 term 한정)를 지원한다. validate_frontmatter는 선택 필드(tags/sources/related)의 평탄성(flat string[])을 검사해 중첩 리스트·비문자열 요소를 frontmatter_invalid violation으로 집행하고, 링크필드(related) 값을 검사해 '[[', ']]', '.md' 포함 슬러그를 frontmatter_invalid로 집행한다. add-page는 --related(CSV→평탄 리스트) 플래그와 미실체 거부 게이트(--body-file/--force/--note, speculative_content)를 갖는다. update-page는 기존 페이지 갱신 도구 경로다(부분 갱신·created 보존·updated 자동). 루트는 용도별로 분리한다(계약 SSOT: opal/core/references/harness/worktree.md §task root와 allocator root 계약): 조회의 cwd 파생 경로 조립 지점(_load_code_scan_json·ingest-scan 스캔 루트·--brain-path 기본값)은 _task_root_cwd()로 cwd 작업본(task_root) 기준으로 해석하며 허브로 수렴하지 않는다. 회고적 학습 쓰기(add-page·update-page)는 require_write_root가 기본은 task_root(cwd 작업본) 자신에 쓰고, allocator_root는 다른 루트를 명시적으로 지정할 때만(finalize_brain_root 경유) 쓴다(harness/worktree.md §task root와 allocator root 계약 — `.opal`은 task_root 쓰기 대상). --brain-path 명시값은 _DefaultBrainPath 센티넬로 기본값과 구분해 cwd 파생 해석 대상에서 제외한다.",
   "exports": [
     "cmd_init", "cmd_add_page", "cmd_update_page", "cmd_index", "cmd_log",
     "cmd_search", "cmd_sync_header", "cmd_lint", "cmd_validate",
@@ -154,7 +154,7 @@ ERROR_CODES = {
     "brain_already_initialized":  "brain이 이미 초기화됨: {brain_path}. --force로만 재초기화 가능",
     "brain_path_invalid":         "brain-path가 유효하지 않음: {brain_path}",
     "brain_not_initialized":      "brain이 초기화되지 않음 (.opal/brain/SCHEMA.md 부재): {brain_path}",
-    "allocator_root_required":    "회고적 학습 쓰기에는 명시 allocator_root가 필요함 — cwd 추론 금지 (harness/worktree.md §task root와 allocator root 계약)",
+    "allocator_root_required":    "allocator_root는 지정 시 허브 절대 경로만 허용함 — 미지정·빈 값·상대 경로 거부 (harness/worktree.md §task root와 allocator root 계약)",
     "invalid_page_type":          "유효하지 않은 페이지 타입: {page_type} (허용: {allowed})",
     "frontmatter_invalid":        "frontmatter 표준 위반: {detail}",
     "duplicate_page":             "동일 경로의 페이지가 이미 존재: {page}. 갱신은 update-page를 사용",
@@ -223,13 +223,11 @@ def get_kst_date(command="(unknown)"):
     return get_kst_datetime(command).split(" ")[0]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 루트 해석 — 조회는 task_root, 회고적 학습 쓰기는 명시 allocator_root
+# 루트 해석 — 조회는 task_root, 회고적 학습 쓰기는 기본 task_root 자신
+# (allocator_root는 다른 루트를 명시 지정할 때만)
 # 계약 원문(SSOT): opal/core/references/harness/worktree.md
 #                  §task root와 allocator root 계약
 # ─────────────────────────────────────────────────────────────────────────────
-
-# git 워크트리 컨테이너 디렉터리 이름.
-WORKTREE_SEGMENT = ".opal-worktrees"
 
 
 def _task_root_cwd():
@@ -241,15 +239,6 @@ def _task_root_cwd():
     비워크트리 실행에서는 cwd 자신이므로 동작이 변경 전과 동일하다.
     """
     return pathlib.Path.cwd()
-
-
-def _inside_worktree(path):
-    """path가 워크트리 슬롯 안인지 판정한다 — 쓰기 거부 판정 전용.
-
-    [MUST] 이 판정은 allocator_root를 추론하지 않는다. 명시 인자 없는 회고적 학습
-    쓰기를 거부할지만 정하며, 쓸 루트는 오직 명시 allocator_root로만 정해진다.
-    """
-    return WORKTREE_SEGMENT in str(path).split("/")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -321,16 +310,16 @@ def finalize_brain_root(command, allocator_root):
 def require_write_root(command, args):
     """페이지 쓰기 명령(회고적 학습 쓰기)의 brain 루트 결정.
 
-    - `--allocator-root` 명시: finalize 쓰기 경로(`finalize_brain_root`).
-    - 그 외: 조회와 동일 해석. 단 워크트리 안에서 `--brain-path` 기본값(cwd 파생)으로
-      쓰는 것은 거부한다 — 명시 루트 없는 쓰기는 수행하지 않는다.
+    - `--allocator-root` 명시: 다른 루트를 명시 지정하는 finalize 쓰기 경로
+      (`finalize_brain_root`).
+    - 그 외: 조회와 동일 해석 — task_root(cwd 작업본) 자신에 쓴다. 워크트리
+      안에서도 워크트리 자신이 task_root이므로 그대로 쓴다(cwd 추론 거부 없음;
+      harness/worktree.md §task root와 allocator root 계약 — `.opal`은
+      task_root 쓰기 대상).
     """
     allocator_root = getattr(args, "allocator_root", None)
     if allocator_root:
         return finalize_brain_root(command, allocator_root)
-    if isinstance(args.brain_path, _DefaultBrainPath) and _inside_worktree(_task_root_cwd()):
-        err(command, "allocator_root_required", reason="cwd_inference_in_worktree",
-            cwd=str(_task_root_cwd()))
     return require_brain(command, args.brain_path)
 
 
