@@ -117,7 +117,7 @@ tools: [Read, Grep, Glob, Bash]
 |---|---|---|
 | `completeness`(요구·변경 범위 완전성) | PASS | `task_md`의 AC/C와 PLAN `## Findings`의 직접 변경·문서 갱신·미확인 가정이 Work item·Risks·시나리오로 빠짐없이 이어진다 |
 | `decision_clarity`(결정·계약 명확성) | PASS | 외부 동작·인터페이스·실패 정책·구조·저장 방식 중 하나라도 구현자에게 선택을 남기면 FAIL |
-| `executability`(실행 가능성) | PASS | Work item만으로 추가 설계 없이 구현 가능하고 담당·순서·파일 소유권이 명확하다 |
+| `executability`(실행 가능성) | PASS | Work item만으로 추가 설계 없이 구현 가능하고 담당·순서·파일 소유권이 명확하다. Work item·시나리오가 외부 CLI·에이전트·서비스를 호출할 때 `~/.opal/AGENT.md` 도구 선택 표의 정식 OPAL wrapper(예: `opal-agent`)를 쓰지 않고 raw CLI를 지정하면 FAIL |
 | `recoverability`(적용·복구 가능성) | PASS | 설치·검증 순서와 실패 시 복구 경로가 존재한다 |
 
 각 축은 근거 인용이 필수다. 시나리오 3축은 Phase 1-S 기준(척도·통과선·앵커)을 그대로 적용한다 — 재정의하지 않고 참조만 한다.

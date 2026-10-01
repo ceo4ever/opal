@@ -1,0 +1,98 @@
+{
+  "duration_api_ms": 64281,
+  "stop_reason": "end_turn",
+  "session_id": "ba9444e5-26a9-4587-bf29-2f82252b49c8",
+  "total_cost_usd": 0.6587272,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 61834,
+    "cache_read_input_tokens": 300536,
+    "output_tokens": 5195,
+    "output_tokens_details": {
+      "thinking_tokens": 2153
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 61834,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 2468,
+        "cache_read_input_tokens": 71317,
+        "cache_creation_input_tokens": 2899,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 2899
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 12,
+      "outputTokens": 5195,
+      "cacheReadInputTokens": 300536,
+      "cacheCreationInputTokens": 61834,
+      "webSearchRequests": 0,
+      "costUSD": 0.6587272,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2153,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "진입 게이트 검증(`ok: true`)과 TASK·PLAN·TEST-SCENARIO 검토를 끝냈습니다. 지금 설계 4축 판정 JSON을 정리하고 있습니다.\n\n```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: design) 판정 완료: completeness=PASS, decision_clarity=FAIL, executability=PASS, recoverability=PASS, gaps 2건\",\n  \"input_bundle_hash\": \"8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"PASS\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"PASS\",\n      \"recoverability\": \"PASS\"\n    },\n    \"gaps\": [\n      \"decision_clarity-1: PLAN.md:95 (Risks H-2 설계 대응) ↔ PLAN.md:76 (D-7 증거 필드) — H-2는 'check 소요를 계층 응답으로 관측한다'고 하지만, D-7의 계층 `check` 필드는 `{cmd, exit, status}`뿐이고 소요 시간 필드가 없다. 구현자는 공개 응답에 소요 시간 필드(이름·단위 포함)를 새로 넣을지, H-2 관측을 다른 방법으로 대신할지 정해야 한다.\",\n      \"decision_clarity-2: PLAN.md:76 (D-7 계층 `check: {cmd, exit, status}`) — D-4가 계층 `status`를 폐쇄 목록으로 정한 것과 달리, `check.status`는 허용 값(예: pass/fail, 또는 계층 상태값 재사용 여부)이 정의되지 않았다. D-8은 상태값 원문을 README 한 곳에 둔다고 했으므로, 구현자가 이 공개 필드의 값 집합을 직접 정해야 한다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"axis_reasons\": {\n    \"completeness\": \"TASK의 AC-1~AC-8과 C-1~C-7이 Work item 완료 기준 열(PLAN.md:86-88)에 모두 연결되어 있다. Findings의 직접 변경 7개(PLAN.md:31-37)는 W-1(템플릿·스키마)과 W-3(runner·resolver·test_tool.py·tests·fixtures/unit-real)에 들어 있다. 문서 갱신 3개(PLAN.md:58-60)는 W-3(README)과 W-2(execute-guide, opal-test-agent AGENT.md)에 들어 있다. 미확인 가정 H-1~H-3은 Risks(PLAN.md:94-96)와 TEST-SCENARIO S-9·S-10·S-13으로 이어진다. 회귀 확인 소비자와 영향 없음 근거(PLAN.md:43-54)는 S-11 (4)의 grep 대조로 닫힌다.\",\n    \"decision_clarity\": \"D-1~D-11(PLAN.md:70-80)이 필드 의미, 실행 순서(run 누락 → check → run), 범위 판정과 제외 사유, 상태 폐쇄 목록, 필수 여부, exit 21과 `unit_incomplete`, 계약 원문 위치, 이관 방식, 템플릿·추론 명령, 배포를 구체적으로 확정했다. 다만 공개 응답 계약 안에 미정 항목 2건(gaps)이 남아 FAIL이다.\",\n    \"executability\": \"W-1·W-2·W-3 모두 담당(opal-task-agent), 변경 파일, 선행 작업(W-3 ← W-1), 실행 그룹(P1 병렬, P2)이 명시되어 있다. W-1과 W-2는 변경 파일이 겹치지 않는다(PLAN.md:100). RED 테스트 파일은 opal-test-agent가 소유하고 W-3은 수정하지 않는다는 소유권 경계가 있다(PLAN.md:88, TEST-SCENARIO.md:14). Work item이 외부 에이전트·서비스를 raw CLI로 호출하는 지정은 없다. ruff·mypy·eslint 등은 검증 대상 도구이고, 공급 방법은 H-1에 정해져 있다.\",\n    \"recoverability\": \"적용 순서는 RED → P1 → P2 → TEST → 승인 후 설치 → 배포본 검증이다(PLAN.md:100). 설치 직전 사용자 승인을 받는다(D-11, PLAN.md:80). 복구 경로는 두 가지다: 설치 전에는 작업본 보정 커밋, 설치 후에는 허브 main에서 `scripts/install-mac.sh` 메뉴 1 재설치(PLAN.md:102). 배포본 검증 항목(sha256 비교, `zsh -lic`, resolve·unit 실행)도 정해져 있다(PLAN.md:101, TEST-SCENARIO S-13).\"\n  },\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n설계 4축 중 `decision_clarity` 하나만 FAIL입니다. 구현자가 직접 정해야 하는 공개 응답 계약 항목이 2건 남아 있기 때문입니다.\n- H-2 대응은 check 소요 시간을 응답에서 보겠다고 하지만, D-7에는 그 시간 필드가 없습니다.\n- `check.status`에 들어갈 수 있는 값이 정의되지 않았습니다.\n\n이번 호출은 `scope: design`이라 `verdict`와 `rewrite_target`은 넣지 않았습니다. 두 값은 `design-gate combine`이 계산합니다. 파일은 만들거나 수정하지 않았습니다.",
+  "ttft_ms": 9464,
+  "type": "result",
+  "duration_ms": 65822,
+  "uuid": "360a8f7b-7bc9-415f-9661-d212228f90b7",
+  "ttft_stream_ms": 7047,
+  "time_to_request_ms": 265,
+  "first_content_frame_ms": 7047,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

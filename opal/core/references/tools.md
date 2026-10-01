@@ -32,7 +32,7 @@ OPAL이 배포하는 도구 전수 목록이다. 이 표는 **어떤 도구가 �
 | `improve-tool` | 개선 후보를 로컬(프로젝트 `.opal/`)·FW(`~/.opal/fw-inbox/`) 2원으로 분기 기록 | `~/.opal/tools/improve-tool/run.sh` | `opal/tools/improve-tool/README.md` |
 | `memory-tool` | 프로젝트 메모리 인덱스·히스토리(`MEMORY.json` 단독 SSOT) 결정론 집행 | `~/.opal/tools/memory-tool/run.sh` | `opal/tools/memory-tool/README.md` |
 | `opal-action-monitor` | 루프 액션 에이전트의 `.oppl-run/` 산출물을 단계×축 현황판으로 렌더(읽기 전용) | `~/.opal/tools/opal-action-monitor/run.sh` | `opal/tools/opal-action-monitor/README.md` |
-| `opal-agent` | 여러 LLM CLI(claude·gemini·codex·grok)를 비대화형 서브에이전트로 호출 | `~/.opal/tools/opal-agent/run.sh` | `opal/tools/opal-agent/README.md` |
+| `opal-agent` | 여러 LLM CLI(claude·gemini·codex·grok)를 비대화형 서브에이전트로 호출 — raw `claude -p`·`codex exec`·`gemini -p` 대신 이 도구를 쓴다 | `~/.opal/tools/opal-agent/run.sh` | `opal/tools/opal-agent/README.md` |
 | `opal-cli` | OPAL 프레임워크 관리 단일 진입점(업데이트·진단·제거·MCP 관리) | `~/.opal/tools/opal-cli/run.sh` (PATH 별칭 `opal-cli`) | `opal/tools/opal-cli/README.md` |
 | `oppl-runtime-tool` | oppl 2-루프 실행의 유한 실행 계약(설정·ledger·lock·admission) 집행 | `~/.opal/tools/oppl-runtime-tool/run.sh` | `opal/tools/oppl-runtime-tool/README.md` |
 | `playwright-tool` | URL을 headless Chromium으로 렌더해 Markdown으로 변환 | `~/.opal/tools/playwright-tool/run.sh` | `opal/tools/playwright-tool/README.md` |

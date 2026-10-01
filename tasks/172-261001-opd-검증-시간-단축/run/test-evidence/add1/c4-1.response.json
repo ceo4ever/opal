@@ -1,0 +1,98 @@
+{
+  "duration_api_ms": 66746,
+  "stop_reason": "end_turn",
+  "session_id": "c52362b3-5034-4b5e-869f-4b2eaa4808d4",
+  "total_cost_usd": 0.6738066,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 64836,
+    "cache_read_input_tokens": 317253,
+    "output_tokens": 4581,
+    "output_tokens_details": {
+      "thinking_tokens": 1753
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 64836,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 1841,
+        "cache_read_input_tokens": 76605,
+        "cache_creation_input_tokens": 613,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 613
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 12,
+      "outputTokens": 4581,
+      "cacheReadInputTokens": 317253,
+      "cacheCreationInputTokens": 64836,
+      "webSearchRequests": 0,
+      "costUSD": 0.6738066,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1753,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "설계 4축 판정을 마쳤습니다. `decision_clarity` 하나만 FAIL입니다.\n\n```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: design) 판정 완료: completeness=PASS, decision_clarity=FAIL, executability=PASS, recoverability=PASS\",\n  \"status\": \"completed\",\n  \"scope\": \"design\",\n  \"input_bundle_hash\": \"8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b\",\n  \"iteration\": 1,\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"PASS\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"PASS\",\n      \"recoverability\": \"PASS\"\n    },\n    \"gaps\": [\n      \"decision_clarity-1: `PLAN.md` §Decisions and contracts D-2·D-3 — `run` 없이 `run_files`만 있는 도구의 처리 순서가 정해지지 않았다. D-1은 `run_files`를 `run`에 딸린 선택 필드로 정의하고, D-2 ①은 `run`이 없으면 무조건 `not_configured`로 판정한다. D-3은 대상 파일이 0개일 때 `not_applicable`을 낸다. 그래서 '`run_files`만 있는 도구 + 맞는 파일 0개'일 때 `not_configured`와 `not_applicable` 중 어느 쪽인지, '`run_files`만 있고 `--changed-files` 없음'일 때 무엇을 실행하는지 구현자가 골라야 한다.\",\n      \"decision_clarity-2: `PLAN.md` §Decisions and contracts D-2·D-3 — 설치 확인(`check`)을 먼저 실행하는 D-2 ②와 파일 필터 결과 0개면 명령을 실행하지 않는 D-3의 순서가 정해지지 않았다. `not_applicable` 계층에서 `check`를 실행하는지, 그리고 `check`가 실패하고 동시에 맞는 파일도 0개일 때 `tool_unavailable`과 `not_applicable` 중 무엇인지 구현자가 골라야 한다.\",\n      \"decision_clarity-3: `PLAN.md` §Decisions and contracts D-4 — 전체 `incomplete`의 사유 코드 3개(`required_layer_unverified`·`no_check_executed`·`no_layers_declared`)와 조건의 대응, 여러 조건이 동시에 성립할 때의 우선순위가 정해지지 않았다. 예를 들어 필수 계층 하나뿐인데 그 계층이 `not_configured`이면 '필수 계층 미검증'과 '`pass` 0개'가 둘 다 성립한다. 이때 최상위 `reason` 값(외부 동작)을 구현자가 골라야 한다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n**축별 판정 근거**\n- **completeness (PASS):** TASK의 AC-1~8과 C-1~7이 모두 W-1~W-3의 완료 기준에 연결됩니다(`PLAN.md` §Work items). Findings의 직접 변경 대상과 문서 갱신 대상(test-tool README, execute-guide, opal-test-agent)은 모두 Work item에 들어 있습니다. 미확인 가정 H-1~H-3은 §Risks에 대응책과 함께 있습니다.\n- **decision_clarity (FAIL):** 필드 의미, 상태값 목록, exit 코드, 증거 필드는 표로 정해져 있습니다(D-1·D-4·D-6·D-7). 하지만 위 gaps 3건에서 상태와 사유를 정하는 분기 순서가 비어 있습니다.\n- **executability (PASS):** 담당, 선행 작업, 실행 그룹(P1은 병렬, P2), 파일 소유권이 정해져 있습니다. RED 테스트 파일은 opal-test-agent가 따로 소유하고, 구현 워커는 그 파일을 고치지 않습니다. 정식 OPAL wrapper가 있는데 raw CLI를 쓰라고 지정한 곳은 없습니다. 배포본 실행에는 `~/.opal/tools/test-tool/run.sh`를 쓰고, ruff·mypy·pytest·eslint 같은 실제 도구는 검증 대상 자체라 직접 실행합니다.\n- **recoverability (PASS):** D-11과 §Release and recovery에 적용 순서와 실패 시 복구 경로가 있습니다. 순서는 RED → P1 → P2 → TEST → 사용자 승인 후 설치 → 배포본 검증입니다. 설치 전 실패는 보정 커밋으로 복구하고, 설치 후 문제는 허브 main에서 다시 설치해 되돌립니다.\n\n진입 게이트의 `event-loader verify`는 `ok: true`(검증 문서 4건)로 통과했습니다. 이전 회차 gaps는 받지 않아 `resolved_gaps`는 빈 배열입니다. 만든 파일은 없습니다.",
+  "ttft_ms": 6846,
+  "type": "result",
+  "duration_ms": 68946,
+  "uuid": "345755b5-1c7c-4b52-ad02-1fb498da428b",
+  "ttft_stream_ms": 4524,
+  "time_to_request_ms": 254,
+  "first_content_frame_ms": 4524,
+  "queued_turn_count": 0,
+  "result_index": 0
+}
