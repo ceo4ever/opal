@@ -5,7 +5,7 @@
       "task_id": "170-261001-opds-설계-게이트-회차-단축",
       "title": "AGENTIC-LOG.md 등 append-only 로그 편집 시 Edit 앵커를 반드시 마지막 엔트리 뒤로 고정",
       "type": "improvement",
-      "status": "pending",
+      "status": "applied",
       "file": "memory/AGENTIC_LOG_md_등_append_only_로그_편집_시_Edit_앵커를_반드시_마지막_엔트리_뒤로_고정.md",
       "summary": "로그 append 시 앵커를 마지막 엔트리로 재확인 후 편집",
       "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
