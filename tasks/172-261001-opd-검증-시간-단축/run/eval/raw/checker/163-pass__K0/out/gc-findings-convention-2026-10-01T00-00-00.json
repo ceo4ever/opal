@@ -1,0 +1,42 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+    "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+    "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+    "opal/tools/ownership-tool/tests/test_codex_identity.py",
+    "opal/tools/ownership-tool/tests/test_session_start.py",
+    "opal/tools/worktree-launcher/tests/test_adapter_orca.py",
+    "opal/tools/worktree-launcher/tests/test_cli.py",
+    "opal/tools/worktree-launcher/tests/test_codex_handoff.py",
+    "opal/tools/worktree-launcher/tests/test_integration.py",
+    "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+    "opal/tools/worktree-launcher/tests/test_settings.py",
+    "opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py",
+    "opal/tools/worktree-launcher/worktree_launcher/cli.py",
+    "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+    "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+    "opal/tools/worktree-tool/schema/worktree.schema.json",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py",
+    "scripts/install-mac.sh",
+    "scripts/install/windows.ps1",
+    "scripts/tests/test_agent_adapter_fields.sh"
+  ],
+  "findings": [],
+  "evidence": [
+    "git merge-base 7a6b3017^ HEAD -> c6e295d467aace71d994ca139819061f64143d02",
+    "git diff --name-status --diff-filter=ACMR c6e295d467aa HEAD -> 21 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4",
+    "model findings dropped: out_of_range=0, mechanical_rule=0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

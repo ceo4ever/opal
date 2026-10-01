@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "haiku",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 112.6,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 106143,
+  "stop_reason": "end_turn",
+  "session_id": "f9544904-bfb5-489e-848f-b807047d5643",
+  "total_cost_usd": 0.2801262,
+  "usage": {
+   "input_tokens": 161,
+   "cache_creation_input_tokens": 63134,
+   "cache_read_input_tokens": 937122,
+   "output_tokens": 11997,
+   "output_tokens_details": {
+    "thinking_tokens": 5324
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 63134,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 8,
+     "output_tokens": 1255,
+     "cache_read_input_tokens": 69157,
+     "cache_creation_input_tokens": 1259,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1259
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-haiku-4-5-20251001": {
+    "inputTokens": 161,
+    "outputTokens": 11997,
+    "cacheReadInputTokens": 937122,
+    "cacheCreationInputTokens": 63134,
+    "webSearchRequests": 0,
+    "costUSD": 0.2801262,
+    "contextWindow": 200000,
+    "maxOutputTokens": 32000,
+    "thinkingTokens": 5324,
+    "canonicalModel": "claude-haiku-4-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 22,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "---\n\n## 🎯 최종 보고\n\n**op-gc-convention 컨벤션 검사 완료**\n\n### 실행 요약\n\n- **이벤트**: `worker.dispatch` ✅\n- **검사 대상**: `opal/tools/demo-tool/demoHelper.py` (1개 파일)\n- **검사 범위**: base-ref 기반 변경 구간 (ecff583f4455 → 1462b42db18b)\n- **기준**: docs/CONVENTIONS.md (T0 기준 문서)\n\n### 검사 결과\n\n| 카테고리 | 발견 | 심각도 | 상태 |\n|---------|------|--------|------|\n| **naming** | 1건 | Medium | ⚠️ 수동 조치 필요 |\n| **기타** | 0건 | — | ✅ 정상 |\n\n### 이슈 상세\n\n**[GC-001] Python 파일 네이밍 규칙 위반**\n\n```\n파일명: demoHelper.py (현재) → demo_helper.py (권장)\n규칙: Python 파일은 snake_case 사용 (CONVENTIONS.md 명시)\n영향: 파일 탐색·자동화 규칙 불일치\n예시: creative_response.py, user_auth.py\n```\n\n---\n\n```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m3-camelcase-py__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m3-camelcase-py__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"컨벤션 검사 완료: 1건의 Medium 심각도 이슈 발견 (Python 파일 네이밍 규칙 위반). 파일명 demoHelper.py는 snake_case(demo_helper.py)로 변경 필요.\",\n  \"status\": \"completed\",\n  \"check_status\": \"partial\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m3-camelcase-py__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m3-camelcase-py__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\"\n  ]\n}\n```",
+  "ttft_ms": 4980,
+  "type": "result",
+  "duration_ms": 109402,
+  "uuid": "aece4fb2-a715-4316-8559-c663e0861418",
+  "ttft_stream_ms": 817,
+  "time_to_request_ms": 96,
+  "first_content_frame_ms": 817,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

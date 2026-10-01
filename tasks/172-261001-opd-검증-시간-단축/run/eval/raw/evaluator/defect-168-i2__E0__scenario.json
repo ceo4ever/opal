@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 50.6,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 45433,
+  "stop_reason": "end_turn",
+  "session_id": "eb1beca4-84b4-43d9-834b-d8d98a3d7954",
+  "total_cost_usd": 0.2684354,
+  "usage": {
+   "input_tokens": 12,
+   "cache_creation_input_tokens": 19819,
+   "cache_read_input_tokens": 170177,
+   "output_tokens": 3790,
+   "output_tokens_details": {
+    "thinking_tokens": 634
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 19819,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1714,
+     "cache_read_input_tokens": 37972,
+     "cache_creation_input_tokens": 315,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 315
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 12,
+    "outputTokens": 3790,
+    "cacheReadInputTokens": 170177,
+    "cacheCreationInputTokens": 19819,
+    "webSearchRequests": 0,
+    "costUSD": 0.2684354,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 634,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "시나리오 3축을 채점했습니다. 판정은 **fail**입니다. 축별 점수는 goal 0, adoption 2, boundary 0이고 평균은 0.67입니다. 0점 축이 둘이어서 통과선(각 축 1점 이상, 평균 1.5 이상)에 미달합니다. `worker.dispatch` receipt는 직접 verify해 `ok: true`를 확인했고 필수 문서 4건을 적용했습니다. 파일은 만들지 않았습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"27522876917ef63792862d076b7e3a5b9c51cfe3f699079408d6fcf4ccf38387\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 0, \"adoption\": 2, \"boundary\": 0},\n    \"average\": 0.67,\n    \"gaps\": [\n      \"goal-1: `TEST-SCENARIO.md` §Scenarios S-1 — 기대 결과가 \\\"state.json의 어떤 행이 마크되는지 확인(정확한 대응 미정)\\\"이라서 통과·실패를 가를 판정 기준이 없다. 어떤 전이가 어떤 행을 마크해야 통과인지를 검증자가 정해야 한다. 또 PLAN 완료 전이 1개만 다루므로 AC-1 \\\"각 전이\\\"가 덮이지 않는다. `close.done_md`부터 `close.final`까지의 전이 등 나머지 전이 중 무엇을 검증할지도 검증자가 정해야 한다.\",\n      \"goal-2: `TEST-SCENARIO.md` §Scenarios S-2 — 기대 결과가 \\\"담당자(사용자/PM/자동)가 누구인지 확인(미정)\\\"이라서 기대하는 담당자가 정해져 있지 않다. 사용자·PM·자동 중 무엇이 나와야 통과인지를 검증자가 정해야 한다. AC-2가 요구하는 agentic 모드의 user_confirm 시나리오도 없어서 agentic 담당자 검증을 넣을지와 기대값까지 검증자가 정해야 한다.\",\n      \"boundary-1: `TEST-SCENARIO.md` §Scenarios — 정상 경로만 있다. 그런데 적용할 수 있는 실패·경계 경로가 있다. state-tool mark 호출 실패, 이미 마크된 행에 다시 전이하는 경우, agentic 모드의 자동 승인 경로(`PLAN.md` §Decisions and contracts D-1: \\\"혹은 자동 승인될 수도 있다\\\"), C-1 스키마 불변 위반 여부가 그 예다. 이 중 무엇을 검증하고 각각 어떤 결과를 기대할지 검증자가 정해야 한다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\n**축별 근거**\n- **goal = 0:** S-1과 S-2는 AC-1·AC-2에 연결돼 있습니다. 하지만 기대 결과가 둘 다 \"미정\"이라 목표를 직접 확인하는 시나리오가 사실상 없습니다. agentic 모드의 user_confirm과 \"각 전이\" 전체도 다루지 않습니다.\n- **adoption = 2:** TASK는 기존 경로를 교체하는 목표가 아니고, 전이와 행의 대응을 명확히 하는 목표입니다. PLAN의 회귀 확인 절에 따르면 v1은 별도 스킬이라 영향이 없습니다. 그래서 \"교체형 목표 아님\" 앵커를 적용했습니다.\n- **boundary = 0:** mark 호출 실패, 같은 전이 반복, 자동 승인, 스키마 불변 같은 실패·경계 경로를 적용할 수 있는데, 시나리오는 정상 경로 2건뿐입니다.\n\n**advisory:** 2건은 서로 다른 AC를 검증하고 계층 과잉이나 분류 오류도 없어서 만들지 않았습니다. `previous_gaps`가 입력되지 않았으므로 `resolved_gaps`는 빈 배열입니다. 부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 쓰지 않았고, 두 결과를 합치는 일은 `design-gate combine`이 맡습니다.\n\nNotion 외 claude.ai 커넥터(Amazon Selling Partner, Canva, Figma, Gmail, Google Calendar, Google Drive, Helium 10, higgsfield)는 아직 인증되지 않아 쓸 수 없습니다. 쓰려면 claude.ai 커넥터 설정에서 인증해야 합니다. 이번 작업에는 필요하지 않았습니다.",
+  "ttft_ms": 6040,
+  "type": "result",
+  "duration_ms": 47306,
+  "uuid": "6658135f-c6b8-4bbe-94d7-882109f97bc6",
+  "ttft_stream_ms": 3429,
+  "time_to_request_ms": 108,
+  "first_content_frame_ms": 3430,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

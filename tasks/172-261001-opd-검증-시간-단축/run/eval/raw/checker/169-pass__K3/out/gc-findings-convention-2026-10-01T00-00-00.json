@@ -1,0 +1,24 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/brain-tool/brain_tool.py",
+    "opal/tools/brain-tool/tests/test_brain_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py"
+  ],
+  "findings": [],
+  "evidence": [
+    "git merge-base 502115de^ HEAD -> 0dedee8d8040a34013c29a335e487e4980a00a18",
+    "git diff --name-status --diff-filter=ACMR 0dedee8d8040 HEAD -> 3 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4",
+    "model findings dropped: out_of_range=0, mechanical_rule=0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

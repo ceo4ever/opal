@@ -1,0 +1,24 @@
+{
+  "artifact_path": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c10__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md",
+  "findings_path": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c10__K3/out/gc-findings-convention-2026-10-01T00-00-00.json",
+  "summary": "컨벤션 검사 완료 — 차단 findings 2건: 신규 Python 파일(test_event_loader_test_event.py, test_state_tool_test_cycle.py)의 @header 블록 누락. 16개 파일 검사, 기계 규칙 4개 + 모델 검사 적용.",
+  "status": "completed",
+  "check_status": "error",
+  "missing_capabilities": [],
+  "blockers": [
+    {
+      "id": "GC-001",
+      "file": "opal/tools/event-loader/tests/test_event_loader_test_event.py",
+      "reason": "@header 블록 누락 (blocking)"
+    },
+    {
+      "id": "GC-002",
+      "file": "opal/tools/state-tool/tests/test_state_tool_test_cycle.py",
+      "reason": "@header 블록 누락 (blocking)"
+    }
+  ],
+  "changed_files": [
+    "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c10__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md",
+    "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c10__K3/out/gc-findings-convention-2026-10-01T00-00-00.json"
+  ]
+}

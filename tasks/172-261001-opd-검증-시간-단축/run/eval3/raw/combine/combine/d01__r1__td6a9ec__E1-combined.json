@@ -1,0 +1,39 @@
+{
+  "input_bundle_hash": "c0ba0a7a3c50b36ce6a8ec725e23d47ff8f120f71185c5f0a357db7afa5ba5a8",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "recoverability-1: PLAN.md:69 (W-5), PLAN.md:58 (D-14), PLAN.md:79 (H-3 설계 대응), PLAN.md:85 (적용 순서), TEST-SCENARIO.md:25 (S-7 기대 결과) — W-5는 허브에서 `brain-tool index --brain-path <허브>`와 `brain-tool log ... --brain-path <허브>`도 실행하므로 허브의 `.opal/brain/index.md`·`.opal/brain/log.md`가 바뀐다. 그런데 사용자에게 먼저 커밋하라고 안내하는 묶음과 `brain-backfill-report.md`의 '정확한 경로 목록'은 '6개 page + `.gitattributes`'로 고정돼 있어 이 두 파일이 빠져 있다. 사용자가 목록대로만 커밋하면 index.md·log.md가 허브에 미커밋으로 남고, 그 상태에서 같은 파일을 바꾼 태스크 169 브랜치를 merge하면 H-3이 막으려던 'local changes would be overwritten' 거부가 그대로 일어난다. 커밋 묶음과 보고서 경로 목록에 index.md·log.md를 넣을지, 그리고 S-7이 이를 확인할지는 구현자의 선택으로 남아 있다.",
+      "recoverability-2: PLAN.md:88 (Release and recovery '실패 시') — W-5 롤백 명령이 `git checkout -- .opal/brain/` 또는 `git clean`뿐이다. D-14대로 W-5가 허브 `.gitattributes`에 쓰는 4줄은 되돌리지 못하고, 디렉터리 단위 checkout은 허브 `.opal/brain/`에 있는 다른 미커밋 변경까지 지울 수 있다. H-3은 바로 그런 변경과 섞이지 않도록 경로 목록을 남기라고 요구한다. 보고서의 정확한 경로 목록(`.gitattributes`·index.md·log.md 포함)으로 경로별 복원을 하는지, 새로 만든 page 2건은 무엇으로 지우는지가 정해지지 않아 구현자의 선택으로 남아 있다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 1,
+      "boundary": 2
+    },
+    "average": 1.667,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6은 유형이 `check`(정적 검사, 조건 '없음(정적 검사)')인데, 행동에 '재배포 1회 실행 후 `~/.opal/tools/brain-tool/brain_tool.py`를 diff'가 들어 있다(TEST-SCENARIO.md:24). 이것은 `~/.opal/`을 바꾸는 부수 효과 있는 행동 검증(D-12, C-4)이다. grep 정적 검사 묶음과 한 행에 섞여 있어, 재배포 단계가 실패하거나 빠져도 '정적 검사 통과'와 구분되지 않는다.",
+      "recommendation": "재배포+diff 확인(D-12)을 별도 시나리오로 나눠 행동 유형과 방법·환경(install-mac.sh 실행 → diff)을 명시하라. S-6에는 grep·`git diff --name-only` 정적 검사만 남겨라."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

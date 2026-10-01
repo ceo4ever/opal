@@ -377,6 +377,8 @@ DESIGN_GATE_ERROR_CODES = {
         " 최신 문서 묶음으로 evaluator를 다시 호출하세요",
     "design_gate_result_invalid":
         "evaluator 결과가 기록 계약을 충족하지 않습니다: {detail}",
+    "design_gate_partial_invalid":
+        "design-gate combine 부분 결과가 계약을 충족하지 않습니다: {detail}",
     "design_gate_verdict_mismatch":
         "--verdict pass인데 설계 4축·시나리오 기준 미충족 (FAIL 축 {failed_axes}, 시나리오 평균 {scenario_average})",
     "design_gate_not_passed":
@@ -398,7 +400,7 @@ TEST_CYCLE_ERROR_CODES = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 168 W-1: opd2 전용 mark 가드 오류 코드 — DESIGN_GATE_ERROR_CODES(17종, 동결)와
+# 168 W-1: opd2 전용 mark 가드 오류 코드 — DESIGN_GATE_ERROR_CODES(18종, 동결)와
 #   물리 분리한다(scenario_gate_record_required 선례, D-1). `_error_template()`이
 #   ERROR_CODES → RUN_LOG_STATE_ERROR_CODES → DESIGN_GATE_ERROR_CODES →
 #   TEST_CYCLE_ERROR_CODES → 이 테이블 순으로 조회한다.

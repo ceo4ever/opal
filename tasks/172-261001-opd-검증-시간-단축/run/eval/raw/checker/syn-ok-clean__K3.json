@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "haiku",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 123.5,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 117551,
+  "stop_reason": "end_turn",
+  "session_id": "54cd2f1b-c239-4b5e-82cc-312a629f117a",
+  "total_cost_usd": 0.26303319999999997,
+  "usage": {
+   "input_tokens": 145,
+   "cache_creation_input_tokens": 59025,
+   "cache_read_input_tokens": 824782,
+   "output_tokens": 12472,
+   "output_tokens_details": {
+    "thinking_tokens": 6051
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 59025,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 8,
+     "output_tokens": 1094,
+     "cache_read_input_tokens": 64883,
+     "cache_creation_input_tokens": 1424,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1424
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-haiku-4-5-20251001": {
+    "inputTokens": 145,
+    "outputTokens": 12472,
+    "cacheReadInputTokens": 824782,
+    "cacheCreationInputTokens": 59025,
+    "webSearchRequests": 0,
+    "costUSD": 0.26303319999999997,
+    "contextWindow": 200000,
+    "maxOutputTokens": 32000,
+    "thinkingTokens": 6051,
+    "canonicalModel": "claude-haiku-4-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 18,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "---\n\n## ✅ 작업 완료\n\nop-gc-convention 스킬 실행이 정상 완료되었습니다.\n\n### 실행 요약\n\n| 항목 | 결과 |\n|-----|------|\n| **상태** | ✅ PASS |\n| **검사 파일** | 2개 (demo_tool.py, demo-guide.md) |\n| **Finding 수** | 0건 |\n| **기계 규칙** | 4개 규칙 적용, 0건 위반 |\n| **모델 검사** | 0건 추가 위반 |\n| **최종 판정** | PASS |\n\n### 생성된 산출물\n\n1. **Markdown 보고서**\n   - 경로: `GC-CONVENTION-2026-10-01T00-00-00.md`\n   - 내용: 상세 검사 결과, 기준 문서, 확인 항목\n\n2. **Finding JSON**\n   - 경로: `gc-findings-convention-2026-10-01T00-00-00.json`\n   - 형식: gc-finding-schema 준수\n   - 필드: check, status, findings[], evidence[], references[], missing_capabilities[]\n\n### 적용된 기준\n\n- **프로젝트 컨벤션**: `docs/CONVENTIONS.md`\n- **언어 규칙**: 파일명(kebab-case, Python은 snake_case), 코드명(English), 문서(한국어)\n- **@header 규칙**: Python 파일 상단 메타데이터 블록\n- **네이밍**: 올바른 파일/폴더 명명 규칙 준수\n\n### 검사 방식\n\n- **사전 검사** (기계 규칙): convention-precheck 도구로 변경 구간 자동 스캔\n- **모델 검사** (변경 구간): 지정된 라인 범위만 수동 분석\n- **통합** (Merge): 사전+모델 결과 병합\n\n```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-ok-clean__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-ok-clean__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"컨벤션 검사 완료: 2개 파일, 0건 위반, PASS\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-ok-clean__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-ok-clean__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\"\n  ]\n}\n```",
+  "ttft_ms": 2146,
+  "type": "result",
+  "duration_ms": 120406,
+  "uuid": "dcabec01-e2f7-4a27-9ceb-2d47830bf6a1",
+  "ttft_stream_ms": 703,
+  "time_to_request_ms": 72,
+  "first_content_frame_ms": 703,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

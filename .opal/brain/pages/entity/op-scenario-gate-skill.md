@@ -19,7 +19,8 @@ sources:
 - task:167
 - skill:op-scenario-gate
 - task:170
-related: [scenario-goal-coverage-gate-loop, opal-evaluator-agent, test-tool, scenario-gate-pilot-fit-criteria, scenario-economy-advisory-gate, state-tool, design-gate-gaps-resolution-roundtrip]
+- task:172
+related: [scenario-goal-coverage-gate-loop, opal-evaluator-agent, test-tool, scenario-gate-pilot-fit-criteria, scenario-economy-advisory-gate, state-tool, design-gate-gaps-resolution-roundtrip, design-gate-scope-parallel-judgement-combine]
 created: '2026-07-23'
 updated: '2026-10-01'
 status: draft
@@ -36,6 +37,7 @@ op-scenario-gate는 TEST-SCENARIO 단계에서 목표-커버리지 루브릭 게
 - **회차별 기록 명령화(task:167)**: 평가자 디스패치 여부와 무관하게 매 회차 1회 `test-tool scenario-gate-record`(`opal/tools/test-tool/lib/scenario.py:1377`)를 호출해 이력을 직접 편집하지 않고 도구가 원자 기록하게 한다. builder(`scenario-coverage-build`)가 입력 오류로 exit 17이면 evaluator를 부르지 않고 `--input-error`로 기록한 뒤 `escalate`/`reason: input_error`를 그대로 반환한다.
 - **advisory 응답 접합(task:167)**: evaluator 결과에 `advisories[]`가 있으면 PM이 `run/<gate>-i<N>-responses.json`에 ID 단위 `apply`/`retain`(+사유) 응답을 작성해 `--advisory-responses`로 넘긴다. oppb evidence 실패는 `--evidence-error <code>` 모드로 이력에 남긴다(§5.2).
 - **gaps 해소 보고 왕복 접합(task:170)**: PM 경로 설계 게이트 디스패치 §6.1 ②에서 `design_gate.history`를 최신부터 역순 순회해, verdict가 `deterministic_fail`·`input_error`·`superseded`가 아닌 가장 최근 회차의 `run/design-gate-i{k}.json` gaps(design+scenario 합산)를 `previous_gaps`로 조회해 evaluator 입력에 전달한다(그 회차 gaps가 비어 있으면 생략, 끝까지 없으면 생략). ③ 앞에서 응답 `resolved_gaps`의 id 집합이 보낸 `previous_gaps`의 id 집합과 정확히 같은지 검증하고, 다르면 `--verdict input_error`로 기록한다(상세: [[design-gate-gaps-resolution-roundtrip]]).
+- **병렬 두 호출 + 결합(task:172)**: §6.1은 `design-gate start` 응답이 싣는 `previous_gaps`·`previous_gaps_by_scope`를 그대로 evaluator 입력에 전달한다. 이전 지적 조회를 PM이 `design_gate.history`를 순회해 추론하던 방식은 폐기되었다. evaluator를 `scope: design`·`scope: scenario`로 병렬 두 번 호출하고 `design-gate combine`으로 결합한 결과를 기존과 같은 `design-gate record`에 넘긴다 ([[design-gate-scope-parallel-judgement-combine]]).
 - 종료조건 판정 — 수렴(pass)/반복상한(escalate)/무진전(escalate)/재작성(rewrite) 4분기 verdict를 반환한다.
 
 ## 설계 배경 (WHY)
@@ -46,6 +48,8 @@ op-scenario-gate는 TEST-SCENARIO 단계에서 목표-커버리지 루브릭 게
 - 이력을 스킬이 직접 append하던 방식은 기록 누락·형식 오류를 기계적으로 막을 수 없었다. 기록·검증을 도구 명령(`scenario-gate-record`/`scenario-gate-verify`)으로 옮기고 `state-tool mark`가 검증을 강제 호출하게 해, 게이트 통과 선언이 다시 담당자 재량으로 되돌아가지 않게 했다(근거: task:167 PLAN 확인 사실·Decisions "목표-커버 기록 명령"·"mark 가드", → [[scenario-economy-advisory-gate]]).
 - evaluator rewrite 지적 7회 중 6회가 `decision_clarity` 축 실패였는데도, 다음 회차가 이전 지적을 실제로 해소했는지 기계적으로 보증하는 지점이 없었다. 완전성 검사를 op-scenario-gate의 응답 수신 직후 1개 지점으로 좁혀, "이전 지적 각각의 해소 여부 보고"(AC-4)가 실제로 전건 보고되는지 보증한다(근거: task:170 TASK.md·PLAN.md Decisions, → [[design-gate-gaps-resolution-roundtrip]]).
 
+- 이전 지적 조립은 도구가 결정론으로 하게 되어 PM의 회차별 추론이 사라졌다 (근거: task:172 DONE.md AC-3). 위 'gaps 해소 보고 왕복 접합(task:170)' 항목의 PM 조회 서술은 task:170 시점이며 현재는 `design-gate start` 응답이 대체한다. 완전성 검증(id 집합 일치) 자체는 유지된다.
+
 ## 관계 (HOW)
 
 - [[test-tool]] — `scenario-coverage-check`로 결정론 게이트를, task:167부터 `scenario-gate-record`·`scenario-gate-verify`로 이력 기록·검증을 호출한다.
@@ -54,6 +58,7 @@ op-scenario-gate는 TEST-SCENARIO 단계에서 목표-커버리지 루브릭 게
 - [[scenario-gate-pilot-fit-criteria]] — 어느 pilot에 접합하는지 판정한 기준.
 - [[scenario-economy-advisory-gate]] — task:167 advisory 응답 게이트·중복 억제 계약.
 - [[state-tool]] — PM 경로 설계 게이트의 advisory 응답·refinement(`design-gate record`)와, 목표-커버 게이트 행 완료 시의 `mark` 검증 가드를 담당한다.
+- [[design-gate-scope-parallel-judgement-combine]] — task:172 병렬 scope 판정과 결합
 - [[design-gate-gaps-resolution-roundtrip]] — task:170 previous_gaps/resolved_gaps 조회·완전성 검증 계약 상세.
 - 접합 지점: opd(opal-pilot-dev) STEP 3.5, opds(opal-pilot-dev-short) STEP 2 PLAN, opsdd(opal-pilot-sdd) Phase 2 REVIEW 3종(근거: task:075 DONE.md §2).
 

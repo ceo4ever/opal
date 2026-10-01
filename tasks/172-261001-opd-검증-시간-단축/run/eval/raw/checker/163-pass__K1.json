@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": "low",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 30.8,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 23370,
+  "stop_reason": "end_turn",
+  "session_id": "f9ef21d4-bf2f-4feb-b94c-61fdbcf4ef4a",
+  "total_cost_usd": 0.1194224,
+  "usage": {
+   "input_tokens": 12,
+   "cache_creation_input_tokens": 17008,
+   "cache_read_input_tokens": 94732,
+   "output_tokens": 3242,
+   "output_tokens_details": {
+    "thinking_tokens": 135
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 17008,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 537,
+     "cache_read_input_tokens": 22084,
+     "cache_creation_input_tokens": 714,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 714
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 12,
+    "outputTokens": 3242,
+    "cacheReadInputTokens": 94732,
+    "cacheCreationInputTokens": 17008,
+    "webSearchRequests": 0,
+    "costUSD": 0.1194224,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 135,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": \".../out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \".../out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"21개 파일을 검사해 blocking finding 6건을 찾았다. 모두 테스트 파일 6개에서 @header가 사라진 회귀다. 기준 커밋에는 헤더가 있었지만 지금은 code-scan 결과가 비어 있다. 모델 검사는 변경 구간을 정밀하게 읽지 않고 finding 없이(none) merge했다. 그래서 이 결과는 기계 규칙(사전 검사)만 반영한다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \".../out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \".../out/convention-review-input-2026-10-01T00-00-00.json\",\n    \".../out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \".../out/GC-CONVENTION-2026-10-01T00-00-00.md\"\n  ]\n}\n```\n\n`check_status`가 `pass`인데 blocking finding이 6건 있습니다. 이 값은 도구가 낸 그대로입니다. 검사가 정상 완료됐다는 뜻으로 보이며, 위반이 없다는 뜻은 아닙니다.",
+  "ttft_ms": 1526,
+  "type": "result",
+  "duration_ms": 27365,
+  "uuid": "48bfd725-7261-4967-bd1f-4feb161d2271",
+  "ttft_stream_ms": 1150,
+  "time_to_request_ms": 58,
+  "first_content_frame_ms": 1150,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

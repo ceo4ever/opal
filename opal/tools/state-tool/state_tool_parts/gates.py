@@ -9,6 +9,9 @@
     "cmd_verify",
     "cmd_event_verify",
     "cmd_design_gate_start",
+    "cmd_design_gate_combine",
+    "_previous_gaps_for",
+    "_gap_id",
     "_check_plan_contract"
   ]
 }
@@ -22,6 +25,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 
 from . import base
 from .codes import (
@@ -1659,6 +1663,50 @@ def _design_gate_deterministic_check(task_path):
     return missing
 
 
+_PREVIOUS_GAPS_SKIP_VERDICTS = ("deterministic_fail", "input_error", "superseded")
+
+
+def _gap_id(text):
+    """gaps 항목 id — 첫 번째 `: ` 앞부분 전체, `: `가 없으면 전체 문자열 (evaluator 계약 정의)."""
+    return text.split(": ", 1)[0]
+
+
+def _gap_strings(part):
+    """부분 객체(design 또는 scenario)의 gaps 중 문자열 항목만 순서대로 반환한다."""
+    gaps = part.get("gaps") if isinstance(part, dict) else None
+    if not isinstance(gaps, list):
+        return []
+    return [g for g in gaps if isinstance(g, str)]
+
+
+def _previous_gaps_for(task_path, state):
+    """이전 회차 지적 조립 — (previous_gaps, previous_gaps_by_scope, previous_gaps_iteration).
+
+    design_gate.history를 최신부터 역순 순회해 verdict가 deterministic_fail·input_error·
+    superseded가 아닌 첫 회차 k의 run/design-gate-i{k}.json을 읽는다. 파일이 없거나 읽을 수
+    없으면 더 이전 회차로 계속 가고, 읽었다면 gaps가 비어 있어도 거기서 멈춘다. 읽은 파일이
+    없으면 ([], 빈 scope 둘, None)이다. 상태·파일 외 입력이 없는 순수 함수다.
+    """
+    dg = state.get("design_gate") if isinstance(state.get("design_gate"), dict) else {}
+    for item in reversed(dg.get("history") or []):
+        if not isinstance(item, dict) or item.get("verdict") in _PREVIOUS_GAPS_SKIP_VERDICTS:
+            continue
+        k = item.get("iteration")
+        if isinstance(k, bool) or not isinstance(k, int):
+            continue
+        path = pathlib.Path(task_path) / "run" / f"design-gate-i{k}.json"
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        by_scope = {"design": _gap_strings(data.get("design")),
+                    "scenario": _gap_strings(data.get("scenario"))}
+        return by_scope["design"] + by_scope["scenario"], by_scope, k
+    return [], {"design": [], "scenario": []}, None
+
+
 def _decision_clarity_lint(task_path):
     """170 AC-2 — decision_clarity 유보 어휘 후보 린트 (판정 아님, 후보 위치만 반환).
 
@@ -1841,8 +1889,11 @@ def cmd_design_gate_start(args):
     state["next_action"] = _derive_next_action(state)
     _rl_fields = run_log_commit(task_path, state, command, event=events or None)
     _jw = sync_state_md(task_path, state, now_str, command)
+    _prev, _prev_by_scope, _prev_iteration = _previous_gaps_for(task_path, state)
     ok(command, status="evaluating", iteration=args.iteration,
        gate_id=f"design-gate-i{args.iteration}", bundle_hash=bundle, refinement=refinement,
+       previous_gaps=_prev, previous_gaps_by_scope=_prev_by_scope,
+       previous_gaps_iteration=_prev_iteration,
        _transition_state=state, **(_jw or {}), **(_rl_fields or {}))
 
 
@@ -2075,6 +2126,141 @@ def cmd_design_gate_record(args):
        next_refinement=bool(dg.get("refinement_pending")) and dg["status"] == "fail",
        _transition_state=state,
        **extra, **(_jw or {}), **(_rl_fields or {}))
+
+
+# ── design-gate combine (172 D-5) ─────────────────────────────────────────────
+
+def _combine_load_partial(command, label, path):
+    try:
+        data = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError) as e:
+        err(command, "design_gate_partial_invalid", detail=f"cannot load {label} result: {e}")
+    if not isinstance(data, dict):
+        err(command, "design_gate_partial_invalid", detail=f"{label} result must be a JSON object")
+    return data
+
+
+def _combine_check_partial(command, label, result, prev_ids):
+    """③ 부분 결과 형식 검사 — 위반은 design_gate_partial_invalid(detail에 사유)."""
+    def bad(detail):
+        err(command, "design_gate_partial_invalid", detail=f"{label}: {detail}")
+
+    if result.get("scope") != label:
+        bad(f"scope must be {label!r}, got {result.get('scope')!r}")
+    part = result.get(label)
+    if not isinstance(part, dict):
+        bad(f"missing {label} object")
+    if label == "design":
+        axes = part.get("axes")
+        if not isinstance(axes, dict):
+            bad("design.axes must be an object")
+        missing = [k for k in DESIGN_GATE_AXES if k not in axes]
+        if missing:
+            bad(f"design.axes missing {missing}")
+    else:
+        scores = part.get("scores")
+        if not isinstance(scores, dict):
+            bad("scenario.scores must be an object")
+        for k in DESIGN_GATE_SCENARIO_KEYS:
+            if k not in scores:
+                bad(f"scenario.scores missing {k}")
+            if isinstance(scores[k], bool) or not isinstance(scores[k], (int, float)):
+                bad(f"scenario.scores.{k} must be a number")
+    gaps = part.get("gaps", [])
+    if not isinstance(gaps, list) or any(not isinstance(g, str) for g in gaps):
+        bad(f"{label}.gaps must be a list of strings")
+    resolved = result.get("resolved_gaps", [])
+    if not isinstance(resolved, list):
+        bad("resolved_gaps must be a list")
+    ids = set()
+    for item in resolved:
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+            bad("resolved_gaps item must be an object with string id")
+        if item.get("status") not in ("resolved", "unresolved"):
+            bad(f"resolved_gaps status must be resolved|unresolved ({item.get('id')!r}: "
+                f"{item.get('status')!r})")
+        ids.add(item["id"])
+    if ids != set(prev_ids):
+        bad(f"resolved_gaps id set mismatch: expected {sorted(prev_ids)}, got {sorted(ids)}")
+    if not isinstance(result.get("advisories", []), list):
+        bad("advisories must be a list")
+
+
+def cmd_design_gate_combine(args):
+    """설계·시나리오 부분 결과를 단일 design-rubric 결과 형식 파일 하나로 결합한다.
+
+    state.json·run-log·락을 건드리지 않는다(읽기 전용). 출력은 임시 파일에 쓴 뒤 os.replace.
+    """
+    command = "design-gate combine"
+    task_path = resolve_task_path(args.task_path, command)
+    state = load_state_json(task_path, command)
+    _require_pm_design_path(state, command)
+    dg_view = state.get("design_gate") if isinstance(state.get("design_gate"), dict) else {}
+    attempt = dg_view.get("current_attempt") or {}
+    if dg_view.get("status") != "evaluating":                                  # ①
+        err(command, "design_gate_iteration_invalid", iteration=args.iteration,
+            expected=None, detail="no open design gate attempt — run design-gate start first")
+    if args.iteration != attempt.get("iteration"):
+        err(command, "design_gate_iteration_invalid", iteration=args.iteration,
+            expected=attempt.get("iteration"))
+    bundle = attempt.get("bundle_hash")
+    partial = {"design": _combine_load_partial(command, "design", args.design_result),
+               "scenario": _combine_load_partial(command, "scenario", args.scenario_result)}
+    for label in ("design", "scenario"):                                       # ②
+        res = partial[label]
+        if res.get("input_bundle_hash") != bundle or res.get("iteration") != args.iteration:
+            err(command, "design_gate_result_stale", bundle_hash=bundle,
+                iteration=args.iteration, result_input_bundle_hash=res.get("input_bundle_hash"),
+                result_iteration=res.get("iteration"), scope=label)
+    _prev, prev_by_scope, _prev_iteration = _previous_gaps_for(task_path, state)
+    for label in ("design", "scenario"):                                       # ③
+        _combine_check_partial(command, label, partial[label],
+                               [_gap_id(g) for g in prev_by_scope[label]])
+
+    design, scenario = partial["design"]["design"], partial["scenario"]["scenario"]
+    axes = design["axes"]
+    scores = scenario["scores"]
+    values = [float(scores[k]) for k in DESIGN_GATE_SCENARIO_KEYS]
+    average = sum(values) / len(values)
+    design_ok = all(str(axes.get(k)).upper() == "PASS" for k in DESIGN_GATE_AXES)
+    scenario_ok = all(v >= 1 for v in values) and average >= 1.5
+    if design_ok and scenario_ok:
+        verdict, rewrite_target = "pass", None
+    else:
+        verdict = "fail"
+        rewrite_target = "both" if (not design_ok and not scenario_ok) else (
+            "plan" if not design_ok else "scenario")
+    resolved_gaps = (list(partial["design"].get("resolved_gaps", []))
+                     + list(partial["scenario"].get("resolved_gaps", [])))
+    advisories = [] if attempt.get("refinement") is True else list(
+        partial["scenario"].get("advisories", []))
+    combined = {
+        "input_bundle_hash": bundle,
+        "iteration": args.iteration,
+        "design": {"axes": axes, "gaps": list(design.get("gaps", []))},
+        "scenario": {"scores": scores, "average": round(average, 3),
+                     "gaps": list(scenario.get("gaps", []))},
+        "resolved_gaps": resolved_gaps,
+        "advisories": advisories,
+        "verdict": verdict,
+        "rewrite_target": rewrite_target,
+    }
+    out_path = pathlib.Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=out_path.name + ".", suffix=".tmp", dir=str(out_path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(combined, f, ensure_ascii=False, indent=2)
+            f.write("\n")
+        os.replace(tmp_name, out_path)
+    except BaseException:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
+    ok(command, output_path=str(out_path), verdict=verdict, rewrite_target=rewrite_target,
+       resolved_gaps_count=len(resolved_gaps))
 
 
 # ── design-gate reset (DEC-10) ────────────────────────────────────────────────

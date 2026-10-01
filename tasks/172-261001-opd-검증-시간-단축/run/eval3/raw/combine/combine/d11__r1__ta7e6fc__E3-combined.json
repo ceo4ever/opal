@@ -1,0 +1,33 @@
+{
+  "input_bundle_hash": "481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md §Decisions and contracts D-1 — coverage exit 16/17 회차에서 record를 '생략'할지 '빈 결과로 기록'할지가 정해지지 않았다. 원문은 'PM이 상황에 맞게 record를 생략하거나 빈 결과로 기록할 수 있다 — 구체적 분기 기준은 아직 정하지 않았다'이다. 실패 정책과 외부 동작이 구현자의 선택으로 남아 있다",
+      "decision_clarity-2: PLAN.md §Findings > 미확인 가정 — exit 16(완전 미디스패치)과 exit 17(부분 디스패치)을 같은 방식으로 처리할지 다르게 처리할지가 정해지지 않았다. 반복 상한에 들어가는 회차로 셀지도 정해지지 않았다(Risks H-1: '설계 대응 없음(아직 미해결)')",
+      "executability-1: PLAN.md §Work items W-1 — 구체적 변경이 '정확한 기준은 구현 중 정리'로 되어 있다. 그래서 담당자가 design-gate.md에 어떤 분기를 적을지 구현 전에 추가로 설계해야 한다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 0
+    },
+    "average": 0.667,
+    "gaps": [
+      "goal-1: TEST-SCENARIO.md §Scenarios S-1 '기대 결과' 열 — 기대 결과가 'record를 생략하거나 빈 결과로 기록한다(정확한 분기 기준 미정)'라서, 생략과 빈 결과 기록 중 무엇이 통과인지 검증자가 정해야 합니다. AC-1의 '처리 방법이 명확하다'를 직접 판정할 수 있는 단일 기대 결과(어떤 명령을 실행하고 어떤 history·iteration 상태가 되는지)가 없습니다.",
+      "boundary-1: TEST-SCENARIO.md §Scenarios (S-1만 있음) — AC-1과 PLAN §Findings '미확인 가정'이 다루는 exit 17 경로에 시나리오가 없습니다. exit 16과 17의 처리가 서로 다른지도 정해지지 않았습니다. exit 0 회귀 경로와 반복 상한 집계(PLAN H-1)를 확인하는 경계 시나리오도 없어서, 어떤 경계를 검증할지가 구현자에게 남아 있습니다."
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

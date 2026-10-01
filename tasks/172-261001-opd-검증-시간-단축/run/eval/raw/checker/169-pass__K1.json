@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": "low",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 32.9,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 27110,
+  "stop_reason": "end_turn",
+  "session_id": "407f7d22-74ac-447f-ad21-4a3c5b562fbf",
+  "total_cost_usd": 0.17870180000000002,
+  "usage": {
+   "input_tokens": 16,
+   "cache_creation_input_tokens": 27769,
+   "cache_read_input_tokens": 173219,
+   "output_tokens": 3295,
+   "output_tokens_details": {
+    "thinking_tokens": 86
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 27769,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 800,
+     "cache_read_input_tokens": 32933,
+     "cache_creation_input_tokens": 626,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 626
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 16,
+    "outputTokens": 3295,
+    "cacheReadInputTokens": 173219,
+    "cacheCreationInputTokens": 27769,
+    "webSearchRequests": 0,
+    "costUSD": 0.17870180000000002,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 86,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K1/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K1/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"컨벤션 검사 결과 pass입니다. 대상 3개 파일의 변경 구간에서 사전 검사 finding 0건, 모델 검사 finding 0건이 나왔습니다. checked_files는 target_files와 같습니다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K1/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K1/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K1/out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K1/out/convention-review-input-2026-10-01T00-00-00.json\"\n  ]\n}\n```",
+  "ttft_ms": 1536,
+  "type": "result",
+  "duration_ms": 29701,
+  "uuid": "a067cb52-3936-4bf5-a8c9-f721ccc09d7e",
+  "ttft_stream_ms": 1012,
+  "time_to_request_ms": 60,
+  "first_content_frame_ms": 1012,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

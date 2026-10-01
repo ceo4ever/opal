@@ -1,0 +1,20 @@
+t38526a e03 E1 r2 design   96.6s scenario   76.3s verdict=fail fmt=-/-
+{"ok": true, "done": 1, "planned": 18}
+tbd641a e02 E3 r1 design   25.1s scenario   31.6s verdict=pass fmt=-/-
+tc87199 e01 E3 r3 design   35.9s scenario   23.0s verdict=pass fmt=-/-
+tf3e966 e01 E3 r1 design   23.4s scenario   29.3s verdict=fail fmt=-/-
+t0006e0 e02 E3 r3 design   31.2s scenario   34.3s verdict=pass fmt=-/-
+te9fabb e02 E1 r1 design   82.5s scenario   54.4s verdict=fail fmt=-/-
+tc7d7a5 e03 E3 r1 design   39.1s scenario   26.8s verdict=pass fmt=-/-
+t8be7b3 e02 E1 r2 design   76.8s scenario   50.5s verdict=fail fmt=-/-
+t8522ad e01 E1 r1 design   92.3s scenario   53.6s verdict=fail fmt=-/-
+tfecb2b e02 E3 r2 design   23.0s scenario   29.8s verdict=pass fmt=-/-
+t6011e3 e03 E1 r1 design  102.1s scenario   88.1s verdict=fail fmt=-/-
+t7483f0 e01 E1 r3 design   91.0s scenario   55.1s verdict=fail fmt=-/-
+t9a23c5 e03 E3 r2 design   53.9s scenario   28.9s verdict=pass fmt=-/-
+t59ffa6 e03 E3 r3 design   66.0s scenario   30.6s verdict=pass fmt=-/-
+t26da0a e03 E1 r3 design   91.8s scenario   54.4s verdict=fail fmt=-/-
+t3919a4 e02 E1 r3 design   76.5s scenario   51.1s verdict=fail fmt=-/-
+t45c4b0 e01 E3 r2 design   30.4s scenario   30.2s verdict=fail fmt=-/-
+t7e692f e01 E1 r2 design   94.9s scenario   43.1s verdict=fail fmt=-/-
+{"ok": true, "done": 18, "planned": 18}

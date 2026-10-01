@@ -1,0 +1,47 @@
+{
+  "input_bundle_hash": "481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: TASK.md:24 (C-1) — 기존 record 필수 필드를 보존하는지가 Work item·Risk·시나리오에 연결되지 않았다. 따라서 '빈 결과 기록'이 필수 필드를 비워도 되는지는 구현자가 정해야 한다",
+      "completeness-2: PLAN.md:32 (### 미확인 가정) — exit 16(완전 미디스패치)과 exit 17(부분 디스패치)을 같은 방식으로 처리할지 나눠서 처리할지가 확인되지 않았고, 이를 해소할 Work item·Risk도 없다",
+      "completeness-3: TEST-SCENARIO.md:20 (S-1) — 시나리오가 exit 16만 다루고 exit 17 회차는 다루지 않는다. 그래서 exit 17의 기대 결과를 무엇으로 볼지 남아 있다",
+      "decision_clarity-1: PLAN.md:38 (D-1) — evaluator가 디스패치되지 않은 회차(coverage exit 16/17)에서 record를 '생략'할지 '빈 결과로 기록'할지, 그리고 둘을 가르는 분기 기준이 정해지지 않았다",
+      "decision_clarity-2: PLAN.md:50 (H-1) — 반복 상한을 계산할 때 해당 회차를 iteration으로 셀지 말지가 정해지지 않았다(설계 대응 '없음')",
+      "executability-1: PLAN.md:44 (W-1) — '정확한 기준은 구현 중 정리'라는 문구 때문에 분기 기준과 서술 내용을 구현자가 직접 설계해야 한다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.0,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md` §Scenarios S-1: \"PM이 record를 생략하거나 빈 결과로 기록한다(정확한 분기 기준 미정)\" — exit 16 회차의 기대 결과가 'record 생략'인지 '빈 결과 기록'인지(빈 결과라면 verdict·필드 값이 무엇인지) 정해지지 않아 구현자와 테스트 작성자가 정답을 고르게 된다. 기대 결과를 하나로 확정해 반증 가능한 판정 기준으로 써야 한다.",
+      "boundary-1: `TEST-SCENARIO.md` §Scenarios — exit 17(부분 미디스패치) 회차 시나리오가 없다. exit 16과 같은 처리인지 다른 처리인지 구현자가 정하게 된다(`PLAN.md` §미확인 가정과 연결된다).",
+      "boundary-2: `TEST-SCENARIO.md` §Scenarios — `PLAN.md` §회귀 확인: \"기존 정상 coverage(exit 0) 경로는 영향 없음\"을 확인하는 회귀 시나리오가 없다. 분기 추가 후 exit 0 경로의 record 동작이 그대로인지 검증할지 말지가 구현자에게 남는다."
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-1"
+      ],
+      "basis": "변경 대상은 `PLAN.md` §Work items W-1에 따라 문서(`opal/core/references/harness/design-gate.md`)에 분기 서술을 추가하는 것뿐이고 실행 코드 변경은 없다. 그런데 S-1은 방법을 'unit', 행동을 'design-gate record 시도'로 적은 행동 시나리오다. 실제로 확인할 수 있는 신호는 '문서에 exit 16/17 분기 규칙이 확정된 형태로 적혀 있는가'라는 정적 Check다.",
+      "recommendation": "S-1을 문서 내용 Check(예: design-gate.md의 해당 절에 exit 16·17별 확정 처리 규칙이 있는지 확인)로 다시 분류하라. 동작 검증이 필요하면 record를 실제로 호출하는 도구 경로를 명시한 행동 시나리오를 따로 두라."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

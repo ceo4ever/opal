@@ -1,0 +1,13 @@
+{
+  "artifact_path": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c07__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md",
+  "findings_path": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c07__K3/out/gc-findings-convention-2026-10-01T00-00-00.json",
+  "summary": "43개 파일 검사 완료 — 컨벤션 위반 0건 (PASS)",
+  "status": "completed",
+  "check_status": "pass",
+  "missing_capabilities": [],
+  "blockers": [],
+  "changed_files": [
+    "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c07__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md",
+    "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c07__K3/out/gc-findings-convention-2026-10-01T00-00-00.json"
+  ]
+}

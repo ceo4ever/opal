@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "haiku",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 114.9,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 109364,
+  "stop_reason": "end_turn",
+  "session_id": "279e4202-85f9-45ac-8517-45c064a7d5ee",
+  "total_cost_usd": 0.23595449999999998,
+  "usage": {
+   "input_tokens": 105,
+   "cache_creation_input_tokens": 57770,
+   "cache_read_input_tokens": 589995,
+   "output_tokens": 12262,
+   "output_tokens_details": {
+    "thinking_tokens": 5763
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 57770,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 8,
+     "output_tokens": 1094,
+     "cache_read_input_tokens": 63126,
+     "cache_creation_input_tokens": 1926,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1926
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-haiku-4-5-20251001": {
+    "inputTokens": 105,
+    "outputTokens": 12262,
+    "cacheReadInputTokens": 589995,
+    "cacheCreationInputTokens": 57770,
+    "webSearchRequests": 0,
+    "costUSD": 0.23595449999999998,
+    "contextWindow": 200000,
+    "maxOutputTokens": 32000,
+    "thinkingTokens": 5763,
+    "canonicalModel": "claude-haiku-4-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 16,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "완벽합니다! 🎯 **op-gc-convention 스킬 실행 완료**\n\n## 최종 결과\n\n```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"컨벤션 검사 완료 — High severity 1건 (SKILL.md 첫 frontmatter에 description 필드 누락)\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\"\n  ]\n}\n```\n\n---\n\n## 검사 요약\n\n| 항목 | 결과 |\n|------|------|\n| **대상 파일** | opal/skills/op-demo-check/SKILL.md |\n| **검사 기준** | docs/CONVENTIONS.md (§파일 구조 §YAML Frontmatter) |\n| **총 이슈** | 1건 |\n| **심각도 분포** | High 1 / Medium 0 / Low 0 |\n| **블로킹 여부** | Yes (1건) — 파일 수정 후 재검사 필수 |\n| **보고서** | ✓ Markdown 보고서 생성 |\n| **Finding JSON** | ✓ Machine-readable finding 생성 |\n\n---\n\n## 발견 사항\n\n### GC-001 (High severity, Blocking)\n\n**문제:** SKILL.md 첫 frontmatter에 `description` 필드 누락\n\n```yaml\n---\nname: op-demo-check\n---  ← ❌ description 필드 필수\n```\n\n**영향:** 에이전트·스킬 로더가 스킬 정의를 식별하지 못할 수 있음\n\n**해결:** YAML frontmatter에 `description` 키 추가\n```yaml\n---\nname: op-demo-check\ndescription: |\n  {스킬의 한 줄 설명 — 트리거 키워드 포함}\n---\n```\n\n**기준:** docs/CONVENTIONS.md §파일 구조 §YAML Frontmatter\n\n---\n\n## 절차 완료\n\n✅ 입력 검증  \n✅ 기준 문서 로드 (docs/CONVENTIONS.md)  \n✅ 사전 검사 (convention-precheck scan)  \n✅ 변경 구간 모델 검사  \n✅ 최종 결합 (merge)  \n✅ Markdown 보고서 생성  \n\n**[WORKER] 작업 완료**",
+  "ttft_ms": 4342,
+  "type": "result",
+  "duration_ms": 111703,
+  "uuid": "06f73980-ddcd-435d-a7d2-2fd9e58e8c7e",
+  "ttft_stream_ms": 2035,
+  "time_to_request_ms": 57,
+  "first_content_frame_ms": 2035,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

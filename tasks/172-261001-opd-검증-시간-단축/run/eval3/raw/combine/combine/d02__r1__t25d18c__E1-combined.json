@@ -1,0 +1,45 @@
+{
+  "input_bundle_hash": "0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:51 (W-6 '통합과 실측 준비') ↔ TASK.md:27 (AC-6) — AC-6은 '태스크 162의 재기동 및 첫 checkpoint 경로의 실제 결과가 기록된다'를 요구한다. 그런데 W-6은 '설치본 검증 명령 준비'까지만 맡고, PLAN.md:66은 install·162 재기동 전에 중단·보고한다고만 적었다. 승인 뒤 install 실행, S-9·S-10 실측, 결과 기록 위치(DONE.md 등)를 맡는 Work item이나 담당이 없다. 실측을 누가 하고 어디에 기록할지가 구현자에게 남는다.",
+      "completeness-2: PLAN.md:48 (W-4 변경 대상) ↔ TEST-SCENARIO.md:25 (S-7 'installer bash/PowerShell 테스트') — W-4는 scripts/install/windows.ps1을 바꾸지만 테스트 파일로는 scripts/tests/test_agent_adapter_fields.sh(bash)만 배정했다. Windows 이관 함수를 검증할 PowerShell 테스트의 파일·실행 방법이 정해지지 않아, 생략할지 새로 만들지가 구현자에게 남는다.",
+      "completeness-3: PLAN.md:10·PLAN.md:34-40 ('REQUEST.md §변경 내용·§테스트를 따른다') ↔ TASK.md:10 ('같은 폴더의 REQUEST.md') — 태스크 폴더 t25d18c에 REQUEST.md가 없다. PLAN이 범위와 검증 조건의 원천으로 위임한 절(§변경 내용 1~9, §테스트, §162 복구 순서)을 이 폴더 입력만으로는 확인할 수 없다. PLAN 본문에 없는 요구를 어디서 확정할지가 구현자에게 남는다.",
+      "decision_clarity-1: PLAN.md:49 (W-3 'bounded lease polling')·PLAN.md:65 ('설정 상한 안에서 종료') — lease polling 대기 상한의 launcher 설정 키 이름, 코드 기본값(초), polling 간격이 정해지지 않았다. 외부에 보이는 설정 인터페이스와 timeout 동작을 구현자가 고르게 된다.",
+      "decision_clarity-2: PLAN.md:35 ('`recover`는 보존 handle 또는 worktree root의… 확인 후에만 hub_owned로 복귀')·PLAN.md:49 (W-3 변경 대상 cli.py) — 새 공개 CLI 동사 `worktree-launcher recover`의 인자 구성(--adapter/--project-root/--task 등), 성공·실패 응답 필드, `recovery_input_missing` 같은 오류 코드가 PLAN에 없다. 공개 CLI 계약이 구현자 선택으로 남는다.",
+      "decision_clarity-3: PLAN.md:34 ('불일치 시 registry 바이트 불변')·TEST-SCENARIO.md:19 — `--exclude-owner`와 같은 owner를 거부할 때의 오류 코드, `--expected-owner`·`--exclude-owner` 누락 시 동작(인자 오류 여부), 성공 뒤 반환 owner가 기대값과 다를 때의 launcher 처리(사후 단언 오류 코드)가 정해지지 않았다. 실패 정책이 구현자에게 남는다.",
+      "executability-1: PLAN.md:48 (W-4가 settings.py 소유) ↔ PLAN.md:49 (W-3 bounded polling 상한은 launcher 설정값) — polling 상한 설정 키는 worktree_launcher/settings.py에 추가해야 한다. 그런데 이 파일은 W-4(P1)만 소유하고 W-3(P2)의 변경 대상에는 없다. 누가 settings.py에 키를 넣는지, W-3이 W-4에 의존하는지(현재 선행은 W-1만)가 불명확하다. 파일 소유권과 순서를 구현자가 정해야 한다.",
+      "recoverability-1: PLAN.md:61-66 (Release and recovery) — 실패 복구가 '설치 전 source 재시험'과 '배포·162 재기동 전 중단·보고'까지만 정의돼 있다. 배포 뒤 설치본 회귀(예: --no-daemon 이관 후 사용자 세션 기동 실패)가 생겼을 때 이관된 argv_template을 되돌리는 방법, 이전 설치본으로 돌아가는 방법이 없다. 162 기존 세션 복구는 이 폴더에 없는 'REQUEST.md §162 복구 순서'에만 위임돼 있어, 실패 뒤 복구 경로를 구현자나 운영자가 직접 정해야 한다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "cheaper_layer",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6의 방법·환경에는 '실제 Codex sandbox'가 들어 있다. 그러나 이 시나리오가 검증하는 계약(lock `os.open`의 EPERM/EACCES/EROFS → 30초 대기 없이 `registry_write_denied`, lease 성공 후 registry 기록 거부에서만 ok + `registry_owner_deferred_to_hub` 진단, foreign owner는 실패)은 오류를 주입한 pytest의 반환 JSON과 호출 순서 기록만으로 증명된다. 모델 판단 품질은 AC-4의 수용 기준이 아니고 `[실호출 1회]` 표지도 없다. 실제 sandbox에서의 부팅 관측은 이미 S-9(설치본·실제 Orca/Codex, AC-4 커버)와 S-10(실제 Codex sandbox)에 있다.",
+      "recommendation": "S-6은 pytest / worktree-tool·ownership-tool 계층으로 한정하라. 실제 sandbox에서 확인해야 할 내용은 S-9 기대 결과에 'registry 쓰기가 거부되면 codex-start 응답에 `registry_owner_deferred_to_hub` 진단이 존재'를 추가해 한 시나리오로 합쳐라."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

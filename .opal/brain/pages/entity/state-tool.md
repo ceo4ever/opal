@@ -34,8 +34,9 @@ sources:
 - task:094
 - task:167
 - task:170
+- task:172
 - task:174
-related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, close-history-auto-link-enforce-conversion, memory-tool, state-md-journal-redefinition, mirror-gate-must-not-hostage-ssot-record, mark-force-decision-log-scope, test-tool, op-scenario-gate-skill, scenario-economy-advisory-gate, design-gate-deterministic-pretier-separation, behavior-preserving-split-and-block-conversion-lessons]
+related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, close-history-auto-link-enforce-conversion, memory-tool, state-md-journal-redefinition, mirror-gate-must-not-hostage-ssot-record, mark-force-decision-log-scope, test-tool, op-scenario-gate-skill, scenario-economy-advisory-gate, design-gate-deterministic-pretier-separation, design-gate-scope-parallel-judgement-combine, behavior-preserving-split-and-block-conversion-lessons]
 created: 2026-06-10
 updated: '2026-10-01'
 status: active
@@ -116,6 +117,9 @@ PM 경로 설계 게이트 advisory 응답·refinement, 목표-커버 게이트 
 - `state.json` 부재 시 다른 5개 게이트 플래그와 동일한 graceful skip(exit 0), PM 경로가 아닌 태스크(`plan.design_gate` 행 없음)면 `{"ok": true, "design_gate_check": "skipped", "reason": "not a PM design path"}`를 반환한다.
 - `_decision_clarity_lint()`는 `_design_gate_deterministic_check` 함수 정의 끝(`:6853`) 이후에 추가되어 태스크 168이 동시에 편집한 `apply_opd2_gate_mark_guard`(`:6702-6763`) 및 그 앞 상수 블록(`:6513-6534`)과 물리적으로 겹치지 않는다.
 
+## 설계 게이트 이전 지적 조립과 결합 (task:172)
+
+설계 게이트 시작 응답이 이전 지적(`previous_gaps`, 영역별 `previous_gaps_by_scope`, 읽은 회차 `previous_gaps_iteration`)을 직접 싣고, 신규 `design-gate combine`이 병렬 판정의 부분 결과를 결합한다. 기록 단계(`design-gate record`)의 검사 순서와 오류 코드는 바뀌지 않았다 (분할 전 `state_tool.py:6972`·`:7478`; task:174 분할 후에는 `state_tool_parts/gates.py`의 `cmd_design_gate_start`·`cmd_design_gate_combine`에서 찾는다). 상세는 [[design-gate-scope-parallel-judgement-combine]].
 ## 코드 구조 — 진입점과 9개 모듈 (task:174)
 
 외부 계약은 그대로 두고 8천 줄대 단일 파일을 책임별 모듈로 나눴다. 진입점 `state_tool.py`는 얇은 껍데기이고 실제 코드는 `state_tool_parts/` 아래 9개 모듈(`codes`·`base`·`run_log`·`journal`·`guards`·`gates`·`commands_core`·`commands_run`·`cli`)에 있다(근거: task:174 DONE.md §결과).
@@ -143,5 +147,6 @@ PM 경로 설계 게이트 advisory 응답·refinement, 목표-커버 게이트 
 - [[test-tool]] — task:167부터 목표-커버 게이트 mark 가드가 형제 프로세스로 호출하는 검증 주체
 - [[op-scenario-gate-skill]] — 이 도구의 design-gate record/start를 호출하는 PM 경로 컨트롤 스킬
 - [[scenario-economy-advisory-gate]] — task:167 advisory 응답 게이트·목표-커버 기록·mark 가드 전체 계약
+- [[design-gate-scope-parallel-judgement-combine]] — task:172 previous_gaps 결정론 조립·combine
 - [[design-gate-deterministic-pretier-separation]] — task:170 결정론/evaluator 2-tier 분리 + 사전검사 아키텍처 결정
 - [[behavior-preserving-split-and-block-conversion-lessons]] — task:174 분할·차단 전환 교훈 2건

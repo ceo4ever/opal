@@ -1,0 +1,1355 @@
+{
+ "n_trials": 99,
+ "cands": {
+  "E0": {
+   "n_trials": 33,
+   "n_calls": 66,
+   "format_errors": {
+    "design": [],
+    "scenario": []
+   },
+   "format_error_count": {
+    "design": 0,
+    "scenario": 0,
+    "total": 0
+   },
+   "format_error_types": {},
+   "combined_ok": 33,
+   "combined_fail": 0,
+   "defect": {
+    "trials": 15,
+    "with_result": 15,
+    "no_result": 0,
+    "missed": 0,
+    "missed_worst_case": 0
+   },
+   "clean": {
+    "trials": 9,
+    "with_result": 9,
+    "no_result": 0,
+    "fail": 7,
+    "fail_worst_case": 7
+   },
+   "borderline": {
+    "trials": 9,
+    "with_result": 9,
+    "no_result": 0,
+    "fail": 8
+   },
+   "rule1": true,
+   "rule2": false,
+   "rule3": true,
+   "rule4": true,
+   "adoptable": false,
+   "time_combined": {
+    "n": 33,
+    "mean": 78.8,
+    "median": 68.5,
+    "p90": 110.1,
+    "max": 229.8
+   },
+   "time_call": {
+    "n": 66,
+    "mean": 66.3,
+    "median": 56.0,
+    "p90": 98.6,
+    "max": 229.8
+   },
+   "time_call_design": {
+    "n": 33,
+    "mean": 77.0,
+    "median": 67.3,
+    "p90": 110.1,
+    "max": 229.8
+   },
+   "time_call_scenario": {
+    "n": 33,
+    "mean": 55.6,
+    "median": 52.8,
+    "p90": 75.5,
+    "max": 83.5
+   },
+   "time_pair_wall": {
+    "n": 33,
+    "mean": 78.8,
+    "median": 68.5,
+    "p90": 110.1,
+    "max": 229.8
+   }
+  },
+  "E1": {
+   "n_trials": 33,
+   "n_calls": 66,
+   "format_errors": {
+    "design": [],
+    "scenario": []
+   },
+   "format_error_count": {
+    "design": 0,
+    "scenario": 0,
+    "total": 0
+   },
+   "format_error_types": {},
+   "combined_ok": 33,
+   "combined_fail": 0,
+   "defect": {
+    "trials": 15,
+    "with_result": 15,
+    "no_result": 0,
+    "missed": 0,
+    "missed_worst_case": 0
+   },
+   "clean": {
+    "trials": 9,
+    "with_result": 9,
+    "no_result": 0,
+    "fail": 8,
+    "fail_worst_case": 8
+   },
+   "borderline": {
+    "trials": 9,
+    "with_result": 9,
+    "no_result": 0,
+    "fail": 6
+   },
+   "rule1": true,
+   "rule2": false,
+   "rule3": true,
+   "rule4": true,
+   "adoptable": false,
+   "time_combined": {
+    "n": 33,
+    "mean": 74.1,
+    "median": 73.7,
+    "p90": 102.5,
+    "max": 134.4
+   },
+   "time_call": {
+    "n": 66,
+    "mean": 63.4,
+    "median": 56.5,
+    "p90": 94.7,
+    "max": 134.4
+   },
+   "time_call_design": {
+    "n": 33,
+    "mean": 72.1,
+    "median": 73.7,
+    "p90": 102.5,
+    "max": 134.4
+   },
+   "time_call_scenario": {
+    "n": 33,
+    "mean": 54.6,
+    "median": 54.8,
+    "p90": 65.7,
+    "max": 84.4
+   },
+   "time_pair_wall": {
+    "n": 33,
+    "mean": 74.1,
+    "median": 73.7,
+    "p90": 102.5,
+    "max": 134.4
+   }
+  },
+  "E3": {
+   "n_trials": 33,
+   "n_calls": 66,
+   "format_errors": {
+    "design": [],
+    "scenario": []
+   },
+   "format_error_count": {
+    "design": 0,
+    "scenario": 0,
+    "total": 0
+   },
+   "format_error_types": {},
+   "combined_ok": 33,
+   "combined_fail": 0,
+   "defect": {
+    "trials": 15,
+    "with_result": 15,
+    "no_result": 0,
+    "missed": 0,
+    "missed_worst_case": 0
+   },
+   "clean": {
+    "trials": 9,
+    "with_result": 9,
+    "no_result": 0,
+    "fail": 3,
+    "fail_worst_case": 3
+   },
+   "borderline": {
+    "trials": 9,
+    "with_result": 9,
+    "no_result": 0,
+    "fail": 5
+   },
+   "rule1": true,
+   "rule2": false,
+   "rule3": true,
+   "rule4": true,
+   "adoptable": false,
+   "time_combined": {
+    "n": 33,
+    "mean": 35.7,
+    "median": 31.2,
+    "p90": 53.1,
+    "max": 75.0
+   },
+   "time_call": {
+    "n": 66,
+    "mean": 31.3,
+    "median": 28.4,
+    "p90": 41.9,
+    "max": 75.0
+   },
+   "time_call_design": {
+    "n": 33,
+    "mean": 34.8,
+    "median": 31.1,
+    "p90": 53.1,
+    "max": 75.0
+   },
+   "time_call_scenario": {
+    "n": 33,
+    "mean": 27.8,
+    "median": 26.9,
+    "p90": 34.8,
+    "max": 47.0
+   },
+   "time_pair_wall": {
+    "n": 33,
+    "mean": 35.7,
+    "median": 31.2,
+    "p90": 53.1,
+    "max": 75.0
+   }
+  }
+ },
+ "cases": {
+  "d01": {
+   "label": "clean-pass-169",
+   "kind": "clean",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d02": {
+   "label": "clean-pass-163",
+   "kind": "clean",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d03": {
+   "label": "borderline-pass-161",
+   "kind": "borderline",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d04": {
+   "label": "defect:defect-162-i1",
+   "kind": "defect",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d05": {
+   "label": "borderline-pass-163",
+   "kind": "borderline",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d06": {
+   "label": "defect:defect-168-i2",
+   "kind": "defect",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d07": {
+   "label": "borderline-pass-169",
+   "kind": "borderline",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d08": {
+   "label": "defect:defect-163-i1",
+   "kind": "defect",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d09": {
+   "label": "defect:defect-169-i2",
+   "kind": "defect",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d10": {
+   "label": "clean-pass-161",
+   "kind": "clean",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "d11": {
+   "label": "defect:defect-167-i2",
+   "kind": "defect",
+   "cands": {
+    "E0": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  }
+ }
+}

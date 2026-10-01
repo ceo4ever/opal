@@ -4,6 +4,7 @@ description: |
   컨벤션 검사 전담 role 에이전트. 자체 규칙을 보유하지 않고, 디스패처가 지정한 공통 컨벤션 검사 스킬(`op-gc-convention`)을 Read하여 그 프로세스를 수행한다.
   read-only 진단 전담이며 보고서와 finding JSON을 산출한다. opal-pilot-gc CHECK 단계와 PM Gate 컨벤션 자동 진단에서 디스패치된다.
 model: standard
+effort: low
 icon: "📏"
 tools: [Read, Grep, Glob, Bash]
 ---
@@ -32,6 +33,7 @@ tools: [Read, Grep, Glob, Bash]
 | element | X | 산출물 파일명 suffix. 병렬 호출 시 파일명 충돌 방지 |
 | baseline | X | 직전 실행의 `gc-report.json` 경로 또는 `none` |
 | project_documents | X | 호출자가 선별해 주입한 기준 문서 경로 목록 |
+| base_ref | X | 변경 구간 검사용 기준 브랜치·ref. 있으면 스킬이 사전 검사·변경 구간 검사 분기를 수행한다 |
 
 ### PM Gate 호출 시나리오 (참고)
 
@@ -48,6 +50,7 @@ opp/opd/opds/opdw EXECUTE PM Gate에서 호출될 때의 파라미터 매핑:
 | element | 영역별 병렬 호출 시 영역명. 단일 호출이면 생략 |
 | baseline | 직전 opgc 태스크 폴더의 `gc-report.json` 경로 또는 `none` |
 | project_documents | PM이 선별해 주입한 기준 문서 경로 목록 |
+| base_ref | 태스크 worktree의 기준 브랜치(없으면 기본 브랜치) |
 
 > 트리거 조건·판정 기준·스킵 조건은 `~/.opal/references/harness/pm-review-gate.md` §검토 절차 §13 참조.
 

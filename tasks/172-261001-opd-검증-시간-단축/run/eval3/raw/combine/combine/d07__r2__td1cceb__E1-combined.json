@@ -1,0 +1,36 @@
+{
+  "input_bundle_hash": "6af7a3f22658edfbb4d04b8ba7aaabd4defe044f54abf95e5410731cfe32a9e4",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 1,
+      "boundary": 2
+    },
+    "average": 1.667,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "TEST-SCENARIO.md:24 S-6은 조건이 '없음(정적 검사)'이고 유형이 check다. 그런데 행동에 '재배포 1회 실행 후 ~/.opal/tools/brain-tool/brain_tool.py를 opal/tools/brain-tool/brain_tool.py와 diff'가 들어 있다. 이는 install 스크립트를 실행해 배포본 환경을 바꾸는 행동 검증이다. 성질이 다른 이 검증이 정적 grep 검사와 한 행에 묶여 있다.",
+      "recommendation": "재배포 후 diff(D-12, C-4)는 '구현 후' 행동 시나리오로 따로 분리한다. 조건(재배포 대상 경로)과 기대 결과(diff 결과 없음)도 그 시나리오에 따로 둔다. S-6에는 grep·git diff --name-only 정적 검사만 남긴다."
+    }
+  ],
+  "verdict": "pass",
+  "rewrite_target": null
+}

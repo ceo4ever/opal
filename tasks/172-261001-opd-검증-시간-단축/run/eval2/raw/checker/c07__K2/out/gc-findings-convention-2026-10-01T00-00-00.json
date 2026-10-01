@@ -1,0 +1,111 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/agents/opal-test-agent/AGENT.md",
+    "opal/core/references/test-tools-schema.yaml",
+    "opal/skills/op-dev-execute/references/execute-guide.md",
+    "opal/templates/test-tools.yaml",
+    "opal/tools/test-tool/README.md",
+    "opal/tools/test-tool/lib/resolver.py",
+    "opal/tools/test-tool/lib/runner.py",
+    "opal/tools/test-tool/test_tool.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/conftest.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/pyproject.toml",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/test_calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/pyproject.toml",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/test_calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-test/calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-test/pyproject.toml",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-test/test_calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-type/calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-type/pyproject.toml",
+    "opal/tools/test-tool/tests/fixtures/unit-real/python-type/test_calc.py",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/eslint.config.js",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/package.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.test.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/tsconfig.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/eslint.config.js",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/package.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.test.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/tsconfig.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/eslint.config.js",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/package.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.test.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/tsconfig.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/eslint.config.js",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/package.json",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.test.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.ts",
+    "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/tsconfig.json",
+    "opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+    "opal/tools/test-tool/tests/test_test_tool.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "eaf1a5c08e9b0705",
+      "category": "unused-import",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "convention-categories §5 미사용 import",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/test-tool/lib/runner.py",
+        "line": 31,
+        "symbol": "os"
+      },
+      "evidence": "import os 후 모듈 내 os. 참조 0건 (grep 확인). 변경 전 파일에도 있던 기존 미사용 import이나 이번 변경 구간(1-77)에 포함됨.",
+      "impact": "불필요한 의존·가독성 저하. 동작 영향 없음.",
+      "remediation": {
+        "guidance": "import os 제거",
+        "auto_fixable": true
+      },
+      "verification": "grep -n '\\bos\\b' lib/runner.py 가 import 줄만 남지 않음",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "0dd772ba90036c45",
+      "category": "dead-code",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "convention-categories §4 죽은 코드",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/test-tool/lib/runner.py",
+        "line": 50,
+        "symbol": "SCOPE_REASONS"
+      },
+      "evidence": "SCOPE_REASONS, SCOPE_EXCLUDE_REASONS(50-51행)를 이번 변경에서 신설했으나 저장소 전체에서 정의 외 참조 0건이며 __exports__·README 대조 테스트 대상에도 없음.",
+      "impact": "미사용 상수는 README 원문과 어긋나도 검증되지 않아 계약 드리프트를 숨긴다.",
+      "remediation": {
+        "guidance": "사용처(방출 전 검증 또는 계약 테스트)를 연결하거나 제거",
+        "auto_fixable": true
+      },
+      "verification": "grep -rn 'SCOPE_REASONS\\|SCOPE_EXCLUDE_REASONS' opal/tools/test-tool 결과에 정의 외 참조 존재",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base 624ea8a0^ HEAD -> c6e295d467aace71d994ca139819061f64143d02",
+    "git diff --name-status --diff-filter=ACMR c6e295d467aa HEAD -> 43 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4",
+    "model findings dropped: out_of_range=0, mechanical_rule=0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

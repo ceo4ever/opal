@@ -1,0 +1,38 @@
+{
+  "input_bundle_hash": "27522876917ef63792862d076b7e3a5b9c51cfe3f699079408d6fcf4ccf38387",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:34 (## Findings > 미확인 가정) — 'semi-agentic·agentic 모드별 user_confirm 담당자 차이를 아직 조사하지 않았다'는 가정을 해소하는 Work item·결정이 없고, PLAN.md:52 H-1의 설계 대응도 '없음(아직 미해결)'이라 구현자가 가정 조사 여부와 결론을 스스로 정해야 한다",
+      "completeness-2: PLAN.md:22 (## Findings > 직접 변경) — 'lifecycle.py 단계 전이 시 state-tool mark 호출 추가'만 있고 마크 대상 전이 목록(PLAN 완료, user_confirm, close.done_md~close.final 등)을 나열하지 않아, 어느 전이를 범위에 넣을지 구현자가 정해야 한다",
+      "decision_clarity-1: PLAN.md:40 (D-1) — '각 전이가 어떤 행을 마크하는지는 구현 중 lifecycle.py 코드를 보면서 정한다'로 남아 있어 전이와 state.json 행의 대응 표를 구현자가 정해야 한다(AC-1 미결정)",
+      "decision_clarity-2: PLAN.md:40 (D-1) — 'semi-agentic은 사용자가, agentic은 PM이 마크하거나 혹은 자동 승인될 수도 있다'로 모드별 user_confirm 행 담당자(사용자/PM/자동 승인)를 구현자가 골라야 한다(AC-2 미결정)",
+      "decision_clarity-3: PLAN.md:40 (D-1) — close.done_md부터 close.final까지의 close 계열 행을 누가 언제 마크하는지 정의가 없어 구현자가 정해야 한다",
+      "executability-1: PLAN.md:46 (W-1 구체적 변경) — '어떤 행을 마크할지, user_confirm 행을 누가 마크할지는 구현하면서 정한다'로 남아 있어 추가 설계 없이는 구현할 수 없다. 호출 지점과 mark 인자를 구현자가 정해야 한다",
+      "recoverability-1: PLAN.md:54-56 (## Release and recovery) — '별도 배포 절차 없음'만 있어 적용 후 검증 순서와 실패 시 복구 경로(lifecycle.py 원복, 잘못 마크된 state.json 행 정정 방법)를 구현자가 정해야 한다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 0
+    },
+    "average": 0.667,
+    "gaps": [
+      "goal-1: TEST-SCENARIO.md:22 (S-1) — 기대 결과가 'state.json의 어떤 행이 마크되는지 확인(정확한 대응 미정)'이라 정답이 없다. PLAN 완료 전이가 마크해야 할 state.json 행 id를 테스트 작성자가 직접 골라야 해서, AC-1(각 전이가 마크하는 행 명시)을 검증할 수 없다. 다른 전이와 close.done_md~close.final 행에 대한 시나리오도 없다.",
+      "goal-2: TEST-SCENARIO.md:23 (S-2) — 기대 결과가 '담당자(사용자/PM/자동)가 누구인지 확인(미정)'이라 user_confirm 행 담당자의 정답을 테스트 작성자가 골라야 한다. AC-2가 요구하는 agentic 모드 시나리오도 없다(TASK.md AC-2: 'semi-agentic·agentic 모드에서 user_confirm 행을 누가 마크하는지').",
+      "boundary-1: TEST-SCENARIO.md:20-23 (Scenarios 표) — 시나리오가 정상 경로 2건뿐이다. 실제로 일어날 수 있는 실패·경계가 있는데도 다루지 않는다. 그 실패·경계는 C-1(state.json 스키마 불변) 위반 여부, agentic 모드 자동 승인과 PM 마크의 구분, 잘못된 순서나 중복 전이를 거부하거나 그대로 두는지, state-tool mark 실패 시 lifecycle.py의 동작이다. 어떤 실패 경로를 어떤 기대 결과로 검증할지가 테스트 작성자에게 남아 있다."
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

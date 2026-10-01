@@ -1,0 +1,139 @@
+{
+ "token": "tf5a818",
+ "case": "d05",
+ "cand": "E0",
+ "rep": 2,
+ "kind": "borderline",
+ "source": "pass-163",
+ "expected_verdict": "pass",
+ "expected_axes": [],
+ "rows": [
+  {
+   "kind": "evaluator",
+   "case": "d05__r2__tf5a818",
+   "cand": "E0",
+   "scope": "design",
+   "expected": "design 4축 PASS",
+   "elapsed_s": 229.8,
+   "result": true,
+   "reason": null,
+   "usage": {
+    "input_tokens": 20,
+    "cache_creation_input_tokens": 63468,
+    "cache_read_input_tokens": 579637,
+    "output_tokens": 8671,
+    "output_tokens_details": {
+     "thinking_tokens": 3995
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 63468,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 3379,
+      "cache_read_input_tokens": 74495,
+      "cache_creation_input_tokens": 1355,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 1355
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "num_turns": 11,
+   "cost_usd": 0.7971714,
+   "actual": "FAIL 축: recoverability",
+   "fail_axes": [
+    "recoverability"
+   ]
+  },
+  {
+   "kind": "evaluator",
+   "case": "d05__r2__tf5a818",
+   "cand": "E0",
+   "scope": "scenario",
+   "expected": "시나리오 3축 ≥1(평균 ≥1.5)",
+   "elapsed_s": 53.7,
+   "result": true,
+   "reason": null,
+   "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 51737,
+    "cache_read_input_tokens": 165926,
+    "output_tokens": 4490,
+    "output_tokens_details": {
+     "thinking_tokens": 1478
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 51737,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 3371,
+      "cache_read_input_tokens": 54719,
+      "cache_creation_input_tokens": 9400,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 9400
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "num_turns": 5,
+   "cost_usd": 0.5369132000000001,
+   "actual": "점수 2/2/2 평균 2.0, advisory 1건"
+  }
+ ],
+ "comb": {
+  "kind": "combined",
+  "case": "d05__r2__tf5a818",
+  "cand": "E0",
+  "expected_verdict": "pass",
+  "expected_axes": [],
+  "d_elapsed_s": 229.8,
+  "s_elapsed_s": 53.7,
+  "pair_wall_s": 229.8,
+  "elapsed_s": 229.8,
+  "result": true,
+  "verdict": "fail",
+  "rewrite_target": "plan",
+  "fail_axes": [
+   "recoverability"
+  ],
+  "average": 2.0,
+  "match": false,
+  "missed": 0,
+  "flip": 1
+ },
+ "fmt": {
+  "design": null,
+  "scenario": null
+ },
+ "pair_wall_s": 229.8,
+ "elapsed": {
+  "design": 229.8,
+  "scenario": 53.7
+ }
+}

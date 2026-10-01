@@ -1,0 +1,49 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/demo-tool/demo_tool.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "8e4b497cd0822397",
+      "category": "naming-identifier-language",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §언어 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/demo-tool/demo_tool.py",
+        "line": 20,
+        "symbol": "합계_계산"
+      },
+      "evidence": "함수명 `합계_계산`, 매개변수 `숫자_목록`, 지역 변수 `결과`·`숫자`가 한글 식별자이다(20~25행). 같은 파일의 `average`/`values`는 영어.",
+      "impact": "'코드/변수/필드명: English' 규칙을 위반하고 파일 내 네이밍이 불일치한다.",
+      "remediation": {
+        "guidance": "영어 snake_case로 변경한다(예: `total`, `values`, `result`, `value`). 호출처가 있으면 함께 수정한다.",
+        "reference": "docs/CONVENTIONS.md §언어 규칙",
+        "auto_fixable": false
+      },
+      "verification": "해당 파일에서 비ASCII 식별자 grep 결과가 0건이다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615 HEAD -> ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+    "git diff --name-status --diff-filter=ACMR ad289c5a14d5 HEAD -> 1 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4",
+    "docs/CONVENTIONS.md 적용",
+    "precheck scan 실행: 기계 규칙 finding 0건",
+    "model findings dropped: out_of_range=0, mechanical_rule=0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

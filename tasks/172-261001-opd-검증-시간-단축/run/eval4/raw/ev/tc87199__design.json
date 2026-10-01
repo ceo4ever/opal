@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "low",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "low",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/246cf129-7d08-4ea2-82da-97b704032cf4/scratchpad/e4w/work/fx/tc87199",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2113 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 35.9,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 31025,
+  "stop_reason": "end_turn",
+  "session_id": "1fd5e6bb-23cf-43db-9c1a-79cf63a18bbb",
+  "total_cost_usd": 0.4111802,
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 42809,
+   "cache_read_input_tokens": 108721,
+   "output_tokens": 2347,
+   "output_tokens_details": {
+    "thinking_tokens": 566
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 42809,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1292,
+     "cache_read_input_tokens": 53122,
+     "cache_creation_input_tokens": 2073,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 2073
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 6,
+    "outputTokens": 2347,
+    "cacheReadInputTokens": 108721,
+    "cacheCreationInputTokens": 42809,
+    "webSearchRequests": 0,
+    "costUSD": 0.4111802,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 566,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 3,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"PASS\",\n      \"decision_clarity\": \"PASS\",\n      \"executability\": \"PASS\",\n      \"recoverability\": \"PASS\"\n    },\n    \"axis_reasons\": {\n      \"completeness\": \"PASS — Every AC and C in TASK.md (AC-1–AC-6, C-1–C-4) appears in the 'Work items' table under '완료 기준 연결'. Every file listed under PLAN.md '## Findings > 직접 변경' is assigned to a Work item: W-1 owns worktree_tool.py, W-2 owns session_start_hook.py, codex_adapter.py and ownership_core.py, W-3 owns launcher_core.py, cli.py and orca.py, and W-4 owns settings.py, setting.default.json and the install scripts. Every document under '문서 갱신' is assigned: W-5 owns six of them, and W-1 owns worktree.schema.json. The three items under '미확인 가정' (H-1, H-2, H-3) each map to a Risks row and a mitigation. The 162 restart and first checkpoint required by AC-6 are covered by scenarios S-9 and S-10 in TEST-SCENARIO.md, which run after deployment, together with the permission-boundary stop in '## Release and recovery'.\",\n      \"decision_clarity\": \"PASS — The 'Decisions and contracts' table fixes all of the following: the owner checks run atomically inside the lock, and on mismatch the registry bytes do not change; the failure branches (not_created, created, unknown) lead only to recovery_required, and no new launch is allowed; only a registry permission denial is non-fatal, reported as registry_owner_deferred_to_hub; settings migrate only on an exact argv match; checkpoints use path (b), elevation request then re-run; only Orca supports status, and cmux/generic return unknown(status_unsupported); for the Codex version, `codex --help` must show the option. None of the external behaviour, failure policy or state transitions is left for the implementer to choose.\",\n      \"executability\": \"PASS — W-1 through W-6 each name an owner (opal-task-agent), the files they change, a prerequisite and a run group (P1→P2→P3). Run group P1 (W-1, W-2, W-4) has no overlapping files. W-3 depends on W-1, and W-5 and W-6 depend on all earlier items, so the order is clear. No raw external CLI or agent call is specified. orca/codex appear only as subjects of observation and adapter targets.\",\n      \"recoverability\": \"PASS — '## Release and recovery' gives the apply order (P1→P2→P3) and keeps source testing separate from installed-copy checks. Before install, recovery means re-testing with source fixes only. The install deployment and the 162 restart stop at the permission boundary and are reported. 162 recovery is tied to the 'REQUEST.md §162 복구 순서' checks, which stop if any check fails. Unconfirmed states never restart automatically.\"\n    },\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric (scope: design) scoring complete: all four design axes PASS, gaps=0\",\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```",
+  "ttft_ms": 7281,
+  "type": "result",
+  "duration_ms": 32212,
+  "uuid": "6ac919eb-ecc1-4905-92d4-1b4db5135eeb",
+  "ttft_stream_ms": 4102,
+  "time_to_request_ms": 149,
+  "first_content_frame_ms": 4102,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

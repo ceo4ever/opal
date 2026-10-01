@@ -1,0 +1,29 @@
+{
+  "input_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:73-74 (D-4·D-5) — `required: false` 계층이 `fail`일 때 전체 status를 정하지 않았다. D-4는 '필수 계층에 fail이 있으면 fail'만 정의하고, D-5는 선택 계층의 tool_unavailable·not_configured만 다룬다. 그래서 선택 계층이 fail이면 전체가 fail인지 pass인지 구현자가 골라야 한다.",
+      "decision_clarity-2: PLAN.md:73 (D-4) — stop-on-fail로 필수 계층이 `not_run`(stopped_after_failure)이 되었는데 앞선 fail이 선택 계층인 경우의 전체 status를 정하지 않았다. incomplete 조건에는 tool_unavailable·not_configured와 pass 0개만 있고 필수 계층의 not_run은 없다. 그래서 앞 계층 하나가 pass이면 전체가 pass로 나올 수 있고, 이를 막을지 구현자가 골라야 한다. 이 경우 선택 계층 fail이 뒤 계층의 실행도 멈추는지 역시 정하지 않았다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

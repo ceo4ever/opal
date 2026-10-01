@@ -1,0 +1,41 @@
+{
+  "input_bundle_hash": "0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "executability-1: PLAN.md:10, PLAN.md:34-40, TASK.md:10 — 구현 범위와 검증 조건을 'REQUEST.md §변경 내용·§테스트를 따른다'고 정했고 결정 7건이 모두 REQUEST.md §변경 내용 1~8을 근거로 인용하지만, task_folder에 REQUEST.md가 없다(ls: No such file). 구현자는 PLAN 본문만으로 범위를 확정할지, 없는 원천을 찾거나 재구성할지 스스로 골라야 한다.",
+      "executability-2: TEST-SCENARIO.md:25 S-7 / PLAN.md:48 W-4 — S-7은 'Mac/Windows 설정 이관 함수를 실행'하는 PowerShell 테스트를 요구하지만, W-4의 변경 대상 테스트는 bash인 `scripts/tests/test_agent_adapter_fields.sh` 하나뿐이고 PowerShell 테스트 파일·실행 환경·담당이 없다. windows.ps1 이관 함수를 실제 실행해 검증할지, bash 정적 검사로 대신할지, 어느 파일에 둘지가 구현자에게 남는다.",
+      "recoverability-1: PLAN.md:66, TEST-SCENARIO.md:27 S-9 — '162 기존 세션 복구는 REQUEST.md §162 복구 순서의 모든 확인을 통과해야 한다'고 했지만 REQUEST.md가 없다. PLAN에도 그 순서와 S-9의 '162 기존 자식 종료 3중 확인'이 정의돼 있지 않다. 어떤 세 가지를 어떤 순서로 확인하고, 하나라도 실패하면 어떻게 복귀할지를 실행자가 정해야 한다.",
+      "recoverability-2: PLAN.md:61-66 Release and recovery — 복구 경로가 '설치 전에는 source 수정으로만 재시험'뿐이다. 설치 뒤 실패(새 launcher·`--no-daemon` 기본값으로 Codex 부팅 실패, 사용자 설정 이관 후 문제)에서 이전 설치본·이관 전 argv로 되돌리는 방법(백업 보존 여부, 이관 역적용, 재설치 절차)이 없어 롤백 방식을 실행자가 골라야 한다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "cheaper_layer",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6의 시점은 '구현 전 RED'이고 조건은 'lock `os.open`이 EPERM/EACCES/EROFS를 반환'이다. 즉 주입된 결함으로 검증하는 단위 계약이다. 확인할 계약은 '30초 대기 없이 `registry_write_denied`', 'codex-start는 이 경우만 ok와 `registry_owner_deferred_to_hub` 진단', 'foreign owner는 실패'이며, 모두 pytest 결함 주입의 기록된 결과(반환 코드·진단 문자열·경과 시간)로 증명할 수 있다. 그런데도 방법·환경 열에 '실제 Codex sandbox'가 함께 적혀 있다. 실제 sandbox에서 lease 획득 후 registry 쓰기가 거부되는 경로는 이미 S-9(설치본 codex-start ok, lease·registry owner 일치)와 S-10(checkpoint 권한 거부 시 상승·허브 확정 경로)이 실환경에서 직접 검증한다. 모델 판단 품질은 AC-4의 수용 기준이 아니다.",
+      "recommendation": "S-6의 방법·환경은 'pytest / 두 도구(os.open 결함 주입)'로 한정하세요. 실제 Codex sandbox의 권한 거부 관측은 S-9·S-10에 맡기거나, 꼭 필요하면 S-9의 기대 결과에 'registry 기록 거부 시 `registry_owner_deferred_to_hub` 진단 관측'을 추가하세요. 이렇게 하면 RED 단계가 실환경 접근에 의존하지 않습니다."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

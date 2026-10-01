@@ -1,0 +1,23 @@
+{
+  "base_sha": "ecff583f4455e1581944a47c9da6a06bb176ba6f",
+  "head_sha": "5c9cf40d714057d7cd5e30356a0d32a7a6ab9eee",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "opal/tools/demo-tool/demo_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          8,
+          25
+        ]
+      ]
+    }
+  ]
+}

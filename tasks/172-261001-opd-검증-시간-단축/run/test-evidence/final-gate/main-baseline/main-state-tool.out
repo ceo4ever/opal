@@ -1,0 +1,84 @@
+
+===== PASS test_design_gate.py (131.52s) =====
+.......................................                  [100%]
+39 passed, 16 subtests passed in 131.04s (0:02:11)
+
+===== PASS test_event_verify.py (1.57s) =====
+....                                                                     [100%]
+4 passed in 1.13s
+
+===== PASS test_mode_resolution.py (11.28s) =====
+........                                                   [100%]
+8 passed, 14 subtests passed in 10.60s
+
+===== PASS test_mode_transition_contract.py (126.76s) =====
+... [ 42%]
+....                                                                   [100%]
+7 passed, 71 subtests passed in 126.23s (0:02:06)
+
+===== PASS test_opd2_gate_mark_guard.py (3.70s) =====
+...                                                                   [100%]
+3 passed, 3 subtests passed in 3.25s
+
+===== PASS test_parallel_runner.py (1.44s) =====
+..                                                                       [100%]
+2 passed in 1.06s
+
+===== PASS test_pilot_shared_contract.py (5.37s) =====
+....................                               [100%]
+20 passed, 166 subtests passed in 4.92s
+
+===== PASS test_run_identity.py (4.56s) =====
+.............                                                            [100%]
+13 passed in 3.73s
+
+===== PASS test_start_resolution.py (8.94s) =====
+.......................                                  [100%]
+23 passed, 16 subtests passed in 8.53s
+
+===== PASS test_state_tool_core_cli.py (7.95s) =====
+................................................................... [ 48%]
+................................................................. [ 96%]
+.....                                                                    [100%]
+137 passed, 12 subtests passed in 7.58s
+
+===== PASS test_state_tool_extended_contracts.py (95.54s) =====
+................................................................................                                      [100%]
+80 passed, 27 subtests passed in 94.84s (0:01:34)
+
+===== PASS test_state_tool_journal_worktree.py (9.56s) =====
+.........................................ss.s.                           [100%]
+43 passed, 3 skipped in 9.14s
+
+===== PASS test_state_tool_mode_contracts.py (100.00s) =====
+............................ [ 96%]
+.                                                                   [100%]
+29 passed, 49 subtests passed in 99.60s (0:01:39)
+
+===== PASS test_state_tool_ownership.py (7.48s) =====
+.........                                                                [100%]
+9 passed in 6.87s
+
+===== PASS test_state_tool_pipeline_schema.py (10.40s) =====
+............................................... [ 94%]
+...                                                                      [100%]
+50 passed, 25 subtests passed in 9.91s
+
+===== PASS test_state_tool_run_log.py (27.90s) =====
+..................................................             [100%]
+50 passed, 10 subtests passed in 27.45s
+
+===== PASS test_state_tool_test_cycle.py (6.90s) =====
+......                                                                   [100%]
+6 passed in 6.49s
+
+===== PASS test_state_tool_verification_gates.py (0.76s) =====
+..................................................................... [ 75%]
+......................                                                   [100%]
+91 passed, 3 subtests passed in 0.31s
+
+===== PASS test_todo_mirror_hook.py (0.78s) =====
+.................                                                        [100%]
+17 passed in 0.41s
+
+Parallel summary: 19/19 files passed with 4 jobs in 154.68s

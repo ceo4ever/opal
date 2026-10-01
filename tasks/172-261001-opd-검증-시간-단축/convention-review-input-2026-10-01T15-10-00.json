@@ -1,0 +1,356 @@
+{
+  "base_sha": "dee405ca6c072e47c78f7a967adb70469a420a2d",
+  "head_sha": "03dde08991d18da6e309ffed8d42f1581c4509d2",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "docs/PROJECT.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          72,
+          92
+        ],
+        [
+          136,
+          156
+        ]
+      ]
+    },
+    {
+      "path": "opal/agents/opal-convention-checker/AGENT.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          17
+        ],
+        [
+          26,
+          63
+        ]
+      ]
+    },
+    {
+      "path": "opal/agents/opal-evaluator-agent/AGENT.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          19
+        ],
+        [
+          40,
+          61
+        ],
+        [
+          85,
+          106
+        ],
+        [
+          121,
+          142
+        ],
+        [
+          190,
+          228
+        ]
+      ]
+    },
+    {
+      "path": "opal/agents/opal-test-agent/AGENT.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          28,
+          48
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/agents.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          223,
+          244
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/harness/design-gate.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          10,
+          44
+        ],
+        [
+          120,
+          156
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/harness/pm-review-gate.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          94,
+          114
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/harness/test-cycle.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          8,
+          46
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/tools.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          16,
+          36
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/op-dev-test-scenario/references/test-scenario-guide.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          9,
+          34
+        ],
+        [
+          90,
+          117
+        ],
+        [
+          162,
+          182
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/op-gc-convention/SKILL.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          17,
+          37
+        ],
+        [
+          41,
+          71
+        ],
+        [
+          76,
+          96
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/op-scenario-gate/README.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          12,
+          32
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/op-scenario-gate/SKILL.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          191,
+          252
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-pilot-dev/README.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          23,
+          43
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-pilot-dev/SKILL.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          54,
+          74
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/convention-precheck/README.md",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          49
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/convention-precheck/convention_precheck.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          625
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/convention-precheck/run.sh",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          10
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/convention-precheck/tests/test_convention_precheck.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          342
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/README.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          413,
+          444
+        ],
+        [
+          693,
+          713
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          17
+        ],
+        [
+          31,
+          53
+        ],
+        [
+          417,
+          438
+        ],
+        [
+          440,
+          460
+        ],
+        [
+          6945,
+          7008
+        ],
+        [
+          7171,
+          7195
+        ],
+        [
+          7410,
+          7564
+        ],
+        [
+          8375,
+          8418
+        ],
+        [
+          8431,
+          8452
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_design_gate_parallel.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          534
+        ]
+      ]
+    },
+    {
+      "path": "scripts/install-mac.sh",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1527,
+          1553
+        ]
+      ]
+    },
+    {
+      "path": "scripts/tests/test_agent_effort_policy.sh",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          189
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "input_bundle_hash": "3a9f4f63d8de726b9dc2584772f5629b5adf4d2bebf6bbf3826d6fc4e6574215",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md ## Decisions and contracts D-1 — checkpoint 허브 쓰기 실패 시 '권한 상승 재시도'와 '허브 쓰기 포기 후 로컬 확정' 중 무엇을 할지 구현자가 정해야 한다('어느 쪽인지는 구현 중 상황을 보고 정한다'). 둘 중 하나로 정하고, AC-1이 요구하는 오류 코드와 복구 안내 문구도 함께 정해야 한다.",
+      "decision_clarity-2: PLAN.md ## Work items W-1 — cmux가 없는 환경에서 status 조회를 지원할지, 지원하지 않을 때 계약(오류 코드인지 안전한 생략인지)을 어떻게 할지 구현자가 정해야 한다('구체적 지원 여부는 미정'). AC-2의 '안전하게 동작하거나 명확히 실패한다' 중 어느 쪽인지 정해야 한다.",
+      "executability-1: PLAN.md ## Work items W-1 — 구체적 변경이 '적절한 쪽을 적용한다', '그에 맞게 안내한다'처럼 추가 설계가 있어야 구현할 수 있다. 분기 조건, 반환 오류 코드, 출력 형식을 정해야 하고, ## Risks H-1의 설계 대응도 '없음(아직 미해결)'인 채로 남아 있다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 1,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.333,
+    "gaps": [
+      "goal-1: TEST-SCENARIO.md §Scenarios S-1 '기대 결과' — '오류 코드와 복구 안내가 반환된다(구체적 방식 미정)'라서 어떤 오류 코드를 내고 권한 상승 재시도와 로컬 확정 중 어느 복구 경로를 따르는지 판정할 수 없다. 합격 판정 기준이 구현자에게 맡겨져 있어 AC-1 목표를 직접 검증하지 못한다",
+      "boundary-1: TEST-SCENARIO.md §Scenarios S-2 '기대 결과' — '안전하게 동작하거나 명확히 실패한다(지원 여부 미정)'라서 cmux 미설치라는 경계 조건에서 성공과 실패가 모두 통과로 처리된다. 부정 경로의 기대값(지원 여부와 실패 시 오류 계약)을 정해야 한다"
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

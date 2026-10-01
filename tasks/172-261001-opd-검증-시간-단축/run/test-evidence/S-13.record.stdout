@@ -1,0 +1,6 @@
+# record --verdict pass (expected pass, combine says fail)
+{"ok": false, "command": "design-gate record", "error": "design_gate_verdict_mismatch", "message": "--verdict pass인데 설계 4축·시나리오 기준 미충족 (FAIL 축 ['decision_clarity'], 시나리오 평균 2.0)", "failed_axes": ["decision_clarity"], "scenario_scores": {"goal": 2, "adoption": 2, "boundary": 2}, "scenario_average": 2.0, "transition_action": "blocked", "report_type": "decision_request", "next_action": "--verdict pass인데 설계 4축·시나리오 기준 미충족 (FAIL 축 ['decision_clarity'], 시나리오 평균 2.0)"}
+rc=1
+# record --verdict rewrite --rewrite-target plan
+{"ok": true, "command": "design-gate record", "status": "fail", "iteration": 1, "verdict": "rewrite", "rewrite_target": "plan", "gate_id": "design-gate-i1", "bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b", "reason": "design FAIL: decision_clarity; scenario average 2.0", "refinement": false, "next_refinement": false, "run_log": {"status": "active", "pending": 0, "active_run_id": "run_729d1ad0-c35b-4f0c-aba4-d1a15c9bbbcd"}, "transition_action": "continue", "report_type": "progress_report", "next_action": "PLAN 설계 게이트 진행 중"}
+rc=0

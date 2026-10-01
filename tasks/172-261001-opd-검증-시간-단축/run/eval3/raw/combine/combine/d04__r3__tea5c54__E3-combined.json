@@ -1,0 +1,36 @@
+{
+  "input_bundle_hash": "7595abbdfdb7b8a6af749fff40e3de0bd85e098527879771fc6403ab5c9b5a58",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md §Findings > 문서 갱신 — `opal/tools/test-tool/README.md` 갱신을 맡은 Work item이 없다. W-1의 변경 대상은 `duration_cli.py` 하나뿐이어서, README를 고칠지와 누가 고칠지가 구현자에게 남는다",
+      "completeness-2: TASK.md §Constraints C-1·C-2 ↔ PLAN.md §Work items W-1 — 'state.json 키 집합 불변(C-1)'과 '측정 실패 시 TEST 진행 비차단(C-2)'이 Work item·Risks 어디에도 이어지지 않는다. D-1의 'state.json에 새 블록 추가' 선택지는 C-1과 충돌할 수 있다",
+      "completeness-3: PLAN.md §Approach ↔ §Findings > 직접 변경 — Approach는 '기존 state-tool에 서브커맨드 추가'라고 하는데 Findings는 `test-tool/duration_cli.py`를 신규로 만든다고 한다. 어느 도구에 둘지가 구현자에게 남는다",
+      "decision_clarity-1: PLAN.md §Decisions and contracts D-1 — 저장 위치를 'state.json 새 블록 또는 `run/duration.json`, 구현 시점에 더 쉬운 쪽'으로 열어 두었다. 저장 구조 선택이 구현자에게 남는다",
+      "decision_clarity-2: PLAN.md §Work items W-1 — CLI 입력 인자와 JSON 응답 스키마를 '구현하면서 정한다'고 했다. 외부 인터페이스 결정이 구현자에게 남는다",
+      "decision_clarity-3: PLAN.md §Work items W-1 — 중복 `start`·`start` 없는 `stop`을 '적절히 처리'한다고만 했다. 거부·덮어쓰기·no-op 가운데 무엇을 할지, 종료 코드는 무엇인지 같은 실패 정책(AC-2)이 구현자에게 남는다",
+      "decision_clarity-4: PLAN.md §Work items W-1 — 상한 초과 세션을 '적절한 상태로 전이'하고 '필요하면 재개'한다고만 했다. 상한값, 전이 상태 이름, 재개 명령(AC-3)이 구현자에게 남는다",
+      "executability-1: PLAN.md §Work items W-1 — 위 미결정(저장 구조·입출력 스키마·중복/누락 정책·상한 전이) 때문에 추가 설계 없이는 구현할 수 없다. 완료 기준 AC-1~3을 W-1 하나에 몰아 두어서 검증 단위도 구현자가 정해야 한다",
+      "recoverability-1: PLAN.md §Release and recovery — '별도 배포 절차 없음'만 있고 설치·검증 순서가 없다. 측정 실패나 기록 손상(예: start만 남은 고아 세션) 때의 복구 경로도, C-2 fail-safe 동작도 정의되지 않아 구현자에게 남는다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 1,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.333,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

@@ -1,0 +1,32 @@
+{
+  "input_bundle_hash": "0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:51 (W-6) · PLAN.md:66 (Release and recovery) — AC-6(TASK.md:27)은 '태스크 162의 재기동 및 첫 checkpoint 경로의 실제 결과가 기록된다'를 요구하지만, 이 AC에 연결된 Work item은 W-6 '통합과 실측 준비'뿐이고 범위는 '설치본 검증 명령 준비'다. Release 절은 install과 162 재기동 전에 '중단·보고'만 정한다. 승인 뒤 S-9·S-10(TEST-SCENARIO.md:27-28)을 누가 실행하는지, 실제 결과(lease·registry owner 값, checkpoint SHA)를 어느 산출물에 기록하는지 정한 Work item이 없다. 그래서 실행 주체와 기록 위치를 구현자가 정해야 한다",
+      "completeness-2: PLAN.md:20 (Findings 회귀 확인) — 회귀 재실행 대상(test_adapter_cmux.py·test_adapter_generic.py·test_lease.py)과 'registry 상태 소비자 영향 판정 기록'이 Findings에만 있다. W-1의 '영향 판정 기록'(PLAN.md:46)은 기록 위치·형식이 없고, 세 회귀 테스트의 재실행을 맡은 Work item도 없다(W-6 변경 대상에도 없음). 그래서 회귀 확인을 언제 어느 Work item에서 수행하고 어디에 남길지 구현자가 정해야 한다",
+      "decision_clarity-1: PLAN.md:35 (실패 안전 분류) · PLAN.md:49 (W-3) — 새 `recover` 동작은 '보존 handle 또는 worktree root의 absent·cancel·lease 확인 후에만 hub_owned로 복귀'라는 의미만 정의한다. 어느 CLI의 subcommand인지(worktree-launcher cli.py 또는 worktree-tool), 입력 인자(task path·handle 지정 여부), 확인 실패 시 응답 코드·JSON 형태가 없다. S-5(TEST-SCENARIO.md:23)도 'recover를 호출'로만 적혀 있다. 그래서 공개 인터페이스의 위치·인자·실패 응답 계약을 구현자가 정해야 한다",
+      "decision_clarity-2: PLAN.md:39 (cmux 확인 경계) · PLAN.md:49 (W-3) — cmux·generic·fallback이 `unknown(status_unsupported)`를 반환한다는 결과만 정해져 있다. 이를 각 adapter 모듈(adapters/cmux.py·generic.py·opal_agent_fallback.py — 어떤 Work item의 변경 대상에도 없음)에 구현할지, launcher_core에서 status 미구현 adapter를 기본 처리할지 구조가 정해지지 않았다. 그래서 adapter 계약(필수 메서드 여부)과 구현 위치를 구현자가 정해야 한다",
+      "recoverability-1: PLAN.md:66 (Release and recovery '실패 시') — 162 기존 세션 복구는 'REQUEST.md §162 복구 순서의 모든 확인을 통과해야 한다'로 다른 문서에 넘긴다. 그런데 TASK.md:10이 '같은 폴더'에 있다고 한 REQUEST.md가 태스크 폴더에 없다(폴더 내용: TASK.md·PLAN.md·TEST-SCENARIO.md·STATE.md·state.json·run/). PLAN에는 복구 단계가 S-9의 '종료 3중 확인'이라는 단서로만 남아 있다. 그래서 162 복구 절차의 확인 항목·순서를 구현자가 재구성해야 하고, 이 문서만으로는 복구 경로를 검증할 수 없다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

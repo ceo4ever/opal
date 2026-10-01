@@ -1,0 +1,315 @@
+TAP version 13
+# Subtest: [T082/L1-F1] S-1: scan --json — shard-repo 소스 4파일 전부의 헤더가 해석되고 exports가 정확하다
+ok 1 - [T082/L1-F1] S-1: scan --json — shard-repo 소스 4파일 전부의 헤더가 해석되고 exports가 정확하다
+  ---
+  duration_ms: 37.321
+  ...
+# Subtest: [T082/L1-F1] S-2: package 3단 상속 — 샤드 package 우선, 베이스 package 대체, _sources 새 토큰 없음
+ok 2 - [T082/L1-F1] S-2: package 3단 상속 — 샤드 package 우선, 베이스 package 대체, _sources 새 토큰 없음
+  ---
+  duration_ms: 31.426791
+  ...
+# Subtest: [T082/L1-F1] S-3 (escape): 악성 샤드 라벨 — scan/validate exit 1 + shard_declaration_invalid + code-map 밖 신규 파일 0건
+ok 3 - [T082/L1-F1] S-3 (escape): 악성 샤드 라벨 — scan/validate exit 1 + shard_declaration_invalid + code-map 밖 신규 파일 0건
+  ---
+  duration_ms: 58.791541
+  ...
+# Subtest: [T082/L1-F1] S-3 (slash): 악성 샤드 라벨 — scan/validate exit 1 + shard_declaration_invalid + code-map 밖 신규 파일 0건
+ok 4 - [T082/L1-F1] S-3 (slash): 악성 샤드 라벨 — scan/validate exit 1 + shard_declaration_invalid + code-map 밖 신규 파일 0건
+  ---
+  duration_ms: 60.759459
+  ...
+# Subtest: [T082/L1-F1] S-3 (uppercase): 악성 샤드 라벨 — scan/validate exit 1 + shard_declaration_invalid + code-map 밖 신규 파일 0건
+ok 5 - [T082/L1-F1] S-3 (uppercase): 악성 샤드 라벨 — scan/validate exit 1 + shard_declaration_invalid + code-map 밖 신규 파일 0건
+  ---
+  duration_ms: 57.17475
+  ...
+# Subtest: [T082/L1-F1] S-4: CODE_MAP_VERSION === 1 고정, 기존 자산이 unsupported_version으로 차단되지 않는다
+ok 6 - [T082/L1-F1] S-4: CODE_MAP_VERSION === 1 고정, 기존 자산이 unsupported_version으로 차단되지 않는다
+  ---
+  duration_ms: 30.379667
+  ...
+# Subtest: [T082/L1-F2] S-5: target — 샤드 보유 키는 샤드 경로+shard 라벨, 신규 파일은 베이스 경로+shard 키 없음
+ok 7 - [T082/L1-F2] S-5: target — 샤드 보유 키는 샤드 경로+shard 라벨, 신규 파일은 베이스 경로+shard 키 없음
+  ---
+  duration_ms: 54.29975
+  ...
+# Subtest: [T082/L1-F3] S-8 (duplicate-key): worker_scope_violation:shard_duplicate_key 정확히 1건
+ok 8 - [T082/L1-F3] S-8 (duplicate-key): worker_scope_violation:shard_duplicate_key 정확히 1건
+  ---
+  duration_ms: 29.02175
+  ...
+# Subtest: [T082/L1-F3] S-8 (shard-missing): orphan:shard_missing 정확히 1건
+ok 9 - [T082/L1-F3] S-8 (shard-missing): orphan:shard_missing 정확히 1건
+  ---
+  duration_ms: 30.55975
+  ...
+# Subtest: [T082/L1-F3] S-8 (undeclared): worker_scope_violation:shard_undeclared 정확히 1건
+ok 10 - [T082/L1-F3] S-8 (undeclared): worker_scope_violation:shard_undeclared 정확히 1건
+  ---
+  duration_ms: 32.656042
+  ...
+# Subtest: [T082/L1-F3] S-8 (dir-mismatch): worker_scope_violation:shard_dir_mismatch 1건, 기존 dir_mismatch는 0건
+ok 11 - [T082/L1-F3] S-8 (dir-mismatch): worker_scope_violation:shard_dir_mismatch 1건, 기존 dir_mismatch는 0건
+  ---
+  duration_ms: 29.761125
+  ...
+# Subtest: [T082/L1-F3] S-9: dir 부재 시 orphan:dir_missing이 샤드 수와 무관하게 1건
+ok 12 - [T082/L1-F3] S-9: dir 부재 시 orphan:dir_missing이 샤드 수와 무관하게 1건
+  ---
+  duration_ms: 27.081542
+  ...
+# Subtest: [T082/L1-F3] S-10: 샤드 엔트리에 layer 주입 시 layer_in_manifest가 샤드 경로에 귀속
+ok 13 - [T082/L1-F3] S-10: 샤드 엔트리에 layer 주입 시 layer_in_manifest가 샤드 경로에 귀속
+  ---
+  duration_ms: 32.56175
+  ...
+# Subtest: [T082/L1-F5] S-15: manifest_oversize 열거 + exit 0(비차단)
+ok 14 - [T082/L1-F5] S-15: manifest_oversize 열거 + exit 0(비차단)
+  ---
+  duration_ms: 28.372458
+  ...
+# Subtest: [T082/L1-F5] S-16 (a) 작은 값): shardPolicy.maxBytes를 더 작게 설정하면 검출된다
+ok 15 - [T082/L1-F5] S-16 (a) 작은 값): shardPolicy.maxBytes를 더 작게 설정하면 검출된다
+  ---
+  duration_ms: 29.780542
+  ...
+# Subtest: [T082/L1-F5] S-16 (b) 큰 값): shardPolicy.maxBytes를 크게 설정하면 0건
+ok 16 - [T082/L1-F5] S-16 (b) 큰 값): shardPolicy.maxBytes를 크게 설정하면 0건
+  ---
+  duration_ms: 31.434792
+  ...
+# Subtest: [T082/L1-F5] S-16 (c) 미지정): shardPolicy 미설정 시 내장 기본값 maxBytes 10240 / minFiles 40 적용
+ok 17 - [T082/L1-F5] S-16 (c) 미지정): shardPolicy 미설정 시 내장 기본값 maxBytes 10240 / minFiles 40 적용
+  ---
+  duration_ms: 34.441042
+  ...
+# Subtest: [T082/L1-F5] S-16 (d) 경계값 size==limit): 상한과 정확히 같은 크기는 초과가 아니다(off-by-one)
+ok 18 - [T082/L1-F5] S-16 (d) 경계값 size==limit): 상한과 정확히 같은 크기는 초과가 아니다(off-by-one)
+  ---
+  duration_ms: 37.605833
+  ...
+# Subtest: [T082/L1-F5] S-16 (d2) 경계값 size==limit+1): 상한보다 1바이트라도 크면 검출된다
+ok 19 - [T082/L1-F5] S-16 (d2) 경계값 size==limit+1): 상한보다 1바이트라도 크면 검출된다
+  ---
+  duration_ms: 33.692292
+  ...
+# Subtest: [T082/L1-F5] S-16 (e) 타입 위반): shardPolicy.maxBytes가 문자열/음수면 code_scan_config_invalid 처리
+ok 20 - [T082/L1-F5] S-16 (e) 타입 위반): shardPolicy.maxBytes가 문자열/음수면 code_scan_config_invalid 처리
+  ---
+  duration_ms: 58.591041
+  ...
+# Subtest: [T083/L1-F7] S-16 (e2) 구 위치 비차단): index.json manifestMaxBytes 타입 위반은 exit 승격 없이 폐기 안내 1줄
+ok 21 - [T083/L1-F7] S-16 (e2) 구 위치 비차단): index.json manifestMaxBytes 타입 위반은 exit 승격 없이 폐기 안내 1줄
+  ---
+  duration_ms: 32.234875
+  ...
+# Subtest: [T083/L1-F2] S-16 (e3) 전역 타입 위반): ~/.opal/setting.json shardPolicy 무효는 무시 + 기본값 폴백
+ok 22 - [T083/L1-F2] S-16 (e3) 전역 타입 위반): ~/.opal/setting.json shardPolicy 무효는 무시 + 기본값 폴백
+  ---
+  duration_ms: 34.031542
+  ...
+# Subtest: [T082/L1-F5] S-17: scaffold — stderr 1줄 경고, stdout JSON은 초과 없을 때와 바이트 동일
+ok 23 - [T082/L1-F5] S-17: scaffold — stderr 1줄 경고, stdout JSON은 초과 없을 때와 바이트 동일
+  ---
+  duration_ms: 59.074084
+  ...
+# Subtest: [T082/L1-F5] S-25: 베이스는 상한 이하·샤드만 초과 — manifest_oversize 1건 + manifest 필드가 샤드 경로
+ok 24 - [T082/L1-F5] S-25: 베이스는 상한 이하·샤드만 초과 — manifest_oversize 1건 + manifest 필드가 샤드 경로
+  ---
+  duration_ms: 36.238084
+  ...
+# Subtest: [T082/L1-F1] S-21: resolveShards 봉인 — _shards 경로 조립·byKey 구성이 함수 밖에 0건
+ok 25 - [T082/L1-F1] S-21: resolveShards 봉인 — _shards 경로 조립·byKey 구성이 함수 밖에 0건
+  ---
+  duration_ms: 1.582333
+  ...
+# Subtest: [T082/L1-F8] S-22 (version): code-scan version === v1.6.0, 변경이력에 (082)·(083) 행 존재
+ok 26 - [T082/L1-F8] S-22 (version): code-scan version === v1.6.0, 변경이력에 (082)·(083) 행 존재
+  ---
+  duration_ms: 29.375
+  ...
+# Subtest: [T082/L1-F8] S-22 (tools.md): _shards·manifestMaxBytes·shardPolicy·신규 에러 코드 2종 반영
+ok 27 - [T082/L1-F8] S-22 (tools.md): _shards·manifestMaxBytes·shardPolicy·신규 에러 코드 2종 반영
+  ---
+  duration_ms: 0.207917
+  ...
+# Subtest: [T082/L1-F8] S-22 (header-rules.md): 워커 권한 경계 금지 필드에 shards 추가 + 변경이력 KST/(082) 포맷
+ok 28 - [T082/L1-F8] S-22 (header-rules.md): 워커 권한 경계 금지 필드에 shards 추가 + 변경이력 KST/(082) 포맷
+  ---
+  duration_ms: 0.158792
+  ...
+# Subtest: [T082/L2-F2] S-6 (a): shard-repo 청결 엔트리(C.ts, pricing 샤드) — hook 무출력 exit 0
+ok 29 - [T082/L2-F2] S-6 (a): shard-repo 청결 엔트리(C.ts, pricing 샤드) — hook 무출력 exit 0
+  ---
+  duration_ms: 28.912958
+  ...
+# Subtest: [T082/L2-F2] S-6 (b): shard-repo 미갱신 엔트리(A.ts, core 샤드) — 경고에 샤드 경로 포함
+ok 30 - [T082/L2-F2] S-6 (b): shard-repo 미갱신 엔트리(A.ts, core 샤드) — 경고에 샤드 경로 포함
+  ---
+  duration_ms: 28.669167
+  ...
+# Subtest: [T082/L2-F2] S-6 (c): 파손 베이스(broken-base) — hook 무출력 exit 0 (try/catch 흡수)
+ok 31 - [T082/L2-F2] S-6 (c): 파손 베이스(broken-base) — hook 무출력 exit 0 (try/catch 흡수)
+  ---
+  duration_ms: 25.925417
+  ...
+# Subtest: [T082/L2-F3] S-7 (full): shard-repo validate --json — 위반 0건 exit 0
+ok 32 - [T082/L2-F3] S-7 (full): shard-repo validate --json — 위반 0건 exit 0
+  ---
+  duration_ms: 30.937
+  ...
+# Subtest: [T082/L2-F3] S-7 (--changed): shard-repo validate --changed --json — 위반 0건 exit 0
+ok 33 - [T082/L2-F3] S-7 (--changed): shard-repo validate --changed --json — 위반 0건 exit 0
+  ---
+  duration_ms: 30.41325
+  ...
+# Subtest: [T082/L2-F4] S-11: shard-repo scaffold — 선언된 _shards/*.json이 stale 0건
+ok 34 - [T082/L2-F4] S-11: shard-repo scaffold — 선언된 _shards/*.json이 stale 0건
+  ---
+  duration_ms: 30.975791
+  ...
+# Subtest: [T082/L2-F4] S-12: scaffold 2회 연속 — shards 선언 보존 + 베이스 files 무오염 + 2회차 created/updated=0
+ok 35 - [T082/L2-F4] S-12: scaffold 2회 연속 — shards 선언 보존 + 베이스 files 무오염 + 2회차 created/updated=0
+  ---
+  duration_ms: 62.575917
+  ...
+# Subtest: [T082/L2-F4] S-13 (a) 신규 파일: 베이스 files에 draft:true 추가 + added[]가 베이스 경로, 샤드 무변화
+ok 36 - [T082/L2-F4] S-13 (a) 신규 파일: 베이스 files에 draft:true 추가 + added[]가 베이스 경로, 샤드 무변화
+  ---
+  duration_ms: 28.867459
+  ...
+# Subtest: [T082/L2-F4] S-13 (b) 삭제 파일: 샤드 소유 키의 소스 삭제 시 해당 샤드에서 pruned, 베이스 무변화
+ok 37 - [T082/L2-F4] S-13 (b) 삭제 파일: 샤드 소유 키의 소스 삭제 시 해당 샤드에서 pruned, 베이스 무변화
+  ---
+  duration_ms: 29.639709
+  ...
+# Subtest: [T082/L2-F4] S-14: duplicate-key — 디렉토리 skip + skipped[shard_duplicate_key] + 샤드 파일 mtime·내용 무변화
+ok 38 - [T082/L2-F4] S-14: duplicate-key — 디렉토리 skip + skipped[shard_duplicate_key] + 샤드 파일 mtime·내용 무변화
+  ---
+  duration_ms: 29.118667
+  ...
+# Subtest: [T082/L2-F6] S-18 (scaffold): reserved-name — reserved_name_collision exit 1 + code-map 트리 바이트 동일(미기록)
+ok 39 - [T082/L2-F6] S-18 (scaffold): reserved-name — reserved_name_collision exit 1 + code-map 트리 바이트 동일(미기록)
+  ---
+  duration_ms: 26.962042
+  ...
+# Subtest: [T082/L2-F6] S-18 (validate): reserved-name — worker_scope_violation:reserved_name 검출
+ok 40 - [T082/L2-F6] S-18 (validate): reserved-name — worker_scope_violation:reserved_name 검출
+  ---
+  duration_ms: 28.374458
+  ...
+# Subtest: [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "scan --json" 바이트 동일(회귀 가드)
+ok 41 - [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "scan --json" 바이트 동일(회귀 가드)
+  ---
+  duration_ms: 26.339542
+  ...
+# Subtest: [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "domain" 바이트 동일(회귀 가드)
+ok 42 - [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "domain" 바이트 동일(회귀 가드)
+  ---
+  duration_ms: 28.837334
+  ...
+# Subtest: [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "layer" 바이트 동일(회귀 가드)
+ok 43 - [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "layer" 바이트 동일(회귀 가드)
+  ---
+  duration_ms: 30.366375
+  ...
+# Subtest: [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "search auth --json" 바이트 동일(회귀 가드)
+ok 44 - [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "search auth --json" 바이트 동일(회귀 가드)
+  ---
+  duration_ms: 29.191792
+  ...
+# Subtest: [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "exports token --json" 바이트 동일(회귀 가드)
+ok 45 - [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "exports token --json" 바이트 동일(회귀 가드)
+  ---
+  duration_ms: 30.135
+  ...
+# Subtest: [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "summary" 바이트 동일(회귀 가드)
+ok 46 - [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "summary" 바이트 동일(회귀 가드)
+  ---
+  duration_ms: 29.748083
+  ...
+# Subtest: [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "depends auth_service" 바이트 동일(회귀 가드)
+ok 47 - [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "depends auth_service" 바이트 동일(회귀 가드)
+  ---
+  duration_ms: 29.647042
+  ...
+# Subtest: [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "missing" 바이트 동일(회귀 가드)
+ok 48 - [T082/L2-F7] S-19: 골든 8커맨드 재확인 — "missing" 바이트 동일(회귀 가드)
+  ---
+  duration_ms: 32.045958
+  ...
+# Subtest: [T082/L2-F7] S-19: 샤드 미선언 매니페스트 자산 — 빈 shards:[] 추가가 scan/target/scaffold 출력에 영향 없음
+ok 49 - [T082/L2-F7] S-19: 샤드 미선언 매니페스트 자산 — 빈 shards:[] 추가가 scan/target/scaffold 출력에 영향 없음
+  ---
+  duration_ms: 188.524584
+  ...
+# Subtest: [T082/L2-F7] S-19: 기존 테스트 10종 전량 GREEN(무수정)
+not ok 50 - [T082/L2-F7] S-19: 기존 테스트 10종 전량 GREEN(무수정)
+  ---
+  duration_ms: 7824.021917
+  location: '/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/opal/tools/code-scan/tests/test-shard.js:978:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    기존 테스트 10종은 무수정 GREEN이어야 함(재캡처·완화 금지), exit 1 | 
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/opal/tools/code-scan/tests/test-shard.js:995:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: [T082/L2-F7] S-20: shard-repo + --header-source inline — stdout·stderr 양축이 샤드 미도입 시와 동일
+ok 51 - [T082/L2-F7] S-20: shard-repo + --header-source inline — stdout·stderr 양축이 샤드 미도입 시와 동일
+  ---
+  duration_ms: 170.003042
+  ...
+# Subtest: [T082/L2-GOAL] S-23 ①②③④: shard-goal 분산 전/후 — oversize 하강 + 헤더값 동일 + 라우팅 + 위반 0건
+ok 52 - [T082/L2-GOAL] S-23 ①②③④: shard-goal 분산 전/후 — oversize 하강 + 헤더값 동일 + 라우팅 + 위반 0건
+  ---
+  duration_ms: 273.441666
+  ...
+# Subtest: [T082/L2-GOAL] S-23 ⑤: 중간 상태 (a) 선언 누락 — scan이 엔트리를 누락하지 않고 validate가 shard_undeclared로 드러냄
+ok 53 - [T082/L2-GOAL] S-23 ⑤: 중간 상태 (a) 선언 누락 — scan이 엔트리를 누락하지 않고 validate가 shard_undeclared로 드러냄
+  ---
+  duration_ms: 54.442833
+  ...
+# Subtest: [T082/L2-GOAL] S-23 ⑥: 중간 상태 (b) 중복 — 조회는 승자(베이스)로 동작하고 validate가 shard_duplicate_key로 드러냄
+ok 54 - [T082/L2-GOAL] S-23 ⑥: 중간 상태 (b) 중복 — 조회는 승자(베이스)로 동작하고 validate가 shard_duplicate_key로 드러냄
+  ---
+  duration_ms: 55.389417
+  ...
+# Subtest: [T082/L2-F3] S-26 ①: 전체 validate — shard_undeclared가 svc-b에만 귀속, svc-a로 번지지 않음
+ok 55 - [T082/L2-F3] S-26 ①: 전체 validate — shard_undeclared가 svc-b에만 귀속, svc-a로 번지지 않음
+  ---
+  duration_ms: 29.504542
+  ...
+# Subtest: [T082/L2-F3] S-26 ②: --scope svc-a — svc-a만 검사되고 svc-b 위반이 나타나지 않음
+ok 56 - [T082/L2-F3] S-26 ②: --scope svc-a — svc-a만 검사되고 svc-b 위반이 나타나지 않음
+  ---
+  duration_ms: 28.4795
+  ...
+# Subtest: [T082/L2-F3] S-26 ③: 동일 basename(A.ts) 캐시 교차 오염 없음 — 스코프별 정확한 description
+ok 57 - [T082/L2-F3] S-26 ③: 동일 basename(A.ts) 캐시 교차 오염 없음 — 스코프별 정확한 description
+  ---
+  duration_ms: 28.414042
+  ...
+1..57
+# tests 57
+# suites 0
+# pass 56
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10241.251209

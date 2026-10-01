@@ -1,0 +1,45 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/core/references/demo-guide.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "596a2870f706e767",
+      "category": "doc-history",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "opal-doc-standard.md §5",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/core/references/demo-guide.md",
+        "line": 13
+      },
+      "evidence": "기준 커밋 대비 추가된 제목줄: ## 변경이력",
+      "impact": "변경 이력은 git이 갖는데 문서에 이력 절이 누적된다",
+      "remediation": {
+        "guidance": "이력 절을 제거하고 git 로그·DONE.md로 위임한다",
+        "reference": "opal-doc-standard.md §5",
+        "auto_fixable": false
+      },
+      "verification": "해당 제목줄이 문서에 없다",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615 HEAD -> ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+    "git diff --name-status --diff-filter=ACMR ad289c5a14d5 HEAD -> 1 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

@@ -1,0 +1,17 @@
+seq [8.044, 8.051, 8.064] median 8.051 | par [2.011, 2.017, 2.013] median 2.013 ratio 0.25
+(a) rule: ratio<=0.60: True preserved: True => 가능
+rounds 5 missing(reported) [1, 2, 0, 1, 2] missing(8-passed) [1, 2, 0, 1, 2] sum 6
+scenario.py:206 contains _save_spec : True | def _save_spec(task_path: pathlib.Path, spec: Dict[str, Any]) -> None:
+scenario.py:445 contains cmd_scenario_mark : True | def cmd_scenario_mark(args: argparse.Namespace) -> None:
+scenario.py:512 contains _save_spec : True | _save_spec(task_path, spec)
+state_tool.py:4925 contains _interval_sum_seconds : False | return total + (end - start).total_seconds()
+state_tool.py:4940 contains auto_seconds : False | intervals = state.get("test_timing", {}).get("intervals", [])
+lock_in_code False (b) rule: missing>0 or no lock => 불가
+recomputed final: (a) 가능 · (b) 불가
+report final: (a) 가능 · (b) 불가.
+채택 절차 section: True | 비채택/대안: True
+probe.py parses OK
+probe.py usage doc present: True | writes only temp fixtures (tempfile used): True
+NOTE: probe.py has no --help handling; it runs the full probe on any invocation (not executed here to avoid 30s+ run; first attempt with --help was killed by timeout).
+actual state_tool.py line of _interval_sum_seconds = 4928 (report cites 4925/4940)
+actual state_tool.py line of auto_seconds call = 4943 (report cites 4925/4940)

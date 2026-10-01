@@ -1,0 +1,91 @@
+{
+ "d01": {
+  "expected_axes": [],
+  "expected_verdict": "pass",
+  "kind": "clean",
+  "label": "clean-pass-169",
+  "source": "pass-169"
+ },
+ "d02": {
+  "expected_axes": [],
+  "expected_verdict": "pass",
+  "kind": "clean",
+  "label": "clean-pass-163",
+  "source": "pass-163"
+ },
+ "d03": {
+  "expected_axes": [],
+  "expected_verdict": "pass",
+  "kind": "borderline",
+  "label": "borderline-pass-161",
+  "source": "pass-161"
+ },
+ "d04": {
+  "expected_axes": [
+   "decision_clarity",
+   "executability"
+  ],
+  "expected_verdict": "fail",
+  "kind": "defect",
+  "label": "defect:defect-162-i1",
+  "source": "defect-162-i1"
+ },
+ "d05": {
+  "expected_axes": [],
+  "expected_verdict": "pass",
+  "kind": "borderline",
+  "label": "borderline-pass-163",
+  "source": "pass-163"
+ },
+ "d06": {
+  "expected_axes": [
+   "decision_clarity"
+  ],
+  "expected_verdict": "fail",
+  "kind": "defect",
+  "label": "defect:defect-168-i2",
+  "source": "defect-168-i2"
+ },
+ "d07": {
+  "expected_axes": [],
+  "expected_verdict": "pass",
+  "kind": "borderline",
+  "label": "borderline-pass-169",
+  "source": "pass-169"
+ },
+ "d08": {
+  "expected_axes": [
+   "decision_clarity",
+   "executability"
+  ],
+  "expected_verdict": "fail",
+  "kind": "defect",
+  "label": "defect:defect-163-i1",
+  "source": "defect-163-i1"
+ },
+ "d09": {
+  "expected_axes": [
+   "decision_clarity"
+  ],
+  "expected_verdict": "fail",
+  "kind": "defect",
+  "label": "defect:defect-169-i2",
+  "source": "defect-169-i2"
+ },
+ "d10": {
+  "expected_axes": [],
+  "expected_verdict": "pass",
+  "kind": "clean",
+  "label": "clean-pass-161",
+  "source": "pass-161"
+ },
+ "d11": {
+  "expected_axes": [
+   "decision_clarity"
+  ],
+  "expected_verdict": "fail",
+  "kind": "defect",
+  "label": "defect:defect-167-i2",
+  "source": "defect-167-i2"
+ }
+}

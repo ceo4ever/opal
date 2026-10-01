@@ -1,0 +1,41 @@
+{
+  "input_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: `PLAN.md` §Decisions and contracts D-2·D-3 — `run` 없이 `run_files`만 있는 도구의 판정이 둘 중 무엇인지 정해지지 않았다. D-2 ①은 '`run`이 없으면 `not_configured`(사유 `run_missing`)'라고 하고, D-3은 `run_files`로 파일을 거른 뒤 0개면 `not_applicable`이라고 한다. 두 규칙의 우선순위가 없고, D-1도 `run_files`만 있는 설정이 유효한지, 그때 `--changed-files`가 없으면 어떻게 하는지 정하지 않는다. TEST-SCENARIO S-4(b)는 이 경우를 `not_applicable`/`no_matching_files`로 기대하므로 D-2 ①을 그대로 구현하면 어긋난다. 구현자가 둘 중 하나를 고르게 된다",
+      "decision_clarity-2: `PLAN.md` §Decisions and contracts D-2 ②·D-3 — 설치 확인(`check`)과 파일 범위 필터의 실행 순서가 정해지지 않았다. D-2는 ②에서 `check`를 먼저 실행하고 ③에서 run(또는 D-3의 run_files)을 실행하는 순서라, 걸러진 파일이 0개인 `not_applicable` 계층에서도 `check`가 실행된다. S-4(b)는 '어떤 stub도 호출되지 않음'을 기대한다. 필터를 먼저 해서 `check`를 건너뛸지, `check` 뒤에 필터할지는 구현자가 정하게 된다",
+      "decision_clarity-3: `PLAN.md` §Decisions and contracts D-1·D-3 — `run_files`의 `{files}` 치환 규칙이 정해지지 않았다. 파일 구분자, 공백·셸 특수문자가 든 경로의 인용, 셸 실행인지 argv 실행인지가 없다. `file_globs` 대조 기준(basename인지 프로젝트 기준 상대 경로인지)도 없다. 파일 하나가 여러 제외 사유(`missing`·`outside_project`·`pattern_mismatch`)에 해당할 때 무엇을 먼저 적용할지도 없다. 이 값들은 외부에 보이는 `cmd`·`scope.excluded` 출력을 정하는데, 구현자가 고르게 된다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": [
+        "S-6",
+        "S-8"
+      ],
+      "basis": "S-6의 'pyproject.toml만 있는 변형'과 S-8 (b)는 조건이 같고(`.opal` 없음, pyproject.toml만 있는 임시 프로젝트), 행동도 같다(`resolve --project-root <tmp>`, 추론 출처). 확인하는 내용만 다르다. S-6은 `source_path`가 `pyproject.toml` 절대 경로인지 보고, S-8 (b)는 lint `run:\"ruff check .\"`·`run_files`의 `{files}`·typecheck `mypy .`·unit `pytest`를 본다. 한 번 실행한 resolve 응답 하나로 두 신호를 모두 확인할 수 있다.",
+      "recommendation": "S-8 (b)의 기대 결과에 `source:\"infer\"`·`source_path`=`<tmp>/pyproject.toml` 절대 경로를 더하고, S-6에서는 infer 변형을 빼서 project·global 두 출처만 남긴다. 그렇지 않으면 두 행이 같은 RED 픽스처를 함께 쓴다고 명시한다."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

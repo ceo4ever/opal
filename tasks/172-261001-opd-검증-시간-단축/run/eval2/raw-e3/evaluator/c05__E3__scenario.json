@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "low",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "low",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/var/folders/0k/n9rvmztx6xs3xvjsvf0qqzdw0000gn/T/e3work/fx/c05",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 1651 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 30.6,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 25097,
+  "stop_reason": "end_turn",
+  "session_id": "291fc88a-fc6a-449f-ac07-98add3778eb5",
+  "total_cost_usd": 0.35948440000000004,
+  "usage": {
+   "input_tokens": 4,
+   "cache_creation_input_tokens": 39281,
+   "cache_read_input_tokens": 59302,
+   "output_tokens": 1668,
+   "output_tokens_details": {
+    "thinking_tokens": 189
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 39281,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1351,
+     "cache_read_input_tokens": 46920,
+     "cache_creation_input_tokens": 4743,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 4743
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 4,
+    "outputTokens": 1668,
+    "cacheReadInputTokens": 59302,
+    "cacheCreationInputTokens": 39281,
+    "webSearchRequests": 0,
+    "costUSD": 0.35948440000000004,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 189,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 2,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"27522876917ef63792862d076b7e3a5b9c51cfe3f699079408d6fcf4ccf38387\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 0, \"adoption\": 2, \"boundary\": 0},\n    \"average\": 0.67,\n    \"gaps\": [\n      \"goal-1: TEST-SCENARIO.md §Scenarios S-1·S-2 기대 결과 열 — S-1은 \\\"정확한 대응 미정\\\", S-2는 \\\"(미정)\\\"이어서 어떤 전이가 어떤 state.json 행을 마크하는지, user_confirm 행을 누가 마크하는지에 대한 기댓값이 없습니다. 무엇이 통과인지 구현자가 정해야 하므로 AC-1·AC-2 목표를 검증하지 못합니다\",\n      \"goal-2: TEST-SCENARIO.md §Scenarios S-2 — TASK.md AC-2는 semi-agentic과 agentic 두 모드를 요구하지만 시나리오에는 semi-agentic만 있습니다. agentic 모드의 user_confirm 담당자는 검증 대상이 아닙니다\",\n      \"boundary-1: TEST-SCENARIO.md §Scenarios 전체 — 정상 전이만 있습니다. 매핑되지 않은 전이, 이미 마크된 행에 대한 재전이, C-1(state.json 스키마 불변) 위반 여부 같은 실패·경계 경로가 하나도 없습니다. 어떤 경계를 다룰지 구현자가 정해야 합니다\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\n판정 근거 요약:\n- **receipt 검증**: `ok: true`(verified_document_count 4)를 확인한 뒤 판정했습니다.\n- **① 목표 달성 = 0**: S-1과 S-2는 AC를 대상으로 하지만, 기대 결과가 둘 다 \"미정\"이라 무엇을 확인해야 통과인지 정해져 있지 않습니다. 그래서 목표를 검증하는 시나리오가 없다고 보았습니다. agentic 모드도 시나리오에서 빠져 있습니다.\n- **⑤ 채택/잔존 = 2**: 이 목표는 기존 동작을 교체하는 유형이 아니라 행 대응을 명시하는 것이라 이 축이 적용되지 않습니다.\n- **⑥ 경계/부정 = 0**: 다룰 만한 경계(매핑 누락, 중복 전이, 스키마 불변)가 있는데 정상 경로 시나리오만 있습니다.\n- **advisories 없음**: 중복, 합칠 수 있는 시나리오, 더 저렴한 계층으로 충분한 경우, 분류 오류 중 어느 것에도 해당하는 근거가 없었습니다.\n- **`verdict`·`rewrite_target`**: 부분 호출(`scope: scenario`) 계약에 따라 쓰지 않았습니다. 결합은 `design-gate combine` 소관입니다.\n- **변경 파일 없음**: 파일은 만들거나 수정하지 않았습니다.",
+  "ttft_ms": 6792,
+  "type": "result",
+  "duration_ms": 26399,
+  "uuid": "18af71f1-e218-4d15-ab75-7921af1d1184",
+  "ttft_stream_ms": 3120,
+  "time_to_request_ms": 247,
+  "first_content_frame_ms": 3121,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 73.7,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 68326,
+  "stop_reason": "end_turn",
+  "session_id": "a727ade3-7a28-4852-b24f-2ec65b755ac5",
+  "total_cost_usd": 0.339917,
+  "usage": {
+   "input_tokens": 12,
+   "cache_creation_input_tokens": 24870,
+   "cache_read_input_tokens": 184645,
+   "output_tokens": 5199,
+   "output_tokens_details": {
+    "thinking_tokens": 1988
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 24870,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2138,
+     "cache_read_input_tokens": 40605,
+     "cache_creation_input_tokens": 2733,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 2733
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 12,
+    "outputTokens": 5199,
+    "cacheReadInputTokens": 184645,
+    "cacheCreationInputTokens": 24870,
+    "webSearchRequests": 0,
+    "costUSD": 0.339917,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 1988,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "`scope: design`으로 설계 4축을 판정했습니다. 결정 명확성(decision_clarity)과 실행 가능성(executability) 두 축이 FAIL이고, 요구·변경 범위 완전성(completeness)과 적용·복구 가능성(recoverability)은 PASS입니다. `worker.dispatch` receipt는 직접 verify해 `ok: true`(문서 4건 검증)를 확인한 뒤 진행했습니다. 파일은 만들지 않았습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"PASS\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"FAIL\",\n      \"recoverability\": \"PASS\"\n    },\n    \"gaps\": [\n      \"decision_clarity-1: `PLAN.md:38` §Decisions and contracts D-1 — coverage가 exit 16/17을 반환한 회차에서 record를 '생략'할지 '빈 결과로 기록'할지, 그리고 어떤 기준으로 고를지 구현자에게 맡겨져 있다(원문: \\\"PM이 상황에 맞게 record를 생략하거나 빈 결과로 기록할 수 있다 — 구체적 분기 기준은 아직 정하지 않았다\\\").\",\n      \"decision_clarity-2: `PLAN.md:32` §Findings 미확인 가정 + `PLAN.md:38` D-1 — exit 16(완전 미디스패치)과 exit 17(부분 디스패치)을 같은 record 처리로 묶을지 서로 다르게 처리할지가 정해지지 않았다.\",\n      \"decision_clarity-3: `PLAN.md:50` §Risks H-1 — 설계 대응이 '없음(아직 미해결)'이다. 미디스패치 회차를 설계 게이트 반복 상한의 iteration으로 셀지, 그리고 C-1(record 필수 필드 불변)을 지키면서 '빈 결과'를 어떤 형태로 만들지 구현자에게 맡겨져 있다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"executability_note\": \"executability-1: `PLAN.md:44` §Work items W-1 — 구체적 변경이 '(정확한 기준은 구현 중 정리)'로 끝난다. Work item만으로는 구현할 수 없고, 구현 중에 추가 설계를 해야 한다. 담당(opal-task-agent), 순서(선행 없음, P1), 파일 소유권(design-gate.md 단일)은 명확하다. 근본 원인은 decision_clarity-1~3과 같다.\"\n}\n```\n\n**축별 근거**\n- **completeness = PASS**: 요구에서 시나리오까지 끊김 없이 이어집니다.\n  - TASK AC-1은 W-1(`PLAN.md:44`, 완료 기준 연결 AC-1)과 S-1(`TEST-SCENARIO.md:20`)으로 이어집니다.\n  - Findings의 직접 변경(`design-gate.md`)은 W-1의 변경 대상과 같습니다.\n  - 미확인 가정(exit 16과 17의 차이)은 Risks H-1로 이어집니다.\n  - 문서 갱신은 '없음'으로 명시되어 있습니다.\n  - 참고: AC-1은 exit 16과 17을 모두 요구하지만 S-1은 exit 16만 다룹니다. 시나리오 쪽 문제라 이번 scope의 채점 대상이 아닙니다.\n- **decision_clarity = FAIL**: D-1과 W-1이 실패 정책(record 처리 방식)을 명시적으로 구현자에게 넘깁니다. 위 gaps 3건을 참고하세요.\n- **executability = FAIL**: W-1이 \"구현 중 정리\"를 전제로 해서, Work item만으로는 추가 설계 없이 구현할 수 없습니다.\n- **recoverability = PASS**: 배포 절차가 없는 단일 문서 변경입니다(`PLAN.md:54`). 검증은 구현 후 S-1로 하고, 실패하면 해당 문서 변경을 되돌리면 됩니다. 다만 복구 경로가 PLAN에 명시되어 있지는 않아 근거가 약한 PASS입니다.\n\n**주의할 점**\n- **gap 개수**: 결과 계약의 `design.gaps`에는 decision_clarity 3건만 넣었습니다. FAIL인 executability의 gap(`executability-1`)은 계약 밖의 `executability_note` 필드에 따로 두었습니다. 계약에 맞추려면 이 항목을 `design.gaps`의 네 번째 원소로 옮겨야 합니다.\n- **기대 답안과 다른 판정**: fixture 주석에 적힌 원본 i2 판정은 executability가 PASS입니다. 저는 루브릭 앵커(\"추가 설계 없이 구현 가능\") 원문대로 FAIL로 봤습니다. `rewrite_target`이 `plan`이라는 결론은 어느 쪽이든 같습니다.\n- 부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 넣지 않았습니다. `previous_gaps`가 없어서 `resolved_gaps`는 빈 배열이고, `scope: design`이라 `advisories`도 빈 배열입니다.\n\n**인증이 필요한 MCP 서버**: claude.ai Amazon Selling Partner, Canva, Figma, Gmail, Google Calendar, Google Drive, Helium 10, higgsfield는 인증이 필요해 지금은 쓸 수 없습니다. claude.ai의 커넥터 설정에서 승인하면 사용할 수 있습니다.",
+  "ttft_ms": 5287,
+  "type": "result",
+  "duration_ms": 69894,
+  "uuid": "e3bd18a8-bc72-452b-8842-098ea838d8b2",
+  "ttft_stream_ms": 2426,
+  "time_to_request_ms": 94,
+  "first_content_frame_ms": 2426,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

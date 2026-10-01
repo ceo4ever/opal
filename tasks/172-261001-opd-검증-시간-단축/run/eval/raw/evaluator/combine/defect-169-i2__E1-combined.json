@@ -1,0 +1,45 @@
+{
+  "input_bundle_hash": "2c4d1bcab562e6a2cf6533ed19dd90f74ff6763b103176da0be803ad0c174eb1",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:34 (## Findings > ### 미확인 가정), PLAN.md:52 (H-1) — 미확인 가정 '워커 page 경로가 DONE.md 선언과 항상 일치'가 Work item·Risks·시나리오 어디에서도 검증되거나 해소되지 않는다. H-1의 설계 대응은 '없음(아직 미해결)'이고, TASK.md:33 AC-1이 요구하는 '방법이 하나로 정해진다'를 충족하는 Work item도 없다. 불일치를 어떻게 검출하고 처리할지가 구현자에게 남아 있다.",
+      "completeness-2: TASK.md:29 (C-1), PLAN.md:52 (H-1) — C-1(ATTRIBUTION_COMMIT_BLOCKED 동작 보존)과 '선언 밖 page를 쓰면 귀속 커밋이 조용히 실패한다'는 위험이 W-1·S-1로 이어지지 않는다. 차단 동작을 그대로 두면서 조용한 실패를 막는 방법이 구현자에게 남아 있다.",
+      "decision_clarity-1: PLAN.md:40 (D-1) — 변경 후 계약이 '(a) 워커가 D에 선언된 경로만 쓴다 / (b) 워커 결과로 DONE 선언을 갱신한다 / (c) PM이 워커 결과를 선언에 역반영한다 — 어느 쪽을 쓸지는 구현자가 상황에 맞게 정한다'로 되어 있다. 외부 동작·인터페이스 계약을 세 선택지 중 무엇으로 할지가 구현자에게 남아 있다.",
+      "executability-1: PLAN.md:46 (W-1) — '구체적 변경'이 'D-1의 (a)/(b)/(c) 중 적절한 방법을 적용한다(구체적 선택은 구현 중 결정)'이다. 담당(opal-task-agent)·파일·실행 그룹은 명확하지만 Work item만으로는 추가 설계 없이 구현할 수 없다. 정합 방식을 고르는 설계 작업이 구현자에게 남아 있다.",
+      "recoverability-1: PLAN.md:54-56 (## Release and recovery) — '별도 배포 절차 없음(축소판)'만 있다. 적용 후 검증 순서와 실패 시 복구 경로가 없다. 워커가 선언 밖 page를 써서 귀속 커밋이 실패했을 때(H-1) 어떻게 검출하고 원복하거나 재시도할지가 구현자에게 남아 있다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 0
+    },
+    "average": 0.667,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md` §Scenarios S-1 — 기대 결과가 \"D-1 (a)/(b)/(c) 중 하나로 정합이 맞춰진다(구체적 방법 미정)\"라서, (a) D 밖 page 쓰기 거부, (b) DONE 선언 자동 갱신, (c) PM 역반영 중 무엇을 통과로 볼지 테스트 작성자가 정해야 한다. AC-1(`TASK.md` §Acceptance criteria: \"방법이 명확히 하나로 정해진다\")은 방법을 하나로 정하라는 요구인데, S-1은 결과가 셋 중 무엇이든 통과한다. 그래서 목표를 검증하지 못한다. 방법·환경이 `unit`이라 워커 디스패치부터 finalize까지 이어지는 운영 흐름도 직접 검증하지 않는다.",
+      "boundary-1: `TEST-SCENARIO.md` §Scenarios S-1 — 'D 밖 page 쓰기'라는 경계 조건은 있다. 그러나 이때 ATTRIBUTION_COMMIT_BLOCKED로 막는 것이 맞는지, 막히지 않고 통과하는 것이 맞는지는 테스트 작성자가 정해야 한다. C-1(`TASK.md` §Constraints: finalize의 선언 밖 변경 차단 동작 불변)을 확인하는 회귀·제약 시나리오도 없다. `PLAN.md` §Risks H-1이 적은 '귀속 커밋이 조용히 실패할 수 있다'는 실패 경로를 확인할 판정 가능한 시나리오도 없다."
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "cheaper_layer",
+      "targets": [
+        "S-1"
+      ],
+      "basis": "S-1의 행동은 op-brain-ingest 워커(서브에이전트) 디스패치 후 finalize다(`TEST-SCENARIO.md` §Setup·§Scenarios S-1). 그런데 검증할 계약은 '워커가 쓴 page 경로 집합과 DONE.md 선언 집합 D의 관계', 그리고 'finalize 차단 동작'뿐이다. 이 둘은 워커 결과로 기록된 page 경로 목록 파일과 고정된 DONE.md를 finalize에 넣으면 증명할 수 있다. AC-1의 수용 기준은 모델의 판단 품질이 아니다. 방법·환경 열에는 `[실호출 1회]` 표지도 없다. 또 행동은 실제 디스패치인데 방법·환경은 `unit`으로 적혀 있어 계층 표기가 서로 맞지 않는다.",
+      "recommendation": "S-1을 워커 실호출 대신 기록된 워커 결과(경로 목록)를 입력으로 쓰는 finalize 단위·통합 테스트로 바꾼다. 행동 열의 '워커 디스패치'를 '기록된 워커 결과로 finalize 실행'으로 고쳐 계층 표기를 맞춘다."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

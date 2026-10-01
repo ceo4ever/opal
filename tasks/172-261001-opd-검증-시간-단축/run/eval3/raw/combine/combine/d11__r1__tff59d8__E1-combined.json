@@ -1,0 +1,32 @@
+{
+  "input_bundle_hash": "481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: `PLAN.md` §Decisions and contracts D-1: \"PM이 상황에 맞게 record를 생략하거나 빈 결과로 기록할 수 있다 — 구체적 분기 기준은 아직 정하지 않았다\" — coverage exit 16/17 회차에 record를 생략할지 빈 결과로 기록할지, 그리고 이 회차가 설계 게이트 반복 상한에 들어가는지를 구현자/PM이 정해야 한다(실패 정책 미결정)",
+      "decision_clarity-2: `PLAN.md` §Findings 미확인 가정: \"exit 16과 17의 차이(완전 미디스패치 vs 부분 디스패치)가 record 처리에 어떤 영향을 주는지 아직 확인하지 않았다\" — exit 16과 exit 17을 같게 처리할지 따로 처리할지(부분 디스패치에서 받은 결과를 기록할지 버릴지)를 정해야 한다",
+      "executability-1: `PLAN.md:44` W-1: \"(정확한 기준은 구현 중 정리)\" — 담당 opal-task-agent가 문서에 쓸 분기 기준을 구현 중에 직접 설계해야 해서, 이 Work item만으로는 추가 설계 없이 구현할 수 없다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.0,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md` §Scenarios: \"PM이 record를 생략하거나 빈 결과로 기록한다(정확한 분기 기준 미정)\" — S-1의 기대 결과가 두 결과 중 어느 쪽이 맞는지 정하지 않는다. 그래서 '생략'과 '빈 결과 기록' 중 어느 것을 정답으로 볼지는 구현자와 테스터의 몫이 된다. 어떤 동작을 해도 통과하므로 AC-1(\"PM이 record를 어떻게 처리해야 하는지 명확하다\")의 명확성을 검증하지 못한다. 또 방법이 `unit`이라 PM 운영 계층에서 record 절차가 정해져 있는지를 직접 확인하지도 않는다"
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

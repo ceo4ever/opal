@@ -1,0 +1,36 @@
+{
+  "input_bundle_hash": "6af7a3f22658edfbb4d04b8ba7aaabd4defe044f54abf95e5410731cfe32a9e4",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6 is typed `check` and its condition says \"없음(정적 검사)\", but its action includes \"재배포 1회 실행 후 `~/.opal/tools/brain-tool/brain_tool.py`를 ... diff\". That step runs `scripts/install-mac.sh`, which overwrites the deployed copy under ~/.opal. The scenario therefore mixes a static grep of 6 files and docstrings (AC-2·H-2) with a deploy action that has side effects (C-4·D-12). The condition column contradicts the action.",
+      "recommendation": "Keep S-6 as the static grep check for the 6 files, the docstrings and the `git diff --name-only` path check. Move the redeploy and diff (D-12, C-4) into its own scenario with the precondition \"run install-mac.sh once\" and its expected result, or at least state the redeploy run in S-6's condition column."
+    }
+  ],
+  "verdict": "pass",
+  "rewrite_target": null
+}

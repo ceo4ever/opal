@@ -1,0 +1,68 @@
+merge-base HEAD main = dee405ca6c072e47c78f7a967adb70469a420a2d
+--- (a) added lines:
++병렬로 실행해도 되는 시나리오는 Setup에 `병렬 그룹: S-a, S-b, ...` 한 줄로 선언한다.
++
++- 서로 선행 관계가 없고 공유 자원(포트·`~/.opal`·같은 파일·태스크 상태 파일)을 쓰지 않는 시나리오만 작성자가 선언한다.
++- 선언이 없는 시나리오는 순차 실행이다.
++- `test-scenario.json` 스키마에 필드를 추가하지 않는다. 실행 규칙은 `opal/core/references/harness/test-cycle.md`가 소유한다.
++
++### 에이전트·외부 서비스 실호출 기준
++
++- 에이전트·외부 서비스 실호출은 모델의 판단·응답 자체가 AC의 수용 기준일 때만 시나리오로 쓴다.
++- 전달 경로, 입력 조립, 출력 형식, 기록은 기록된 결과 파일을 입력으로 한 결정론 시나리오(`integration`·`contract`)로 쓴다.
++- 실호출 시나리오는 `방법·환경` 열에 `[실호출 1회]`와 근거 AC-N을 적는다.
++- 한 시나리오 안에서 호출은 1회만 한다. 반복 측정은 시나리오가 아니라 측정 작업이다.
++- 실행 주체와 실행 규칙(헤드리스 호출 불가 시 `blocked` 포함)은 `opal/core/references/harness/test-cycle.md` §실호출 시나리오가 소유한다.
++
++- 병렬 그룹: {S-a, S-b, ... | 선언 없음(순차)}
+PASS a1 [실호출 1회] 표지 
+PASS a2 실호출 한정 기준 
+PASS a3 1회 제한 
+PASS a4 Setup 병렬 그룹 
+PASS b1 cheaper_layer 조항 
+PASS b2 scope 입력 
+PASS b3 부분 결과 계약 
+PASS b4 effort: default 없음 
+PASS c1 previous_gaps 산문 조회 규칙 없음 
+PASS c2 resolved_gaps 산문 검증 문단 없음 
+PASS c3 병렬 5단계(①~⑤ + ⑥ 반환) steps=① ② ③ ④ ⑤ ⑥ 
+PASS c4 combine 명령 + 동시 디스패치 
+failure codes: 18 ['design_gate_not_applicable', 'design_gate_locked', 'design_gate_attempt_open', 'design_gate_retry_limit', 'task_reconfirm_required', 'design_gate_iteration_invalid', 'rewrite_target_unchanged', 'design_gate_deterministic_fail', 'design_gate_input_missing', 'design_gate_input_changed', 'design_gate_result_stale', 'design_gate_result_invalid', 'design_gate_partial_invalid', 'design_gate_verdict_mismatch', 'design_gate_not_passed', 'design_bundle_mismatch', 'advisory_response_invalid', 'scenario_gate_record_required']
+PASS d1 18종 표기 및 18행 
+PASS d2 partial_invalid combine 소속 
+--- (e) changed-line keyword hits:
+PASS e1 설계 4축 표 변경 없음 []
+PASS e2 verdict 규칙 변경 없음 
+PASS e3 반복 상한 3회 문구 변경 없음 
+PASS e4 reset --owner user 문구 변경 없음 
+--- evaluator AGENT.md removed lines: 3
+    -effort: default
+    -| previous_gaps | `phase==design-rubric`이고 조회 규칙상 존재할 때만 O | 직전 유효 회차(design_gate.history를 역순 순회해 verdict가 `deterministic_fail`·`input_error`·`supers
+    -verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용한다. `input_bundle_hash`·`iteration`은 입력받은 값을 그대로 최상위에 반환한다(가공·재계산 금지) — `state-tool design-g
+PASS e5 evaluator 4축 정의·verdict 규칙 행 삭제/변경 없음 
+PASS f1 op-gc-convention base_ref 
+PASS f2 checker AGENT base_ref 
+PASS f3 pm-review-gate §13 base_ref 
+   pm-review-gate base_ref line: ['- **호출 입력 명세**: `target_files = changed_files ∩ 영역 prefix`, `scope = 영역명` (단일 호출 시 `scope=all`), `ta']
+PASS f4 gc-finding-schema.md main 대비 무변경 
+PASS g1 병렬 그룹 실행 절 
+PASS g2 다중 에이전트 비채택 근거·대안 
+PASS g3 실호출 시나리오 절 
+PASS g4 actor.md 무변경 
+--- (h) install-mac.sh added 7 removed 0
+    +        # ── convention-precheck 실행 권한 (172) ──
+    +        local convention_precheck_run="$opal_home/tools/convention-precheck/run.sh"
+    +        if [[ -f "$convention_precheck_run" ]]; then
+    +            chmod +x "$convention_precheck_run"
+    +            success "convention-precheck run.sh 실행 권한 설정"
+    +        fi
+    +
+PASS h1 install-mac.sh 변경=convention-precheck chmod 블록만 
+PASS h2 센티넬 구간 mac==windows 바이트 동일 (1783 bytes) 
+PASS h3 센티넬 구간 main 대비 무변경 
+PASS i1 tools.md convention-precheck 행 
+PASS i2 docs/PROJECT.md convention-precheck 행 
+non-task changed: 24 | extra: [] | missing: [] | other tasks/ dirs: []
+PASS j1 변경 파일 = PM 지정 24개 + 이 태스크 산출물 
+
+SUMMARY: 33 / 33 checks pass; failed: []

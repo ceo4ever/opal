@@ -1,0 +1,30 @@
+TAP version 13
+# Subtest: [T118/RootContract] 자기완결(.opal 보유) 워크트리 cwd는 그 자신에 착지해 config를 해석한다
+ok 1 - [T118/RootContract] 자기완결(.opal 보유) 워크트리 cwd는 그 자신에 착지해 config를 해석한다
+  ---
+  duration_ms: 26.976875
+  ...
+# Subtest: [T118/RootContract] 자기완결이 아닌(자기 .opal 없는) 워크트리 cwd는 허브로 착지해 허브 config를 해석한다
+ok 2 - [T118/RootContract] 자기완결이 아닌(자기 .opal 없는) 워크트리 cwd는 허브로 착지해 허브 config를 해석한다
+  ---
+  duration_ms: 26.329417
+  ...
+# Subtest: [T118/RootContract] 조상 어디에도 .opal/이 없으면 위치를 발명하지 않고 header_source_unset이 그대로 난다
+ok 3 - [T118/RootContract] 조상 어디에도 .opal/이 없으면 위치를 발명하지 않고 header_source_unset이 그대로 난다
+  ---
+  duration_ms: 24.377292
+  ...
+# Subtest: [T118/RootContract] hubRootFromPath는 더 이상 export되지 않고, findProjectRoot만 남는다
+ok 4 - [T118/RootContract] hubRootFromPath는 더 이상 export되지 않고, findProjectRoot만 남는다
+  ---
+  duration_ms: 1.904791
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 83.179458

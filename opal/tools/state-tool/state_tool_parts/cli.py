@@ -34,6 +34,7 @@ from .run_log import (
 )
 from .gates import (
     cmd_design_decision,
+    cmd_design_gate_combine,
     cmd_design_gate_record,
     cmd_design_gate_reset,
     cmd_design_gate_start,
@@ -469,8 +470,8 @@ def build_parser():
     p_gres.set_defaults(func=cmd_gate_resolve)
 
     # ── design-gate (157 DEC-7/DEC-9/DEC-10) ──
-    p_dg = sub.add_parser("design-gate", help="PM 경로 독립 설계 게이트 (start|record|reset)")
-    dg_sub = p_dg.add_subparsers(dest="design_gate_command", metavar="<start|record|reset>")
+    p_dg = sub.add_parser("design-gate", help="PM 경로 독립 설계 게이트 (start|record|combine|reset)")
+    dg_sub = p_dg.add_subparsers(dest="design_gate_command", metavar="<start|record|combine|reset>")
     dg_sub.required = True
     p_dgs = dg_sub.add_parser("start", help="결정론 검사 후 설계 게이트 시도 시작 (gate.requested)")
     p_dgs.add_argument("task_path", metavar="<task-path>")
@@ -485,6 +486,14 @@ def build_parser():
     p_dgr.add_argument("--advisory-responses", dest="advisory_responses", metavar="<json>",
                        help="advisory 응답 파일 [{id, response: apply|retain, reason}] (167)")
     p_dgr.set_defaults(func=cmd_design_gate_record)
+    p_dgc = dg_sub.add_parser(
+        "combine", help="설계·시나리오 부분 결과를 단일 design-rubric 결과 파일로 결합 (읽기 전용)")
+    p_dgc.add_argument("task_path", metavar="<task-path>")
+    p_dgc.add_argument("--iteration", type=int, required=True, metavar="N")
+    p_dgc.add_argument("--design-result", dest="design_result", required=True, metavar="<json>")
+    p_dgc.add_argument("--scenario-result", dest="scenario_result", required=True, metavar="<json>")
+    p_dgc.add_argument("--output", required=True, metavar="<json>")
+    p_dgc.set_defaults(func=cmd_design_gate_combine)
     p_dgx = dg_sub.add_parser("reset", help="반복 상한(retry_limit) 해제 — 사용자 결정 전용")
     p_dgx.add_argument("task_path", metavar="<task-path>")
     p_dgx.add_argument("--owner", choices=["PM", "worker", "user", "auto"])
@@ -517,7 +526,10 @@ def main():
         args.command == "resolve-mode" and args.mode is not None
         and (pathlib.Path(args.task_path) / "state.json").exists()
     )
-    if args.command in state_writers or resolve_mode_write:
+    # design-gate combine은 읽기 전용(state.json·락·run-log 비접촉)이라 쓰기 락에서 제외한다.
+    is_combine = (args.command == "design-gate"
+                  and getattr(args, "design_gate_command", None) == "combine")
+    if (args.command in state_writers and not is_combine) or resolve_mode_write:
         task_path = resolve_task_path(args.task_path, args.command)
         with state_writer_lock(task_path):
             args.func(args)

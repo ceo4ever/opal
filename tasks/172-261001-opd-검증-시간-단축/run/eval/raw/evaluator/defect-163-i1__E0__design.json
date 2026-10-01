@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 43.0,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 37991,
+  "stop_reason": "end_turn",
+  "session_id": "aa0b21c0-0250-41cf-81ed-4d6e38d6b89b",
+  "total_cost_usd": 0.1810574,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 10665,
+   "cache_read_input_tokens": 95427,
+   "output_tokens": 3831,
+   "output_tokens_details": {
+    "thinking_tokens": 1056
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 10665,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2963,
+     "cache_read_input_tokens": 28168,
+     "cache_creation_input_tokens": 965,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 965
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 3831,
+    "cacheReadInputTokens": 95427,
+    "cacheCreationInputTokens": 10665,
+    "webSearchRequests": 0,
+    "costUSD": 0.1810574,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 1056,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "receipt 검증은 `ok: true`로 통과했습니다(문서 4건 확인). 이번 판정은 `scope: design`이라 설계 4축만 채점했습니다. `previous_gaps` 입력이 없어서 `resolved_gaps`는 빈 배열입니다.\n\n```json\n{\n  \"input_bundle_hash\": \"3a9f4f63d8de726b9dc2584772f5629b5adf4d2bebf6bbf3826d6fc4e6574215\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"FAIL\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"FAIL\",\n      \"recoverability\": \"PASS\"\n    },\n    \"gaps\": [\n      \"completeness-1: TASK.md:28 (## Constraints C-1) ↔ PLAN.md:42-52 (## Work items, ## Risks), TEST-SCENARIO.md:20-23 — 제약 C-1 '기존 checkpoint 커밋 포맷을 바꾸지 않는다'가 Work item, Risk, 시나리오 어디에도 연결되지 않았다. D-1 후보인 '로컬에만 확정'이나 '권한 상승 재시도'가 커밋 포맷을 보존하는지 확인할 방법이 없어, 포맷 보존을 지킬지와 그 검증 방법이 구현자에게 맡겨져 있다.\",\n      \"decision_clarity-1: PLAN.md:40 (## Decisions and contracts D-1) — '권한을 상승시켜 재시도하거나, 혹은 허브 쓰기를 포기하고 로컬에만 확정할 수도 있다 — 어느 쪽인지는 구현 중 상황을 보고 정한다'라고 되어 있다. checkpoint 허브 쓰기 실패 시 권한 상승 재시도와 로컬 확정 중 무엇을 할지, 그리고 그때의 오류 코드와 복구 안내 문구가 정해지지 않아 구현자가 골라야 한다.\",\n      \"decision_clarity-2: PLAN.md:46 (## Work items W-1 구체적 변경) — 'cmux가 없는 환경은 status 조회를 지원하거나, 지원하지 않으면 그에 맞게 안내한다(구체적 지원 여부는 미정)'라고 되어 있다. cmux가 없을 때 status를 지원할지, 미지원이면 어떤 계약(오류 코드, 종료 동작, 안내 문구)을 따를지가 구현자에게 남아 있다.\",\n      \"executability-1: PLAN.md:46 (## Work items W-1) — '권한 상승 재시도 또는 로컬 확정 중 적절한 쪽을 적용한다'라고 되어 있어, W-1만 보고는 추가 설계 없이 구현할 수 없다. 분기 조건, 재시도 여부와 횟수, 반환 오류 코드를 구현자가 새로 설계해야 한다. PLAN.md:52 H-1의 설계 대응도 '없음(아직 미해결)'이라 막힌 부분을 풀어 줄 근거가 없다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\n**판정 근거**\n- **completeness, FAIL:** AC-1과 AC-2는 W-1(PLAN.md:46)과 S-1/S-2에 연결되어 있습니다. 반면 C-1(TASK.md:28)은 PLAN과 시나리오 어디에도 나오지 않습니다.\n  - 미확인 가정(PLAN.md:34, cmux 미설치 환경의 동작)은 W-1에 '미정'으로만 넘어가 있고 Risks에는 없습니다.\n  - 이 부분은 결정이 비어 있는 문제라 `decision_clarity-2`에 넣었습니다.\n- **decision_clarity, FAIL:** PLAN.md:40의 D-1이 한 가지 계약이 아니라 둘 중 고르라는 형태로 남아 있습니다. PLAN.md:46의 cmux 지원 여부도 '미정'이라고 적혀 있습니다. 두 건 모두 원본 i1의 gaps와 같은 미결정입니다.\n- **executability, FAIL:** W-1이 정해지지 않은 D-1을 그대로 가져다 쓰고, \"적절한 쪽\"이라는 구현자 재량 문구가 있습니다. 담당(opal-task-agent), 대상 파일, 순서(P1, 선행 없음)는 분명합니다.\n- **recoverability, PASS:** 변경은 boot.py에 분기를 하나 더하는 것이고, PLAN.md:56에 별도 배포 절차가 없다고 명시되어 있습니다. 정상 경로가 영향을 받지 않는다는 회귀 확인(PLAN.md:26)과 시나리오 기반 검증 순서(TEST-SCENARIO.md:16-23)도 있습니다.\n  - 런타임 복구 안내의 내용이 비어 있는 점은 D-1이 정해지지 않은 데서 나온 문제라 decision_clarity에서만 감점했습니다. 같은 문제를 두 번 감점하지 않으려는 것입니다.\n\n**원본 i1과 다른 점:** 원본 i1은 completeness를 PASS로 판정했지만, 이번에는 C-1이 연결되지 않은 점을 근거로 FAIL로 판정했습니다. 원본의 decision_clarity FAIL과 executability FAIL은 그대로 재현되었습니다.\n\n이 결과는 `scope: design` 부분 판정이라 `verdict`와 `rewrite_target`은 넣지 않았습니다. 두 값은 `design-gate combine`이 정합니다. 만든 파일은 없습니다.\n\n참고로, 인증이 필요한 MCP 서버(claude.ai Amazon Selling Partner, Canva, Figma, Gmail, Google Calendar, Google Drive, Helium 10, higgsfield)는 claude.ai 커넥터 설정에서 승인해야 쓸 수 있습니다. 이번 작업에는 쓰지 않았습니다.",
+  "ttft_ms": 3200,
+  "type": "result",
+  "duration_ms": 39610,
+  "uuid": "f239a7fc-8600-4ace-86ba-6d4226ac5eeb",
+  "ttft_stream_ms": 1498,
+  "time_to_request_ms": 82,
+  "first_content_frame_ms": 1498,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

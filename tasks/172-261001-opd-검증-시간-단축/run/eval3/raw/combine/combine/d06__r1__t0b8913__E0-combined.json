@@ -1,0 +1,37 @@
+{
+  "input_bundle_hash": "27522876917ef63792862d076b7e3a5b9c51cfe3f699079408d6fcf4ccf38387",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: `TASK.md` §Constraints C-1 — 'C-1: 기존 state.json 스키마를 변경하지 않는다'가 `PLAN.md` §Work items W-1·§Risks·`TEST-SCENARIO.md` §Scenarios 어디에도 이어지지 않아, 스키마를 지킬지 확장할지를 구현자가 정해야 한다",
+      "completeness-2: `PLAN.md` §Findings 미확인 가정 — 'semi-agentic·agentic 모드별 user_confirm 담당자 차이를 아직 조사하지 않았다'가 §Risks H-1로만 옮겨졌고 설계 대응이 '없음(아직 미해결)'이다. 조사 결과에 따라 담당자를 정하는 일이 구현자에게 남는다",
+      "decision_clarity-1: `PLAN.md` §Decisions and contracts D-1 — '각 전이가 어떤 행을 마크하는지는 구현 중 lifecycle.py 코드를 보면서 정한다'. lifecycle.py 전이별로 어떤 state.json 행을 마크할지가 구현자에게 남는다 (AC-1 미충족)",
+      "decision_clarity-2: `PLAN.md` §Decisions and contracts D-1 — 'semi-agentic은 사용자가, agentic은 PM이 마크하거나 혹은 자동 승인될 수도 있다 — 모드별 정확한 담당자는 아직 정하지 않았다'. 모드별 user_confirm 행 마크 주체(사용자/PM/자동 승인)가 구현자에게 남는다 (AC-2 미충족)",
+      "executability-1: `PLAN.md` §Work items W-1 — '어떤 행을 마크할지, user_confirm 행을 누가 마크할지는 구현하면서 정한다'. Work item만으로는 구현할 수 없고, 호출 지점·인자(행 id)·모드 분기 설계를 구현자가 정해야 한다",
+      "recoverability-1: `PLAN.md` §Release and recovery — '별도 배포 절차 없음(축소판)'뿐이다. lifecycle.py 변경의 적용·검증 순서와 잘못된 행 마크가 생겼을 때의 state.json 복구·롤백 방법이 구현자에게 남는다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 0
+    },
+    "average": 0.667,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md` §Scenarios S-1(L22) — 기대 결과가 \"state.json의 어떤 행이 마크되는지 확인(정확한 대응 미정)\"이라서, lifecycle.py 전이별로 어떤 state.json 행이 마크돼야 하는지 판정 기준을 구현자·테스터가 정해야 한다. AC-1(`TASK.md` §Acceptance criteria L32)은 이 시나리오로 검증되지 않는다",
+      "goal-2: `TEST-SCENARIO.md` §Scenarios S-2(L23) — 기대 결과가 \"담당자(사용자/PM/자동)가 누구인지 확인(미정)\"이라서, semi-agentic 모드의 user_confirm 행 마커를 누구로 기대할지 선택이 남아 있다. agentic 모드 시나리오가 없어서 AC-2(`TASK.md` L33)의 'semi-agentic·agentic' 절반은 검증 대상이 아니다",
+      "boundary-1: `TEST-SCENARIO.md` §Scenarios(L22-23) — 적용할 수 있는 실패·경계 경로가 전혀 없다. 예를 들어 C-1(`TASK.md` L28, 기존 state.json 스키마 불변)을 확인하는 제약 시나리오가 없다. state-tool mark 호출이 실패하거나 행이 없을 때의 동작, agentic 모드의 자동 승인 분기(`PLAN.md` §Decisions D-1 L40)도 없다. 그래서 어떤 경계를 검증할지 구현자에게 남는다"
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

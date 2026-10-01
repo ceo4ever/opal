@@ -15,6 +15,25 @@ load: stage.test
 3. PM은 묶음 요청 발송 시 `state-tool test-clock start <task> --kind human --id <handoff-id>`를 각 handoff ID에 대해 정확히 한 번 호출한 뒤, 요청 증거와 열린 ID 목록을 `opal-test-agent`에 주입하여 디스패치한다. test agent는 요청·시작 ID를 확인하되 사람 요청이나 human start를 반복하지 않는다. 결측·불일치면 PM에 BLOCKED로 반환한다. test agent가 `test-clock start <task> --kind auto --id <실행-id>`를 호출해 자동 시나리오를 실행하고 직후 `auto` stop을 호출한다. 자동 실행은 사람 제출 대기와 병행한다. 각 사람 제출은 같은 run-id/resume-token의 구조화 submission을 verifier가 처리한 뒤에만 PM이 해당 `human` stop을 호출한다. PM이 이 종료 호출을 test agent에 명시 위임한 경우에만 agent가 대신 호출한다. 제출자의 완료 선언만으로 PASS를 기록하지 않는다. 중복 start·열리지 않은 interval의 stop은 오류로 다룬다. 열린 interval은 `test-metrics`에 열린 상태로 남긴다.
 4. `test-tool scenario-mark`와 `scenario-status`에 실제 출력·exit code·verifier 결과를 남긴다. TEST-SCENARIO.md 명세에 결과를 덧쓰지 않는다. 사람 대기가 남으면 `awaiting_human`을 유지하고 자동 검사 결과를 먼저 보고한다.
 
+## 병렬 그룹 실행
+
+서로 독립인 자동 시나리오는 한 에이전트 안에서 동시 실행해 벽시계 시간을 줄인다. 병렬 단위는 한 `opal-test-agent`의 한 번의 Bash이며, 여러 에이전트를 동시에 디스패치하지 않는다.
+
+1. **선언**: 작성자가 TEST-SCENARIO Setup에 `병렬 그룹: S-a, S-b, ...` 줄로 선언한 시나리오끼리만 동시 실행한다. 선언이 없거나 선언에 없는 시나리오는 순차 실행한다. 에이전트가 병렬 대상을 추정하거나 추가하지 않는다. 선언은 Setup 문서 줄이며 `test-scenario.json` 스키마에 필드를 추가하지 않는다.
+2. **실행**: 에이전트는 그룹의 명령을 한 번의 Bash에서 `&`로 띄우고 `wait`로 모두 기다린다. 시나리오별 stdout과 종료 코드를 각각 파일로 저장한다(`wait <pid>`로 종료 코드를 개별 수집).
+3. **시간 기록**: 그룹 전체를 `test-clock`의 auto 구간 하나로 기록한다(`start <task> --kind auto --id batch-N` → 그룹 종료 직후 stop). 시나리오마다 구간을 열지 않으며, 그래야 `auto_seconds`가 구간 합산으로 부풀지 않고 그룹 벽시계 시간이 된다.
+4. **기록**: `test-tool scenario-mark`와 `test-clock` 호출은 그룹 실행이 끝난 뒤 에이전트가 순차로 한다. 판정은 시나리오별 저장 파일을 증거로 `opal-test-agent`가 기록하며, TEST 보고에 `batch-N`, 시나리오별 출력·종료 코드 파일 경로, 그룹 벽시계 시간을 남긴다.
+
+**다중 에이전트 병렬은 채택하지 않는다.** 근거는 `tasks/172-261001-opd-검증-시간-단축/run/PARALLEL-PROBE.md`의 실측이다. 단일 에이전트 안 병렬은 가능하다(중앙값 비율 0.250, 출력·종료 코드 보존). 반면 여러 프로세스의 동시 `scenario-mark`는 5라운드에서 기록이 사라진 시나리오가 6건 관측됐고 `opal/tools/test-tool/lib/scenario.py`에 파일 잠금이 없다. 또 에이전트마다 auto 구간을 열면 `auto_seconds`가 구간 합산이 되어 벽시계와 달라진다. 대안은 후속 태스크에서 `scenario-mark` 잠금을 도입하고 auto 구간을 합집합으로 계산하는 것이다. 그 전에는 이 절의 단일 에이전트 절차만 쓴다.
+
+## 실호출 시나리오
+
+에이전트·외부 서비스를 실제로 호출하는 시나리오는 TEST-SCENARIO의 방법·환경 열에 `[실호출 1회]` 표지가 있는 행이다.
+
+1. 실행 주체는 `opal-test-agent`다. Bash로 정식 wrapper `~/.opal/tools/opal-agent/run.sh`를 시나리오당 **1회** 실행한다. 원 CLI `claude -p`를 직접 호출하지 않는다(정식 OPAL wrapper가 있으면 raw 외부 CLI 대신 wrapper, `~/.opal/AGENT.md` 도구 선택 규칙). 대상 에이전트의 역할은 해당 `AGENT.md`(설치본 `~/.opal/agents/<이름>/AGENT.md`, 설치 전에는 저장소 `opal/agents/<이름>/AGENT.md`)에서 frontmatter를 제외한 본문을 `--system-prompt`로, frontmatter의 `model`을 플랫폼 모델 별칭(light/standard/advanced → haiku/sonnet/opus, `~/.opal/setting.json` models 기준)으로 `--model`에, `effort`를 `--effort`에, `tools`를 쉼표 목록으로 `--allowed-tools`에 전달한다. 그 밖에 `--json`, `--cwd`, `--timeout`, `--opal-bootstrap off`를 지정한다. opal-agent 옵션의 근거는 `opal/tools/opal-agent/README.md`이며, `--agent <이름>`처럼 설치된 정의를 이름으로 고르는 옵션은 없으므로 역할은 `--system-prompt`로 전달한다. 반복 호출하지 않는다.
+2. 원본 JSON 응답을 증거 파일로 저장하고, 그 파일을 기대 결과와 대조해 판정한다. 요약·가공본만으로 판정하지 않는다.
+3. 헤드리스 호출이 불가능하면 `blocked`로 반환한다. PM은 직접 수행하거나 우회 판정하지 않고 사용자에게 보고한다(`actor.md` §독립 검증 경계 유지).
+
 ## EXECUTE 증거 재사용
 
 EXECUTE의 lint·type/build·unit PASS는 **현재 TEST 대상과 동일한 commit SHA**, 동일한 명령과 환경 서명(도구·의존성·설정·실행 환경), 읽을 수 있는 PASS 출력 증거 경로가 모두 확인될 때만 TEST에서 재사용한다. TEST 보고에 각 항목의 SHA·정확한 명령·환경 서명·PASS 증거 경로와 재사용 판정을 기록한다. 하나라도 다르거나 증거가 없으면 `opal-test-agent`가 다시 실행한다. 재사용은 독립 TEST 시나리오 실행·판정을 대체하지 않는다. 이를 위해 `test-scenario.json` 스키마에 필드를 임의로 추가하지 않는다.

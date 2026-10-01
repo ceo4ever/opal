@@ -1,0 +1,516 @@
+TAP version 13
+# Subtest: [T083/L1-F1a] TS-001: 정책 설정이 전혀 없으면 상수(maxBytes=10240, minFiles=40)가 적용된다
+ok 1 - [T083/L1-F1a] TS-001: 정책 설정이 전혀 없으면 상수(maxBytes=10240, minFiles=40)가 적용된다
+  ---
+  duration_ms: 886.786625
+  ...
+# Subtest: [T083/L1-F1a] TS-002: 전역 setting.json에만 shardPolicy가 있으면 그 값이 적용된다
+ok 2 - [T083/L1-F1a] TS-002: 전역 setting.json에만 shardPolicy가 있으면 그 값이 적용된다
+  ---
+  duration_ms: 194.140458
+  ...
+# Subtest: [T083/L1-F1a] TS-003: 프로젝트에 minFiles만 있으면 maxBytes는 전역, minFiles는 프로젝트 값 (셀 머지)
+ok 3 - [T083/L1-F1a] TS-003: 프로젝트에 minFiles만 있으면 maxBytes는 전역, minFiles는 프로젝트 값 (셀 머지)
+  ---
+  duration_ms: 278.204958
+  ...
+# Subtest: [T083/L1-F1a] TS-004: 3층 동시 존재 시 code-scan.json > setting.json > 상수 순으로 결정론적
+ok 4 - [T083/L1-F1a] TS-004: 3층 동시 존재 시 code-scan.json > setting.json > 상수 순으로 결정론적
+  ---
+  duration_ms: 103.283125
+  ...
+# Subtest: [T083/L1-F1c] TS-005: 프로젝트 shardPolicy 타입 위반 → exit 1 code_scan_config_invalid
+ok 5 - [T083/L1-F1c] TS-005: 프로젝트 shardPolicy 타입 위반 → exit 1 code_scan_config_invalid
+  ---
+  duration_ms: 31.823417
+  ...
+# Subtest: [T083/L1-F1a] TS-006: shardPolicy에 알 수 없는 키(_help)가 있어도 거부되지 않는다
+ok 6 - [T083/L1-F1a] TS-006: shardPolicy에 알 수 없는 키(_help)가 있어도 거부되지 않는다
+  ---
+  duration_ms: 59.526958
+  ...
+# Subtest: [T083/L1-F1d] TS-007: 봉인 — DEFAULT_SHARD_POLICY 상수 밖 미참조 + manifestMaxBytes( 함수 소스 부재
+ok 7 - [T083/L1-F1d] TS-007: 봉인 — DEFAULT_SHARD_POLICY 상수 밖 미참조 + manifestMaxBytes( 함수 소스 부재
+  ---
+  duration_ms: 1.001792
+  ...
+# Subtest: [T083/L1-F1d] TS-008: 봉인 — loadGlobalSetting( 호출이 소스에 정확히 1곳(resolveShardPolicy 본문)
+ok 8 - [T083/L1-F1d] TS-008: 봉인 — loadGlobalSetting( 호출이 소스에 정확히 1곳(resolveShardPolicy 본문)
+  ---
+  duration_ms: 0.296459
+  ...
+# Subtest: [T083/L1-F1b-a] TS-010: OPAL_HOME이 setting.json 없는 홈을 가리키면 상수 폴백 + stderr 무출력
+ok 9 - [T083/L1-F1b-a] TS-010: OPAL_HOME이 setting.json 없는 홈을 가리키면 상수 폴백 + stderr 무출력
+  ---
+  duration_ms: 135.477209
+  ...
+# Subtest: [T083/L1-F1b-b] TS-011: 전역 setting.json이 깨진 JSON이면 exit 1이 아니라(비차단) 상수 폴백 + stderr 1줄
+ok 10 - [T083/L1-F1b-b] TS-011: 전역 setting.json이 깨진 JSON이면 exit 1이 아니라(비차단) 상수 폴백 + stderr 1줄
+  ---
+  duration_ms: 32.631375
+  ...
+# Subtest: [T083/L1-F1b-b] TS-012: bootstrap·models만 있는 전역 설정(shardPolicy 키 부재) → 상수 폴백 + stderr 무출력
+ok 11 - [T083/L1-F1b-b] TS-012: bootstrap·models만 있는 전역 설정(shardPolicy 키 부재) → 상수 폴백 + stderr 무출력
+  ---
+  duration_ms: 125.919167
+  ...
+# Subtest: [T083/L1-F1b-b] TS-013: 전역 shardPolicy.maxBytes 타입 위반 → 비차단 + 상수 폴백 + stderr 1줄, exit code 불변
+ok 12 - [T083/L1-F1b-b] TS-013: 전역 shardPolicy.maxBytes 타입 위반 → 비차단 + 상수 폴백 + stderr 1줄, exit code 불변
+  ---
+  duration_ms: 32.321083
+  ...
+# Subtest: [T083/L1-F1b-a] TS-014: 같은 프로젝트를 서로 다른 OPAL_HOME 2개로 실행하면 정책이 다르게 적용된다
+ok 13 - [T083/L1-F1b-a] TS-014: 같은 프로젝트를 서로 다른 OPAL_HOME 2개로 실행하면 정책이 다르게 적용된다
+  ---
+  duration_ms: 418.363708
+  ...
+# Subtest: [T083/L1-F1b-c] TS-015: 실행 전후 전역 setting.json 바이트가 동일 + 그 사이 전역 정책은 실제로 소비된다
+ok 14 - [T083/L1-F1b-c] TS-015: 실행 전후 전역 setting.json 바이트가 동일 + 그 사이 전역 정책은 실제로 소비된다
+  ---
+  duration_ms: 227.798875
+  ...
+# Subtest: [T083/L1-F1b-b] TS-016: 전역 4상태(부재·깨짐·키부재·타입위반) 전부 exit code 불변 + 타입위반은 stderr 안내 1줄
+ok 15 - [T083/L1-F1b-b] TS-016: 전역 4상태(부재·깨짐·키부재·타입위반) 전부 exit code 불변 + 타입위반은 stderr 안내 1줄
+  ---
+  duration_ms: 171.553208
+  ...
+# Subtest: [T083/L1-F2a] TS-020: 바이트 초과 + 엔트리 수 미달 → manifest_oversize에 열거되지 않는다
+ok 16 - [T083/L1-F2a] TS-020: 바이트 초과 + 엔트리 수 미달 → manifest_oversize에 열거되지 않는다
+  ---
+  duration_ms: 446.423292
+  ...
+# Subtest: [T083/L1-F2b] TS-021: 바이트 초과 + 엔트리 수 충족 → 1건 열거 + exit 0(비차단)
+ok 17 - [T083/L1-F2b] TS-021: 바이트 초과 + 엔트리 수 충족 → 1건 열거 + exit 0(비차단)
+  ---
+  duration_ms: 55.763542
+  ...
+# Subtest: [T083/L1-F2a] TS-022: 바이트 미달 + 엔트리 수 충족 → 0건 (AND 조건)
+ok 18 - [T083/L1-F2a] TS-022: 바이트 미달 + 엔트리 수 충족 → 0건 (AND 조건)
+  ---
+  duration_ms: 413.511542
+  ...
+# Subtest: [T083/L1-F2-경계] TS-023: entries===minFiles는 대상(하한은 이상), entries===minFiles-1은 비대상
+ok 19 - [T083/L1-F2-경계] TS-023: entries===minFiles는 대상(하한은 이상), entries===minFiles-1은 비대상
+  ---
+  duration_ms: 103.050709
+  ...
+# Subtest: [T083/L1-F2-경계] TS-024: size===maxBytes는 비대상, size===maxBytes+1은 대상 (082 off-by-one 계약 보존)
+ok 20 - [T083/L1-F2-경계] TS-024: size===maxBytes는 비대상, size===maxBytes+1은 대상 (082 off-by-one 계약 보존)
+  ---
+  duration_ms: 116.100542
+  ...
+# Subtest: [T083/L1-F2c] TS-025: 베이스는 상한 이하·샤드만 2축 충족 → 1건 + manifest 필드가 샤드 경로 (082 S-25 계승)
+ok 21 - [T083/L1-F2c] TS-025: 베이스는 상한 이하·샤드만 2축 충족 → 1건 + manifest 필드가 샤드 경로 (082 S-25 계승)
+  ---
+  duration_ms: 30.590542
+  ...
+# Subtest: [T083/L1-F2-scaffold] TS-026: 2축 미충족이면 scaffold stderr 비어있고, 충족이면 1줄 + stdout 바이트 동일
+ok 22 - [T083/L1-F2-scaffold] TS-026: 2축 미충족이면 scaffold stderr 비어있고, 충족이면 1줄 + stdout 바이트 동일
+  ---
+  duration_ms: 53.156667
+  ...
+# Subtest: [T083/L1-F4a] TS-030: split --plan --json — 그룹 후보 + estimatedBytes·files 존재
+ok 23 - [T083/L1-F4a] TS-030: split --plan --json — 그룹 후보 + estimatedBytes·files 존재
+  ---
+  duration_ms: 29.927292
+  ...
+# Subtest: [T083/L1-F4a] TS-031/034: --plan 실행 전후 code-map 트리 바이트 동일(무쓰기), --out은 groups 문서 1개만 생성
+ok 24 - [T083/L1-F4a] TS-031/034: --plan 실행 전후 code-map 트리 바이트 동일(무쓰기), --out은 groups 문서 1개만 생성
+  ---
+  duration_ms: 63.377417
+  ...
+# Subtest: [T083/L1-F4b] TS-033/116: --plan --json 2회 실행 stdout이 바이트 동일(결정론) — 사전 유/무 각각
+ok 25 - [T083/L1-F4b] TS-033/116: --plan --json 2회 실행 stdout이 바이트 동일(결정론) — 사전 유/무 각각
+  ---
+  duration_ms: 112.493958
+  ...
+# Subtest: [T083/L1-F4c] TS-032/035~037: 1건뿐인 엔트리는 unassigned + "기타" 그룹 0개 + 라벨 안전
+ok 26 - [T083/L1-F4c] TS-032/035~037: 1건뿐인 엔트리는 unassigned + "기타" 그룹 0개 + 라벨 안전
+  ---
+  duration_ms: 27.151
+  ...
+# Subtest: [T083/L1-F4-usage] TS-038: inline 모드에서 split --plan → exit 1 split_inline_mode
+ok 27 - [T083/L1-F4-usage] TS-038: inline 모드에서 split --plan → exit 1 split_inline_mode
+  ---
+  duration_ms: 27.3075
+  ...
+# Subtest: [T083/L1-F4-usage] TS-039: --plan과 --groups 동시 지정 → exit 1 split_usage_invalid
+ok 28 - [T083/L1-F4-usage] TS-039: --plan과 --groups 동시 지정 → exit 1 split_usage_invalid
+  ---
+  duration_ms: 28.297708
+  ...
+# Subtest: [T083/L1-F4d] TS-100~101: 각 단계는 직전 잔여만 입력받고, 앞 단계 배정은 후속 단계에서 불변
+ok 29 - [T083/L1-F4d] TS-100~101: 각 단계는 직전 잔여만 입력받고, 앞 단계 배정은 후속 단계에서 불변
+  ---
+  duration_ms: 29.947292
+  ...
+# Subtest: [T083/L1-F4d] TS-102~106,132: 신호별 배정 — S1 첫토큰/S2 첫2토큰/S3 임의토큰/S4 마지막토큰/S5 depends
+ok 30 - [T083/L1-F4d] TS-102~106,132: 신호별 배정 — S1 첫토큰/S2 첫2토큰/S3 임의토큰/S4 마지막토큰/S5 depends
+  ---
+  duration_ms: 28.891917
+  ...
+# Subtest: [T083/L1-F4d] TS-106: depends를 공유하는 엔트리 3건 이상이 S5 그룹이 된다 (파생 픽스처)
+ok 31 - [T083/L1-F4d] TS-106: depends를 공유하는 엔트리 3건 이상이 S5 그룹이 된다 (파생 픽스처)
+  ---
+  duration_ms: 29.058584
+  ...
+# Subtest: [T083/L1-F4d] TS-107~108: S1~S3 2건 미만·S4~S5 3건 미만은 다음 단계로 흐르고, 다중 매칭은 스팬 길이·등재 순서로 결정론적
+ok 32 - [T083/L1-F4d] TS-107~108: S1~S3 2건 미만·S4~S5 3건 미만은 다음 단계로 흐르고, 다중 매칭은 스팬 길이·등재 순서로 결정론적
+  ---
+  duration_ms: 29.60425
+  ...
+# Subtest: [T083/L1-F4d] ★S-5 채택 효과 단언: 사다리 최종 unassigned 수는 S1 단독 실행 시점의 unassigned보다 작다
+ok 33 - [T083/L1-F4d] ★S-5 채택 효과 단언: 사다리 최종 unassigned 수는 S1 단독 실행 시점의 unassigned보다 작다
+  ---
+  duration_ms: 56.239166
+  ...
+# Subtest: [T083/L2-F4f] TS-109: --trace 단계별 표 — assigned+unassigned===total
+ok 34 - [T083/L2-F4f] TS-109: --trace 단계별 표 — assigned+unassigned===total
+  ---
+  duration_ms: 28.605583
+  ...
+# Subtest: [T083/L2-F4f] TS-110: --stop-after S2가 S3~S5를 실행하지 않고 잔여를 전부 unassigned로 낸다
+ok 35 - [T083/L2-F4f] TS-110: --stop-after S2가 S3~S5를 실행하지 않고 잔여를 전부 unassigned로 낸다
+  ---
+  duration_ms: 28.979042
+  ...
+# Subtest: [T083/L2-F4f] TS-111: 사다리 id 밖 --stop-after 값 → exit 1 split_usage_invalid + 허용값 목록
+ok 36 - [T083/L2-F4f] TS-111: 사다리 id 밖 --stop-after 값 → exit 1 split_usage_invalid + 허용값 목록
+  ---
+  duration_ms: 27.222042
+  ...
+# Subtest: [T083/L2-F4f] TS-112: 모든 배정 엔트리에 stage가 실리고 groups[].stage ↔ assignments[key] 일치
+ok 37 - [T083/L2-F4f] TS-112: 모든 배정 엔트리에 stage가 실리고 groups[].stage ↔ assignments[key] 일치
+  ---
+  duration_ms: 28.985458
+  ...
+# Subtest: [T083/L2-F4f] TS-113: --trace --stop-after 출력을 그대로 --groups -(stdin) 파이프해도 성공한다(왕복)
+ok 38 - [T083/L2-F4f] TS-113: --trace --stop-after 출력을 그대로 --groups -(stdin) 파이프해도 성공한다(왕복)
+  ---
+  duration_ms: 66.807667
+  ...
+# Subtest: [T083/L1-F4e] TS-114: 사전 미발견 시 S1~S3은 skipped:dict_absent이고 S4·S5만 실행된다
+ok 39 - [T083/L1-F4e] TS-114: 사전 미발견 시 S1~S3은 skipped:dict_absent이고 S4·S5만 실행된다
+  ---
+  duration_ms: 36.601166
+  ...
+# Subtest: [T083/L1-F4e] TS-115: 사전 미발견 시 dict.found===false + dict.searched 경로 목록
+ok 40 - [T083/L1-F4e] TS-115: 사전 미발견 시 dict.found===false + dict.searched 경로 목록
+  ---
+  duration_ms: 33.430708
+  ...
+# Subtest: [T083/L1-F4e] TS-120: shardPolicy.dictPath 명시값이 최우선 — dict.source==="policy"
+ok 41 - [T083/L1-F4e] TS-120: shardPolicy.dictPath 명시값이 최우선 — dict.source==="policy"
+  ---
+  duration_ms: 33.488958
+  ...
+# Subtest: [T083/L1-F4e] TS-121: docs/PROJECT.md의 {설계} 변수가 해소되면 dict.source==="project-var"
+ok 42 - [T083/L1-F4e] TS-121: docs/PROJECT.md의 {설계} 변수가 해소되면 dict.source==="project-var"
+  ---
+  duration_ms: 32.995458
+  ...
+# Subtest: [T083/L1-F4e] TS-122~123: 변수 미등록 시 기본 경로 2후보 중 어디에 두어도 발견 + 앞 단계 성공 시 뒤를 안 본다
+ok 43 - [T083/L1-F4e] TS-122~123: 변수 미등록 시 기본 경로 2후보 중 어디에 두어도 발견 + 앞 단계 성공 시 뒤를 안 본다
+  ---
+  duration_ms: 33.837583
+  ...
+# Subtest: [T083/L1-F4e] TS-124: 수식어(6열)·분류어(5열) 두 표에서 영문·약어가 정확히 추출된다(헤더 이름 기반)
+ok 44 - [T083/L1-F4e] TS-124: 수식어(6열)·분류어(5열) 두 표에서 영문·약어가 정확히 추출된다(헤더 이름 기반)
+  ---
+  duration_ms: 30.506208
+  ...
+# Subtest: [T083/L1-F4e] TS-125~127: 헤더 불일치 표 무시 + 파손 stderr 1줄 + 부재는 침묵
+ok 45 - [T083/L1-F4e] TS-125~127: 헤더 불일치 표 무시 + 파손 stderr 1줄 + 부재는 침묵
+  ---
+  duration_ms: 61.696375
+  ...
+# Subtest: [T083/L1-F4e] TS-128: dictPath가 프로젝트 루트 밖이면 읽지 않고 다음 후보로 넘어간다(경로 이탈 차단)
+ok 46 - [T083/L1-F4e] TS-128: dictPath가 프로젝트 루트 밖이면 읽지 않고 다음 후보로 넘어간다(경로 이탈 차단)
+  ---
+  duration_ms: 30.88425
+  ...
+# Subtest: [T083/L1-F4e] TS-129: 사전 파일이 크기 상한 초과면 "사전 없음" 취급 + 도구가 멈추지 않는다
+ok 47 - [T083/L1-F4e] TS-129: 사전 파일이 크기 상한 초과면 "사전 없음" 취급 + 도구가 멈추지 않는다
+  ---
+  duration_ms: 31.376208
+  ...
+# Subtest: [T083/L1-F4e] TS-130~131: split --plan 실행 전후 사전·docs/PROJECT.md 바이트 동일 + 조회 8커맨드는 사전을 읽지 않는다(지연 로딩)
+ok 48 - [T083/L1-F4e] TS-130~131: split --plan 실행 전후 사전·docs/PROJECT.md 바이트 동일 + 조회 8커맨드는 사전을 읽지 않는다(지연 로딩)
+  ---
+  duration_ms: 61.613334
+  ...
+# Subtest: [T083/L1-X-a] TS-140: .opal/code-scan.json이 없는 트리에서 init --header-source inline이 exit 0으로 초안을 낸다
+ok 49 - [T083/L1-X-a] TS-140: .opal/code-scan.json이 없는 트리에서 init --header-source inline이 exit 0으로 초안을 낸다
+  ---
+  duration_ms: 26.349333
+  ...
+# Subtest: [T083/L1-X-a] TS-141: .opal/code-scan.json이 깨진 JSON인 트리에서도 init --write --force가 exit 0으로 복구한다
+ok 50 - [T083/L1-X-a] TS-141: .opal/code-scan.json이 깨진 JSON인 트리에서도 init --write --force가 exit 0으로 복구한다
+  ---
+  duration_ms: 29.561958
+  ...
+# Subtest: [T083/L1-X-b] TS-142: TTY 없이 실행해도 정상 동작하고 프롬프트를 출력하지 않는다
+ok 51 - [T083/L1-X-b] TS-142: TTY 없이 실행해도 정상 동작하고 프롬프트를 출력하지 않는다
+  ---
+  duration_ms: 28.974875
+  ...
+# Subtest: [T083/L1-X-b] TS-143: --header-source 누락 시 exit 1 init_header_source_required + 파일 미생성
+ok 52 - [T083/L1-X-b] TS-143: --header-source 누락 시 exit 1 init_header_source_required + 파일 미생성
+  ---
+  duration_ms: 25.475166
+  ...
+# Subtest: [T083/L1-X-b] TS-144: --header-source auto(구형 값)는 exit 1 header_source_invalid + init 자체는 유효값에서 동작한다
+ok 53 - [T083/L1-X-b] TS-144: --header-source auto(구형 값)는 exit 1 header_source_invalid + init 자체는 유효값에서 동작한다
+  ---
+  duration_ms: 91.658792
+  ...
+# Subtest: [T083/L1-X-b] TS-158: init 추가로 15서브명령이 되고, 나머지 13 명령의 게이트 차단 동작은 불변이다
+ok 54 - [T083/L1-X-b] TS-158: init 추가로 15서브명령이 되고, 나머지 13 명령의 게이트 차단 동작은 불변이다
+  ---
+  duration_ms: 31.783917
+  ...
+# Subtest: [T083/L2-X-c] TS-145: 파일 없음 + --write 없음 → stdout 초안 + 쓰기 0건
+ok 55 - [T083/L2-X-c] TS-145: 파일 없음 + --write 없음 → stdout 초안 + 쓰기 0건
+  ---
+  duration_ms: 28.521833
+  ...
+# Subtest: [T083/L2-X-c] TS-146: 파일 있음 + --write(force 없음) → exit 1 config_exists + 기존 파일 바이트 동일
+ok 56 - [T083/L2-X-c] TS-146: 파일 있음 + --write(force 없음) → exit 1 config_exists + 기존 파일 바이트 동일
+  ---
+  duration_ms: 28.50625
+  ...
+# Subtest: [T083/L2-X-c] TS-147/153: 파일 있음 + --write --force → .bak이 원본과 바이트 동일 + stderr 보고 1줄
+ok 57 - [T083/L2-X-c] TS-147/153: 파일 있음 + --write --force → .bak이 원본과 바이트 동일 + stderr 보고 1줄
+  ---
+  duration_ms: 30.382458
+  ...
+# Subtest: [T083/L2-X-d] TS-148~149: docs/PROJECT.md 프로젝트 구성 표에서 scopes 추론, 표 없으면 디렉토리 스캔 폴백
+ok 58 - [T083/L2-X-d] TS-148~149: docs/PROJECT.md 프로젝트 구성 표에서 scopes 추론, 표 없으면 디렉토리 스캔 폴백
+  ---
+  duration_ms: 52.634042
+  ...
+# Subtest: [T083/L2-X-d] TS-150~151: extensions에 .md 항상 포함 + exclude 규약 예시 10종과 정확 일치 + 키 순서
+ok 59 - [T083/L2-X-d] TS-150~151: extensions에 .md 항상 포함 + exclude 규약 예시 10종과 정확 일치 + 키 순서
+  ---
+  duration_ms: 25.938958
+  ...
+# Subtest: [T083/L2-X-d] TS-152: shardPolicy 키가 초안에 존재하지 않는다(3단 폴백 보존)
+ok 60 - [T083/L2-X-d] TS-152: shardPolicy 키가 초안에 존재하지 않는다(3단 폴백 보존)
+  ---
+  duration_ms: 25.419417
+  ...
+# Subtest: [T083/L2-X-d] TS-154: 이 저장소에서 init을 돌리면 scopes 이름 3종이 실제 .opal/code-scan.json과 일치한다
+ok 61 - [T083/L2-X-d] TS-154: 이 저장소에서 init을 돌리면 scopes 이름 3종이 실제 .opal/code-scan.json과 일치한다
+  ---
+  duration_ms: 40.823083
+  ...
+# Subtest: [T083/L2-X-d] TS-155~156: 3종 에러의 fix에 init 복구 명령 포함 + md 표 파싱이 parseMdTable 1곳
+ok 62 - [T083/L2-X-d] TS-155~156: 3종 에러의 fix에 init 복구 명령 포함 + md 표 파싱이 parseMdTable 1곳
+  ---
+  duration_ms: 25.554833
+  ...
+# Subtest: [T083/L2-X-d] TS-157/160: init 실행 전후 전역 setting.json 바이트 동일 + pm/code-scan-management.md에 init 반영
+ok 63 - [T083/L2-X-d] TS-157/160: init 실행 전후 전역 setting.json 바이트 동일 + pm/code-scan-management.md에 init 반영
+  ---
+  duration_ms: 26.713291
+  ...
+# Subtest: [T083/L2-F3a] TS-040/043/044: split --groups 실행 후 _shards 생성 + shards 선언 추가 + validate 0건 + scaffold no-op
+ok 64 - [T083/L2-F3a] TS-040/043/044: split --groups 실행 후 _shards 생성 + shards 선언 추가 + validate 0건 + scaffold no-op
+  ---
+  duration_ms: 82.352334
+  ...
+# Subtest: [T083/L2-F3b] TS-041: 실행 전후 엔트리 총합이 동일하다(실제 파일 재로딩 기준, 유실 0건)
+ok 65 - [T083/L2-F3b] TS-041: 실행 전후 엔트리 총합이 동일하다(실제 파일 재로딩 기준, 유실 0건)
+  ---
+  duration_ms: 32.446083
+  ...
+# Subtest: [T083/L2-F3c] TS-042: groups에 없는 엔트리(legacy/temp/quirky)는 베이스에 그대로 남는다
+ok 66 - [T083/L2-F3c] TS-042: groups에 없는 엔트리(legacy/temp/quirky)는 베이스에 그대로 남는다
+  ---
+  duration_ms: 33.49825
+  ...
+# Subtest: [T083/L2-F3d] TS-045: --dry-run은 결과를 출력하고 .opal/code-map/ 트리를 바이트 동일하게 남긴다
+ok 67 - [T083/L2-F3d] TS-045: --dry-run은 결과를 출력하고 .opal/code-map/ 트리를 바이트 동일하게 남긴다
+  ---
+  duration_ms: 34.76425
+  ...
+# Subtest: [T083/L1-라벨] TS-053: ../evil·_shards·대문자 라벨은 exit 1 split_groups_invalid(경로 이탈 차단)
+ok 68 - [T083/L1-라벨] TS-053: ../evil·_shards·대문자 라벨은 exit 1 split_groups_invalid(경로 이탈 차단)
+  ---
+  duration_ms: 82.612125
+  ...
+# Subtest: [T083/L2-F3-손편집] ★S-10 손편집 집행: --plan 출력을 사람이 편집(라벨 개명 + 그룹 간 엔트리 이동)해도 성공 + 유실 0건
+ok 69 - [T083/L2-F3-손편집] ★S-10 손편집 집행: --plan 출력을 사람이 편집(라벨 개명 + 그룹 간 엔트리 이동)해도 성공 + 유실 0건
+  ---
+  duration_ms: 30.879417
+  ...
+# Subtest: [T083/L2-F3e] TS-046~047: 존재하지 않는 키·한 엔트리를 2개 그룹에 지정 → exit 1 split_groups_invalid + 쓰기 0건
+ok 70 - [T083/L2-F3e] TS-046~047: 존재하지 않는 키·한 엔트리를 2개 그룹에 지정 → exit 1 split_groups_invalid + 쓰기 0건
+  ---
+  duration_ms: 57.158125
+  ...
+# Subtest: [T083/L2-F3e] TS-048: 쓰기 실패 주입 → exit 1 + 트리 바이트 동일 + *.tmp-split 잔존 0건
+ok 71 - [T083/L2-F3e] TS-048: 쓰기 실패 주입 → exit 1 + 트리 바이트 동일 + *.tmp-split 잔존 0건
+  ---
+  duration_ms: 28.957083
+  ...
+# Subtest: [T083/L2-F3e] TS-049: 사후 검증 총합 불일치 시 롤백되어 트리가 원상 복구된다
+ok 72 - [T083/L2-F3e] TS-049: 사후 검증 총합 불일치 시 롤백되어 트리가 원상 복구된다
+  ---
+  duration_ms: 28.478708
+  ...
+# Subtest: [T083/L1-F5a] TS-060: manifest_oversize 위반에 recommendedShards(≥2 정수)와 next(문자열) 포함
+ok 73 - [T083/L1-F5a] TS-060: manifest_oversize 위반에 recommendedShards(≥2 정수)와 next(문자열) 포함
+  ---
+  duration_ms: 27.422833
+  ...
+# Subtest: [T083/L1-F5b] TS-061: next 필드의 명령을 그대로 실행하면 F-004 제안 출력이 exit 0으로 나온다
+ok 74 - [T083/L1-F5b] TS-061: next 필드의 명령을 그대로 실행하면 F-004 제안 출력이 exit 0으로 나온다
+  ---
+  duration_ms: 53.73425
+  ...
+# Subtest: [T083/L1-F5a] TS-062: detail이 {bytes}/{maxBytes} 포맷을 유지한다(정확 단언, H-8)
+ok 75 - [T083/L1-F5a] TS-062: detail이 {bytes}/{maxBytes} 포맷을 유지한다(정확 단언, H-8)
+  ---
+  duration_ms: 28.082875
+  ...
+# Subtest: [T083/L1-F5a] TS-063: scaffold stderr 경고에 split ... --plan 명령이 포함된다
+ok 76 - [T083/L1-F5a] TS-063: scaffold stderr 경고에 split ... --plan 명령이 포함된다
+  ---
+  duration_ms: 29.847625
+  ...
+# Subtest: [T083/L2-F7] TS-080: 기존 11개 테스트 스크립트 전량 GREEN (자기 자신은 재귀 방지를 위해 제외 — 082 관용)
+not ok 77 - [T083/L2-F7] TS-080: 기존 11개 테스트 스크립트 전량 GREEN (자기 자신은 재귀 방지를 위해 제외 — 082 관용)
+  ---
+  duration_ms: 0.44325
+  location: '/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/opal/tools/code-scan/tests/test-shard-policy.js:1394:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    [MUST] 083 신규 파일 1개(test-shard-policy.js 자기 자신) + 107 신규 파일 1개(test-header-history.js) + 109 신규 파일 1개(test-hub-root.js)를 제외하면 기존 스크립트가 정확히 13개여야 함(109 진행 시점 기준), got ["test-discover.js","test-feature.js","test-header-history.js","test-header-source.js","test-hook.js","test-hub-root.js","test-regression.js","test-resolve-header.js","test-scaffold.js","test-scan-root-landing.js","test-scope-filter.js","test-shard.js","test-target.js","test-validate.js"]
+    
+    14 !== 13
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 13
+  actual: 14
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/opal/tools/code-scan/tests/test-shard-policy.js:1398:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: [T083/L2-F7] TS-081: fixtures/golden/* 8파일 바이트 diff 0 (git diff --stat 빈 결과, 재캡처 금지)
+ok 78 - [T083/L2-F7] TS-081: fixtures/golden/* 8파일 바이트 diff 0 (git diff --stat 빈 결과, 재캡처 금지)
+  ---
+  duration_ms: 34.751083
+  ...
+# Subtest: [T083/L2-F7] TS-082: 샤드 미선언 자산(codemap-repo·legacy-repo) 출력 불변 + shardPolicy 도입 후에도 무영향
+ok 79 - [T083/L2-F7] TS-082: 샤드 미선언 자산(codemap-repo·legacy-repo) 출력 불변 + shardPolicy 도입 후에도 무영향
+  ---
+  duration_ms: 207.599458
+  ...
+# Subtest: [T083/L2-F7] TS-083: 가짜 홈 5종 중 어느 것을 주입해도 정책 미적용 명령(scan)의 결과가 동일하다
+ok 80 - [T083/L2-F7] TS-083: 가짜 홈 5종 중 어느 것을 주입해도 정책 미적용 명령(scan)의 결과가 동일하다
+  ---
+  duration_ms: 296.304459
+  ...
+# Subtest: [T083/L2-F7] TS-084: 모든 테스트 파일의 spawnSync 호출이 OPAL_HOME을 주입한다(정적 grep)
+not ok 81 - [T083/L2-F7] TS-084: 모든 테스트 파일의 spawnSync 호출이 OPAL_HOME을 주입한다(정적 grep)
+  ---
+  duration_ms: 2.145917
+  location: '/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/opal/tools/code-scan/tests/test-shard-policy.js:1492:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    [RED expect] spawnSync를 쓰는 모든 테스트 파일이 OPAL_HOME을 주입해야 함(U-7) — 현재 083 이전 파일들은 주입하지 않음, got ["test-scan-root-landing.js"]
+    + actual - expected
+    
+    + [
+    +   'test-scan-root-landing.js'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'test-scan-root-landing.js'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/opal/tools/code-scan/tests/test-shard-policy.js:1499:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: [T083/L2-F7] TS-085: 082 시나리오 26종의 테스트 함수가 전부 존재 + skip·todo 0건 + 083 이전(S-13) 완료
+ok 82 - [T083/L2-F7] TS-085: 082 시나리오 26종의 테스트 함수가 전부 존재 + skip·todo 0건 + 083 이전(S-13) 완료
+  ---
+  duration_ms: 0.38
+  ...
+# Subtest: [T083/L2-F8] TS-090/097: VERSION===1.6.0 + 변경이력 (083) 행 + @header 갱신
+ok 83 - [T083/L2-F8] TS-090/097: VERSION===1.6.0 + 변경이력 (083) 행 + @header 갱신
+  ---
+  duration_ms: 0.085291
+  ...
+# Subtest: [T083/L2-F8] TS-091: tools.md에 split·2축 판정·shardPolicy·3단 우선순위·에러 코드 7종 반영
+not ok 84 - [T083/L2-F8] TS-091: tools.md에 split·2축 판정·shardPolicy·3단 우선순위·에러 코드 7종 반영
+  ---
+  duration_ms: 0.177792
+  location: '/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/opal/tools/code-scan/tests/test-shard-policy.js:1525:1'
+  failureType: 'testCodeFailure'
+  error: "[RED expect] tools.md에 'split_usage_invalid'이 반영돼야 함 — 현재 미반영"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/opal/tools/code-scan/tests/test-shard-policy.js:1529:12)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: [T083/L2-F8] TS-092: header-rules.md에 split 집행 1줄 + 변경이력 v1.7
+ok 85 - [T083/L2-F8] TS-092: header-rules.md에 split 집행 1줄 + 변경이력 v1.7
+  ---
+  duration_ms: 0.114791
+  ...
+# Subtest: [T083/L2-F8b] TS-093: setting.default.json에 shardPolicy.maxBytes===10240·minFiles===40
+ok 86 - [T083/L2-F8b] TS-093: setting.default.json에 shardPolicy.maxBytes===10240·minFiles===40
+  ---
+  duration_ms: 0.111791
+  ...
+# Subtest: [T083/L2-F8b] TS-094~095: 가짜 홈 3형태에 시드 로직 적용 — 기존 값 무손실 + 멱등
+ok 87 - [T083/L2-F8b] TS-094~095: 가짜 홈 3형태에 시드 로직 적용 — 기존 값 무손실 + 멱등
+  ---
+  duration_ms: 128.257
+  ...
+# Subtest: [T083/L2-F8b] TS-096: 시드가 없는 환경(homes/absent)에서 코드 상수로 정상 동작한다
+ok 88 - [T083/L2-F8b] TS-096: 시드가 없는 환경(homes/absent)에서 코드 상수로 정상 동작한다
+  ---
+  duration_ms: 113.3195
+  ...
+# Subtest: [T083/L2-DONE4] ★★★TS-054: 사전상태단언 → 전 궤 관통(validate→--plan --out→--groups --dry-run→--groups→validate) → 유실 0건 + 오버사이즈 0건
+ok 89 - [T083/L2-DONE4] ★★★TS-054: 사전상태단언 → 전 궤 관통(validate→--plan --out→--groups --dry-run→--groups→validate) → 유실 0건 + 오버사이즈 0건
+  ---
+  duration_ms: 146.368792
+  ...
+1..89
+# tests 89
+# suites 0
+# pass 86
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6972.125458

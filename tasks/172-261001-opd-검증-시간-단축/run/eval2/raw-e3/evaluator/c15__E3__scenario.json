@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "low",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "low",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/var/folders/0k/n9rvmztx6xs3xvjsvf0qqzdw0000gn/T/e3work/fx/c15",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 1651 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 26.4,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 21902,
+  "stop_reason": "end_turn",
+  "session_id": "e0518796-b706-47d5-a429-f4e6340ef6ce",
+  "total_cost_usd": 0.3668954,
+  "usage": {
+   "input_tokens": 4,
+   "cache_creation_input_tokens": 39488,
+   "cache_read_input_tokens": 60077,
+   "output_tokens": 1948,
+   "output_tokens_details": {
+    "thinking_tokens": 244
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 39488,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1630,
+     "cache_read_input_tokens": 47695,
+     "cache_creation_input_tokens": 4175,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 4175
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 4,
+    "outputTokens": 1948,
+    "cacheReadInputTokens": 60077,
+    "cacheCreationInputTokens": 39488,
+    "webSearchRequests": 0,
+    "costUSD": 0.3668954,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 244,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 2,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "receipt 검증 결과는 `ok: true`이고, 확인된 문서는 4건입니다. 판정 JSON은 아래와 같습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"2c4d1bcab562e6a2cf6533ed19dd90f74ff6763b103176da0be803ad0c174eb1\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 0, \"adoption\": 2, \"boundary\": 1},\n    \"average\": 1.0,\n    \"gaps\": [\n      \"goal-1: TEST-SCENARIO.md#Scenarios S-1 기대 결과 — 'D-1 (a)/(b)/(c) 중 하나로 정합이 맞춰진다(구체적 방법 미정)'이라서 AC-1(맞추는 방법이 하나로 정해짐)을 직접 검증하지 못한다. 워커 page 집합과 DONE.md 선언 집합 D를 맞추는 방법 중 (a) 워커가 D 경로만 쓰기, (b) DONE 선언 갱신, (c) PM 역반영 가운데 무엇을 기대 결과로 볼지가 구현자에게 남아 있다\",\n      \"boundary-1: TEST-SCENARIO.md#Scenarios S-1 — D 밖 page라는 경계 조건은 있지만 기대 결과가 정해지지 않았다. C-1(finalize의 ATTRIBUTION_COMMIT_BLOCKED 동작 불변)을 확인하는 부정 경로도 없다. D 밖 쓰기를 차단할지 선언에 흡수할지가 구현자에게 남아 있다\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [\n    {\n      \"id\": \"A-1\",\n      \"kind\": \"cheaper_layer\",\n      \"targets\": [\"S-1\"],\n      \"basis\": \"S-1의 행동은 'op-brain-ingest 워커 디스패치 후 finalize'로 실제 서브에이전트를 호출하지만 방법·환경 열은 'unit'이고 [실호출 1회] 표지가 없다. 검증할 계약(워커가 쓴 page 집합과 D의 정합, finalize 차단 여부)은 워커 출력을 기록한 결과 파일(쓴 page 경로 목록)을 finalize에 입력해 증명할 수 있다. AC-1의 수용 기준에도 모델 판단 품질은 들어 있지 않다\",\n      \"recommendation\": \"워커 디스패치를 기록된 page 경로 목록 fixture로 바꾼다. D 안쪽 경우와 D 밖 경우 각각에 대해 finalize 결과를 단위 수준에서 검증한다\"\n    }\n  ]\n}\n```\n\n- **시나리오 축 미달**: 목표 0점, 채택/잔존 2점, 경계/부정 1점으로 평균은 1.0입니다. 목표 축에 0점이 있고 평균도 통과선 1.5에 못 미칩니다.\n- **목표 축 0점**: S-1의 기대 결과가 \"(a)/(b)/(c) 중 하나, 구체적 방법 미정\"으로 남아 있어서 AC-1을 직접 검증할 수 없습니다.\n- **경계 축 1점**: D 밖 page라는 경계 조건은 있지만 기대 결과가 정해지지 않았고, C-1(finalize 차단 동작 불변)을 확인하는 시나리오도 없습니다.\n- **채택/잔존 2점**: 이 태스크의 목표는 교체형이 아니라서 만점입니다.\n\n`scope: scenario` 부분 호출이라 계약에 따라 `verdict`와 `rewrite_target`은 넣지 않았습니다. 이전 회차 gaps가 전달되지 않아 `resolved_gaps`는 빈 배열이고, 파일은 만들지 않았습니다.",
+  "ttft_ms": 4870,
+  "type": "result",
+  "duration_ms": 22971,
+  "uuid": "7fa682be-45fa-443f-95a1-b878c32c1883",
+  "ttft_stream_ms": 2216,
+  "time_to_request_ms": 172,
+  "first_content_frame_ms": 2216,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

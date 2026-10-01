@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 38.9,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 33411,
+  "stop_reason": "end_turn",
+  "session_id": "ea47e05f-6c08-40fd-851c-d79ac50c4ab8",
+  "total_cost_usd": 0.23435579999999998,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 18155,
+   "cache_read_input_tokens": 94419,
+   "output_tokens": 3510,
+   "output_tokens_details": {
+    "thinking_tokens": 851
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 18155,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2715,
+     "cache_read_input_tokens": 27196,
+     "cache_creation_input_tokens": 9427,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 9427
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 3510,
+    "cacheReadInputTokens": 94419,
+    "cacheCreationInputTokens": 18155,
+    "webSearchRequests": 0,
+    "costUSD": 0.23435579999999998,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 851,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"96944daaa30a59a0389908d9bb8e3d78964623bae569758cc0f7d29117e9ed6f\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: scenario) 채점 완료: scores={goal:2, adoption:2, boundary:2}, average=2.0, gaps 0건, advisories 0건\",\n  \"blockers\": [],\n  \"changed_files\": [],\n  \"_evidence\": {\n    \"goal\": \"S-9가 설치본에서 실제 Orca와 Codex로 태스크 162를 재기동하고 'codex-start ok, lease·registry owner가 동일한 자식 ID'를 확인한다. S-10은 같은 세션의 첫 'worktree-tool checkpoint'에서 'checkpoint SHA와 registry 기록이 일치'하는지 확인한다. 둘 다 배포 후 운영 계층에서 TASK Proposed outcome('lease를 획득해 부팅하고, 허브가 같은 세션을 registry owner로 확정')과 AC-6을 직접 검증하므로 2점이다.\",\n    \"adoption\": \"교체형 요소를 양쪽에서 검증한다. 신규 경로가 채택되었는지는 S-9가 설치본의 실제 재기동에서 lease 기반 owner 확정으로 확인한다. 구 동작이 남지 않았는지는 S-1('pending·만료·부재 lease는 owner_lease_unresolved, registry 바이트 불변')이 owner 없는 성공의 재발을 막는지로 확인한다. 설정 교체는 S-7('신규·구 기본은 --no-daemon, 수정 argv는 바이트 보존')이 구 기본 argv의 잔존 여부와 사용자 수정값 보존을 함께 확인하므로 2점이다.\",\n    \"boundary\": \"실패와 경계 경로를 직접 검증한다. S-1·S-2는 lease 불일치와 동시 owner 변경을 다룬다. S-3은 close 실패·잔존, handoff 실패, lease 재조회 실패를 다루며, 결과가 불명이면 recovery_required가 되고 재기동이 차단되는지 확인한다. S-4는 Orca stale·기타 오류가 unknown으로 분류되는지, S-5는 recover 실패 조건에서 상태가 바뀌지 않는지 확인한다. S-6은 EPERM·EACCES·EROFS가 30초 대기 없이 registry_write_denied로 분류되는지, S-8은 미지원 Codex 인자를 실제 기동해 bounded timeout과 터미널 부재 확인이 이뤄지는지 검증하므로 2점이다.\",\n    \"advisory_review\": \"cheaper_layer 후보를 검토했지만 지적하지 않았다. S-6의 실제 Codex sandbox, S-8의 실제 Orca 터미널, S-9·S-10의 설치본 실측은 Setup에 '실제 Codex 부팅, 허브 registry 권한, Orca 터미널 종료, 설치본 checkpoint를 대신하지 않는다'고 명시된 환경 계약을 검증한다. 이 계약은 기록된 결과 파일로 증명할 수 없다. S-1·S-2와 S-3·S-5는 검증 대상 경로(ownership-set 거부 / 최종 전이 경합, timeout 복구 / 명시 recover)가 서로 달라 subsumed·mergeable 근거가 부족하다. Check와 행동 시나리오의 분류 오류도 발견하지 못했다.\"\n  }\n}\n```\n\n`scope: scenario` 부분 결과 계약에 맞춰 판정 JSON만 반환했습니다. 파일은 만들지 않았습니다.\n\n- **진입 게이트:** `event-loader verify --event worker.dispatch`를 직접 실행해 `ok: true`를 확인했습니다. 확인된 문서는 4건입니다.\n- **결과:** 세 축(goal·adoption·boundary)이 모두 2점이고 평균은 2.0입니다. 채점 근거는 `_evidence`에 축별로 정리했습니다.\n- **빈 배열 항목:** 입력에 `previous_gaps`가 없어서 `resolved_gaps`는 빈 배열입니다. 근거가 충분한 advisory가 없어서 `advisories`도 빈 배열입니다.\n- **계약 밖 필드:** `_evidence`는 계약에 없는 필드라 소비 측이 무시해도 됩니다.\n- **verdict 없음:** 부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 쓰지 않았습니다. 두 결과를 합치는 일은 `design-gate combine` 소관입니다.\n\n참고로 claude.ai 커넥터 일부(Amazon Selling Partner, Canva, Figma, Gmail, Google Calendar, Google Drive, Helium 10, higgsfield)는 아직 인증이 필요합니다. claude.ai 커넥터 설정에서 인증하기 전까지는 쓸 수 없습니다. 이번 판정에는 필요하지 않았습니다.",
+  "ttft_ms": 3055,
+  "type": "result",
+  "duration_ms": 35437,
+  "uuid": "abb2f7a9-b5c9-4736-8bde-03176827a726",
+  "ttft_stream_ms": 1255,
+  "time_to_request_ms": 93,
+  "first_content_frame_ms": 1255,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

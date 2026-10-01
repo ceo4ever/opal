@@ -1,0 +1,26 @@
+{
+ "e01": {
+  "label": "clean-pass-163",
+  "kind": "clean",
+  "source": "pass-163",
+  "expected_verdict": "pass",
+  "expected_axes": [],
+  "request_md_added": true
+ },
+ "e02": {
+  "label": "clean-pass-161",
+  "kind": "clean",
+  "source": "pass-161",
+  "expected_verdict": "pass",
+  "expected_axes": [],
+  "request_md_added": true
+ },
+ "e03": {
+  "label": "clean-pass-169",
+  "kind": "clean",
+  "source": "pass-169",
+  "expected_verdict": "pass",
+  "expected_axes": [],
+  "request_md_added": false
+ }
+}

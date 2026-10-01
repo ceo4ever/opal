@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "medium",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/fx/c03",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2089 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 50.3,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 45186,
+  "stop_reason": "end_turn",
+  "session_id": "cc4cd677-e3bc-4a6b-8c08-c247cd905b1d",
+  "total_cost_usd": 0.4543296,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 43747,
+   "cache_read_input_tokens": 180408,
+   "output_tokens": 3412,
+   "output_tokens_details": {
+    "thinking_tokens": 959
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 43747,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2663,
+     "cache_read_input_tokens": 52795,
+     "cache_creation_input_tokens": 19784,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 19784
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 3412,
+    "cacheReadInputTokens": 180408,
+    "cacheCreationInputTokens": 43747,
+    "webSearchRequests": 0,
+    "costUSD": 0.4543296,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 959,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "이번 호출(`design-rubric`, `scope: scenario`, 1회차)의 판정 결과 시나리오 3축이 모두 2점(평균 2.0)이고, 미달 축과 advisory는 없습니다. 진입 게이트 verify는 `ok: true`(검증 문서 4건)로 통과했고, 파일은 만들지 않았습니다. 부분 결과 계약이라 `verdict`·`rewrite_target`은 넣지 않았습니다. 이전 회차 gap이 입력으로 오지 않아 `resolved_gaps`는 비어 있습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope=scenario) 채점 완료: scores={goal:2, adoption:2, boundary:2}, average=2.0, gaps 0건, advisories 0건\",\n  \"axis_reasons\": {\n    \"goal\": \"TASK Proposed outcome '실제 실행한 검사의 명령·범위·결과·설정 출처를 확인 … 검사 미실행은 통과로 소비되지 않는다'를 운영 계층에서 직접 검증한다. S-9·S-10은 fixtures/unit-real 사례에 실제 ruff·mypy·pytest·eslint·tsc·vitest를 실행해 정상 exit 0과 위반 exit 5를 관측하고 버전·출력을 evidence/real-tools/에 보존한다(AC-6). S-13은 정식 설치 뒤 배포본 run.sh로 실제 unit을 실행하고 새 로그인 셸 설정 해석을 확인한다(AC-8). S-6은 cwd·config.source/path·계층 cmd/exit/scope 공개 출력을 단언한다(AC-3). AC-1~AC-8이 모두 하나 이상의 시나리오에 대응한다.\",\n    \"adoption\": \"교체형 목표(check를 검사로 실행하던 경로 → run 계약)의 양쪽을 검증한다. 채택: S-8(a)(b)(c)는 전역 템플릿·pyproject 추론·package.json 추론이 모두 run을 갖는지 확인하고, S-13(1)(3)은 배포본 템플릿·스키마 sha256 일치와 실제 실행을 확인하며, S-11(1)은 소비자 문서(execute-guide·opal-test-agent)가 새 계약을 적었는지 확인한다. 잔존: S-1은 구형 설정에서 check stub의 표식 파일이 생기지 않음(check 미실행·run 대체 없음)을, S-8은 어느 출력에도 'ruff .'가 없음과 check≠run을, S-11(2)는 상태값 정의가 README 한 곳에만 있음을 단언한다.\",\n    \"boundary\": \"실패·경계 경로를 직접 검증한다. S-1은 run 누락(not_configured/run_missing, exit 21), S-2(b)는 설치 확인 실패(tool_unavailable/install_check_failed)와 S-3 검사 실패(exit 5)의 구별, S-3은 stop-on-fail 뒤 not_run 잔존, S-4는 빈 계층(no_layers_declared)과 glob 불일치(no_matching_files/no_check_executed), S-5는 missing·outside_project·pattern_mismatch 제외와 file_scope_unsupported, S-7은 required:false/true 경계를 다룬다. 실제 도구 계층에서도 S-9·S-10의 lint·타입·테스트 위반 사례가 실패 경로를 관측하며, H-1 공급 실패는 BLOCKED로 처리하도록 Setup에 정해져 있다.\"\n  },\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n축 채점에는 반영하지 않은 참고 사항입니다(gap·advisory 기준에 해당하지 않음):\n\n- **실행 환경 경로 불일치:** TEST-SCENARIO Setup의 worktree 경로는 `ai-framework/.opal-worktrees/task_161`이고 RED 파일명도 `s161`입니다. 이번 호출의 `project_root`는 `opal/.opal-worktrees/task_172`라서 서로 다릅니다. 픽스처라면 문제없지만, 실제 태스크라면 TEST 실행 전에 맞춰야 합니다.\n- **네트워크 확인 방법 부재:** S-10의 \"네트워크 없이 끝난다\"는 확인 수단(네트워크 차단 환경 등)이 정해져 있지 않습니다. 지금은 `check.exit:0`으로만 간접 관측합니다.",
+  "ttft_ms": 4828,
+  "type": "result",
+  "duration_ms": 46873,
+  "uuid": "3a2ab764-4407-4b03-9e5e-7815c5a7d89e",
+  "ttft_stream_ms": 2201,
+  "time_to_request_ms": 69,
+  "first_content_frame_ms": 2201,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

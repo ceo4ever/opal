@@ -102,7 +102,7 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - **기타 경로 트리거 조건**: 단계 = EXECUTE이고 워커 반환 `changed_files` 중 docs/, .opal/, *.md, tasks/ 외 파일이 ≥1건 (legacy R-6 스킵 조건의 역)
    - **영역 분할 절차**: `docs/PROJECT.md` "## 프로젝트 구성" 섹션 prefix 매칭으로 영역별 분할 — 의사코드는 `opal/core/references/pm/context-injection.md` §PROJECT.md 프로젝트 구성 기반 라우팅을 그대로 적용 (→ D-3). 매칭 실패 시 단일 호출(`scope=all`)로 폴백 (→ D-4 예시 B)
    - **호출**: 영역별로 opal-convention-checker 워커 디스패치 — 파라미터 매핑은 `opal/agents/opal-convention-checker/AGENT.md` §입력 명세 §PM Gate 호출 시나리오 표 참조 (→ D-2)
-   - **호출 입력 명세**: `target_files = changed_files ∩ 영역 prefix`, `scope = 영역명` (단일 호출 시 `scope=all`), `task_folder = 현재 태스크 폴더`, `timestamp` = 영역별 분리 (병렬 호출별 고유 ts)
+   - **호출 입력 명세**: `target_files = changed_files ∩ 영역 prefix`, `scope = 영역명` (단일 호출 시 `scope=all`), `task_folder = 현재 태스크 폴더`, `timestamp` = 영역별 분리 (병렬 호출별 고유 ts), `base_ref` = 태스크 worktree 기준 브랜치(없으면 기본 브랜치)
    - **판정 기준**:
      | 발견 이슈 심각도 | 결과 |
      |---------------|------|

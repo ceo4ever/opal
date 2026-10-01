@@ -1,0 +1,200 @@
+TAP version 13
+# Subtest: [T080/L2-F5] TS-024 (S-11): 동일 픽스처를 두 모드로 validate — 커버리지 분자가 각 모드 소스만 반영(합산 폐기)
+ok 1 - [T080/L2-F5] TS-024 (S-11): 동일 픽스처를 두 모드로 validate — 커버리지 분자가 각 모드 소스만 반영(합산 폐기)
+  ---
+  duration_ms: 96.965917
+  ...
+# Subtest: [T080/L2-F5] TS-025 (S-11): manifest 모드 — 인라인 부재가 위반으로 집계되지 않는다
+ok 2 - [T080/L2-F5] TS-025 (S-11): manifest 모드 — 인라인 부재가 위반으로 집계되지 않는다
+  ---
+  duration_ms: 45.304959
+  ...
+# Subtest: [T080/L2-F5] TS-026 (S-11): inline 모드 — 구조 패스 스킵으로 매니페스트 무결성 위반이 집계되지 않는다
+ok 3 - [T080/L2-F5] TS-026 (S-11): inline 모드 — 구조 패스 스킵으로 매니페스트 무결성 위반이 집계되지 않는다
+  ---
+  duration_ms: 64.517167
+  ...
+# Subtest: [T080/L2-F5] TS-027 (S-11) [회귀]: uncovered:pre_existing만 비차단 · 나머지 차단 · exit 2 정책 불변
+ok 4 - [T080/L2-F5] TS-027 (S-11) [회귀]: uncovered:pre_existing만 비차단 · 나머지 차단 · exit 2 정책 불변
+  ---
+  duration_ms: 64.242834
+  ...
+# Subtest: [T080/L2-F5] TS-029 (S-11): validate --json 결과에 headerSource 필드가 포함된다
+ok 5 - [T080/L2-F5] TS-029 (S-11): validate --json 결과에 headerSource 필드가 포함된다
+  ---
+  duration_ms: 194.47425
+  ...
+# Subtest: [T080/L2-F9] TS-014 (S-7): include로 걸러진 형제 파일은 매니페스트에 없어도 files_key_removed로 집계되지 않는다 (오탐 금지)
+ok 6 - [T080/L2-F9] TS-014 (S-7): include로 걸러진 형제 파일은 매니페스트에 없어도 files_key_removed로 집계되지 않는다 (오탐 금지)
+  ---
+  duration_ms: 59.083417
+  ...
+# Subtest: [T080/L2-F9] TS-015 (S-7): 필터에 걸리지 않는 in-scope 미등재 파일은 여전히 files_key_removed로 검출된다 (미탐 금지)
+ok 7 - [T080/L2-F9] TS-015 (S-7): 필터에 걸리지 않는 in-scope 미등재 파일은 여전히 files_key_removed로 검출된다 (미탐 금지)
+  ---
+  duration_ms: 56.502667
+  ...
+# Subtest: [T077-승계] violations/orphan — orphan:file_missing 검출 + exit 2
+ok 8 - [T077-승계] violations/orphan — orphan:file_missing 검출 + exit 2
+  ---
+  duration_ms: 51.999791
+  ...
+# Subtest: [T077-승계] violations/orphan — orphan:dir_missing 검출 + exit 2
+ok 9 - [T077-승계] violations/orphan — orphan:dir_missing 검출 + exit 2
+  ---
+  duration_ms: 57.342875
+  ...
+# Subtest: [T077-승계] violations/uncovered — uncovered:no_entry 검출 + exit 2
+ok 10 - [T077-승계] violations/uncovered — uncovered:no_entry 검출 + exit 2
+  ---
+  duration_ms: 63.334792
+  ...
+# Subtest: [T077-승계] violations/uncovered — uncovered:incomplete 검출 + exit 2
+ok 11 - [T077-승계] violations/uncovered — uncovered:incomplete 검출 + exit 2
+  ---
+  duration_ms: 54.932125
+  ...
+# Subtest: [T077-승계] violations/conflict-inline-shadowed — conflict:inline_shadowed 검출 + exit 2
+ok 12 - [T077-승계] violations/conflict-inline-shadowed — conflict:inline_shadowed 검출 + exit 2
+  ---
+  duration_ms: 64.896125
+  ...
+# Subtest: [T077-승계] violations/draft — draft 검출 + exit 2
+ok 13 - [T077-승계] violations/draft — draft 검출 + exit 2
+  ---
+  duration_ms: 53.526833
+  ...
+# Subtest: [T077-승계] violations/exports-missing — exports_not_found 검출 + exit 2
+ok 14 - [T077-승계] violations/exports-missing — exports_not_found 검출 + exit 2
+  ---
+  duration_ms: 55.622334
+  ...
+# Subtest: [T077-승계] exports 대조 — 존재(통과)/미존재(exports_not_found)/주석내존재(통과, 계약된 한계)
+ok 15 - [T077-승계] exports 대조 — 존재(통과)/미존재(exports_not_found)/주석내존재(통과, 계약된 한계)
+  ---
+  duration_ms: 59.443541
+  ...
+# Subtest: [T077-승계] --changed "csv" — 지정 파일만 판정, mode:"changed"
+ok 16 - [T077-승계] --changed "csv" — 지정 파일만 판정, mode:"changed"
+  ---
+  duration_ms: 52.809
+  ...
+# Subtest: [T077-승계] --changed - (stdin) — 개행 구분 목록 입력
+ok 17 - [T077-승계] --changed - (stdin) — 개행 구분 목록 입력
+  ---
+  duration_ms: 59.759917
+  ...
+# Subtest: [T077-승계] violations/clean — 위반 0건, exit 0, ok:true
+ok 18 - [T077-승계] violations/clean — 위반 0건, exit 0, ok:true
+  ---
+  duration_ms: 46.341917
+  ...
+# Subtest: [T077-승계] draft 상태 exit 2 → description 채운 뒤 exit 0
+ok 19 - [T077-승계] draft 상태 exit 2 → description 채운 뒤 exit 0
+  ---
+  duration_ms: 122.980625
+  ...
+# Subtest: [T077-승계] 워커 권한 경계 — 허용 필드만 수정된 매니페스트는 통과(exit 0)
+ok 20 - [T077-승계] 워커 권한 경계 — 허용 필드만 수정된 매니페스트는 통과(exit 0)
+  ---
+  duration_ms: 53.213417
+  ...
+# Subtest: [T077-승계] 워커 권한 경계 — dir 조작 → worker_scope_violation:dir_mismatch, exit 2
+ok 21 - [T077-승계] 워커 권한 경계 — dir 조작 → worker_scope_violation:dir_mismatch, exit 2
+  ---
+  duration_ms: 56.173917
+  ...
+# Subtest: [T077-승계] 워커 권한 경계 — files 키 추가/삭제 → files_key_added / files_key_removed
+ok 22 - [T077-승계] 워커 권한 경계 — files 키 추가/삭제 → files_key_added / files_key_removed
+  ---
+  duration_ms: 58.0875
+  ...
+# Subtest: [T077-승계] 워커 권한 경계 — layer/domain/module 침범 거부 + 해석 결과 무시
+ok 23 - [T077-승계] 워커 권한 경계 — layer/domain/module 침범 거부 + 해석 결과 무시
+  ---
+  duration_ms: 118.16475
+  ...
+# Subtest: [T077-승계] 신규(untracked) 헤더 없는 파일 → uncovered:newly_uncovered + exit 2
+ok 24 - [T077-승계] 신규(untracked) 헤더 없는 파일 → uncovered:newly_uncovered + exit 2
+  ---
+  duration_ms: 180.202875
+  ...
+# Subtest: [T077-승계] HEAD엔 헤더 있었으나 현재 제거(회귀) → uncovered:newly_uncovered + exit 2
+ok 25 - [T077-승계] HEAD엔 헤더 있었으나 현재 제거(회귀) → uncovered:newly_uncovered + exit 2
+  ---
+  duration_ms: 212.919
+  ...
+# Subtest: [T077-승계] HEAD에도 헤더 없던 기존 파일 → uncovered:pre_existing + exit 0(비차단)
+ok 26 - [T077-승계] HEAD에도 헤더 없던 기존 파일 → uncovered:pre_existing + exit 0(비차단)
+  ---
+  duration_ms: 200.923291
+  ...
+# Subtest: [T077-승계] 두 분류 혼재 — newly_uncovered 1건 + pre_existing 1건 → exit 2 + counts 양쪽 노출
+ok 27 - [T077-승계] 두 분류 혼재 — newly_uncovered 1건 + pre_existing 1건 → exit 2 + counts 양쪽 노출
+  ---
+  duration_ms: 228.056583
+  ...
+# Subtest: [T077-승계] 비git 트리 — 전량 pre_existing + exit 0 + stderr 경고 1줄
+ok 28 - [T077-승계] 비git 트리 — 전량 pre_existing + exit 0 + stderr 경고 1줄
+  ---
+  duration_ms: 50.11575
+  ...
+# Subtest: [T077-승계] --changed: exclude 디렉토리명 하위 파일 → skipped[excluded_dir] + counts 무영향 + exit 0
+ok 29 - [T077-승계] --changed: exclude 디렉토리명 하위 파일 → skipped[excluded_dir] + counts 무영향 + exit 0
+  ---
+  duration_ms: 99.895167
+  ...
+# Subtest: [T077-승계] --changed: excludePatterns 매치 파일 → skipped[excluded_pattern] + counts 무영향 + exit 0
+ok 30 - [T077-승계] --changed: excludePatterns 매치 파일 → skipped[excluded_pattern] + counts 무영향 + exit 0
+  ---
+  duration_ms: 103.75525
+  ...
+# Subtest: [T077-승계] --changed 대조군: exclude 미매치 신규 헤더 없는 파일은 여전히 newly_uncovered + exit 2
+ok 31 - [T077-승계] --changed 대조군: exclude 미매치 신규 헤더 없는 파일은 여전히 newly_uncovered + exit 2
+  ---
+  duration_ms: 122.724958
+  ...
+# Subtest: [T077-승계] exclude 3종으로 정당히 제외된 파일은 files_key_removed로 오탐되지 않는다 (대칭 불변식)
+ok 32 - [T077-승계] exclude 3종으로 정당히 제외된 파일은 files_key_removed로 오탐되지 않는다 (대칭 불변식)
+  ---
+  duration_ms: 32.513667
+  ...
+# Subtest: [T077-승계] index.exclude 전용 디렉토리(svc/vendor)의 파일도 오탐되지 않는다 (union 검증)
+ok 33 - [T077-승계] index.exclude 전용 디렉토리(svc/vendor)의 파일도 오탐되지 않는다 (union 검증)
+  ---
+  duration_ms: 31.827291
+  ...
+# Subtest: [T077-승계] 대조군: 제외 대상 아닌 신규 미등재 파일은 여전히 files_key_removed로 검출된다
+ok 34 - [T077-승계] 대조군: 제외 대상 아닌 신규 미등재 파일은 여전히 files_key_removed로 검출된다
+  ---
+  duration_ms: 39.946542
+  ...
+# Subtest: [T106/ADD-2] c1: @header 블록이 창문 **안**에서 종료 + 워킹==커밋 → covered · exit 0 · newly_uncovered 0
+ok 35 - [T106/ADD-2] c1: @header 블록이 창문 **안**에서 종료 + 워킹==커밋 → covered · exit 0 · newly_uncovered 0
+  ---
+  duration_ms: 190.640375
+  ...
+# Subtest: [T106/ADD-2] c2: @header 블록이 창문 **밖**에서 종료 + 워킹==커밋 → pre_existing · exit 0(비차단)
+ok 36 - [T106/ADD-2] c2: @header 블록이 창문 **밖**에서 종료 + 워킹==커밋 → pre_existing · exit 0(비차단)
+  ---
+  duration_ms: 0.109875
+  ...
+# Subtest: [T106/ADD-2] c3: 창문 경계가 JSON 블록 **내부**(닫는 `}`가 창문 밖) → end === -1 정상 null → pre_existing · exit 0
+ok 37 - [T106/ADD-2] c3: 창문 경계가 JSON 블록 **내부**(닫는 `}`가 창문 밖) → end === -1 정상 null → pre_existing · exit 0
+  ---
+  duration_ms: 0.070375
+  ...
+# Subtest: [T106/ADD-2] 불변식: 라이브 창문과 HEAD 비교 창문은 **같은 바이트 창문**을 본다(플립 지점 일치)
+ok 38 - [T106/ADD-2] 불변식: 라이브 창문과 HEAD 비교 창문은 **같은 바이트 창문**을 본다(플립 지점 일치)
+  ---
+  duration_ms: 22.691583
+  ...
+1..38
+# tests 38
+# suites 0
+# pass 38
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3139.542291

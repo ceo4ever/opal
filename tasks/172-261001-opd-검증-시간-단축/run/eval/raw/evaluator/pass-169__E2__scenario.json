@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "high",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 76.5,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 71657,
+  "stop_reason": "end_turn",
+  "session_id": "17b12385-e7e5-432e-896b-263ec429cb67",
+  "total_cost_usd": 0.44332879999999997,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 37610,
+   "cache_read_input_tokens": 137044,
+   "output_tokens": 5750,
+   "output_tokens_details": {
+    "thinking_tokens": 2222
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 37610,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 3628,
+     "cache_read_input_tokens": 41377,
+     "cache_creation_input_tokens": 14701,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 14701
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 5750,
+    "cacheReadInputTokens": 137044,
+    "cacheCreationInputTokens": 37610,
+    "webSearchRequests": 0,
+    "costUSD": 0.44332879999999997,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 2222,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "시나리오 3축 채점 결과는 goal 2·adoption 2·boundary 2로 평균 2.0입니다. `scope: scenario` 부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 쓰지 않았습니다(두 결과의 결합과 verdict 계산은 `design-gate combine`이 맡음). 파일은 만들지 않았습니다.\n\n`worker.dispatch` receipt는 직접 다시 검증했고 `ok: true`, 검증 문서 4건이었습니다.\n\n```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: scenario) 채점 완료: scores={goal:2, adoption:2, boundary:2}, average=2.0, gaps 0건, advisories 0건\",\n  \"status\": \"completed\",\n  \"input_bundle_hash\": \"6af7a3f22658edfbb4d04b8ba7aaabd4defe044f54abf95e5410731cfe32a9e4\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": [],\n    \"axis_reasons\": {\n      \"goal\": \"TEST-SCENARIO.md §Scenarios S-3 — 실제 CLI로 (1) cwd를 워크트리로 두고 allocator-root 없이 `brain-tool add-page`를 호출하고 (2) `worktree-tool finalize`가 귀속 커밋을 만들고 (3) 허브 `main`에 `git merge`한 뒤, '허브 `main` 작업트리에 그 page 파일이 그대로 존재한다 — merge 이후 별도 page 반영 단계 없이 이 커밋만으로 지식이 이동함을 직접 확인'한다. 이는 TASK.md Proposed outcome('하나의 merge로 허브에 들어가고, merge 후에 지식 반영을 따로 수행하지 않아도 된다')을 운영 흐름에서 끝까지 검증한다. 목표의 나머지 부분도 다른 시나리오가 직접 검증한다: 문서 절차 일치는 S-6, 공유 파일 정합은 S-5, 누락 후보 반영은 S-7. LLM 워커 디스패치는 Setup '대역 사용과 한계'에서 범위 밖으로 밝혔고 워커가 쓰는 결정론 CLI 계약만 검증한다. 목표 판정에 필요한 신호는 이 범위로 충분하다.\",\n      \"adoption\": \"교체형 목표다. 기존 계약은 'merge 후 허브 finalize가 brain page를 반영'이고 새 계약은 '브랜치 자신에 직접 쓰고 merge 전에 귀속 커밋'이다. 채택은 두 시나리오가 검증한다: S-3은 새 경로로 실제 page를 쓰고 커밋하고 merge하며, S-6은 done-template.md의 '새 계약(브랜치 자신에 직접 write, finalize가 merge 전 귀속 커밋) 서술 존재'와 opal-pilot-dev의 D-8·D-9·D-10·D-15 문구, op-brain-ingest의 D-7·W-6 문구를 확인한다. 잔존도 두 시나리오가 검증한다: S-6은 '\\\"merge 후 허브 finalize가 수행\\\"·\\\"merge 후 귀속 후처리\\\" 류의 구식 전제 문구가 6개 파일 어디에도 남아 있지 않은지' grep하고 반전 테스트 docstring 근거를 확인하며, S-1은 이전 `allocator_root_required` 거부가 사라졌음을 RED→GREEN으로 확인한다. 양쪽이 모두 검증되므로 2점이다. 잔존 grep 범위는 PLAN W-2·W-3·W-6·W-7의 변경 파일 6개와 같다.\",\n      \"boundary\": \"실패·경계 경로를 직접 검증한다. S-2(c)는 '상대경로는 여전히 `allocator_root_required`로 거부'되는지, S-2(a)는 명시한 허브 경로에만 쓰고 cwd에는 쓰지 않는지 확인한다. S-4는 'finalize가 `S ⊆ D` 위반으로 차단'하며 위반 경로를 반환하는지, `TestS12WorktreeWriteRejection` 회귀로 MEMORY.json 워크트리 쓰기 거부가 유지되는지 확인한다. S-12는 같은 page의 같은 구간을 두 브랜치가 다르게 고쳤을 때 '표준 conflict marker로 중단'되고 '양쪽이 쓴 서로 다른 문장이 모두 남아 있음'을 확인한 뒤, D-15 해결 절차와 `brain-tool validate --brain-path`의 exit 0을 실측한다. S-5는 두 브랜치의 `log.md` 동시 append가 유실되지 않는지와 `index.md` 재생성 정합을 검증한다.\"\n    }\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n채점 근거:\n- **goal 2점:** S-3이 워크트리에서 page를 쓰고, finalize로 커밋하고, merge한 뒤 허브에 page가 있는지까지 실제 CLI로 확인합니다. 목표의 나머지 부분은 S-5·S-6·S-7이 나눠 검증합니다.\n- **adoption 2점:** 기존 계약을 대체하는 목표입니다. 새 계약이 적용됐는지는 S-3·S-6이, 예전 문구와 이전 거부 동작이 남지 않았는지는 S-6·S-1이 확인합니다.\n- **boundary 2점:** 상대경로 거부(S-2), 선언하지 않은 경로의 finalize 차단과 MEMORY.json 쓰기 거부(S-4), 같은 page 충돌 시 양쪽 문장 보존과 해결 절차(S-12)를 직접 검증합니다.\n\nadvisory를 만들지 않은 이유:\n- 시나리오 사이에 완전히 포함되거나 합칠 수 있는 중복이 없습니다.\n- 서브에이전트나 외부 서비스를 실제로 호출하는 시나리오가 없어 `cheaper_layer` 대상이 아닙니다.\n- 유형 분류가 명백히 틀린 시나리오도 없습니다. S-6은 `check`로 분류됐는데 재배포를 1회 실행하는 단계가 들어 있습니다. 배포 결과 diff를 확인하는 검사로 볼 수 있어 `misclassified`로 지적하지 않았습니다.\n\n`previous_gaps`가 입력되지 않아 `resolved_gaps`는 빈 배열입니다.",
+  "ttft_ms": 6444,
+  "type": "result",
+  "duration_ms": 73072,
+  "uuid": "61e7c205-ebe6-47c9-a8fc-2fd5b138c7d5",
+  "ttft_stream_ms": 3850,
+  "time_to_request_ms": 57,
+  "first_content_frame_ms": 3851,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

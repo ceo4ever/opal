@@ -1,0 +1,30 @@
+{
+  "input_bundle_hash": "0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:51 (W-6), TEST-SCENARIO.md:27-28 (S-9·S-10) — TASK.md:27 AC-6은 '태스크 162의 재기동 및 첫 checkpoint 경로의 실제 결과가 기록된다'를 요구하는데 W-6은 '설치본 검증 명령 준비'까지만 맡는다. 승인 뒤 install 실행, REQUEST.md:38-43 §162 복구 순서 1~4 수행, 162 재기동, 첫 checkpoint 관측과 기록을 맡는 Work item·담당이 없다. 구현자가 누가 언제 실측하고 어디에 기록할지 정해야 한다",
+      "completeness-2: PLAN.md:20 (회귀 확인), PLAN.md:46-47 (W-1·W-2) — REQUEST.md:95는 registry 상태 소비자를 PLAN에서 목록화하고 영향 근거를 남기라고(전수 갱신) 요구한다. 그런데 PLAN은 목록을 W-1 실행 시 조사로 미루고 소비자 코드는 변경하지 않는다고 정했다. REQUEST가 명시한 소비자 `session_start_hook` 부트 등록 조건(:138-145)은 W-2의 변경 파일 안에 있으나 W-2 구체적 변경에 recovery_required 대응 여부가 없다. 그래서 status·remove 가드, schema enum, 부트 등록 조건이 새 상태를 받을 때의 동작을 구현자가 정해야 한다",
+      "completeness-3: PLAN.md:48 (W-4) — `scripts/install/windows.ps1` 이관 로직을 변경하지만 변경 대상 테스트는 `scripts/tests/test_agent_adapter_fields.sh`(bash)뿐이다. TEST-SCENARIO.md:25 S-7이 요구하는 PowerShell 이관 검증의 테스트 파일과 실행 방식이 정해지지 않았다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

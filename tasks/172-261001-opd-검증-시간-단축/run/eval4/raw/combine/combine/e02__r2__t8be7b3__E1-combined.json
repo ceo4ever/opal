@@ -1,0 +1,39 @@
+{
+  "input_bundle_hash": "2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:72 (D-3 검사 범위) — `--changed-files` 상대 경로를 무엇 기준으로 해석할지 정해져 있지 않다(project_root인지, 호출 프로세스 cwd인지). 절대 경로 입력의 허용·정규화, symlink 해석 후 outside_project 판정 여부도 미정이다. `scope.checked`와 `run_files`의 `{files}` 치환에 넣는 경로 형식(입력 그대로/project_root 기준 상대/절대), 구분자, 셸 인용(runner는 shell=True로 실행, runner.py:72)도 구현자에게 남는다. S-5의 `../outside.py`→`outside_project` 기대(TEST-SCENARIO.md:27)는 project_root 기준일 때만 성립한다. W-2 execute-guide 호출 규칙(PLAN.md:87)도 저장소 루트 기준 경로를 넘길지 project_root 기준 경로를 넘길지 정할 수 없다. 이 둘은 project_root가 하위 디렉터리일 때(예: dashboard/frontend) 결과가 달라진다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": [
+        "S-6",
+        "S-8"
+      ],
+      "basis": "S-6의 'pyproject.toml만 있는 변형 → resolve(infer)'와 S-8(b)의 'pyproject.toml만 있는 프로젝트 → resolve --project-root <tmp>'는 조건과 행동이 같다. 단언만 나뉘어 있다: S-6은 `source_path`=pyproject.toml 절대 경로, S-8(b)는 lint `run:\"ruff check .\"`·`run_files`·typecheck·unit run 명령이다(TEST-SCENARIO.md:28, :30). 같은 resolve 호출 한 번이 두 검증 신호를 모두 낸다.",
+      "recommendation": "pyproject 단독 infer resolve 사례를 한 행(예: S-8(b))으로 합쳐 `source_path`와 추론 명령을 함께 단언한다. S-6에는 project·global 두 출처만 남긴다. 또는 두 행이 같은 실행 산출물을 공유한다고 명시한다."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

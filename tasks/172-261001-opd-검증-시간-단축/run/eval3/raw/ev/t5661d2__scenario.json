@@ -1,0 +1,123 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/246cf129-7d08-4ea2-82da-97b704032cf4/scratchpad/e3w/work/fx/t5661d2",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2121 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 49.1,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 44494,
+  "stop_reason": "end_turn",
+  "session_id": "1502afd7-9323-42b4-be68-f2a05a51b624",
+  "total_cost_usd": 0.6400087999999999,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 66796,
+   "cache_read_input_tokens": 164444,
+   "output_tokens": 3636,
+   "output_tokens_details": {
+    "thinking_tokens": 1260
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 66796,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2585,
+     "cache_read_input_tokens": 61261,
+     "cache_creation_input_tokens": 17921,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 17921
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 3636,
+    "cacheReadInputTokens": 164444,
+    "cacheCreationInputTokens": 66796,
+    "webSearchRequests": 0,
+    "costUSD": 0.6400087999999999,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 1260,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [\n    {\n      \"id\": \"A-1\",\n      \"kind\": \"mergeable\",\n      \"targets\": [\"S-6\", \"S-8\"],\n      \"basis\": \"Both rows run the same resolve command on the same setup. In the S-6 infer variant (TEST-SCENARIO.md:28, 'pyproject.toml만 있는 변형' + resolve with the infer source), the setup and command are identical to S-8 (b) (TEST-SCENARIO.md:30, 'pyproject.toml만 있는 프로젝트' + `resolve --project-root <tmp>`). The only difference is what each row asserts: S-6 checks `source_path` and S-8 (b) checks the `run`/`run_files` values. Running one execution against two separate expectation rows duplicates the verification signal.\",\n      \"recommendation\": \"Fold the `source_path`=`pyproject.toml` absolute-path assertion into S-8 (b)'s expected result and drop the infer variant from S-6, so S-6 keeps only the project and global sources. S-8 (a) uses the real template and S-6's global variant uses a stub config, so those two stay separate.\"\n    }\n  ],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: scenario) scoring done: scores={goal:2, adoption:2, boundary:2}, average=2.0, gaps 0, advisories 1 (mergeable)\",\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n**Scoring basis**\n\n- **① Goal achievement = 2.** The goal is to separate install checks from real checks and to stop skipped checks from counting as a pass. Three rows test this directly:\n  - S-9 (TEST-SCENARIO.md:31) runs the real ruff, mypy and pytest on 4 cases: normal, lint violation, type violation and test failure. It checks both pass and fail, and keeps the versions and output.\n  - S-10 (:32) does the same with the real TypeScript tools.\n  - S-13 (:35) runs the deployed `~/.opal/tools/test-tool/run.sh unit` in a new login shell and checks that it really executes `ruff check .`, `mypy .` and `pytest`.\n- **⑤ Adoption/retention = 2.** This is a replacement-type goal: `check` stops being executed as a check and `run` takes its place. Both sides are tested.\n  - **Adoption (new path used):** S-8 (:30) checks that the template and inferred configs have `run`, with `check`≠`run` and `ruff check .`. S-11 (1) (:33) checks the consumer docs. S-13 checks the deployed template.\n  - **Retention (old path gone):** S-1 (:23) checks that `check` is neither executed nor substituted for `run`, and that no marker file appears. S-8 checks that the string `ruff .` is absent. S-11 (2) and (4) check that the state definitions exist only in the README and that every consumer has been handled.\n- **⑥ Boundary/negative = 2.** Each failure and boundary case is tested directly:\n  - `run` missing: S-1\n  - install check failure, kept distinct from a check failure: S-2 (b)\n  - `not_run` after stop-on-fail: S-3\n  - empty run and no matching files: S-4\n  - missing, outside-project and pattern-mismatch file exclusions: S-5\n  - optional and required layers: S-7\n  - real violation cases: S-9 and S-10\n\nThe verdict and `rewrite_target` are not filled in. Under the partial-call contract, `design-gate combine` computes them.",
+  "ttft_ms": 4386,
+  "type": "result",
+  "duration_ms": 45663,
+  "uuid": "ec8bbfa9-9601-4905-bd60-81de6f5b05f9",
+  "ttft_stream_ms": 2096,
+  "time_to_request_ms": 36,
+  "first_content_frame_ms": 2096,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

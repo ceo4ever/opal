@@ -1,0 +1,38 @@
+{
+  "input_bundle_hash": "96944daaa30a59a0389908d9bb8e3d78964623bae569758cc0f7d29117e9ed6f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "recoverability-1: PLAN.md:66 (## Release and recovery '실패 시') — 태스크 162 기존 세션 복구의 확인 항목을 'REQUEST.md §162 복구 순서'에만 맡겼는데 태스크 폴더에 REQUEST.md가 없고, TEST-SCENARIO.md:27 S-9의 '종료 3중 확인'도 세 가지 확인(예: 터미널 부재·lease 해제·registry owner 상태)과 하나라도 실패할 때의 정지·보고 경로를 정의하지 않아, 162 재기동 전에 무엇을 확인하고 실패하면 어떻게 할지 구현자가 정해야 한다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "cheaper_layer",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6의 방법·환경은 'pytest / 두 도구 및 실제 Codex sandbox'이며 `[실호출 1회]` 표지가 없습니다. 검증 대상 AC-4의 계약은 기록된 결과로 증명할 수 있습니다. 즉 lock `os.open` EPERM/EACCES/EROFS의 즉시 `registry_write_denied` 분류, lease 성공 후 registry 거부만 ok와 `registry_owner_deferred_to_hub` 진단, foreign owner 실패가 대상이며, pytest fixture가 반환 JSON으로 이를 확인합니다. 모델 판단 품질은 수용 기준이 아닙니다. 실제 sandbox 권한 거부 관측은 배포 후 S-9(AC-4 포함, 설치본·실제 Orca/Codex)와 S-10(H-3 권한 거부 경로)이 이미 덮습니다.",
+      "recommendation": "S-6은 pytest 계층(두 도구의 반환·진단 기록 검증)으로 한정하세요. 실제 Codex sandbox 관측은 S-9·S-10에 맡기거나, 꼭 필요하면 S-6 방법 열에 `[실호출 1회]`를 표기해 의도를 밝히세요."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

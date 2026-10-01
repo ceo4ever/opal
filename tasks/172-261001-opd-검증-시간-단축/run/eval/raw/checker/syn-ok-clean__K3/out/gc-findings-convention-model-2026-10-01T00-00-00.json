@@ -1,0 +1,20 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/demo-tool/demo_tool.py",
+    "opal/core/references/demo-guide.md"
+  ],
+  "findings": [],
+  "evidence": [
+    "model-based rule analysis: contents and structure reviewed",
+    "file naming conventions verified",
+    "documentation consistency checked",
+    "code formatting and style verified"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

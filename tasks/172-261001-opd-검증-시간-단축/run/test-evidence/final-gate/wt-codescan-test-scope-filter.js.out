@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: [T080/L1-F7] TS-010 (S-4): 문자열 scopes 픽스처 20종이 무수정으로 동작한다
+ok 1 - [T080/L1-F7] TS-010 (S-4): 문자열 scopes 픽스처 20종이 무수정으로 동작한다
+  ---
+  duration_ms: 1081.981375
+  ...
+# Subtest: [T080/L1-F7] TS-011 (S-4): 객체 형식 {path, include, exclude}가 스키마 검증을 통과한다
+ok 2 - [T080/L1-F7] TS-011 (S-4): 객체 형식 {path, include, exclude}가 스키마 검증을 통과한다
+  ---
+  duration_ms: 28.838958
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): index.json scopes[].include — 문자열 스칼라 → invalid_index
+ok 3 - [T080/L1-F7b] TS-075 (S-4): index.json scopes[].include — 문자열 스칼라 → invalid_index
+  ---
+  duration_ms: 27.606083
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].include — 문자열 스칼라 → code_scan_config_invalid
+ok 4 - [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].include — 문자열 스칼라 → code_scan_config_invalid
+  ---
+  duration_ms: 26.007583
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): index.json scopes[].include — 원소에 비문자열 혼입 → invalid_index
+ok 5 - [T080/L1-F7b] TS-075 (S-4): index.json scopes[].include — 원소에 비문자열 혼입 → invalid_index
+  ---
+  duration_ms: 27.01625
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].include — 원소에 비문자열 혼입 → code_scan_config_invalid
+ok 6 - [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].include — 원소에 비문자열 혼입 → code_scan_config_invalid
+  ---
+  duration_ms: 27.228167
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): index.json scopes[].include — 객체 → invalid_index
+ok 7 - [T080/L1-F7b] TS-075 (S-4): index.json scopes[].include — 객체 → invalid_index
+  ---
+  duration_ms: 27.030208
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].include — 객체 → code_scan_config_invalid
+ok 8 - [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].include — 객체 → code_scan_config_invalid
+  ---
+  duration_ms: 25.298042
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): index.json scopes[].exclude — 문자열 스칼라 → invalid_index
+ok 9 - [T080/L1-F7b] TS-075 (S-4): index.json scopes[].exclude — 문자열 스칼라 → invalid_index
+  ---
+  duration_ms: 28.065875
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].exclude — 문자열 스칼라 → code_scan_config_invalid
+ok 10 - [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].exclude — 문자열 스칼라 → code_scan_config_invalid
+  ---
+  duration_ms: 26.6945
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): index.json scopes[].exclude — 원소에 비문자열 혼입 → invalid_index
+ok 11 - [T080/L1-F7b] TS-075 (S-4): index.json scopes[].exclude — 원소에 비문자열 혼입 → invalid_index
+  ---
+  duration_ms: 27.1465
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].exclude — 원소에 비문자열 혼입 → code_scan_config_invalid
+ok 12 - [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].exclude — 원소에 비문자열 혼입 → code_scan_config_invalid
+  ---
+  duration_ms: 25.848958
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): index.json scopes[].exclude — 객체 → invalid_index
+ok 13 - [T080/L1-F7b] TS-075 (S-4): index.json scopes[].exclude — 객체 → invalid_index
+  ---
+  duration_ms: 28.2775
+  ...
+# Subtest: [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].exclude — 객체 → code_scan_config_invalid
+ok 14 - [T080/L1-F7b] TS-075 (S-4): code-scan.json scopes[].exclude — 객체 → code_scan_config_invalid
+  ---
+  duration_ms: 25.798959
+  ...
+# Subtest: [T080/L1-F10] TS-016 (S-5): root 동률 + include만 다른 두 스코프 — 파일이 자기 include 스코프로 귀속
+ok 15 - [T080/L1-F10] TS-016 (S-5): root 동률 + include만 다른 두 스코프 — 파일이 자기 include 스코프로 귀속
+  ---
+  duration_ms: 108.229083
+  ...
+# Subtest: [T080/L1-F10] TS-017 (S-5): 양쪽 include가 동시 매칭 → scope_ambiguous exit 1
+ok 16 - [T080/L1-F10] TS-017 (S-5): 양쪽 include가 동시 매칭 → scope_ambiguous exit 1
+  ---
+  duration_ms: 27.05125
+  ...
+# Subtest: [T080/L1-F10] TS-018 (S-5): include 미사용 tiebreak 픽스처 판정 결과 불변
+ok 17 - [T080/L1-F10] TS-018 (S-5): include 미사용 tiebreak 픽스처 판정 결과 불변
+  ---
+  duration_ms: 92.425541
+  ...
+# Subtest: [T080/L2-F8] TS-012 (S-6): 열거·scaffold 열거·validate 구조 패스·--changed·target 5지점이 동일 집합을 판정
+ok 18 - [T080/L2-F8] TS-012 (S-6): 열거·scaffold 열거·validate 구조 패스·--changed·target 5지점이 동일 집합을 판정
+  ---
+  duration_ms: 267.811542
+  ...
+# Subtest: [T080/L2-F8] TS-013 (S-6): 스코프 필터 판정 로직이 isInScope 외 0곳 (산출물 검사)
+ok 19 - [T080/L2-F8] TS-013 (S-6): 스코프 필터 판정 로직이 isInScope 외 0곳 (산출물 검사)
+  ---
+  duration_ms: 5.043166
+  ...
+# Subtest: [T080/L2-F8] TS-019 (S-6): scan <file> 명시 경로는 include 밖이어도 결과를 반환 (PM Gate 보호)
+ok 20 - [T080/L2-F8] TS-019 (S-6): scan <file> 명시 경로는 include 밖이어도 결과를 반환 (PM Gate 보호)
+  ---
+  duration_ms: 52.9795
+  ...
+# Subtest: [T080/L2-GOAL] TS-072 (S-19): 전역 inline 1회 실행 — 두 스코프 4파일이 모두 동일 모드를 보고
+ok 21 - [T080/L2-GOAL] TS-072 (S-19): 전역 inline 1회 실행 — 두 스코프 4파일이 모두 동일 모드를 보고
+  ---
+  duration_ms: 106.036208
+  ...
+# Subtest: [T080/L2-GOAL] TS-073 (S-19): 같은 실행에서 target·scaffold·validate·scan 4경로의 모드가 일치
+ok 22 - [T080/L2-GOAL] TS-073 (S-19): 같은 실행에서 target·scaffold·validate·scan 4경로의 모드가 일치
+  ---
+  duration_ms: 220.267
+  ...
+# Subtest: [T080/L2-GOAL] TS-074 (S-19): 전역값 한 줄만 뒤집으면 5경로가 함께 반전된다
+ok 23 - [T080/L2-GOAL] TS-074 (S-19): 전역값 한 줄만 뒤집으면 5경로가 함께 반전된다
+  ---
+  duration_ms: 880.827125
+  ...
+# Subtest: [T080/L2-GOAL] TS-074 (S-19): 5번째 경로 — hook도 전역값 한 줄에 따라 함께 반전된다
+ok 24 - [T080/L2-GOAL] TS-074 (S-19): 5번째 경로 — hook도 전역값 한 줄에 따라 함께 반전된다
+  ---
+  duration_ms: 146.6395
+  ...
+1..24
+# tests 24
+# suites 0
+# pass 24
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3352.40975

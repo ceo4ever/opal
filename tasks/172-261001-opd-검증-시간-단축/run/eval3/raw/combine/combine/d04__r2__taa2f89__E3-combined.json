@@ -1,0 +1,39 @@
+{
+  "input_bundle_hash": "7595abbdfdb7b8a6af749fff40e3de0bd85e098527879771fc6403ab5c9b5a58",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md#Work items W-1 / TASK.md#Constraints C-1·C-2 — C-1('state.json 스키마 키 집합 변경 금지')과 C-2('측정 실패 시 TEST 진행 비차단 fail-safe')가 Work item·Risks·시나리오 어디로도 이어지지 않아, 구현자가 두 제약을 지킬지와 지키는 방법을 직접 정해야 한다. D-1의 'state.json에 새 블록 추가' 선택지는 C-1과 충돌할 수 있다",
+      "completeness-2: TEST-SCENARIO.md#Scenarios — AC-3(상한 초과 전이·재개)를 다루는 시나리오가 없고, AC-2는 'stop 없이 start'(S-2)만 있으며 'start 없이 stop'은 빠져 있다. 무엇을 검증할지 구현자가 정해야 한다",
+      "completeness-3: PLAN.md#Approach vs #Findings 직접 변경 — Approach는 'state-tool에 서브커맨드 추가'라고 하지만 변경 대상은 `opal/tools/test-tool/duration_cli.py` 신규 파일이다. 어느 도구에 둘지 구현자가 골라야 한다",
+      "decision_clarity-1: PLAN.md#Decisions and contracts D-1 — 저장 위치를 'state.json 새 블록 또는 별도 run/duration.json, 구현 시점에 더 쉬운 쪽'으로 남겨 저장 구조 선택을 구현자에게 넘긴다(Findings#미확인 가정도 같은 미결정)",
+      "decision_clarity-2: PLAN.md#Work items W-1 — 'CLI 입력·출력 형식(인자, JSON 응답 스키마)과 저장 구조는 구현하면서 정한다'고 해서 외부 인터페이스(인자·응답 스키마·종료 코드)를 구현자가 정해야 한다",
+      "decision_clarity-3: PLAN.md#Work items W-1 — 중복 start·누락 stop을 '적절히 처리한다'고만 써서 실패 정책(거부·덮어쓰기·무시, 종료 코드)이 정해지지 않았다",
+      "decision_clarity-4: PLAN.md#Work items W-1 — 상한 초과 세션을 '적절한 상태로 전이, 필요하면 재개'라고만 써서 상한 값, 전이 후 상태 이름, 재개 명령·조건을 구현자가 정해야 한다",
+      "executability-1: PLAN.md#Work items W-1 — W-1 하나에 AC-1~3이 모두 몰려 있고, 그 안에 설계 결정(D-1·인터페이스·실패 정책)이 미결로 남아 있다. 추가 설계 없이는 구현을 시작할 수 없고, 소요시간이 state.json에 어떻게 반영될지(state-tool 경유 여부, 파일 소유권)도 정해지지 않았다",
+      "recoverability-1: PLAN.md#Release and recovery / #Risks H-1 — 설치·검증 순서와 실패 시 복구 경로가 없다('별도 배포 절차 없음'). H-1 설계 대응은 '없음(아직 미해결)'이고, 측정 기록이 깨지거나 상한 초과 세션이 남았을 때 어떻게 복구할지(AC-3 재개, C-2 fail-safe 동작)도 정의되지 않았다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 1,
+      "adoption": 2,
+      "boundary": 0
+    },
+    "average": 1.0,
+    "gaps": [
+      "boundary-1: TEST-SCENARIO.md §Scenarios S-2 — 중복 start의 기대 결과가 '안전하게 처리된다(구체적 동작 미정)'이고, start 없이 stop하는 누락 호출(AC-2 후반)과 측정 상한 초과 전이·재개(AC-3) 시나리오가 없다. 실패·경계 경로의 기대 동작(에러 코드/상태값/재개 명령)을 구현자가 고르게 남아 있다",
+      "goal-1: TEST-SCENARIO.md §Scenarios S-1 — 소요시간 산출만 확인하고 Proposed outcome의 'state.json 반영'과 C-1(스키마 키 집합 불변)·C-2(측정 실패 시 TEST 진행 미차단)를 검증하지 않는다. 저장 위치와 반영 확인 방법을 구현자가 정해야 한다"
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

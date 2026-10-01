@@ -1,0 +1,39 @@
+{
+  "input_bundle_hash": "c0ba0a7a3c50b36ce6a8ec725e23d47ff8f120f71185c5f0a357db7afa5ba5a8",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:27 (Findings §회귀 확인) — `.opal/brain/pages/concept/worktree-task-root-allocator-root-split.md:39`의 '명시 인자 없는 쓰기를 전용 오류로 막는다'는 AC-2가 제거를 요구하는 바로 그 전제다. 그런데 이 문서를 맡는 Work item이 없고 'op-brain-ingest가 갱신 여부를 판단한다'고만 적혀 있어, 정정할지 말지가 CLOSE 워커의 재량으로 남는다. S-6 grep 대상에도 없어 AC-2 충족을 검증할 수 없다.",
+      "completeness-2: PLAN.md:25 (Findings §회귀 확인 memory-learning.md) — `opal/core/references/harness/memory-learning.md:94`의 '요청 적용은 merge 후 `worktree-tool finalize`가 수행하며'는 W-7(PLAN.md:71)이 'finalize는 merge 전 귀속 커밋'으로 정정하는 서술과 모순된다. PLAN은 이 파일을 `--allocator-root` 문구 회귀 확인용으로만 올려 정정 여부와 담당 Work item이 정해지지 않았고, S-6 grep 대상(6개 파일)에도 없다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 1,
+      "boundary": 2
+    },
+    "average": 1.667,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6 is typed `check` and marked '없음(정적 검사)', yet its action includes '재배포 1회 실행 후 `~/.opal/tools/brain-tool/brain_tool.py`를 ... diff'. That step runs the install script, which writes to the deployed copy at ~/.opal/, and then compares the result. It is not a static grep. The pass condition 'diff 결과가 빈 값' is set only after that run, so it is a behavioral check.",
+      "recommendation": "Split S-6 into two scenarios. The grep and `git diff --name-only` steps stay as a static `check`. Make the redeploy and `diff` (D-12, C-4) a separate scenario with an execution type and timing 구현 후. That way a redeploy failure does not show up as a failed static check."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

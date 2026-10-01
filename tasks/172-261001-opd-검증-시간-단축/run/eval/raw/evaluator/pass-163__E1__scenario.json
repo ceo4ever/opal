@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 34.0,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 28273,
+  "stop_reason": "end_turn",
+  "session_id": "40289810-9c59-4f3f-8b37-858c69fd294d",
+  "total_cost_usd": 0.2072736,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 16112,
+   "cache_read_input_tokens": 94028,
+   "output_tokens": 2977,
+   "output_tokens_details": {
+    "thinking_tokens": 854
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 16112,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2132,
+     "cache_read_input_tokens": 26889,
+     "cache_creation_input_tokens": 7691,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 7691
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 2977,
+    "cacheReadInputTokens": 94028,
+    "cacheCreationInputTokens": 16112,
+    "webSearchRequests": 0,
+    "costUSD": 0.2072736,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 854,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "판정 결과입니다. `scope: scenario`라서 `verdict`와 `rewrite_target`은 반환하지 않습니다. 시나리오 3축은 모두 2점이고 gap은 없습니다.\n\n- **진입 게이트**: `event-loader verify --event worker.dispatch`를 직접 실행해 `ok: true`를 확인했습니다. 검증된 문서는 4건입니다.\n- **① 목표 달성 (goal) = 2**: S-9, S-10이 설치본과 실제 Orca/Codex 환경에서 사용자·운영 계층의 목표를 직접 검증합니다.\n  - S-9: 162를 재기동하면 `codex-start`가 ok이고, lease owner와 registry owner가 같은 자식 ID입니다(AC-1, AC-6).\n  - S-10: 첫 `checkpoint`의 SHA와 registry 기록이 일치하거나, 권한 거부 시 설계한 상승 경로가 작동합니다.\n- **⑤ 채택/잔존 (adoption) = 2**: 교체되는 것은 구 Codex 기본 argv에서 `--no-daemon`으로의 기본값입니다(AC-5). S-7이 양쪽을 모두 검증합니다.\n  - 채택: 신규 설정이 `--no-daemon`을 받습니다.\n  - 잔존 제거: 정확히 일치하는 구 기본 argv가 이관됩니다.\n  - 보존: 사용자가 수정한 argv는 바이트 단위로 유지됩니다.\n  - 구 동작인 \"owner 없는 성공\"의 제거는 S-1, S-2, S-9가 확인합니다.\n- **⑥ 경계/부정 (boundary) = 2**: 실패·경계 경로를 직접 검증합니다.\n  - S-1: pending·만료·부재 lease와 owner 불일치 시 registry 바이트가 바뀌지 않습니다.\n  - S-3: 상태가 불명이면 `recovery_required`로 남고 재기동이 차단됩니다.\n  - S-4: stale와 list 부재가 함께 확인될 때만 absent입니다.\n  - S-5: 확인이 끝나기 전 `recover`는 상태를 바꾸지 않습니다.\n  - S-6: EPERM/EACCES/EROFS는 30초 대기 없이 `registry_write_denied`로 분류되고, foreign owner는 실패합니다.\n  - S-8: 지원되지 않는 인자는 timeout을 거쳐 `hub_owned`로 돌아갑니다.\n- **advisory**: 0건입니다.\n  - 실호출을 쓰는 S-6, S-8, S-9, S-10은 레지스트리 실제 권한, 터미널 종료, 설치본 `checkpoint`를 확인합니다. Setup이 대역으로는 대신할 수 없다고 밝힌 계약이라 `cheaper_layer` 대상이 아닙니다.\n  - 완전히 포함되거나 합칠 수 있는 시나리오, 분류가 틀린 시나리오는 없습니다.\n- `previous_gaps` 입력이 없어서 `resolved_gaps`는 빈 배열입니다.\n\n```json\n{\n  \"input_bundle_hash\": \"96944daaa30a59a0389908d9bb8e3d78964623bae569758cc0f7d29117e9ed6f\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope=scenario) 채점 완료: scores={goal:2, adoption:2, boundary:2}, average=2.0, gaps 0건, advisories 0건\",\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```",
+  "ttft_ms": 2881,
+  "type": "result",
+  "duration_ms": 30348,
+  "uuid": "b3e1ca2e-8979-41aa-855d-fecbf7f10421",
+  "ttft_stream_ms": 1095,
+  "time_to_request_ms": 67,
+  "first_content_frame_ms": 1095,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

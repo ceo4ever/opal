@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "low",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "low",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/246cf129-7d08-4ea2-82da-97b704032cf4/scratchpad/e4w/work/fx/t45c4b0",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2121 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 30.2,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 25940,
+  "stop_reason": "end_turn",
+  "session_id": "cef588ec-fcd2-4d65-8af2-d8cae9b463a7",
+  "total_cost_usd": 0.39546739999999997,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 40488,
+   "cache_read_input_tokens": 152057,
+   "output_tokens": 2056,
+   "output_tokens_details": {
+    "thinking_tokens": 226
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 40488,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1344,
+     "cache_read_input_tokens": 48546,
+     "cache_creation_input_tokens": 4328,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 4328
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 2056,
+    "cacheReadInputTokens": 152057,
+    "cacheCreationInputTokens": 40488,
+    "webSearchRequests": 0,
+    "costUSD": 0.39546739999999997,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 226,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: scenario) 채점 완료: scores={goal:2, adoption:2, boundary:2}, average=2.0, gaps 0건, advisories 0건\",\n  \"blockers\": [],\n  \"changed_files\": [],\n  \"_evidence\": {\n    \"gate\": \"event-loader verify --event worker.dispatch → ok: true (verified_document_count 4)\",\n    \"goal\": \"TEST-SCENARIO.md S-9: 설치본·실제 Orca/Codex 환경에서 162를 재기동해 'codex-start ok, lease·registry owner가 동일한 자식 ID'를 확인하고, S-10: 첫 `worktree-tool checkpoint`의 SHA·registry 일치를 확인한다. 둘 다 운영 계층에서 TASK 목표(AC-1·AC-6, 부팅 owner 확정과 162 재개)를 직접 검증한다 → 2\",\n    \"adoption\": \"AC-5는 교체형(구 기본 argv → `--no-daemon`)이다. S-7은 '신규·구 기본은 `--no-daemon`'(새 기본값 채택·구 기본값 이관)과 '수정 argv는 바이트 보존'을 Mac/Windows 양쪽에서 검증한다. S-8은 미지원 인자일 때 timeout 뒤 hub_owned로 복귀하는지 검증한다. 채택과 잔존 양쪽이 검증된다 → 2\",\n    \"boundary\": \"S-1(pending·만료·부재 lease, 허브 owner 불일치 → 거부·바이트 불변), S-3(close 실패·잔존, handoff 실패, lease 재조회 실패 → recovery_required·재기동 차단), S-4(stale·기타 오류 → unknown), S-5(recover 실패 조건 → 상태 불변), S-6(EPERM/EACCES/EROFS → 30초 대기 없이 `registry_write_denied`, foreign owner 실패), S-8(미지원 인자·없는 실행 명령)으로 실패·경계 경로를 직접 검증한다 → 2\",\n    \"advisories_note\": \"S-1/S-2와 S-3/S-5는 같은 영역을 다루지만 검증 신호가 다르다(owner-from-lease 거부, 최종 전이 원자성, timeout 복구, 명시 recover). 실호출 시나리오 S-8~S-10은 실제 터미널·sandbox 권한 경계 자체가 수용 기준(C-4, AC-6)이라 cheaper_layer 대상이 아니다. 따라서 subsumed·mergeable·cheaper_layer·misclassified 근거가 없다\"\n  }\n}\n```",
+  "ttft_ms": 5909,
+  "type": "result",
+  "duration_ms": 27080,
+  "uuid": "301168e9-22e5-419e-968a-5eb854f57927",
+  "ttft_stream_ms": 3395,
+  "time_to_request_ms": 39,
+  "first_content_frame_ms": 3396,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

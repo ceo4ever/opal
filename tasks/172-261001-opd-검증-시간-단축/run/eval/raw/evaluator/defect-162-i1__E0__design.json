@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 51.3,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 46322,
+  "stop_reason": "end_turn",
+  "session_id": "a99ac0ec-331a-487f-ae81-98cb08d5bcfe",
+  "total_cost_usd": 0.25987800000000005,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 19234,
+   "cache_read_input_tokens": 103070,
+   "output_tokens": 4268,
+   "output_tokens_details": {
+    "thinking_tokens": 754
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 19234,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2638,
+     "cache_read_input_tokens": 35901,
+     "cache_creation_input_tokens": 1801,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1801
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 4268,
+    "cacheReadInputTokens": 103070,
+    "cacheCreationInputTokens": 19234,
+    "webSearchRequests": 0,
+    "costUSD": 0.25987800000000005,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 754,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "receipt를 검증했고 `ok: true`(필수 문서 4건)가 나왔습니다. `scope: design`이므로 설계 4축만 채점했습니다. 네 축 모두 FAIL입니다.\n\n**축별 판정 근거**\n- **completeness (요구·변경 범위 완전성): FAIL**\n  - AC-1·AC-2·AC-3은 W-1에 연결되어 있습니다.\n  - 그러나 C-1(state.json 스키마 키 집합 변경 금지)과 C-2(fail-safe)는 Work item·Risks 어디에도 이어지지 않습니다.\n  - D-1의 \"state.json에 새 블록 추가\"라는 선택지는 C-1과 충돌할 수 있는데, 이 충돌이 다뤄지지 않았습니다.\n  - Findings에 적힌 README 갱신이 W-1의 변경 대상에 빠져 있습니다.\n  - Approach는 \"state-tool 서브커맨드 추가\"라고 하지만, Findings와 W-1은 test-tool 아래 신규 파일을 만든다고 해서 두 설명이 맞지 않습니다.\n- **decision_clarity (결정·계약 명확성): FAIL**\n  - D-1의 저장 위치가 \"구현 시점에 더 쉬운 쪽으로 정한다\"로 남아 있습니다.\n  - W-1은 CLI 입출력 형식, 중복·누락 호출 처리, 상한 초과 시 상태 전이와 재개 방법을 모두 \"구현하면서 정한다\" 또는 \"적절히 처리한다\"로 미뤄 두었습니다.\n- **executability (실행 가능성): FAIL**\n  - W-1만으로는 추가 설계 없이 구현할 수 없습니다.\n  - H-1의 설계 대응도 \"없음(아직 미해결)\"입니다.\n- **recoverability (적용·복구 가능성): FAIL**\n  - Release and recovery 절이 \"별도 배포 절차 없음\" 한 줄뿐입니다.\n  - 설치·검증 순서와 측정 실패 시 복구 경로가 없습니다.\n\n픽스처 TASK.md 주석에 적힌 원본 i1 판정은 completeness·recoverability를 PASS로 봤습니다. 위 근거에 따라 이번 판정에서는 두 축도 FAIL로 판정했습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"7595abbdfdb7b8a6af749fff40e3de0bd85e098527879771fc6403ab5c9b5a58\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"FAIL\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"FAIL\",\n      \"recoverability\": \"FAIL\"\n    },\n    \"gaps\": [\n      \"completeness-1: `TASK.md` §Constraints C-1 ↔ `PLAN.md` §Decisions and contracts D-1 — D-1의 'state.json에 새 블록 추가' 선택지가 C-1(기존 state.json 스키마 키 집합 변경 금지)을 위반하는지 판단하지 않았고, C-1이 Work item·Risks 어디에도 연결되지 않아 구현자가 스키마 변경 허용 여부를 스스로 정해야 한다\",\n      \"completeness-2: `TASK.md` §Constraints C-2 ↔ `PLAN.md` §Work items W-1 — 측정 실패 시 TEST 단계 진행을 막지 않는 fail-safe 동작(예외 삼킴·종료코드·경고 출력)이 Work item·Risks·시나리오 어디에도 없어 실패 처리 정책을 구현자가 선택해야 한다\",\n      \"completeness-3: `PLAN.md` §Findings 문서 갱신 ↔ §Work items W-1 — `opal/tools/test-tool/README.md` 갱신이 W-1 변경 대상에 빠져 있어 문서 갱신을 할지, 누가 할지가 남아 있다\",\n      \"completeness-4: `PLAN.md` §Approach ↔ §Findings 직접 변경 — Approach는 'state-tool에 측정 서브커맨드 추가', Findings·W-1은 'test-tool/duration_cli.py 신규'로 서로 달라 구현 위치(state-tool 확장인지 test-tool 신규 CLI인지)를 구현자가 정해야 한다\",\n      \"decision_clarity-1: `PLAN.md` §Decisions and contracts D-1 — 측정 데이터 저장 위치가 'state.json 새 블록 또는 별도 run/duration.json, 구현 시점에 더 쉬운 쪽'으로 열려 있어 저장 구조와 경로를 구현자가 선택해야 한다\",\n      \"decision_clarity-2: `PLAN.md` §Work items W-1 — CLI 입력(인자·대상 단계 식별자)과 출력(JSON 응답 스키마·종료코드)이 '구현하면서 정한다'로 남아 인터페이스 계약을 구현자가 정해야 한다\",\n      \"decision_clarity-3: `PLAN.md` §Work items W-1 — stop 없이 다시 start(덮어쓰기/거부/무시), start 없이 stop(오류/무시/no-op)을 '적절히 처리한다'로만 적어 AC-2의 중복·누락 처리 정책을 구현자가 선택해야 한다\",\n      \"decision_clarity-4: `PLAN.md` §Work items W-1 — 상한(8시간 등) 값, 초과 시 전이 상태명, '필요하면' 재개하는 방법이 정해지지 않아 AC-3의 상태 전이·재개 계약을 구현자가 정해야 한다\",\n      \"executability-1: `PLAN.md` §Work items W-1 — 구체적 변경이 '구현하면서 정한다'·'적절히 처리한다'로 채워져 있어 W-1만으로는 추가 설계 없이 구현할 수 없고, 구현자가 설계를 먼저 해야 한다\",\n      \"executability-2: `PLAN.md` §Risks H-1 — 저장 구조 미정 위험의 설계 대응이 '없음(아직 미해결)'이라 재작업 위험 해소 방법을 구현자가 정해야 한다\",\n      \"recoverability-1: `PLAN.md` §Release and recovery — '별도 배포 절차 없음' 한 줄뿐이라 설치·검증 순서(배포 대상 경로, 설치 후 확인 명령)를 구현자가 정해야 한다\",\n      \"recoverability-2: `PLAN.md` §Release and recovery — 측정 기록 손상, 상한 초과 세션 잔존, state.json 오기록 같은 실패 시 복구·롤백 경로가 없어 복구 방법을 구현자가 선택해야 한다\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\n`previous_gaps` 입력이 없어서 `resolved_gaps`는 빈 배열입니다. `scope: design`이라 `advisories`도 비어 있습니다. 부분 결과 계약대로 `verdict`와 `rewrite_target`은 쓰지 않았으며, 둘의 결정은 `design-gate combine`이 맡습니다. 파일은 만들거나 수정하지 않았습니다.",
+  "ttft_ms": 6431,
+  "type": "result",
+  "duration_ms": 47792,
+  "uuid": "657437d6-0362-45f3-b495-f5687a7143a6",
+  "ttft_stream_ms": 3811,
+  "time_to_request_ms": 55,
+  "first_content_frame_ms": 3812,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

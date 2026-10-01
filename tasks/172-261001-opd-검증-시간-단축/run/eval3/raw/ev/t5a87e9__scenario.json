@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "low",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "low",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/e3w/work/fx/t5a87e9",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2121 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 47.0,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 41450,
+  "stop_reason": "end_turn",
+  "session_id": "217b731a-4226-4aee-afa7-eb5e7d3ac2d5",
+  "total_cost_usd": 0.4546924,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 46528,
+   "cache_read_input_tokens": 164382,
+   "output_tokens": 2478,
+   "output_tokens_details": {
+    "thinking_tokens": 191
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 46528,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1664,
+     "cache_read_input_tokens": 52860,
+     "cache_creation_input_tokens": 6050,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 6050
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 2478,
+    "cacheReadInputTokens": 164382,
+    "cacheCreationInputTokens": 46528,
+    "webSearchRequests": 0,
+    "costUSD": 0.4546924,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 191,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "판정 결과입니다. receipt verify는 `ok: true`(검증 문서 4건)로 통과했습니다. 파일은 만들지 않았습니다.\n\n```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: scenario) 채점 완료: scores={goal:2, adoption:2, boundary:2}, average=2.0\",\n  \"input_bundle_hash\": \"2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": [],\n    \"reasons\": {\n      \"goal\": \"TEST-SCENARIO.md:31-32 S-9·S-10은 실제 ruff·mypy·pytest·eslint·tsc·vitest를 정상과 위반 사례에 돌려 exit와 계층 status를 확인하고, 버전과 출력을 evidence/real-tools/에 남긴다(AC-6). TEST-SCENARIO.md:35 S-13은 정식 install 뒤 새 로그인 셸에서 배포된 실행기로 실제 검사를 돌려 status:\\\"pass\\\"를 확인한다(AC-8). 사용자·운영 계층에서 목표를 직접 검증하므로 2점이다.\",\n      \"adoption\": \"교체형 목표(check를 실행하던 방식에서 run 실행으로 바꿈)다. 새 방식 채택은 TEST-SCENARIO.md:30 S-8에서 확인한다. 전역 템플릿과 추론 출력 전부가 run을 갖고 check≠run이며 ruff run은 \\\"ruff check .\\\"이다. 구형 방식이 남지 않았는지는 세 곳에서 확인한다. S-8은 'ruff .' 문자열이 없음을 보고, TEST-SCENARIO.md:23 S-1은 구형 설정의 check가 실행되지도 run을 대체하지도 않음(표식 미생성)을 보고, TEST-SCENARIO.md:33 S-11(4)는 소비자 grep을 대조한다. 채택과 잔존을 모두 검증하므로 2점이다.\",\n      \"boundary\": \"TEST-SCENARIO.md:23-29의 S-1~S-5·S-7이 실패와 경계 경로를 직접 검증한다. 대상은 run 누락, 설치 확인 실패와 검사 실패의 exit 구분, 선행 계층 실패 뒤 not_run 처리, 빈 계층, glob 불일치, 범위 제외 3종(pattern_mismatch·missing·outside_project), 파일 범위를 지원하지 않는 도구, required 차이다. 2점이다.\"\n    }\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n- 세 축이 모두 2점이라 미달 축이 없고 `gaps`는 비어 있습니다. 부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 쓰지 않았습니다. 최종 판정과 결합은 `design-gate combine`이 맡습니다.\n- 직전 회차 gaps(`previous_gaps`)가 입력되지 않아 `resolved_gaps`는 빈 배열입니다.\n- `advisories`가 비어 있는 이유: 포함 관계, 합칠 수 있는 시나리오, 더 저렴한 계층으로 충분한 경우, 분류 오류 중 근거가 성립하는 항목을 찾지 못했습니다. 실제 도구를 쓰는 S-9·S-10·S-13은 실제 도구 실행 자체가 AC-6·AC-8의 수용 기준이라 `cheaper_layer` 대상이 아닙니다.\n- `reasons`는 축별 근거를 보여 주려고 넣은 필드로, 부분 결과 계약에는 없습니다. 기록 도구가 모르는 필드를 거부하면 이 필드를 빼고 저장하면 됩니다.",
+  "ttft_ms": 16496,
+  "type": "result",
+  "duration_ms": 42816,
+  "uuid": "c265a47d-79e1-4494-843e-527b81a8aef8",
+  "ttft_stream_ms": 12243,
+  "time_to_request_ms": 245,
+  "first_content_frame_ms": 12244,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

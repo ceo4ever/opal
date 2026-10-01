@@ -1,0 +1,133 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+    "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+    "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+    "opal/tools/ownership-tool/tests/test_codex_identity.py",
+    "opal/tools/ownership-tool/tests/test_session_start.py",
+    "opal/tools/worktree-launcher/tests/test_adapter_orca.py",
+    "opal/tools/worktree-launcher/tests/test_cli.py",
+    "opal/tools/worktree-launcher/tests/test_codex_handoff.py",
+    "opal/tools/worktree-launcher/tests/test_integration.py",
+    "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+    "opal/tools/worktree-launcher/tests/test_settings.py",
+    "opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py",
+    "opal/tools/worktree-launcher/worktree_launcher/cli.py",
+    "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+    "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+    "opal/tools/worktree-tool/schema/worktree.schema.json",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py",
+    "scripts/install-mac.sh",
+    "scripts/install/windows.ps1",
+    "scripts/tests/test_agent_adapter_fields.sh"
+  ],
+  "findings": [
+    {
+      "fingerprint": "1e95bd0ecd324b48",
+      "category": "주석 언어",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §언어 규칙 + 인접 코드 관측(주석 한국어)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+        "line": 47,
+        "symbol": "start"
+      },
+      "evidence": "이번 변경이 추가한 주석 4줄(L47-50)이 영문이다. 기준 커밋의 같은 파일 주석은 한국어 2줄·영문 0줄이다.",
+      "impact": "같은 파일 안에서 주석 언어가 섞여 문서 본문 한국어 원칙과 인접 코드 관례에서 벗어난다.",
+      "remediation": {
+        "guidance": "추가한 주석을 한국어로 옮긴다(식별자·오류 코드는 영문 유지).",
+        "auto_fixable": false
+      },
+      "verification": "변경 구간의 `#` 주석에 한글이 포함됐는지 확인한다.",
+      "suppression": null,
+      "id": "GC-001"
+    },
+    {
+      "fingerprint": "366827ffe16ffc1e",
+      "category": "주석 언어",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §언어 규칙 + 인접 코드 관측(주석 한국어)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+        "line": 184,
+        "symbol": "main"
+      },
+      "evidence": "이번 변경이 추가한 주석 4줄(L184-187)이 영문이다. 기준 커밋의 같은 파일 주석은 한국어 14줄·영문 0줄이다.",
+      "impact": "같은 파일 안에서 주석 언어가 섞여 문서 본문 한국어 원칙과 인접 코드 관례에서 벗어난다.",
+      "remediation": {
+        "guidance": "추가한 주석을 한국어로 옮긴다(식별자·오류 코드는 영문 유지).",
+        "auto_fixable": false
+      },
+      "verification": "변경 구간의 `#` 주석에 한글이 포함됐는지 확인한다.",
+      "suppression": null,
+      "id": "GC-002"
+    },
+    {
+      "fingerprint": "cb46b508bc7957c0",
+      "category": "주석 언어",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §언어 규칙 + 인접 코드 관측(주석 한국어)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+        "line": 62
+      },
+      "evidence": "이번 변경이 추가한 주석 10줄(L62, 368, 568-569, 651-653, 663-665)이 영문이다. 기준 커밋의 같은 파일 주석은 한국어 27줄·영문 0줄이다.",
+      "impact": "같은 파일 안에서 주석 언어가 섞여 문서 본문 한국어 원칙과 인접 코드 관례에서 벗어난다.",
+      "remediation": {
+        "guidance": "추가한 주석을 한국어로 옮긴다(식별자·오류 코드는 영문 유지).",
+        "auto_fixable": false
+      },
+      "verification": "변경 구간의 `#` 주석에 한글이 포함됐는지 확인한다.",
+      "suppression": null,
+      "id": "GC-003"
+    },
+    {
+      "fingerprint": "941c7c82c269385c",
+      "category": "주석 언어",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §언어 규칙 + 인접 코드 관측(주석 한국어)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+        "line": 41
+      },
+      "evidence": "이번 변경이 추가한 주석 2줄(L41-42)이 영문이다. 기준 커밋의 같은 파일 주석은 한국어 17줄·영문 0줄이다.",
+      "impact": "같은 파일 안에서 주석 언어가 섞여 문서 본문 한국어 원칙과 인접 코드 관례에서 벗어난다.",
+      "remediation": {
+        "guidance": "추가한 주석을 한국어로 옮긴다(식별자·오류 코드는 영문 유지).",
+        "auto_fixable": false
+      },
+      "verification": "변경 구간의 `#` 주석에 한글이 포함됐는지 확인한다.",
+      "suppression": null,
+      "id": "GC-004"
+    }
+  ],
+  "evidence": [
+    "git merge-base 7a6b3017^ HEAD -> c6e295d467aace71d994ca139819061f64143d02",
+    "git diff --name-status --diff-filter=ACMR c6e295d467aa HEAD -> 21 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4",
+    "model findings dropped: out_of_range=0, mechanical_rule=0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

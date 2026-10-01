@@ -1,0 +1,44 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "docs/PROJECT.md",
+    "opal/agents/opal-convention-checker/AGENT.md",
+    "opal/agents/opal-evaluator-agent/AGENT.md",
+    "opal/agents/opal-test-agent/AGENT.md",
+    "opal/core/references/agents.md",
+    "opal/core/references/harness/design-gate.md",
+    "opal/core/references/harness/pm-review-gate.md",
+    "opal/core/references/harness/test-cycle.md",
+    "opal/core/references/tools.md",
+    "opal/skills/op-dev-test-scenario/references/test-scenario-guide.md",
+    "opal/skills/op-gc-convention/SKILL.md",
+    "opal/skills/op-scenario-gate/README.md",
+    "opal/skills/op-scenario-gate/SKILL.md",
+    "opal/skills/opal-pilot-dev/README.md",
+    "opal/skills/opal-pilot-dev/SKILL.md",
+    "opal/tools/convention-precheck/README.md",
+    "opal/tools/convention-precheck/convention_precheck.py",
+    "opal/tools/convention-precheck/run.sh",
+    "opal/tools/convention-precheck/tests/test_convention_precheck.py",
+    "opal/tools/state-tool/README.md",
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/tests/test_design_gate_parallel.py",
+    "scripts/install-mac.sh",
+    "scripts/tests/test_agent_effort_policy.sh"
+  ],
+  "findings": [],
+  "evidence": [
+    "git merge-base main HEAD -> dee405ca6c072e47c78f7a967adb70469a420a2d",
+    "git diff --name-status --diff-filter=ACMR dee405ca6c07 HEAD -> 24 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

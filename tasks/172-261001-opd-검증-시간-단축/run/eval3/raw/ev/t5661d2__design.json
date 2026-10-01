@@ -1,0 +1,123 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/246cf129-7d08-4ea2-82da-97b704032cf4/scratchpad/e3w/work/fx/t5661d2",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2113 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 79.8,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 75204,
+  "stop_reason": "end_turn",
+  "session_id": "7c5fef77-2688-44c6-bf12-84b791d5c055",
+  "total_cost_usd": 0.6942722000000001,
+  "usage": {
+   "input_tokens": 14,
+   "cache_creation_input_tokens": 61844,
+   "cache_read_input_tokens": 362421,
+   "output_tokens": 6349,
+   "output_tokens_details": {
+    "thinking_tokens": 3354
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 61844,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2579,
+     "cache_read_input_tokens": 73470,
+     "cache_creation_input_tokens": 760,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 760
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 14,
+    "outputTokens": 6349,
+    "cacheReadInputTokens": 362421,
+    "cacheCreationInputTokens": 61844,
+    "webSearchRequests": 0,
+    "costUSD": 0.6942722000000001,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 3354,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 8,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"FAIL\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"PASS\",\n      \"recoverability\": \"PASS\"\n    },\n    \"axis_reasons\": {\n      \"completeness\": \"TASK AC-1~AC-8 and C-1~C-7 all map to W-1~W-3 via the 'completion criteria link' column (PLAN.md:86-88). Every Findings item is covered: the direct changes (PLAN.md:31-37) are in W-1/W-3, the doc updates (PLAN.md:58-60) are in W-2/W-3, and H-1~H-3 are in Risks. One Risks design response has no landing place: H-2 promises to observe check duration in the layer response (PLAN.md:95), but the D-7 evidence field list (PLAN.md:76) and the W-3 changes (PLAN.md:88) have no field for it.\",\n      \"decision_clarity\": \"D-1~D-11 pin down field meaning, execution order, the closed status list, exit codes, where the contract text lives, and migration. Two scope-judgment rules in D-3 (PLAN.md:72), which are external behavior, are left to the implementer: what base directory relative `--changed-files` paths resolve against, and which exclusion reason wins when several apply to one file.\",\n      \"executability\": \"Owner, files changed, prerequisites, and execution group are all specified per item (PLAN.md:86-88). W-1 and W-2 run in parallel with no file overlap, and W-3 depends on W-1. The order RED (opal-test-agent) → P1 → P2 → TEST → approved install is fixed (PLAN.md:100), and W-3 explicitly forbids editing the RED file. No raw external agent CLI is named, so the wrapper rule is not violated. The TS tool supply source dashboard/frontend has eslint 10, typescript 6, and vitest 4 as devDependencies, so the supply path in H-1 (PLAN.md:94) is real.\",\n      \"recoverability\": \"D-11 (PLAN.md:80) and Release and recovery (PLAN.md:100-102) set the order: source verification → user approval → install-mac.sh menu 1 → deployed-copy verification (resolve, unit, sha, login-shell variable). Before install, recovery is a fix commit on the branch; after install, re-running the install from hub main. H-1 supply failure becomes BLOCKED, and H-3 shared-global deployment requires approval, so the failure paths are recoverable.\"\n    },\n    \"gaps\": [\n      \"completeness-1: PLAN.md:95 (Risks H-2 design response) ↔ PLAN.md:76 (D-7 evidence fields) ↔ PLAN.md:88 (W-3) — H-2 says check duration is observed in the layer response, but D-7's layer field list (`check: {cmd, exit, status}`) and W-3 define no duration field. The implementer must decide whether the field exists, its name, and its unit (e.g. `check.duration_ms`). Either add it to D-7 or drop H-2's observation method and replace it with something else (e.g. a separate time measurement in the S-10 evidence).\",\n      \"decision_clarity-1: PLAN.md:72 (D-3 scope) — The base for resolving relative paths in `--changed-files` (the user's invocation cwd vs `--project-root`) is undefined, which leaves the outcome open for cases like `../outside.py` (S-5). The `requested`, `checked`, and `excluded[].path` notation (original input vs project-relative vs absolute) is also unspecified.\",\n      \"decision_clarity-2: PLAN.md:72 (D-3 exclusion reasons) — When one file meets more than one of `missing`, `outside_project`, and `pattern_mismatch` (e.g. a missing `gone.md` that also fails the glob, or an outside path that does not exist), it is unclear which reason is recorded. Specify the check order (e.g. outside_project → missing → pattern_mismatch) or a single-reason priority rule.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\nThe `worker.dispatch` receipt verified `ok: true` (4 documents). This was a design-only judgment: the four design axes, with no scenario scoring, no `verdict` and no `rewrite_target`. The design came back with 2 axes FAIL (completeness, decision clarity) and 2 PASS (executability, recoverability). I created no files and changed none.",
+  "ttft_ms": 5378,
+  "type": "result",
+  "duration_ms": 76581,
+  "uuid": "6ceb4552-a6e6-47e0-9f79-31c3c0d25b60",
+  "ttft_stream_ms": 2271,
+  "time_to_request_ms": 33,
+  "first_content_frame_ms": 2271,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

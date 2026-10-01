@@ -8,7 +8,8 @@ tags:
 - gaps-contract
 sources:
 - task:170
-related: [opal-evaluator-agent, op-scenario-gate-skill, design-gate-deterministic-pretier-separation]
+- task:172
+related: [opal-evaluator-agent, op-scenario-gate-skill, design-gate-deterministic-pretier-separation, design-gate-scope-parallel-judgement-combine]
 created: '2026-10-01'
 updated: '2026-10-01'
 status: draft
@@ -29,6 +30,11 @@ status: draft
 - evaluator(`opal-evaluator-agent`)의 `design-rubric` phase 입력에 `previous_gaps`(있을 때만)를 추가하고, 출력(Phase 4 결과 계약)에 `resolved_gaps`(`[{id, status(resolved|unresolved), reason}]`)를 추가한다. 기존 `design`/`scenario`/`verdict`/`rewrite_target`/`advisories` 구조는 그대로 유지한다(scope 분기·결과 계약 교체 없음).
 - 완전성 검증: `resolved_gaps`의 id 집합이 보낸 `previous_gaps`의 id 집합과 정확히 같아야 한다. 다르면 `op-scenario-gate`가 응답 수신 직후(단일 호출이므로 scope별 분기 없이 응답 1개만 확인) `--verdict input_error`로 기록한다 — 포맷 모호성이 아니라 실제 누락 신호이므로 완화하지 않는다.
 
+## 후속 변경 (task:172)
+
+- 위 결정은 scope 분리를 범위에서 제외했으나 task:172가 `scope` 분리와 `design-gate combine`을 도입했다 ([[design-gate-scope-parallel-judgement-combine]]).
+- `previous_gaps` 조회·조립은 PM이 아니라 `state-tool design-gate start`가 한다. 응답이 `previous_gaps`·`previous_gaps_by_scope`·`previous_gaps_iteration`을 싣는다. 조회 규칙(최신부터 역순, `deterministic_fail`·`input_error`·`superseded` 제외, 빈 gaps면 생략)과 id 정의는 그대로이며 구현 주체만 바뀌었다 (근거: task:172 DONE.md AC-3).
+
 ## 영향 범위
 
 `opal/agents/opal-evaluator-agent/AGENT.md`(§입력 명세 `previous_gaps`, gaps 포맷 [MUST], Phase 4 결과 계약 `resolved_gaps` 필드 추가), `opal/skills/op-scenario-gate/SKILL.md`(§6.1 ②previous_gaps 조회·전달, ③ 앞 resolved_gaps id-완전성 검증). evaluator의 다른 4개 phase(design-review/spec-review/drift-recheck/scenario-rubric 자체의 판정 기준)와 반복 상한 3회는 무변경.
@@ -38,3 +44,4 @@ status: draft
 - [[opal-evaluator-agent]]
 - [[op-scenario-gate-skill]]
 - [[design-gate-deterministic-pretier-separation]]
+- [[design-gate-scope-parallel-judgement-combine]]

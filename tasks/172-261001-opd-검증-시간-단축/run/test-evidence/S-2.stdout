@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /Users/lucas/.opal/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172
+plugins: asyncio-1.3.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 33 items / 22 deselected / 11 selected
+
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_advisories_from_scenario_only PASSED [  9%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_average_below_threshold_scenario PASSED [ 18%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_average_rounding PASSED [ 27%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_axis_case_insensitive PASSED [ 36%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_both PASSED [ 45%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_design_axis_fail_plan PASSED [ 54%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_pass PASSED [ 63%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_read_only_no_lock_artifacts PASSED [ 72%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_refinement_clears_advisories PASSED [ 81%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_resolved_gaps_order_design_then_scenario PASSED [ 90%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineVerdictTest::test_combine_verdict_score_zero_scenario PASSED [100%]
+
+====================== 11 passed, 22 deselected in 21.72s ======================

@@ -1,0 +1,40 @@
+{
+  "input_bundle_hash": "2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: `PLAN.md` §Risks H-2 설계 대응 ↔ §Decisions and contracts D-7 — H-2는 'check 소요를 계층 응답으로 관측한다'고 했지만 D-7의 계층 필드 목록(`name`·`tool`·`required`·`status`·`reason`·`check: {cmd, exit, status}`·`cmd`·`exit`·`stdout`·`scope`)에는 소요 시간 필드가 없다. 공개 CLI 출력에 소요 시간 필드를 넣을지, 넣는다면 이름·위치·단위(예: `check.duration_ms`)를 무엇으로 할지 구현자가 정해야 한다. 아니면 H-2 대응을 출력 필드 없이 관측하는 방법으로 바꿔야 한다.",
+      "decision_clarity-2: `PLAN.md` §Decisions and contracts D-3·D-7 — 파일 범위 계약에서 세 가지가 정해지지 않았다. (a) `--changed-files` 상대 경로의 기준이 프로젝트 루트인지 프로세스 cwd인지(S-5의 `../outside.py` 판정이 이 기준에 달려 있다). (b) `scope.kind: \"project\"`일 때 `scope.checked`·`scope.excluded`에 들어갈 값(빈 배열·`null`·요청 파일 전부 중 무엇인지). (c) `run_files`의 `{files}` 자리에 파일을 넣을 때 셸 인용 방식(공백·특수문자 경로를 shlex quote할지). 셋 다 공개 응답과 실제 실행 명령을 바꾸는데 구현자에게 맡겨져 있다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": [
+        "S-6",
+        "S-8"
+      ],
+      "basis": "Two scenarios run the same check on the same setup. S-6 runs `resolve` on a variant with only pyproject.toml and checks that `source_path` is the absolute pyproject.toml path (TEST-SCENARIO.md:28). S-8(b) runs `resolve --project-root <tmp>` on a project with only pyproject.toml and checks the inferred `run`, `run_files` and `typecheck` fields (TEST-SCENARIO.md:30). Both are CLI subprocess runs marked 구현 전 RED, so the same command runs twice on the same fixture.",
+      "recommendation": "Merge S-6's infer variant into S-8(b) so that one `resolve` call checks both the `run` fields and `source_path`. S-6 would then keep only the project and global sources and the `unit` evidence fields."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: [T080/L2-F2] TS-001 (S-1): headerSource 미설정 트리 — 13커맨드 전량 exit 1 + header_source_unset
+ok 1 - [T080/L2-F2] TS-001 (S-1): headerSource 미설정 트리 — 13커맨드 전량 exit 1 + header_source_unset
+  ---
+  duration_ms: 328.732959
+  ...
+# Subtest: [T080/L2-F2] TS-002 (S-1): 미설정 차단 시 stderr에 사유·해결·근거 문서 3줄이 나간다
+ok 2 - [T080/L2-F2] TS-002 (S-1): 미설정 차단 시 stderr에 사유·해결·근거 문서 3줄이 나간다
+  ---
+  duration_ms: 27.519291
+  ...
+# Subtest: [T080/L2-F2b] TS-007 (S-1): --help / --version은 미설정 상태에서도 exit 0
+ok 3 - [T080/L2-F2b] TS-007 (S-1): --help / --version은 미설정 상태에서도 exit 0
+  ---
+  duration_ms: 53.046292
+  ...
+# Subtest: [T080/L2-F12b] TS-008 (S-20): 깨진 JSON 설정 → code_scan_config_invalid (미설정과 구분)
+ok 4 - [T080/L2-F12b] TS-008 (S-20): 깨진 JSON 설정 → code_scan_config_invalid (미설정과 구분)
+  ---
+  duration_ms: 24.215958
+  ...
+# Subtest: [T080/L2-F12b] TS-002 (S-1): USAGE가 --header-source 옵션과 2택 값 도메인을 안내한다
+ok 5 - [T080/L2-F12b] TS-002 (S-1): USAGE가 --header-source 옵션과 2택 값 도메인을 안내한다
+  ---
+  duration_ms: 24.826792
+  ...
+# Subtest: [T080/L1-F1b] TS-003 (S-20): headerSource "auto" → header_source_invalid + detail "auto" + 마이그레이션 힌트
+ok 6 - [T080/L1-F1b] TS-003 (S-20): headerSource "auto" → header_source_invalid + detail "auto" + 마이그레이션 힌트
+  ---
+  duration_ms: 26.685209
+  ...
+# Subtest: [T080/L1-F1c] TS-009 (S-20): --header-source bogus → header_source_invalid + where "cli" + 힌트 없음
+ok 7 - [T080/L1-F1c] TS-009 (S-20): --header-source bogus → header_source_invalid + where "cli" + 힌트 없음
+  ---
+  duration_ms: 27.807083
+  ...
+# Subtest: [T080/L1-F1c] TS-065 (S-20): config headerSource "bogus" → header_source_invalid + where "config" + stdout 무오염
+ok 8 - [T080/L1-F1c] TS-065 (S-20): config headerSource "bogus" → header_source_invalid + where "config" + stdout 무오염
+  ---
+  duration_ms: 26.281875
+  ...
+# Subtest: [T080/L1-F1] TS-004 (S-21): 미설정 프로젝트 + --header-source inline → scan exit 0
+ok 9 - [T080/L1-F1] TS-004 (S-21): 미설정 프로젝트 + --header-source inline → scan exit 0
+  ---
+  duration_ms: 26.459125
+  ...
+# Subtest: [T080/L1-F1] TS-006 (S-21): 전역 manifest + --header-source inline → CLI 승리, 두 스코프 4파일이 동일 모드
+ok 10 - [T080/L1-F1] TS-006 (S-21): 전역 manifest + --header-source inline → CLI 승리, 두 스코프 4파일이 동일 모드
+  ---
+  duration_ms: 213.498792
+  ...
+# Subtest: [T080/L1-F1d] TS-005 (S-21): index.json scopes[].headerSource는 무시 — 전역 inline 적용 + 안내 1줄
+ok 11 - [T080/L1-F1d] TS-005 (S-21): index.json scopes[].headerSource는 무시 — 전역 inline 적용 + 안내 1줄
+  ---
+  duration_ms: 52.607292
+  ...
+# Subtest: [T080/L1-F1d] TS-069 (S-21): code-scan.json scopes[].headerSource는 무시 — 전역 inline 적용 + 안내 1줄
+ok 12 - [T080/L1-F1d] TS-069 (S-21): code-scan.json scopes[].headerSource는 무시 — 전역 inline 적용 + 안내 1줄
+  ---
+  duration_ms: 55.265584
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 892.608375
