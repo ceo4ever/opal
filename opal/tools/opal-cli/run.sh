@@ -67,7 +67,7 @@ ${BOLD}서브커맨드:${NC}
   doctor                환경 진단 (의존성·경로·MCP·부트스트래퍼)
   uninstall             OPAL 제거 (~/.opal + 부트스트래퍼 마커)
   mcp [add|list|remove] [name]  MCP 관리
-  console [start|stop|status|open|scan|log]  OPAL Console 대시보드 관리 (포트 7823)
+  console [start|stop|status|open|scan|log]  OPAL Console 대시보드 관리 (open은 준비 확인 후 브라우저 실행)
 
 ${BOLD}옵션:${NC}
   --version             버전 출력

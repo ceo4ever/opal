@@ -53,6 +53,10 @@ TEST-SCENARIO 작성 기준, 유형 전달, 중복 판정, advisory 응답 게�
 - fix 재검증(HEAD 3cd2a87): 영향 시나리오 테스트 30 passed. test-tool 회귀에서 새 실패는 없다. S-7 가드 테스트 10 passed.
 - 보안: 변경한 코드 파일에서 시크릿 패턴 grep 0건, `.gitignore` 영향 없음. `py_compile` 7개 파일 OK.
 - 컨벤션: 최종 checker PASS_WITH_ADVISORIES(Critical/High/Medium/Low 0, Info 1). 보고서는 `run/GC-CONVENTION-20260929-r2.md`.
+- 설치본 검증(merge `9b95e96`·`e30c000` 뒤 허브 main에서 install, 2026-09-29 허브 PM 수행): 설치본 `test-tool/lib/scenario.py`·`state-tool/state_tool.py`·`worktree-launcher` 핵심 파일이 HEAD `027ca81`과 같았다. 3건 모두 통과했다.
+  - ① `~/.opal/tools/test-tool/run.sh scenario-gate-verify --help` 정상 출력.
+  - ② 임시 opds 태스크(scratchpad, `pipeline-short.json`, agentic·worker)에서 게이트 기록 없이 `mark --task-step plan.scenario_gate --done`을 실행하자 `scenario_gate_record_required`(`history_missing`)로 거부됐다. `required_action`에 `scenario-gate-record` 재실행 절차가 담겼다. `--force --note`로도 같은 코드로 거부됐고 행은 `pending`으로 남았다.
+  - ③ 설치본 `opal-evaluator-agent`(`scenario-rubric`, worker.dispatch receipt verify ok)에 의도적 중복 fixture(같은 실행을 나눈 S-1~S-3, 소스 grep을 행동 시나리오로 적은 S-5, S-2와 환경만 다른 S-6)를 넣었다. 결과는 verdict pass(2·2·2)였고, 점수와 분리된 advisories 3건을 반환했다: A-1 `mergeable`(S-1~S-3), A-2 `subsumed`(S-6), A-3 `misclassified`(S-5). 각 advisory에 대상 S-ID·근거·권고가 들어 있었다. 첫 디스패치는 PM이 receipt 경로를 빠뜨려 evaluator가 계약대로 blocked를 반환했고, receipt를 넣어 재디스패치했다.
 
 ## 회고적 학습 후보
 

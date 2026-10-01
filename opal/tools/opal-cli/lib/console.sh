@@ -6,7 +6,7 @@
 #   opal-cli console start   — OPAL Console 대시보드 백그라운드 기동 (포트 7823)
 #   opal-cli console stop    — 실행 중인 대시보드 데몬 종료
 #   opal-cli console status  — /health 엔드포인트로 기동 상태 확인
-#   opal-cli console open    — 브라우저에서 대시보드 열기
+#   opal-cli console open    — 서버 준비 확인 후 브라우저에서 대시보드 열기
 #   opal-cli console scan [기준경로...] [--prune] [--depth N]
 #                             — console.config.json 자동 생성·머지 (기본 base=$HOME, depth=3)
 #   opal-cli console log [-n N] — 로그 실시간 팔로우 (기본 최근 50줄부터, Ctrl+C 종료)
@@ -169,6 +169,26 @@ console_read_pid_field() {
     [[ -n "$val" ]] || return 1
     printf '%s' "$val"
     return 0
+}
+
+# _console_wait_for_health <health_url> <attempts>
+# Console 준비 상태는 전용 /health의 성공 HTTP 응답으로만 판정한다. PID 레코드는 stop의
+# 소유권 판정용이며, 이미 실행 중인 비소유 Console을 열 수 있는지의 판정 근거가 아니다.
+_console_wait_for_health() {
+    local health_url="$1" attempts="${2:-10}" attempt
+    case "$attempts" in
+        ''|*[!0-9]*|0) return 1 ;;
+    esac
+
+    for ((attempt = 1; attempt <= attempts; attempt++)); do
+        if curl -fsS --max-time 2 "$health_url" >/dev/null 2>&1; then
+            return 0
+        fi
+        if [[ "$attempt" -lt "$attempts" ]]; then
+            sleep 1
+        fi
+    done
+    return 1
 }
 
 # ─── console 서브커맨드 ───────────────────────────────────────
@@ -393,6 +413,15 @@ cmd_console() {
 
         open)
             local dashboard_url="http://${host}:${port}"
+            if ! _console_wait_for_health "$health_url" 1; then
+                info "OPAL Console 응답 없음 — 기동을 시도합니다."
+                cmd_console start
+                if ! _console_wait_for_health "$health_url" 10; then
+                    error "OPAL Console이 10초 안에 준비되지 않았습니다. 브라우저를 열지 않습니다."
+                    info "로그 확인: $log_file"
+                    return 1
+                fi
+            fi
             # macOS: open, Linux: xdg-open (플랫폼 분기 — CONVENTIONS §플랫폼 분기 격리)
             if command -v open &>/dev/null; then
                 open "$dashboard_url" 2>/dev/null && success "브라우저 열기: $dashboard_url"
@@ -584,7 +613,7 @@ OPAL Console 대시보드 (포트 7823) 관리 명령어입니다.
   start    대시보드 백그라운드 기동
   stop     대시보드 데몬 종료
   status   기동 상태 확인 (/health)
-  open     브라우저에서 대시보드 열기
+  open     서버 준비 확인 후 브라우저에서 대시보드 열기
   scan     console.config.json 자동 생성/머지 (기준경로 탐색)
   log      로그 실시간 팔로우 (기본 최근 50줄부터, -n N 으로 조정, Ctrl+C 종료)
 
