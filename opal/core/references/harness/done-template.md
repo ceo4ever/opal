@@ -49,7 +49,7 @@
 
 ### 회고적 학습 후보 계약
 
-워크트리 태스크는 실행 중 워크트리의 brain 파일을 직접 바꾸지 않는다. 회고적 brain 학습은 이 절에 후보를 선언하고, 실제 page 생성·갱신·생략 판정은 merge 후 허브 finalize가 수행한다.
+CLOSE에서 op-brain-ingest가 브랜치 자신의 `.opal/brain`에 직접 page를 생성·갱신한다. `worktree-tool finalize`가 선언 집합 대비 실제 변경(S⊆D)을 merge 전에 검증하고 통과 시 귀속 커밋으로 확정하며, merge는 이미 커밋된 지식을 그대로 옮긴다.
 
 - 후보 brain page 경로를 **레포 루트 상대 POSIX 경로로 1행 1건** 선언한다.
 - 후보가 없으면 `없음` 한 줄만 쓴다.

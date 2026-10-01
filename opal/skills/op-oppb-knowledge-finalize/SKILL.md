@@ -33,9 +33,9 @@ OPPB에서 MEMORY와 brain은 **P5 이 단계 전까지 읽기 전용**이다(�
 | `project_docs` | PM이 주입한 문서 목록. 이 목록 밖을 탐색하지 않는다 |
 
 `allocator_root`를 인자로 받지 못하면 즉시 `blocked`다. 추론해서 쓰지 않는다 —
-`brain-tool`은 worktree 안의 cwd 파생 쓰기를 `allocator_root_required`(reason `cwd_inference_in_worktree`)로
-거부하고, `memory-tool`은 `.opal-worktrees` 하위 `--file`을 `WORKTREE_WRITE_REJECTED`(update/promote/
-prune/delete/task-number) 또는 deferred index 요청(append --kind memory)으로 우회시킨다.
+OPPB 미니 태스크는 capability-agent의 AGENT.md가 brain·MEMORY 수정을 금지하며, 위반 시에도
+P5 pre-finalize guard(pipeline id 18)가 `.opal/brain/**`·`.opal/MEMORY.json` diff-0을 독립적으로
+검사해 걸러낸다(brain-tool의 워크트리 쓰기 가드에는 더 이상 의존하지 않는다).
 
 ## STEP 0 — 실행 전 게이트
 

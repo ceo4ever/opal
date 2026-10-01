@@ -187,7 +187,7 @@ registry를 되살리지 않는다. 가드나 entry 회수 실패 시에는 태�
 
 ---
 
-### 8. `finalize` — merge 후 귀속 후처리 확정
+### 8. `finalize` — merge 전 워크트리 브랜치 귀속 커밋 확정
 
 ```bash
 ~/.opal/tools/worktree-tool/run.sh finalize --project-root <경로> --task <NNN>

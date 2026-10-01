@@ -1,0 +1,154 @@
+{
+  "goal": "워크트리 태스크의 CLOSE에서 관련 문서·기획서 등 산출물과 brain 지식이 같은 브랜치에 함께 반영된다. 코드와 문서, 지식이 하나의 merge로 허브에 들어가고, merge 후에 지식 반영을 따로 수행하지 않아도 된다. op-brain-ingest 워커는 워크트리에서 실제로 page를 생성하거나 갱신하며, `skipped`로 헛돌지 않는다. `.opal/MEMORY.json`(채번·작업 이력)은 계속 허브만 소유한다. DONE.md 후보 선언과 finalize의 \"선언 밖 brain 변경 차단\"도 유지한다. 여러 태스크가 같은 brain 파일을 바꿔도 merge에서 지식이 사라지지 않고, 공유 파일(`index.md`·`log.md`)이 반복 수작업 없이 정합 상태가 된다. 이미 누락된 태스크 161·162·163·167의 선언 후보가 허브 brain에 반영된다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "C-1",
+    "C-2",
+    "C-3",
+    "C-4"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3",
+    "H-4",
+    "H-5"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "type": "unit",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-1",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "C-1",
+        "C-2",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-5"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-2",
+        "C-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-12",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-4"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}
