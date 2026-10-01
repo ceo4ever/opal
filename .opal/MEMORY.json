@@ -165,6 +165,13 @@
   ],
   "history": [
     {
+      "title": "169 워크트리 CLOSE 지식 반영",
+      "date": "2026-10-01",
+      "stage": "완료",
+      "path": "tasks/169-261001-opds-워크트리-CLOSE-지식-반영/",
+      "result": "brain-tool이 워크트리 작업본 brain 쓰기를 허용해 CLOSE에서 지식이 브랜치에 함께 커밋되도록 전환. DONE 템플릿·op-brain-ingest·opd CLOSE 절차 정합, log/index merge=union. brain-tool 159 passed, main 머지 완료. 설치본 재배포 전."
+    },
+    {
       "title": "167 테스트 시나리오 작성 기준 개선",
       "date": "2026-09-29",
       "stage": "완료",
@@ -191,13 +198,6 @@
       "stage": "완료",
       "path": "tasks/163-260927-opds-코덱스-워크트리-부팅-소유권-복구/",
       "result": "Codex 자식 세션의 lease와 registry 소유권 확정 순서를 복구하고 실패 시 허브 복귀·진단을 구현함. 필수 시나리오 10/10 통과, 실제 Codex 작업본 기동 및 checkpoint 확인, main 머지 완료."
-    },
-    {
-      "title": "161 검증도구 실행정확성 복구",
-      "date": "2026-09-27",
-      "stage": "완료",
-      "path": "tasks/161-260927-opd-검증도구-실행정확성-복구/",
-      "result": "test-tool unit의 설치 확인과 실제 검사를 분리하고 미실행·실패·범위를 구조화해 기록함. 실도구 검증 13/13 통과, 회귀 테스트 569건 통과, main 머지 완료."
     }
   ]
 }
