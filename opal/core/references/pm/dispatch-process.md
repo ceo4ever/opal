@@ -68,8 +68,8 @@ PROJECT 프로젝트 구성과 `.opal/AGENT.md`의 전문 에이전트 매핑을
 3. 대상 에이전트(`<대상>`)와 역할(`<역할>`)을 넘겨 load한다. 역할 문서가 있으면 `--role-doc`을 더한다.
    `~/.opal/tools/event-loader/run.sh load --event worker.dispatch --contract-version 2 --agent <대상> --role <역할> --dispatch-id <식별자> [--role-doc <역할 문서>] > <worker-receipt-path>`
 4. 같은 인자로 검증한다.
-   `~/.opal/tools/state-tool/run.sh event-verify --event worker.dispatch --receipt <worker-receipt-path> --contract-version 2 --agent <대상> --role <역할> --dispatch-id <식별자> [--role-doc <역할 문서>]`
-   성공 조건은 결과가 `ok: true`이고 결과의 `contract`가 2이며 결과의 `dispatch_id`·`agent.name`·`role`이 위 값과 같을 때뿐이다.
+   `~/.opal/tools/state-tool/run.sh event-verify --event worker.dispatch --receipt <worker-receipt-path> --contract-version 2 --agent <대상> --role <역할> --dispatch-id <식별자> [--role-doc <역할 문서>] --require-default-manifest`
+   성공 조건은 결과가 `ok: true`이고 결과의 `contract`가 2이며 결과의 `dispatch_id`·`agent.name`·`role`이 위 값과 같고 결과의 `manifest_path`가 `~/.opal/references/events.json`의 실제 경로와 같으며 `manifest_default`가 `true`일 때뿐이다. 아니면 blocker로 반환한다.
 5. 응답은 대상 에이전트 항목만 선별된 전문이다. `documents[].content`를 한 번 적용하며, 이 문서도 같은
    응답에 포함되므로 직접 다시 Read하거나 `worker.dispatch`를 재귀 load하지 않는다.
 6. predecessor 미충족, load·verify 실패(대상·역할·식별자 불일치 포함), 필수 문서 누락, stale receipt,

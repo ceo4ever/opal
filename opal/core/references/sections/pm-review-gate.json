@@ -1,0 +1,88 @@
+{
+  "document": "opal/core/references/harness/pm-review-gate.md",
+  "unit_level": 3,
+  "sections": [
+    {
+      "id": "pg-completion",
+      "title": "워커 완료 선언",
+      "load": "always"
+    },
+    {
+      "id": "pg-interrupted",
+      "title": "워커 중단 시 산출물 실측 판정",
+      "load": "always"
+    },
+    {
+      "id": "pg-review-procedure",
+      "title": "검토 절차",
+      "load": "always"
+    },
+    {
+      "id": "pg-self-check",
+      "title": "자가 진단 (PM Gate 진입 전 체크)",
+      "load": "always"
+    },
+    {
+      "id": "pg-single-mark",
+      "title": "PM Gate 통과 후 단일 mark",
+      "load": "always"
+    },
+    {
+      "id": "pg-verdict",
+      "title": "판정",
+      "load": "always"
+    },
+    {
+      "id": "pg-harness-relation",
+      "title": "하네스와의 관계",
+      "load": "always"
+    },
+    {
+      "id": "pg-doc-registration",
+      "title": "문서 등록 확인",
+      "load": "always"
+    }
+  ],
+  "review": [
+    {
+      "id": "pg-completion",
+      "load": "always",
+      "reason": "[MUST] 워커 소요 시간 사전 기록 의무와 완료 선언 형식"
+    },
+    {
+      "id": "pg-interrupted",
+      "load": "always",
+      "reason": "[MUST] 워킹트리 실측 판정·완료분 덮어쓰기 금지"
+    },
+    {
+      "id": "pg-review-procedure",
+      "load": "always",
+      "reason": "문서 QA 4원칙·표준 검토 14항목·[MUST] 포함 — PM Gate 핵심 규범으로 단위가 분리되지 않아 전체 always"
+    },
+    {
+      "id": "pg-self-check",
+      "load": "always",
+      "reason": "state-tool 마킹·소요 기록·--force 0건 확인 등 필수 자가 점검 의무"
+    },
+    {
+      "id": "pg-single-mark",
+      "load": "always",
+      "reason": "Gate 통과 후 단일 mark 절차 명령을 지시하는 절차 규범(레거시 gate-pass 주석 포함)"
+    },
+    {
+      "id": "pg-verdict",
+      "load": "always",
+      "reason": "Pass/Fail 처리·재지시 최대 1회·.opal/AGENT.md 미존재 스킵 규칙"
+    },
+    {
+      "id": "pg-harness-relation",
+      "load": "always",
+      "reason": "하네스 Gate가 이 절차를 따르게 하는 관계 규정이나 251B로 미전달 시 목차 비용이 절감량을 초과해 on_demand 이득 없음"
+    },
+    {
+      "id": "pg-doc-registration",
+      "load": "always",
+      "reason": "새 docs 문서 생성 시 소유자 확인·PROJECT.md 등록 절차 규범"
+    }
+  ]
+}

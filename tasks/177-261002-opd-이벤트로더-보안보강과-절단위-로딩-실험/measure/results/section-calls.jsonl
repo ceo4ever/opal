@@ -1,0 +1,8 @@
+{"ts": "2026-10-01T23:43:40Z", "run_tag": "p04-exec-guard-on-1", "ids": "dg-exec-guard", "rc": 0, "out_chars": 1397}
+{"ts": "2026-10-01T23:43:56Z", "run_tag": "p01-bundle-hash-on-1", "ids": "dg-bundle-hash", "rc": 0, "out_chars": 1808}
+{"ts": "2026-10-01T23:43:56Z", "run_tag": "p01-bundle-hash-on-2", "ids": "dg-bundle-hash", "rc": 0, "out_chars": 1808}
+{"ts": "2026-10-01T23:44:06Z", "run_tag": "p02-partial-invalid-on-1", "ids": "dg-error-codes", "rc": 0, "out_chars": 3685}
+{"ts": "2026-10-01T23:44:09Z", "run_tag": "p02-partial-invalid-on-2", "ids": "dg-error-codes", "rc": 0, "out_chars": 3685}
+{"ts": "2026-10-01T23:44:15Z", "run_tag": "p03-runlog-enum-on-1", "ids": "dg-runlog", "rc": 0, "out_chars": 1850}
+{"ts": "2026-10-01T23:44:21Z", "run_tag": "p03-runlog-enum-on-2", "ids": "dg-runlog", "rc": 0, "out_chars": 1850}
+{"ts": "2026-10-01T23:44:28Z", "run_tag": "p04-exec-guard-on-2", "ids": "dg-exec-guard", "rc": 0, "out_chars": 1397}

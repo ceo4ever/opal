@@ -107,6 +107,13 @@
         }
       ],
       "optional_docs": [],
+      "sectioning": [
+        {
+          "document": "pm-process",
+          "source": "{source_root}/opal/core/references/sections/pm-process.json",
+          "deployed": "{deployed_root}/references/sections/pm-process.json"
+        }
+      ],
       "predecessors": [
         "session.project"
       ],
@@ -186,6 +193,13 @@
         }
       ],
       "optional_docs": [],
+      "sectioning": [
+        {
+          "document": "citation-rules",
+          "source": "{source_root}/opal/core/references/sections/citation-rules.json",
+          "deployed": "{deployed_root}/references/sections/citation-rules.json"
+        }
+      ],
       "predecessors": [
         "pilot.start"
       ],
@@ -238,6 +252,18 @@
         }
       ],
       "optional_docs": [],
+      "sectioning": [
+        {
+          "document": "citation-rules",
+          "source": "{source_root}/opal/core/references/sections/citation-rules.json",
+          "deployed": "{deployed_root}/references/sections/citation-rules.json"
+        },
+        {
+          "document": "pm-review-gate",
+          "source": "{source_root}/opal/core/references/sections/pm-review-gate.json",
+          "deployed": "{deployed_root}/references/sections/pm-review-gate.json"
+        }
+      ],
       "predecessors": [
         "pilot.start"
       ],
@@ -305,6 +331,18 @@
         }
       ],
       "optional_docs": [],
+      "sectioning": [
+        {
+          "document": "citation-rules",
+          "source": "{source_root}/opal/core/references/sections/citation-rules.json",
+          "deployed": "{deployed_root}/references/sections/citation-rules.json"
+        },
+        {
+          "document": "design-gate",
+          "source": "{source_root}/opal/core/references/sections/design-gate.json",
+          "deployed": "{deployed_root}/references/sections/design-gate.json"
+        }
+      ],
       "predecessors": [
         "pilot.start"
       ],

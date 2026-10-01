@@ -1,0 +1,116 @@
+{
+ "probe": "p05-reset",
+ "arm": "on",
+ "run": 1,
+ "tag": "p05-reset-on-1",
+ "prompt_bytes": 49419,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 7.9,
+   "json": {
+    "duration_api_ms": 4478,
+    "stop_reason": "end_turn",
+    "session_id": "f613c52e-b332-4427-874a-b74024135fa1",
+    "total_cost_usd": 0.1703712,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 41253,
+     "cache_read_input_tokens": 12376,
+     "output_tokens": 288,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 41253,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 288,
+       "cache_read_input_tokens": 12376,
+       "cache_creation_input_tokens": 41253,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 41253
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 288,
+      "cacheReadInputTokens": 12376,
+      "cacheCreationInputTokens": 41253,
+      "webSearchRequests": 0,
+      "costUSD": 0.1703712,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "**해제 방법**\n- `state-tool design-gate reset <task> --owner user --note <사유>`만 `retry_limit`을 해제한다.\n- reset은 history를 보존하고 iteration 번호를 이어서 쓰므로 `gate_id=design-gate-i{N}`이 중복되지 않는다.\n- `refinement_pending` 상태에서 `advisory_refinement_failed`로 `retry_limit`이 된 경우, reset은 `refinement_pending`을 `false`로 되돌리고 일반 회차부터 다시 시작한다.\n\n**`--owner user` 없이 호출할 때**\n- `user_confirmation_required`로 거부된다.\n\n**status가 `retry_limit`이 아닐 때**\n- 상태를 바꾸지 않고 `reset: false`로 응답하는 no-op이다.",
+    "ttft_ms": 4538,
+    "type": "result",
+    "duration_ms": 4613,
+    "uuid": "f13314e4-8190-476b-af2b-1966bcbbd32b",
+    "ttft_stream_ms": 2613,
+    "time_to_request_ms": 85,
+    "first_content_frame_ms": 2614,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}

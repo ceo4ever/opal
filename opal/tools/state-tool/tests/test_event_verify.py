@@ -231,5 +231,88 @@ class EventVerifyCliTest(unittest.TestCase):
             self.assertEqual(payload["via"], "state-tool event-verify")
 
 
+class EventVerifyRequireDefaultManifestTest(unittest.TestCase):
+    """S-5 (f): state-tool event-verify가 --require-default-manifest를 loader에 그대로 전달한다(판정은 loader 소유)."""
+
+    FLAG = "--require-default-manifest"
+    MANIFEST = REPO_ROOT / "opal" / "core" / "references" / "events.json"
+
+    def setUp(self):
+        self._dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self._dir.cleanup)
+        self.tmp = Path(self._dir.name).resolve()
+        self.project = self.tmp / "project"
+        self.project.mkdir()
+        env = {k: v for k, v in os.environ.items() if not k.startswith("OPAL_EVENT_LOADER_") and k != "OPAL_DEPLOYED_ROOT"}
+        env["HOME"] = str(self.tmp)
+        self.env = env
+
+    @staticmethod
+    def _contract_args() -> list[str]:
+        return ["--contract-version", "2", "--agent", "opal-be-agent", "--role", "builder", "--dispatch-id", "dsp-0123456789"]
+
+    def _load(self, name: str, *extra: str) -> Path:
+        completed = subprocess.run(
+            [sys.executable, str(EVENT_LOADER), "load", "--event", "worker.dispatch", "--source-root", str(REPO_ROOT),
+             "--project-root", str(self.project), "--deployed-root", str(self.tmp / "deployed"), *self._contract_args(), *extra],
+            capture_output=True, text=True, check=False, env=self.env,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        path = self.tmp / name
+        path.write_text(completed.stdout, encoding="utf-8")
+        return path
+
+    def _verify(self, receipt: Path, *extra: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, str(STATE_TOOL), "event-verify", "--event", "worker.dispatch", "--receipt", str(receipt),
+             "--source-root", str(REPO_ROOT), "--project-root", str(self.project), "--deployed-root", str(self.tmp / "deployed"),
+             *self._contract_args(), *extra],
+            capture_output=True, text=True, check=False, env=self.env,
+        )
+
+    def _reduced_copy(self) -> Path:
+        manifest = json.loads(self.MANIFEST.read_text(encoding="utf-8"))
+        event = next(e for e in manifest["events"] if e["id"] == "worker.dispatch")
+        event.pop("selection", None)
+        event["required_docs"] = event["required_docs"][:1]
+        path = self.tmp / "copy" / "events.json"
+        path.parent.mkdir()
+        path.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+        return path
+
+    def test_flag_with_default_manifest_passes_and_reports_manifest_default(self):
+        completed = self._verify(self._load("ok.json"), self.FLAG)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        self.assertTrue(payload["ok"])
+        self.assertIs(payload["manifest_default"], True)
+        self.assertEqual(payload["manifest_path"], str(self.MANIFEST.resolve()))
+        self.assertEqual(payload["via"], "state-tool event-verify")
+
+    def test_flag_with_copied_manifest_is_rejected_with_loader_error_and_exit_code(self):
+        copy = self._reduced_copy()
+        receipt = self._load("copy.json", "--manifest", str(copy))
+        completed = self._verify(receipt, "--manifest", str(copy), self.FLAG)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(completed.returncode, 1, completed.stdout + completed.stderr)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"], "manifest_not_default")
+        self.assertEqual(payload["expected"], str(self.MANIFEST.resolve()))
+        self.assertEqual(payload["actual"], str(copy.resolve()))
+
+    def test_flag_is_forwarded_only_when_given(self):
+        copy = self._reduced_copy()
+        receipt = self._load("copy2.json", "--manifest", str(copy))
+        without = self._verify(receipt, "--manifest", str(copy))
+        payload = json.loads(without.stdout)
+        self.assertEqual(without.returncode, 0, without.stdout + without.stderr)
+        self.assertTrue(payload["ok"])
+        self.assertNotIn("manifest_default", payload)
+        plain = self._verify(self._load("plain.json"))
+        plain_payload = json.loads(plain.stdout)
+        self.assertEqual(plain.returncode, 0, plain.stdout + plain.stderr)
+        self.assertNotIn("manifest_default", plain_payload)
+
+
 if __name__ == "__main__":
     unittest.main()

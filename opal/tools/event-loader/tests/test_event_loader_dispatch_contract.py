@@ -264,9 +264,9 @@ class ArgumentGateTest(ContractBase):
 
     def setUp(self):
         super().setUp()
-        self.role_doc = self.tmp / "role-a.md"
+        self.role_doc = self.project / "role-a.md"
         self.role_doc.write_text("role a\n", encoding="utf-8")
-        self.role_doc_b = self.tmp / "role-b.md"
+        self.role_doc_b = self.project / "role-b.md"
         self.role_doc_b.write_text("role b\n", encoding="utf-8")
 
     def test_matching_arguments_verify_ok(self):
@@ -323,9 +323,9 @@ class ArgumentGateTest(ContractBase):
         self.assert_rejected(self.verify(only_receipt), "response_body_missing")
 
     def test_roles_do_not_accept_each_others_receipts(self):
-        verifier_doc = self.tmp / "verifier.md"
+        verifier_doc = self.project / "verifier.md"
         verifier_doc.write_text("verifier\n", encoding="utf-8")
-        reviewer_doc = self.tmp / "reviewer.md"
+        reviewer_doc = self.project / "reviewer.md"
         reviewer_doc.write_text("reviewer\n", encoding="utf-8")
         ver, _ = self.new_load("ver.json", role="verifier", role_doc=verifier_doc, dispatch_id=ID1)
         rev, _ = self.new_load("rev.json", role="reviewer", role_doc=reviewer_doc, dispatch_id=ID2)

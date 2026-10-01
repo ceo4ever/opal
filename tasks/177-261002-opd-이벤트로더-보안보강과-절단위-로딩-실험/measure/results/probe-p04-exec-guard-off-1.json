@@ -1,0 +1,116 @@
+{
+ "probe": "p04-exec-guard",
+ "arm": "off",
+ "run": 1,
+ "tag": "p04-exec-guard-off-1",
+ "prompt_bytes": 53823,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 6.9,
+   "json": {
+    "duration_api_ms": 3320,
+    "stop_reason": "end_turn",
+    "session_id": "21a4b9ff-6730-439f-b39d-ad9d0927079e",
+    "total_cost_usd": 0.1780192,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 43350,
+     "cache_read_input_tokens": 12376,
+     "output_tokens": 214,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 43350,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 214,
+       "cache_read_input_tokens": 12376,
+       "cache_creation_input_tokens": 43350,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 43350
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 214,
+      "cacheReadInputTokens": 12376,
+      "cacheCreationInputTokens": 43350,
+      "webSearchRequests": 0,
+      "costUSD": 0.1780192,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "**적용 시점**\n- `execute.implement` 진입 가드(설계 게이트 pass, TASK 요구 hash·통과·승인 hash 일치 확인)는 `execute.implement` 행이 `pending`인 진입 전이 시점에만 적용됩니다.\n\n**다시 적용되지 않는 경우**\n- 다른 행의 advance/mark 때는 적용되지 않습니다.\n- 이미 `in_progress` 또는 `done`인 `execute.implement`에는 재적용되지 않습니다.\n\n(출처: design-gate 문서 §\"EXECUTE 가드 적용 시점\")",
+    "ttft_ms": 3357,
+    "type": "result",
+    "duration_ms": 3439,
+    "uuid": "81b62a92-3e88-4ac0-9c11-33e571436d8b",
+    "ttft_stream_ms": 2208,
+    "time_to_request_ms": 58,
+    "first_content_frame_ms": 2208,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}

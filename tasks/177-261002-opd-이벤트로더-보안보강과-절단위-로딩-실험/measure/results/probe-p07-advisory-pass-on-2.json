@@ -1,0 +1,116 @@
+{
+ "probe": "p07-advisory-pass",
+ "arm": "on",
+ "run": 2,
+ "tag": "p07-advisory-pass-on-2",
+ "prompt_bytes": 49438,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 7.7,
+   "json": {
+    "duration_api_ms": 3999,
+    "stop_reason": "end_turn",
+    "session_id": "78737f2c-0db0-4bde-8304-f20da416a63e",
+    "total_cost_usd": 0.1724472,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 41262,
+     "cache_read_input_tokens": 12376,
+     "output_tokens": 492,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 41262,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 492,
+       "cache_read_input_tokens": 12376,
+       "cache_creation_input_tokens": 41262,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 41262
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 492,
+      "cacheReadInputTokens": 12376,
+      "cacheCreationInputTokens": 41262,
+      "webSearchRequests": 0,
+      "costUSD": 0.1724472,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "`record --verdict pass`를 호출할 때 `--advisory-responses` 파일을 함께 제출해야 합니다. 경로는 `run/design-gate-i<N>-responses.json`입니다.\n\n**제출 내용**\n- 형식은 PM이 작성하는 `[{id, response: apply|retain, reason}]` 배열입니다.\n- 이번 경우 advisory가 2건이므로 응답도 2건이어야 합니다.\n\n**응답 규칙**\n- 응답 ID 집합은 advisory ID 집합과 정확히 같아야 합니다. 누락도 안 되고 추가도 안 됩니다.\n- 같은 ID를 중복해서 쓰면 안 됩니다.\n- `retain`에는 공백이 아닌 `reason`이 필요합니다.\n\n**규칙을 어기면**\n- `advisory_response_invalid`로 거부되고, 상태는 바뀌지 않습니다.\n\n**응답 제출 후 처리**\n- `apply`가 1건 이상이면 도구가 해당 회차를 `verdict: rewrite`, `reason: advisory_apply`로 자동 변환해 기록합니다. 이때 `--rewrite-target`이 필수이고, 없으면 `design_gate_result_invalid`로 거부됩니다.\n- 이 회차는 반복 상한을 소비하지 않습니다.\n- 이후 refinement 절차를 따릅니다.",
+    "ttft_ms": 4053,
+    "type": "result",
+    "duration_ms": 4122,
+    "uuid": "445b7fdb-cd78-47e9-9ecb-636542ef50ae",
+    "ttft_stream_ms": 983,
+    "time_to_request_ms": 70,
+    "first_content_frame_ms": 983,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}

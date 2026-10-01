@@ -1,0 +1,267 @@
+{
+  "task_id": "177-261002-opd-이벤트로더-보안보강과-절단위-로딩-실험",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-10-02 07:44:11",
+  "updated_at": "2026-10-02 08:55:06",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:45:29",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:53:56",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:53:56",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "TEST-SCENARIO 작성",
+      "key": "plan.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:53:57",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "설계 게이트",
+      "key": "plan.design_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:59:25",
+      "owner": "PM",
+      "note": "design gate i2 pass",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "`state-tool design-gate record`가 pass를 기록했고 현재 문서 묶음 hash가 통과 hash와 같다",
+          "evaluator design-rubric 설계 4축 PASS·시나리오 3축 기준 충족"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 08:10:13",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 08:55:06",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "conditional": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "conditional": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "TEST 작업 진입",
+  "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177",
+  "actor": "coordinator",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_863fd05a-1e9a-4fa9-a3c5-b1c547d9e61e",
+    "status": "active",
+    "pending_events": []
+  },
+  "design_gate": {
+    "status": "pass",
+    "iteration": 2,
+    "limit": 3,
+    "limit_from": 0,
+    "task_confirm_req_hash": "a71b7054713fec61fad2a8cf65b1b1092bc0d8fbbc612d08e13ae5b723a717c0",
+    "current_attempt": {
+      "iteration": 2,
+      "bundle_hash": "3575afd5926374cca3955fec3617cc1cfba4a5cba0eb734e10764ebcf459e0a0",
+      "files": {
+        "TASK.md": "8e03392d674f30d01302dc72737e8315a65c7186e1f91a5bf194b87f9773a15f",
+        "PLAN.md": "9af0d29b163a6b6c12b11f705c4c466383bee5195126231eab03a4b1115ec64e",
+        "TEST-SCENARIO.md": "4df85758bbdd9d1065c759cd725085de270a31e400d356982f0a3f1270544edf"
+      },
+      "started_at": "2026-10-02 07:57:28",
+      "refinement": false
+    },
+    "passed_bundle_hash": "3575afd5926374cca3955fec3617cc1cfba4a5cba0eb734e10764ebcf459e0a0",
+    "approved_bundle_hash": "3575afd5926374cca3955fec3617cc1cfba4a5cba0eb734e10764ebcf459e0a0",
+    "last_rewrite_target": null,
+    "history": [
+      {
+        "iteration": 1,
+        "verdict": "superseded",
+        "rewrite_target": null,
+        "bundle_hash": "9c2c69d6b429e8930b73bc8a3f8a0b53d70f64f0a78c0ea0b4dbdfedef6218ce",
+        "reason": "document bundle changed before record",
+        "at": "2026-10-02 07:57:28"
+      },
+      {
+        "iteration": 2,
+        "verdict": "pass",
+        "rewrite_target": null,
+        "bundle_hash": "3575afd5926374cca3955fec3617cc1cfba4a5cba0eb734e10764ebcf459e0a0",
+        "reason": null,
+        "at": "2026-10-02 07:59:25",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      }
+    ]
+  }
+}

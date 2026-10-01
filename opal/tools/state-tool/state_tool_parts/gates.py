@@ -2675,6 +2675,8 @@ def cmd_event_verify(args):
     ):
         if value is not None:
             command.extend((option, value))
+    if getattr(args, "require_default_manifest", False):
+        command.append("--require-default-manifest")
 
     completed = subprocess.run(command, capture_output=True, text=True)
     output = completed.stdout.strip()
