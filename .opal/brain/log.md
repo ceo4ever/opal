@@ -500,3 +500,7 @@
 - 신규: [[pages/concept/opd2-state-tool-integration.md]]
 - 출처: task:168
 
+## [2026-10-01] ingest | CLOSE ingest — 태스크 170 설계 게이트 회차 단축
+- 신규: [[pages/concept/design-gate-deterministic-pretier-separation.md]], [[pages/concept/design-gate-gaps-resolution-roundtrip.md]]
+- 출처: task:170
+

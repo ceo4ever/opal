@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-10-01 10:58
+> 갱신: 2026-10-01 12:12
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -119,6 +119,8 @@
 - [[delegation-only-file-gate-bypass]] — 위임 전용 파일에 게이트를 두면 우회된다 — 진입경로 역추적 #gate #architecture #lesson #call-graph
 - [[demote-promote-recursion-guard-timing-threshold-split]] — 강등·승격 재귀 차단 — 판정 시점 분리 + 임계 상호배타 #track-routing #recursion #architecture #opds
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
+- [[design-gate-deterministic-pretier-separation]] — 설계 게이트 결정론/evaluator 2-tier 분리 — 회차 비소비 사전검사 #design-gate #state-tool #opd #opds #pm-path
+- [[design-gate-gaps-resolution-roundtrip]] — 설계 게이트 gaps 해소 보고 왕복 계약 (previous_gaps/resolved_gaps) #design-gate #evaluator #op-scenario-gate #gaps-contract
 - [[dev-pilot-profile-unification]] — 개발 Pilot Full/Short profile 통합 계약 #pilot #dev #opd #opds #compatibility
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
