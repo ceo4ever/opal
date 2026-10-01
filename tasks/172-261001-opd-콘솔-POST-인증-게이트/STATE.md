@@ -1,6 +1,6 @@
 # STATE: 콘솔 POST 인증 게이트 (Gateway Phase 0)
 
-> 최종 갱신: 2026-10-01 16:25:21
+> 최종 갱신: 2026-10-01 18:00:50
 > 파이프라인 현황(rows/상태/다음 액션)의 SSOT는 `state.json`입니다.
 > 조회: `~/.opal/tools/state-tool/run.sh show <task-path>`
 
@@ -13,6 +13,7 @@
 | 4 | 2026-10-01 14:39:04 | design-decision(detail): test-tool environment.json에 선택 키 session_bootstrap을 추가해 프로젝트가 선언한 훅으로 E2E 인증 세션을 만든다 | AC-6의 같은 진입 token 교환 요구를 도구가 OPAL Console을 직접 알지 않고 충족하며 기존 선택 키 확장 방식과 호환, 키 없는 환경 파일은 동작 불변(D-20) |
 | 5 | 2026-10-01 16:09:47 | additional row inserted after row 8: stage=TEST, item=S-16 code-scan @header JSON 이스케이프 4건 수정(주석만), key=test.s_1, new_row_id=9 | additional work entry |
 | 6 | 2026-10-01 16:19:15 | additional row inserted after row 9: stage=TEST, item=보안 M1: E2E redaction 키에 csrf_token·entry·browser_entry_fragment·opal_console_session 추가, SECURITY.md 무세션 표면 서술 정정, key=test.item_1, new_row_id=10 | additional work entry |
+| 7 | 2026-10-01 18:00:50 | current_status changed: completed_unmerged → done | (none) |
 
 ## 블로커
 없음
