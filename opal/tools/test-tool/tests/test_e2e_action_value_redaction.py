@@ -3,7 +3,8 @@
   "module": "test_e2e_action_value_redaction",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "INTENT C-1 — fill/type/select action 입력값이 actions.jsonl에 원문으로 남지 않고 evidence 단일 관문의 fail-closed 저장 계약을 유지하는지 검증한다."
+  "description": "INTENT C-1 — fill/type/select action 입력값이 actions.jsonl에 원문으로 남지 않고 evidence 단일 관문의 fail-closed 저장 계약을 유지하는지 검증한다.",
+  "exports": ["TestActionValueRedaction"]
 }
 """
 

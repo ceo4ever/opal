@@ -520,4 +520,10 @@
 - 신규: [[evaluator-eval-set-label-fixture-measurement-lesson]]
 - 갱신: [[agent-effort-policy-inherit-by-default]], [[opal-evaluator-agent]]
 - 출처: task:172
+## [2026-10-01] ingest | CLOSE ingest — 태스크 173 opds-opd2-사전심사-재시도상한과-지적추적
+- 신규: [[opd2-plan-review-reverify-doc-over-tool-relaxation]], [[opd2-plan-review-fail-limit-and-findings-tracking]]
+- 출처: task:173
+## [2026-10-01] ingest | CLOSE ingest — 태스크 174 header 이력 차단·state-tool 분할
+- 신규: [[behavior-preserving-split-and-block-conversion-lessons]]
+- 출처: task:174
 

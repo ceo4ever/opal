@@ -1,0 +1,191 @@
+{
+  "goal": "- @header `description`·`note`에 이력을 덧붙이면 그 변경은 프레임워크 검사를 통과하지 못하고 막힌다. 막는 판정은 경고가 아니라 실패다. - 머리말이 읽기 범위를 넘어 판정할 수 없는 파일도 조용히 \"머리말 없음\"으로 빠지지 않고 실패로 드러난다. - 현재 저장소에 남아 있는 이력 누적 머리말과 읽기 범위를 넘은 머리말이 모두 정리되어, 차단을 켠 상태에서 저장소 전체 검사가 통과한다. - `state_tool.py`는 책임 영역별로 나뉜 구조가 되고, 기존 CLI 호출 경로·명령·출력은 그대로 유지된다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "C-1",
+    "C-2",
+    "C-3"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "type": "unit",
+      "red_required": true,
+      "covers_requirements": [],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-4",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-3",
+        "AC-4"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-9",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-10",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1",
+        "AC-2",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-11",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-12",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

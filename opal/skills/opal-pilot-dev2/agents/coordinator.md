@@ -31,7 +31,14 @@ PLAN(`plan.md`/`plan.json`) 작성 완료 직후, BUILD 진입 시도 전에 수
    Call B 두 개의 독립 Agent 호출로 **한 메시지 안에서 동시에(병렬로)** 디스패치한다.
    같은 Reviewer 문서를 각각 주입하되 어느 Call을 수행할지 명시한다. 두 호출 다 이전
    역할의 대화 컨텍스트를 재사용하지 않는 새 세션이며, 서로도 독립이다.
-3. 둘 다 pass면 BUILD 진입(Layer 2 통과). 하나라도 fail이면 **그 축만** 수정하고
-   **실패한 Call만** 재디스패치한다(pass한 Call은 재실행하지 않음 — 표적 재검증으로
-   비용을 줄인다).
-4. 재시도는 opd2 기존 전체 재작업 상한(`retries <= 3`)을 공유한다(별도 카운터 신설 안 함).
+3. 둘 다 pass면 BUILD 진입(Layer 2 통과). 하나라도 fail이면 Reviewer의 findings를 반영해
+   plan을 고친 뒤 A·B를 **모두** 새로 디스패치한다. 지문(fingerprint)에 plan 해시와 저장소
+   트리가 들어가므로 수정하면 이전에 통과한 Call 기록도 무효가 되고, 전이는 두 Call 모두
+   현재 지문에서 pass를 요구한다.
+4. Call을 디스패치할 때마다 `lifecycle.py status`의 사전심사 기록에서 그 Call의 최신
+   기록을 찾아 `fail`이면 그 `open_findings`를 Reviewer 프롬프트에 그대로 싣는다. 싣지
+   않거나 틀리게 실어도 도구가 id 집합 불일치로 기록을 거부한다.
+5. 사전심사 fail 기록이 3건이 되면 도구가 상한 대기로 전환해 재심사 기록·BUILD 전이·
+   rewind·unblock을 거부한다. Coordinator는 사용자에게 결정을 요청하고, 사용자의 명시 해제
+   (`plan-review-reset --actor <실명> --reference <사용자 메시지> --reason ...`) 전에는
+   진행하지 않는다. 이 상한은 rewind 상한(`retries <= 3`)과 별개다.

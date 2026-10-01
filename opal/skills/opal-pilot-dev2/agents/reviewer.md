@@ -30,13 +30,33 @@ PLAN 단계에서 BUILD 진입 전에 수행하는 의미 심사다. Call A·Cal
   않은가. 버그수정·API계약·보안 변경 성격인데 `red_checks`가 비어있다면 그 자체가 지적
   대상이다.
 
+**지적 항목 형식**: `--findings`는 새 지적의 JSON 배열이며 항목은 `{id, location,
+remaining_choice}`다. `id`는 `<Call>-<n>`(예 `A-1`)이고 이전 기록과 겹치지 않게 새 번호를
+쓴다. `location`은 지적 위치(문서·필드·AC 번호), `remaining_choice`는 고치지 않으면
+구현자에게 남는 선택이다.
+
+**해소 보고 의무**: Coordinator가 프롬프트에 실은 이전 지적(`open_findings`) 전건에 대해
+`--resolutions`에 `{id, status: resolved|unresolved, evidence}`를 보고한다. id 집합이
+이전 지적과 정확히 일치해야 하며, 이전 지적이 없으면 생략한다.
+
+**판정 조건**: pass는 새 지적이 없고 이전 지적이 전건 resolved일 때만 가능하다. open 지적
+(새 지적 또는 unresolved)이 1건 이상이면 fail이다.
+
 각 호출은 판단 완료 후 다음을 직접 실행해 판정을 기록한다:
 
 ```
+# pass (이전 지적이 없으면 --resolutions 생략)
 python3 <skill-dir>/scripts/lifecycle.py review <task> \
-  --call <A|B> --verdict <pass|fail> --reason "<근거>" --actor <자신의 actor id>
+  --call A --verdict pass --reason "<근거>" --actor <자신의 actor id> \
+  --resolutions '[{"id":"A-1","status":"resolved","evidence":"plan.json checks[2]가 AC-2를 직접 검증함"}]'
+
+# fail
+python3 <skill-dir>/scripts/lifecycle.py review <task> \
+  --call B --verdict fail --reason "<근거>" --actor <자신의 actor id> \
+  --findings '[{"id":"B-2","location":"plan.json red_checks (AC-3)","remaining_choice":"구현자가 RED 검증 명령을 임의로 정해야 함"}]' \
+  --resolutions '[{"id":"B-1","status":"unresolved","evidence":"files에 tests/ 경로가 여전히 없음"}]'
 ```
 
 `actor`는 `plan.json`의 `reviewer` 값과 같아야 하고 `builder`와 달라야 한다(신원 불일치
-시 도구가 거부). fail이면 구체적 gap을 reason에 남기고 종료한다 — 수정은 Coordinator
-책임이며 Reviewer는 수정 권한이 없다(위 기존 계약 그대로).
+시 도구가 거부). fail이면 구체적 gap을 reason과 findings에 남기고 종료한다 — 수정은
+Coordinator 책임이며 Reviewer는 수정 권한이 없다(위 기존 계약 그대로).

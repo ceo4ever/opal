@@ -1,0 +1,5 @@
+{"artifact_path":null,"summary":"design-rubric 판정 완료: verdict=pass, rewrite_target=null","status":"completed","verdict":"pass","input_bundle_hash":"7bc667abcfd9de8ab68562e09beab5a04c7c16be846ab5c231df6782ec5a6d29","iteration":2,
+"design":{"axes":{"completeness":"PASS","decision_clarity":"PASS","executability":"PASS","recoverability":"PASS"},"gaps":[]},
+"scenario":{"scores":{"goal":2,"adoption":2,"boundary":2},"average":2.0,"gaps":[]},
+"resolved_gaps":[{"id":"decision_clarity-1","status":"resolved","reason":"집계식과 rewind 시 floor 0 초기화가 PLAN.md Decisions·W-3·S-4에서 확정됨"},{"id":"decision_clarity-2","status":"resolved","reason":"상한 대기 검사를 advance() 첫 줄에 두고 오류 문구가 항상 await_user로 시작함이 PLAN.md·W-3·S-3(h)에서 확정됨"}],
+"rewrite_target":null,"advisories":[],"blockers":[],"changed_files":[]}

@@ -33,6 +33,30 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 병렬 runner에 pytest 옵션을 추가하려면 `--` 뒤에 둔다. 예를 들어
 `run-tests.sh --jobs 2 -- -x`처럼 실행할 수 있다. 외부 병렬 플러그인은 필요하지 않다.
 
+## 모듈 구조
+
+`state_tool.py`는 진입점이다. 자기 디렉토리를 `sys.path`에 한 번 추가하고
+`state_tool_parts` 패키지의 하위 모듈을 `PART_MODULES` 순서로 적재한 뒤, 각 모듈의
+최상위 이름(밑줄 시작 포함)을 모두 `state_tool` 모듈에 재노출하고 `main()`을 실행한다.
+그래서 `run.sh`·`python state_tool.py ...` 실행 경로와 `import state_tool` 후
+`state_tool.<이름>` 접근은 분할 전과 같다. 코드는 `state_tool_parts/` 아래 9개 모듈에 있다.
+
+| 모듈 | 책임 |
+|------|------|
+| `codes.py` | 단계·모드 enum, 오류 코드 테이블(`ERROR_CODES` 등), 자동 승인 판정 |
+| `base.py` | 전이 출력 필드 보조, `ok`/`err` 출력, 시각(`get_kst_datetime`)·외부 모듈 로더, 상태 파일 I/O |
+| `run_log.py` | run-log outbox admission·원자 커밋·drain·사건 조립·완전성 진단 |
+| `journal.py` | STATE.md 생성·동기화, 행 탐색, 모드 판정, todo 미러, 히스토리·메모리 연동 |
+| `guards.py` | 전이 검사, 게이트 산출물 검사, 행 빌드, pipeline 스펙 검증 |
+| `gates.py` | plan 계약·명확화·근거·RED·설계 게이트, `verify`·`event-verify` |
+| `commands_core.py` | `init`·`show`·`resolve-*`·`advance`·`mark`·`block`·`validate`·`add-row`·`status` |
+| `commands_run.py` | `test-clock`·`run-start`·`finalize-attribution`·부트 브리핑·`gate-pass` |
+| `cli.py` | `build_parser`와 `main` |
+
+- import 방향은 `codes` < `base` < `run_log` < `journal` < `guards` < `gates` < (`commands_core`·`commands_run`) < `cli`만 허용한다. 상위 모듈 import와 `commands_core`↔`commands_run` 상호 import는 하지 않는다.
+- 시각·모듈 로더 주입점(`get_kst_datetime`·`_import_ownership_lease`·`_import_run_log_core`)은 `base.<이름>(...)`으로 호출한다. 테스트는 `state_tool_parts.base` 모듈 속성을 patch한다.
+- 형제 도구 경로(`date`·`run-log-tool`·`ownership-tool`·`memory-tool`·`test-tool`·`event-loader`, `skills/`)는 `state-tool` 디렉토리 기준으로 계산한다. 배포는 `tools` 디렉토리를 통째로 복사하므로 `state_tool_parts/`도 함께 설치된다.
+
 ## 호출 형식
 
 ```bash
@@ -511,7 +535,7 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
   "ok": true, "command": "verify", "evidence_check": "routed",
   "items": [
     {"element": "목표", "verdict": "확정", "reasons": [],
-     "citations": [{"raw": "`opal/tools/state-tool/state_tool.py:100`", "grade": "E2", "exists": true}],
+     "citations": [{"raw": "`opal/tools/state-tool/state_tool_parts/codes.py:100`", "grade": "E2", "exists": true}],
      "source": "clarification"},
     {"element": "제약", "verdict": "미확정", "reasons": ["citation_missing"], "citations": [],
      "source": "clarification"},
@@ -679,7 +703,7 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 
 ## 에러 코드 카탈로그 (59종)
 
-코드는 `state_tool.py`의 세 물리 분리 테이블이 소유한다. 기본 상태 오류는 `ERROR_CODES` 59종,
+코드는 `state_tool_parts/codes.py`의 세 물리 분리 테이블이 소유한다. 기본 상태 오류는 `ERROR_CODES` 59종,
 run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종, 설계 게이트 오류는 `DESIGN_GATE_ERROR_CODES`
 14종이다. `err()`가 조회 시에만 `ERROR_CODES` → `RUN_LOG_STATE_ERROR_CODES` → `DESIGN_GATE_ERROR_CODES`
 순으로 합성하며, 종수는 문서가 아니라 코드의 키 집합을 실측한다. 이 절 헤딩의 종수는 `ERROR_CODES` 기준이다.
@@ -727,7 +751,7 @@ run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종, 설계 게이트 오
 
 ### 기본 상태 오류 (59종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1 + 118 W-4 + 122 W-2 + 134 W-2 + 156 W-1)
 
-> 종수는 `len(ERROR_CODES)`(`state_tool.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
+> 종수는 `len(ERROR_CODES)`(`state_tool_parts/codes.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
 
 | # | 에러 코드 | 발생 명령 | 종료 코드 | 의미 |
 |---|---------|---------|---------|------|

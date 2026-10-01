@@ -3,7 +3,7 @@
   "module": "conftest",
   "layer": "test",
   "domain": "opal-workspace",
-  "description": "git-sync-tool pytest fixture — tmp_path에 로컬 bare remote + 상태별 clone 8종(behind/current/dirty/diverged/detached/noupstream/fetchfail 및 이들을 담는 workspace 컨테이너)을 subprocess로 구성한다. root 저장소 시나리오용으로 자체가 git 저장소인 프로젝트 루트 + 그 아래 workspace/ 컨테이너 구조(project_root_with_workspace)도 제공한다. RED-first 트랙(052) — 실 git 저장소만 사용, mock/patch 금지. 전역 git config 의존 제거를 위해 모든 git 호출에 -c user.email/-c user.name 주입. 139(opws)용으로 선언 파일 기록 헬퍼(write_workspace_config — {순회경로}/../.opal/workspace.json)와 sync 외 서브명령 호출 헬퍼(run_tool_cli)를 함께 제공한다.",
+  "description": "git-sync-tool pytest fixture — tmp_path에 로컬 bare remote + 상태별 clone 8종(behind/current/dirty/diverged/detached/noupstream/fetchfail 및 이들을 담는 workspace 컨테이너)을 subprocess로 구성한다. root 저장소 시나리오용으로 자체가 git 저장소인 프로젝트 루트 + 그 아래 workspace/ 컨테이너 구조(project_root_with_workspace)도 제공한다. 실 git 저장소만 사용, mock/patch 금지. 전역 git config 의존 제거를 위해 모든 git 호출에 -c user.email/-c user.name 주입. 워크스페이스 선언 파일 기록 헬퍼(write_workspace_config — {순회경로}/../.opal/workspace.json)와 sync 외 서브명령 호출 헬퍼(run_tool_cli)도 제공한다.",
   "exports": ["run_git", "make_bare_remote", "clone_repo", "GitFixtureWorkspace", "git_workspace", "GitProjectRootFixture", "project_root_with_workspace", "write_workspace_config", "run_sync_cli", "run_tool_cli"],
   "depends": ["git CLI 2.22+"]
 }

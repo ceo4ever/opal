@@ -1,0 +1,44 @@
+{
+ "input_bundle_hash": "b97383541da317374615e89b85a265ae85231d7637a87e9d42a7706832b06473",
+ "iteration": 3,
+ "design": {
+  "axes": {
+   "completeness": "FAIL",
+   "decision_clarity": "PASS",
+   "executability": "PASS",
+   "recoverability": "PASS"
+  },
+  "gaps": [
+   "completeness-1: PLAN.md > Decisions '소스 텍스트를 읽는 소비자'·W-2·Findings — opal-skill-tester/scripts/skill_tester.py:415-423 _framework_fingerprint()가 state_tool.py 바이트만 해시해 분할 후 state_tool_parts/*.py 변경을 반영하지 못한다. 지문 대상 범위가 미정이다."
+  ]
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "resolved_gaps": [
+  {
+   "id": "completeness-1",
+   "status": "resolved",
+   "reason": "mode_contracts 3곳이 PLAN에 반영됨"
+  }
+ ],
+ "verdict": "fail",
+ "rewrite_target": "plan",
+ "advisories": [
+  {
+   "id": "A-1",
+   "kind": "subsumed",
+   "targets": [
+    "S-8"
+   ],
+   "basis": "S-8 ①은 S-4의 header_overflow=0에 포함된다.",
+   "recommendation": "S-8 ①을 지우거나 S-4 근거로 옮긴다."
+  }
+ ]
+}

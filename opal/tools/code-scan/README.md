@@ -139,6 +139,8 @@ split <manifest> --groups <path|-> [--dry-run]
 | `newly_uncovered` | git 기준 신규 파일(untracked/added), 또는 HEAD엔 `@header`가 있었는데 현재 없음(회귀) | 차단(exit 2) |
 | `pre_existing` | HEAD 버전에도 `@header`가 없던 기존 파일 | **비차단**(exit 0) — `counts.pre_existing`·`violations[]`에 목록만 노출 |
 
+**차단 코드 추가 2종** — `header_history`(description·note·undeclared_field 전 sub, 전체·`--changed` 모두)와 `header_overflow`(`@header {`가 있으나 닫는 `}`가 읽기 범위 24,576바이트 안에 없는 파일 — `uncovered`로 분류하지 않고 1건만 기록, `counts.header_overflow`)는 **항상 차단**(exit 2)이다.
+
 git을 쓸 수 없는 환경(git 미설치·비git 트리)에서는 전량 `pre_existing`으로 처리하고 stderr에 경고 1줄을 낸다(비차단). 다른 5종 위반의 차단 성격은 이 재분류와 무관하게 유지된다.
 
 샤드 선언 시 구조 검사는 **베이스 + 전 샤드 합집합** 기준으로 수행되며, 매니페스트 바이트 상한 초과는 `counts.manifest_oversize`로 열거만 하고 차단하지 않는다.
@@ -285,7 +287,7 @@ git을 쓸 수 없는 환경(git 미설치·비git 트리)에서는 전량 `pre_
 
 | 코드 | 의미 |
 |------|------|
-| `0` | 정상 종료 — `validate`는 **차단 위반 없음**(`uncovered:pre_existing`만 있는 경우와 `manifest_oversize`만 있는 경우 포함) |
+| `0` | 정상 종료 — `validate`는 **차단 위반 없음**(`uncovered:pre_existing`·`manifest_oversize`만 있는 경우 포함 — `header_history`·`header_overflow`는 차단) |
 | `1` | 사용법 오류 / 스키마 오류 / 헤더 소스 미해결 / 위 오류 코드 전건 / 알 수 없는 서브명령 / 알 수 없는 `--scope` |
 | `2` | **`validate` 전용** — 차단 위반 발견 |
 

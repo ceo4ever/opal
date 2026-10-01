@@ -225,7 +225,7 @@ OPAL 본체(스킬·에이전트·도구·하네스)를 작성할 때 따라야 
 - 코드 파일을 생성·수정할 때 파일 상단에 @header 블록을 작성한다 (해당 확장자에 한해).
 - **기록 위치는 `code-scan target <file>` 판정을 따른다** — 인라인 주석 또는 외부 소스 코드 지도(`.opal/code-map/`) 2소스 중 하나이며, 사람·워커가 임의 선택하지 않는다(전역 `headerSource`가 `manifest`이면 code-map 강제).
 - **기록 소스는 `.opal/code-scan.json`의 전역 `headerSource` 단일 키가 결정한다** — `inline` \| `manifest` 2택이며 스코프별 오버라이드는 없다. 미설정·무효값이면 code-scan 전 명령이 exit 1로 차단된다 (Task 080).
-- **코드 `@header`에는 현재 사실만 기재한다** — 이력은 git 로그와 `tasks/{NNN}-*/DONE.md`가 갖는다. 원칙 원문은 `opal/core/references/header-standard.md` §2.1이 소유한다. `code-scan validate`의 `header_history` 비차단 경고가 누적 서술을 관측한다.
+- **코드 `@header`에는 현재 사실만 기재한다** — 이력은 git 로그와 `tasks/{NNN}-*/DONE.md`가 갖는다. 원칙 원문은 `opal/core/references/header-standard.md` §2.1이 소유한다. `code-scan validate`의 `header_history` 차단 위반(exit 2)이 누적 서술을 막는다.
 - 근거: `opal/core/references/harness/header-rules.md`, `opal/core/references/header-standard.md` §7(2소스 표현)
 
 ### Citation Rules (인용)

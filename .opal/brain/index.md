@@ -1,5 +1,7 @@
 # Project Brain Index
 > 갱신: 2026-10-01 21:25
+> 갱신: 2026-10-01 14:45
+> 갱신: 2026-10-01 16:00
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -57,6 +59,7 @@
 - [[auto-approve-user-confirmation-axis-separation]] — 자동 승인 판정의 두 독립 축 — CLOSE 축과 모드 경계 축은 분리된다 #state-tool #gate-design #pattern #task-093
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[backward-compat-default-value-discipline]] — 하위호환 확장의 기본값 규율 — 분기 인자 기본값을 기존 동작으로 #backward-compat #api-design #cli #pattern
+- [[behavior-preserving-split-and-block-conversion-lessons]] — 동작 보존 분할과 차단 전환의 교훈 #lesson #refactor #code-scan #state-tool
 - [[blanket-prohibition-blocks-required-artifacts]] — 워커 프롬프트의 포괄 금지가 규정 산출물을 막는다 — 금지 대신 반환 경로를 지정한다 #dispatch #prompt #worker #pm-discipline #lesson-learned
 - [[blind-reproduction-verification-test]] — 블라인드 재현 테스트 — 작성자 자기검증 배제 검증법 #verification #testing #scenario #ssot #evaluator
 - [[bootstrap-marker-skip-ladder]] — 부트스트랩 첫 줄 마커 3단 스킵 사다리 ([WORKER]/[ASSISTANT]/무마커) #bootstrap #2tier #assistant-tier #headless #pm-gate #architecture
@@ -258,6 +261,8 @@
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
 - [[opal-skill-classification-system]] — OPAL 스킬 분류 체계 — opal-pilot / op-* / opal-* 의미 계층 #skill-registry #classification #pilot #operator #architecture
 - [[opal-skill-tester]] — opal-skill-tester (opst) — 스킬 모의 실행 테스트 #opst #testing #skill
+- [[opd2-plan-review-fail-limit-and-findings-tracking]] — opd2 사전심사 fail 3회 상한과 지적 해소 추적 #opd2 #plan-review #findings
+- [[opd2-plan-review-reverify-doc-over-tool-relaxation]] — opd2 사전심사 재검증 정합은 도구 완화가 아니라 문서 수정으로 푼다 #opd2 #plan-review #fingerprint
 - [[opd2-state-tool-integration]] — opd2 state-tool 통합 #opd2 #state-tool #gate-guard #ssot #task-168
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
 - [[opdd-reverse-track-physical-first-order]] — 역공학 트랙 MODEL 순서는 물리가 먼저다 #architecture-decision #data-design #pipeline #reverse-engineering #task-104

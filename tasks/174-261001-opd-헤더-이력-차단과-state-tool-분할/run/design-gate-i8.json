@@ -1,0 +1,34 @@
+{
+ "input_bundle_hash": "d9657c09916d2f858d4b46d4b6363bb9191c2a30ce3cc34274fe9141d6218499",
+ "iteration": 8,
+ "design": {
+  "axes": {
+   "completeness": "FAIL",
+   "decision_clarity": "PASS",
+   "executability": "PASS",
+   "recoverability": "PASS"
+  },
+  "gaps": [
+   "completeness-1: test-validate.js:799-860 [T106/ADD-2] c1·c2·c3·불변식 4건이 header_overflow 조건에 해당하는 픽스처(HanWinOut·HanWinEdge)를 uncovered:pre_existing·exit 0으로 단언해 차단 전환 후 깨지고, 106 ADD-1 창문 일치 불변식 증명이 사라진다. PLAN이 이 4건의 처리와 대체 픽스처를 정하지 않았다."
+  ]
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "resolved_gaps": [
+  {
+   "id": "completeness-1",
+   "status": "resolved",
+   "reason": "CONVENTIONS.md·pm-review-gate.md가 W-4에 반영됨"
+  }
+ ],
+ "verdict": "fail",
+ "rewrite_target": "both",
+ "advisories": []
+}

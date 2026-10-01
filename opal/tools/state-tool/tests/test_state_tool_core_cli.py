@@ -933,7 +933,7 @@ class TestErrorCodes(BaseTestCase):
     def test_date_tool_failed(self):
         """#4 date_tool_failed: date.js 호출 실패 시 에러 (PLAN §2.18 #4)"""
         self._init()
-        with patch.object(ST, "get_kst_datetime", side_effect=SystemExit(2)):
+        with patch.object(ST_BASE, "get_kst_datetime", side_effect=SystemExit(2)):
             args = make_args(task_path=str(self.task_path), row=1, done=True)
             exit_code, _ = self._call_cmd(ST.cmd_mark, args)
         self.assertEqual(exit_code, 2)

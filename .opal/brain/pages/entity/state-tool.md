@@ -35,7 +35,8 @@ sources:
 - task:167
 - task:170
 - task:172
-related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, close-history-auto-link-enforce-conversion, memory-tool, state-md-journal-redefinition, mirror-gate-must-not-hostage-ssot-record, mark-force-decision-log-scope, test-tool, op-scenario-gate-skill, scenario-economy-advisory-gate, design-gate-deterministic-pretier-separation, design-gate-scope-parallel-judgement-combine]
+- task:174
+related: [brain-tool, opal-brain-system, clarification-gate, state-tool-task-step-key-address, pipeline-json-spec, state-tool-next-action-auto-derivation, state-tool-import-existing-key-reattachment, close-history-auto-link-enforce-conversion, memory-tool, state-md-journal-redefinition, mirror-gate-must-not-hostage-ssot-record, mark-force-decision-log-scope, test-tool, op-scenario-gate-skill, scenario-economy-advisory-gate, design-gate-deterministic-pretier-separation, design-gate-scope-parallel-judgement-combine, behavior-preserving-split-and-block-conversion-lessons]
 created: 2026-06-10
 updated: '2026-10-01'
 status: active
@@ -118,7 +119,16 @@ PM 경로 설계 게이트 advisory 응답·refinement, 목표-커버 게이트 
 
 ## 설계 게이트 이전 지적 조립과 결합 (task:172)
 
-설계 게이트 시작 응답이 이전 지적(`previous_gaps`, 영역별 `previous_gaps_by_scope`, 읽은 회차 `previous_gaps_iteration`)을 직접 싣고, 신규 `design-gate combine`이 병렬 판정의 부분 결과를 결합한다. 기록 단계(`design-gate record`)의 검사 순서와 오류 코드는 바뀌지 않았다 (`opal/tools/state-tool/state_tool.py:6972`, `opal/tools/state-tool/state_tool.py:7478`). 상세는 [[design-gate-scope-parallel-judgement-combine]].
+설계 게이트 시작 응답이 이전 지적(`previous_gaps`, 영역별 `previous_gaps_by_scope`, 읽은 회차 `previous_gaps_iteration`)을 직접 싣고, 신규 `design-gate combine`이 병렬 판정의 부분 결과를 결합한다. 기록 단계(`design-gate record`)의 검사 순서와 오류 코드는 바뀌지 않았다 (분할 전 `state_tool.py:6972`·`:7478`; task:174 분할 후에는 `state_tool_parts/gates.py`의 `cmd_design_gate_start`·`cmd_design_gate_combine`에서 찾는다). 상세는 [[design-gate-scope-parallel-judgement-combine]].
+## 코드 구조 — 진입점과 9개 모듈 (task:174)
+
+외부 계약은 그대로 두고 8천 줄대 단일 파일을 책임별 모듈로 나눴다. 진입점 `state_tool.py`는 얇은 껍데기이고 실제 코드는 `state_tool_parts/` 아래 9개 모듈(`codes`·`base`·`run_log`·`journal`·`guards`·`gates`·`commands_core`·`commands_run`·`cli`)에 있다(근거: task:174 DONE.md §결과).
+
+- 의존 방향은 한 방향이다: `codes` < `base` < `run_log` < `journal` < `guards` < `gates` < (`commands_core`·`commands_run`) < `cli`. 낮은 층은 높은 층을 알지 못한다(근거: task:174 PLAN).
+- 진입점은 분할 모듈의 공개 이름을 속성 순회로 다시 노출해, 기존에 `state_tool.<이름>`으로 접근하던 호출·테스트가 그대로 동작한다(근거: task:174 PLAN).
+- 테스트가 가로채는 주입점 3개(`get_kst_datetime`·`_import_ownership_lease`·`_import_run_log_core`)는 `base.<이름>` 한정 호출로 바꿨다. 그래서 테스트 patch의 겨냥 대상은 진입점이 아니라 `state_tool_parts.base`다. 코드 이동은 이 3개 이름 외에는 원문 그대로다(근거: task:174 DONE.md §결과).
+- 동작 보존은 분할 전 기준 트리와 대표 명령 19회(오류 경로 포함)의 출력·종료 코드·산출물을 비교해 차이 0건으로 확인했다(근거: task:174 DONE.md §검증).
+- 이 문서 본문의 `state_tool.py:N` 줄번호 인용은 분할 전 단일 파일 기준이므로, 분할 후 위치는 해당 기호 이름으로 `state_tool_parts/`에서 찾는다. 교훈은 [[behavior-preserving-split-and-block-conversion-lessons]] 참조.
 
 ## 관련 페이지
 
@@ -139,3 +149,4 @@ PM 경로 설계 게이트 advisory 응답·refinement, 목표-커버 게이트 
 - [[scenario-economy-advisory-gate]] — task:167 advisory 응답 게이트·목표-커버 기록·mark 가드 전체 계약
 - [[design-gate-scope-parallel-judgement-combine]] — task:172 previous_gaps 결정론 조립·combine
 - [[design-gate-deterministic-pretier-separation]] — task:170 결정론/evaluator 2-tier 분리 + 사전검사 아키텍처 결정
+- [[behavior-preserving-split-and-block-conversion-lessons]] — task:174 분할·차단 전환 교훈 2건

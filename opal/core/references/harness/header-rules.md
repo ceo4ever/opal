@@ -121,7 +121,7 @@ code-scan.js 기본 지원 확장자와 동일하다:
 | 레이어/도메인 이동 | `layer`, `domain` |
 
 > **[MUST] 갱신은 교체지 누적이 아니다** — 위 표의 「갱신」은 해당 필드 값을 **제자리에서 바꾸는 것**이다. 이전 값 뒤에 태스크 번호를 붙여 새 단락을 append하지 않는다. 이력은 git과 `tasks/{NNN}-*/DONE.md`가 갖는다 — 원칙 원문은 `~/.opal/references/header-standard.md` §2.1이 소유하며 본 문서는 포인터만 둔다.
-> `code-scan validate`가 `description`·`note`에서 서로 다른 태스크 번호 2개 이상을 감지하면 `header_history` **비차단 경고**를 낸다(exit code 불변). 경고를 받으면 이력 단락을 제거하고 역할 한 줄로 되돌린다.
+> `code-scan validate`가 `description`·`note`에서 서로 다른 태스크 번호 2개 이상을 감지하면 `header_history` **차단 위반**(exit 2)을 낸다. 위반을 받으면 이력 단락을 제거하고 역할 한 줄로 되돌린다. 머리말이 code-scan 읽기 범위(24,576바이트)를 넘어 닫히면 `header_overflow`(차단)이므로 머리말을 범위 안으로 줄인다.
 
 **[MUST] 파일 역할을 설명하는 @header `description`·`note` 또는 같은 파일의 docstring이
 "테스트가 이 계약을 집행한다"고 주장하면 레포 상대 테스트 경로와 정확한 테스트 심볼을
