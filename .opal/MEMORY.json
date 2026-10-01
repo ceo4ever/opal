@@ -173,6 +173,13 @@
   ],
   "history": [
     {
+      "title": "172 검증 시간 단축",
+      "date": "2026-10-01",
+      "stage": "완료",
+      "path": "tasks/172-261001-opd-검증-시간-단축/",
+      "result": "설계 게이트 병렬 판정·combine, 컨벤션 결정론 사전 검사·변경 구간 검사, 판정 에이전트 effort 정책, TEST 병렬 그룹 도입. S-13 1건 실패는 ADD로 원인 분리, evaluator effort low 채택. state-tool·precheck 688 passed, main 머지 완료."
+    },
+    {
       "title": "174 헤더 이력 차단과 state tool 분할",
       "date": "2026-10-01",
       "stage": "완료",
@@ -199,13 +206,6 @@
       "stage": "완료",
       "path": "tasks/168-260930-opd-opd2-프레임워크-통합/",
       "result": "opd2를 //opd2 FW 공통 Pilot으로 등재. 단계 상태를 state-tool 단일 SSOT로 이전하고 lifecycle 게이트는 opd2 전용 mark 가드로 우회 불가하게 연결. ADD-1·2(Builder 라우팅·PLAN 사전심사) 포함, main 머지 완료."
-    },
-    {
-      "title": "169 워크트리 CLOSE 지식 반영",
-      "date": "2026-10-01",
-      "stage": "완료",
-      "path": "tasks/169-261001-opds-워크트리-CLOSE-지식-반영/",
-      "result": "brain-tool이 워크트리 작업본 brain 쓰기를 허용해 CLOSE에서 지식이 브랜치에 함께 커밋되도록 전환. DONE 템플릿·op-brain-ingest·opd CLOSE 절차 정합, log/index merge=union. brain-tool 159 passed, main 머지 완료. 설치본 재배포 전."
     }
   ]
 }
