@@ -1,0 +1,371 @@
+{
+  "task_id": "168-260930-opd-opd2-프레임워크-통합",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-09-30 23:06:22",
+  "updated_at": "2026-10-01 08:58:18",
+  "current_status": "additional_work_done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-30 23:06:41",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-30 23:18:02",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 06:39:21",
+      "owner": "PM",
+      "note": "PM 직접 작성(워커 미디스패치) - 소요시간 미측정 선언",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "TEST-SCENARIO 작성",
+      "key": "plan.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-30 23:19:37",
+      "owner": "PM",
+      "note": "TEST-SCENARIO.md 작성 완료 — Setup/Scenarios 10건, AC 8종·C 4종·H 2종 전건 연결"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "설계 게이트",
+      "key": "plan.design_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-09-30 23:44:59",
+      "owner": "PM",
+      "note": "design gate i4 pass",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "`state-tool design-gate record`가 pass를 기록했고 현재 문서 묶음 hash가 통과 hash와 같다",
+          "evaluator design-rubric 설계 4축 PASS·시나리오 3축 기준 충족"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 05:55:09",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 05:55:17",
+      "owner": "PM",
+      "note": "다중 병렬 워커(10건) 합산이라 단일 소요시간 귀속 불가",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 06:37:53",
+      "owner": "PM",
+      "note": "TEST-SCENARIO.md S-1~S-13 전건 PASS, test-scenario.json locked, 전체 회귀·컨벤션 진단(Critical/High 0건) 완료",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 06:38:06",
+      "owner": "PM",
+      "note": "test-scenario.json 13/13 pass·locked, 전체 회귀 그린(opal-pilot-dev2 31 tests + state-tool 공유계약 20종/169 subtests + 신규 가드 3종), GC-CONVENTION Critical/High 0건(low 6건 전건 해소)",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 06:39:26",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 06:39:26",
+      "owner": "PM",
+      "note": "DONE.md 작성 완료 (PM 직접 작성)",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 06:39:53",
+      "owner": "PM",
+      "note": "해당 없음 — 구현으로 달라진 문서 사실은 이미 W-7(PLAN Work item)로 반영됨(docs/PROJECT.md·harness/modes.md·worktree.md·skill-commands.md). 추가 드리프트 문서 없음",
+      "conditional": true,
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 06:40:04",
+      "owner": "PM",
+      "note": "워크트리 태스크 — 실제 brain page 생성은 merge 후 허브 finalize가 수행. DONE.md ## 회고적 학습 후보에 .opal/brain/pages/opd2-state-tool-integration.md 선언 완료",
+      "conditional": true,
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 06:40:56",
+      "owner": "PM",
+      "note": "memory-tool architecture 기록 1건 추가(동형 가드 패턴 재사용), 워크트리라 index 요청으로 지연·merge 후 허브 처리",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "opd2 Builder 전문 에이전트 라우팅 + 컨벤션 문서 주입 보정",
+      "key": "close.opd2_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 07:30:26",
+      "owner": "PM",
+      "note": "ADD_DONE-1.md 작성 완료 — Builder 라우팅+컨벤션 gate 보정, 전체 테스트 그린, PM Gate 문서검증 통과",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "opd2 PLAN 사전심사(결정론 게이트+병렬 Reviewer) + agents model frontmatter",
+      "key": "close.opd2_2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 08:58:07",
+      "owner": "PM",
+      "note": "ADD_DONE-2.md 작성 완료 — PLAN 사전심사(결정론+병렬 Reviewer) + model frontmatter, 전체 회귀 그린(36 tests + 23 tests/169 subtests)",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "failed",
+      "status_label": "❌",
+      "timestamp": "2026-10-01 06:42:34",
+      "owner": "PM",
+      "note": "block: main 병합 승인 대기 — merge·worktree-tool finalize는 허브 세션에서 사용자 승인 후 수행 (harness/guards.md §커밋 규칙: merge·push는 모드 무관 사용자 승인 필수)",
+      "conditional": true
+    },
+    {
+      "row_id": 18,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "CLOSE worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행) 블로커 해소",
+  "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_168",
+  "actor": "coordinator",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_43e60bd7-a579-48ff-98d8-765feadb655d",
+    "status": "active",
+    "pending_events": []
+  },
+  "design_gate": {
+    "status": "pass",
+    "iteration": 4,
+    "limit": 3,
+    "limit_from": 3,
+    "task_confirm_req_hash": "d33eba4a37b337874b9c7fad4beb83f123afaa1b6af92607430122447b623a8a",
+    "current_attempt": {
+      "iteration": 4,
+      "bundle_hash": "3c9bf3583b5b8aae02c78baf60b937dadcffac910ba4b678c8ac3e2478fabf7f",
+      "files": {
+        "TASK.md": "fdb97fddb73667d31aaf621c35d82831d6447b3112cca7134f7fda8c4421461a",
+        "PLAN.md": "394bc12fd9cd7cb8b7710a6d2c4e6e2f36b0be26a8d07f0d95679348257a2029",
+        "TEST-SCENARIO.md": "dcba44f6c78799be32cadbdd1aaf576e68563e514787ffb0e627360e83663fe0"
+      },
+      "started_at": "2026-09-30 23:42:39",
+      "refinement": false
+    },
+    "passed_bundle_hash": "3c9bf3583b5b8aae02c78baf60b937dadcffac910ba4b678c8ac3e2478fabf7f",
+    "approved_bundle_hash": "3c9bf3583b5b8aae02c78baf60b937dadcffac910ba4b678c8ac3e2478fabf7f",
+    "last_rewrite_target": "scenario",
+    "history": [
+      {
+        "iteration": 1,
+        "verdict": "deterministic_fail",
+        "rewrite_target": null,
+        "bundle_hash": "9a3622f1310e69a680f98ed93224915918813fcb3ecfd3699a88972419a4011f",
+        "reason": "uncovered requirement C-2; uncovered requirement C-3; uncovered requirement C-4; regression target listed as change: opal/tools/state-tool/state_tool.py; finding not in work items: .sdlc/; finding not in work items: .sdlc/events.jsonl",
+        "at": "2026-09-30 23:20:02"
+      },
+      {
+        "iteration": 2,
+        "verdict": "rewrite",
+        "rewrite_target": "plan",
+        "bundle_hash": "24a8a61e8064f7924a361aeb93fb6069cd8df90db3e10b3c6eff89fb49504a44",
+        "reason": "design FAIL: completeness, decision_clarity; scenario average 1.667",
+        "at": "2026-09-30 23:23:38",
+        "advisories": [
+          {
+            "id": "A-1",
+            "kind": "mergeable",
+            "targets": [
+              "S-9",
+              "S-3"
+            ],
+            "basis": "S-9 has no action or environment of its own; it only reviews the dispatch records produced by S-3.",
+            "recommendation": "Merge S-9's expected result into S-3's expected results, or make S-9 an explicit post-check step of S-3."
+          },
+          {
+            "id": "A-2",
+            "kind": "misclassified",
+            "targets": [
+              "S-6"
+            ],
+            "basis": "S-6 is typed check but its action starts opd2 with delivery=release and observes rejection, a behavior verification.",
+            "recommendation": "Reclassify S-6 as a behavior scenario (integration/manual); keep the SKILL.md text read as a separate check."
+          }
+        ],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 3,
+        "verdict": "rewrite",
+        "rewrite_target": "scenario",
+        "bundle_hash": "42c2cec7e19e9bc2967a7100c0f99edea5cd7e089962566586d45e782e840a7f",
+        "reason": "scenario average 1.333",
+        "at": "2026-09-30 23:36:10",
+        "advisories": [
+          {
+            "id": "A-1",
+            "kind": "mergeable",
+            "targets": [
+              "S-9",
+              "S-3"
+            ],
+            "basis": "S-9 has no action or environment of its own; it only reviews dispatch records produced by S-3.",
+            "recommendation": "Fold S-9's expected result into S-3, or state S-9 explicitly as S-3's post-check step."
+          },
+          {
+            "id": "A-2",
+            "kind": "misclassified",
+            "targets": [
+              "S-6"
+            ],
+            "basis": "S-6 is typed check, but its action starts opd2 with delivery=release and observes rejection — that is behavior verification.",
+            "recommendation": "Reclassify S-6 as a behavior scenario (integration/manual); keep reading the SKILL.md text as a separate check."
+          },
+          {
+            "id": "A-3",
+            "kind": "cheaper_layer",
+            "targets": [
+              "S-3",
+              "S-5"
+            ],
+            "basis": "In S-3's expected results, deliberately triggering each lifecycle gate (hash mismatch, out-of-scope change, builder=verifier, missing evidence, 4th retry) repeats blocking already covered by S-5 at unit level. Only the step where state-tool rejects the row transition is new at the e2e layer.",
+            "recommendation": "Have S-3 trigger one representative gate end to end (row not marked done); leave the per-gate matrix to S-5 and the new direct-mark bypass scenario."
+          }
+        ],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 4,
+        "verdict": "pass",
+        "rewrite_target": null,
+        "bundle_hash": "3c9bf3583b5b8aae02c78baf60b937dadcffac910ba4b678c8ac3e2478fabf7f",
+        "reason": null,
+        "at": "2026-09-30 23:44:59",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      }
+    ],
+    "refinement_pending": false
+  }
+}

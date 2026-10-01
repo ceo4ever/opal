@@ -1,0 +1,200 @@
+{
+ "scenario": "smoke-version-flag",
+ "mode": "smoke",
+ "runs": [
+  {
+   "run": "opd-r1",
+   "variant": "//opd",
+   "rep": 1,
+   "timeout": false,
+   "wall_min": 15.8,
+   "cost_usd": 8.66,
+   "turns": 17,
+   "output_tokens": 9053,
+   "result_text": "[부트스트랩] ✅ session.project ⏳ PM\n\n캡틴, 요구서대로 `stockctl --version`을 추가했고 TASK부터 CLOSE까지 끝냈습니다. 작업 브랜치 `feat/OP-TASK-001`에 커밋 5개로 남아 있으며 `main`에는 아직 merge하지 않았습니다.\n\n## 🎯 결론\n1) **요구 4항목 충족** — `stockctl --version`을 단독 실행하면 `stockctl 0.1.0` 한 줄이 출력되고 exit 0으로 끝납니다.\n   - 버전은 `stockctl/__init__.py`의 `__version__`을 그대로 씁니다. 저장소 파일은 만들지도 읽지도 않습니다(깨진 저장소 파일을 지정해도 exit 0, 파일 변화 없음). `docs/CLI.md`에도 행을 추가했습니다.\n2) **기존 동작 그대로** — add/remove/list와 기존 테스트는 바뀌지 않았고, 신규 테스트까지 합쳐 전체 4 passed입니다.\n   - 독립 검증 결과: 설계 게이트 1회차 통과, 테스트 에이전트 시나리오 S-1~S-5 전부 PASS, 컨벤션 검사 Critical/High 0건.\n3) **변경 파일 3개** — `stockctl/cli.py`(argparse `action=\"version\"` 한 줄과 import), `docs/CLI.md`, `tests/test_version.py`(신규)입니다.\n   - 테스트는 먼저 작성해 구현 전에 2건이 실패하는 것을 확인했고, 그 뒤 구현했습니다. 태스크 산출물은 `.opal-worktrees/task_001/tasks/001-261001-opd-버전-확인-옵션/`에 있습니다.\n\n## 📌 추가 확인 사항\n1) [이월] 워크트리 전용 터미널 세션은 띄우지 않았습니다. 이 세션이 워크트리에서 직접 끝까지 진행했고, 그 결정은 AGENTIC-LOG에 남겼습니다.\n2) [리스크] 컨벤션 권고 4건은 고치지 않았습니다. 테스트의 미사용 `monkeypatch` 인자 2건, docstring 부재, 한 글자 변수명이며 프로젝트 규칙 위반이 아닌 비차단 권고입니다.\n3) [미확인] 세션 첫 Bash 호출에서 PreToolUse hook 스크립트(`pretooluse_guard_hook.py`)가 없다는 오류가 났습니다. 이 건과 도구 사용성 2건, 총 3건을 FW 개선 후보로 `~/.opal/fw-inbox/`에 기록했습니다.\n\n---\n▶️ 사용자 결정 필요: 허브에서 `feat/OP-TASK-001`을 `main`에 merge할까요? 권고는 `git merge --ff-only feat/OP-TASK-001`입니다. 그다음 `state-tool finalize-attribution`, `status --set done`, `worktree-tool remove`를 순서대로 실행하면 이력 기록과 워크트리 정리가 끝납니다. merge하지 않으면 변경은 작업 브랜치에만 남고 `main`의 stockctl에는 `--version`이 없는 상태로 유지됩니다.",
+   "task_found": true,
+   "task": "001-261001-opd-버전-확인-옵션",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opd",
+   "gate_iterations": 1,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 5,
+   "raw_commits": 0,
+   "subagent_runs": 5,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 4.2,
+    "execute": 3.3,
+    "test": 4.7,
+    "close": 1.3
+   },
+   "log_error": 0,
+   "log_fix": 0,
+   "stage_log": {},
+   "corrections": [],
+   "stage_min": {
+    "TASK": 1.7,
+    "PLAN": 11.1,
+    "EXECUTE": 0.0,
+    "TEST": 0.1,
+    "CLOSE": 0.5
+   },
+   "decision_requests": 0,
+   "framework": "v0.7.3+c4ace6",
+   "existing_tests_ok": true,
+   "hidden_summary": "2 passed in 0.37s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "PASS",
+   "fail_reasons": [],
+   "trend_warnings": [
+    "최종 수행 시간(분) 최근 중앙값 21.05 → 15.8 (-25%)"
+   ]
+  },
+  {
+   "run": "opd-r2",
+   "variant": "//opd",
+   "rep": 2,
+   "timeout": false,
+   "wall_min": 15.8,
+   "cost_usd": 9.4,
+   "turns": 15,
+   "output_tokens": 9131,
+   "result_text": "✅ [CLOSE] 태스크 완료\n📎 산출물: `tasks/001-261001-opd-버전-확인-옵션/DONE.md` (worktree `.opal-worktrees/task_001` 안)\n\n캡틴, 요구서대로 `stockctl --version`을 구현했고 opd 파이프라인을 끝까지 마쳤습니다. 다만 변경은 아직 커밋되지 않았습니다.\n\n## 🎯 결론\n1) **요구사항 4개 모두 충족** — `python3 -m stockctl --version`이 `stockctl 0.1.0` 한 줄을 출력하고 exit 0으로 끝납니다.\n   - 서브커맨드 없이 단독으로 동작하고, 저장소 파일을 만들지도 읽지도 않습니다. 버전은 `__init__.py`의 `__version__`에서 가져오며, `docs/CLI.md` 계약 표에 행을 추가했습니다.\n2) **검증은 독립 워커가 실제 실행으로 했습니다** — 시나리오 S-1~S-6 6/6 PASS, 전체 테스트 4 passed입니다.\n   - 구현 전에 RED(실패 2건)를 먼저 확인했습니다. `main`과 비교한 결과 add/remove/list 출력과 종료 코드(0/1/2)가 같았고, 설계 게이트 pass, 컨벤션 검사 0건, 보안 검사 통과입니다.\n3) **변경 파일은 3개입니다** — `stockctl/cli.py`(import 조정과 `--version` 옵션 1줄 추가), `docs/CLI.md`(1행 추가), `tests/test_version.py`(신규).\n\n## 📌 추가 확인 사항\n1) [리스크] 변경이 브랜치 `feat/OP-TASK-001`의 작업 트리에 **미커밋** 상태로 남아 있습니다.\n   - Orca 전용 터미널 기동이 `recovery_required`(터미널 생성 여부 확인 불가)로 실패했습니다. 그래서 자율 체크포인트 커밋이 `checkpoint_ownership_denied`로 거부되었고, 저는 커밋하지 않았습니다.\n2) [리스크] worktree finalize가 `closed`로 기록되었습니다.\n   - 브랜치에 커밋이 없어 base와 같은 SHA로 보여 도구가 \"merged\"로 판정한 결과입니다. 실제 merge가 일어난 것은 아닙니다.\n3) [이월] 프레임워크 개선 후보 2건을 `~/.opal/fw-inbox/`에 기록했습니다.\n   - launcher 실패가 체크포인트를 막는 문제와, PM이 직접 쓴 PLAN 행이 CLOSE에서 소요 선언 없음으로 차단되는 문제입니다. 상세 경위는 `AGENTIC-LOG.md`에 있습니다.\n\n---\n▶️ 사용자 결정 필요: worktree의 미커밋 변경 3개 파일과 태스크 캡슐을 `feat/OP-TASK-001`에 커밋한 뒤 `main`에 `git merge --ff-only`로 합칠까요? 권고는 진행입니다. 모든 검증이 통과했고, 커밋하지 않은 채 worktree를 정리하면 변경이 사라질 위험이 있습니다.",
+   "task_found": true,
+   "task": "001-261001-opd-버전-확인-옵션",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opd",
+   "gate_iterations": 1,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 0,
+   "raw_commits": 0,
+   "subagent_runs": 5,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 5.5,
+    "execute": 3.0,
+    "test": 4.1,
+    "close": 1.2
+   },
+   "log_error": 3,
+   "log_fix": 0,
+   "stage_log": {
+    "TASK": {
+     "DECISION": 1,
+     "ERROR": 1,
+     "GATE": 1
+    },
+    "PLAN": {
+     "DECISION": 2,
+     "ERROR": 1,
+     "GATE": 1
+    },
+    "EXECUTE": {
+     "GATE": 2
+    },
+    "TEST": {
+     "GATE": 1
+    },
+    "CLOSE": {
+     "ERROR": 1,
+     "IMPROVE": 1,
+     "DECISION": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "TASK",
+     "kind": "발견",
+     "text": "worktree-launcher launch(adapter=orca) 실패 — `launch_recovery_required`/`launch_receipt_missing`, terminal_creation=unknown. recover 시도도 `recovery_terminal_unconfirmed`"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "발견",
+     "text": "최초 PLAN에 code-scan 결과 인용 없음 → `code_scan_citation_unmet`"
+    },
+    {
+     "stage": "CLOSE",
+     "kind": "발견",
+     "text": "close.done_md 첫 시도 `worker_duration_undeclared`(row 3 PLAN — PM 직접 작성 행)"
+    }
+   ],
+   "stage_min": {
+    "TASK": 1.2,
+    "PLAN": 11.9,
+    "EXECUTE": 0.0,
+    "TEST": 0.0,
+    "CLOSE": 0.7
+   },
+   "decision_requests": 0,
+   "framework": "v0.7.3+c4ace6",
+   "existing_tests_ok": true,
+   "hidden_summary": "2 passed in 0.37s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: checkpoint_commits"
+   ],
+   "trend_warnings": [
+    "최종 수행 시간(분) 최근 중앙값 21.05 → 15.8 (-25%)"
+   ]
+  },
+  {
+   "run": "opd2-r1",
+   "variant": "//opd2",
+   "rep": 1,
+   "timeout": false,
+   "wall_min": 10.7,
+   "cost_usd": 4.36,
+   "turns": 60,
+   "output_tokens": 31841,
+   "result_text": "캡틴, 요구서 내용(`stockctl --version`)은 구현과 검증이 끝났습니다. 다만 변경이 아직 커밋되지 않은 상태입니다. OPAL 도구가 체크포인트 커밋을 거부했기 때문입니다.\n\n## 🎯 결론\n1) **요구서 4개 항목 모두 충족** — `stockctl --version`을 실행하면 표준 출력에 `stockctl 0.1.0` 한 줄이 나오고 exit 0으로 끝납니다.\n   - 버전은 `stockctl/__init__.py`의 `__version__` 값을 씁니다. 서브커맨드 없이 단독으로 동작하고, 저장소 파일을 만들거나 읽지 않습니다. `docs/CLI.md`에 옵션 행을 추가했습니다.\n2) **검증은 세 단계로 따로 실행해 확인** — 구현 전에 새 테스트가 4건 모두 실패하는 것을 먼저 확인했습니다(실패 이유는 `--version` 미구현).\n   - 구현 후에는 구현자와 별도의 검증 담당이 `pytest`를 다시 돌려 6건 모두 통과했습니다(기존 테스트 2건 포함). 리뷰 담당도 따로 검토해 통과로 판정했고, 막는 문제는 없었습니다.\n3) **변경 범위는 계획한 3개 파일뿐** — `stockctl/cli.py`(import 1줄과 옵션 1줄), `docs/CLI.md`(1행), 새 파일 `tests/test_version.py`입니다.\n   - add/remove/list 명령은 바뀌지 않았고, 인자 없이 실행하면 예전처럼 exit 2가 나옵니다. 진행 단계 기록은 `.opal-worktrees/task_001/tasks/001-261001-opd2-버전-옵션/`의 `DONE.md`, `STATE.md`, `AGENTIC-LOG.md`에 있습니다.\n\n## 📌 추가 확인 사항\n1) [미확인] **커밋, main 병합, push는 하지 않았습니다** — 변경은 작업본(브랜치 `feat/OP-TASK-001`)에 커밋되지 않은 채로 남아 있습니다.\n   - 체크포인트 커밋을 두 번 시도했지만 모두 `checkpoint_ownership_denied`(`hub_lease_not_held`)로 거부됐습니다. 원인은 opd2 진행 도구가 작업 소유권(lease)을 잡지 않는 데 있습니다. 소유권을 잡으려고 가짜 opd 상태 파일을 만드는 건 규칙상 금지라 그 방법은 쓰지 않았습니다.\n2) [리스크] **opd2 쪽 연동 문제** — opd2로 진행하는 작업은 지금 구조로는 매번 이렇게 자동 커밋이 막힙니다. 별도 태스크로 고쳐야 합니다.\n   - 같은 내용을 `DONE.md`의 참고 절에 적어 두었습니다.\n\n---\n▶️ 사용자 결정 필요: 작업본의 변경 4건(`stockctl/cli.py`, `docs/CLI.md`, `tests/test_version.py`, 태스크 폴더)을 `feat(001): stockctl --version 옵션 추가` 메시지로 `feat/OP-TASK-001` 브랜치에 직접 커밋하는 것을 승인하시겠습니까? 저는 커밋을 권합니다. 커밋해 두면 검증된 상태를 잃지 않고, 이후 main 병합 여부를 따로 결정할 수 있습니다. 승인하지 않으시면 작업본에 커밋되지 않은 변경으로 그대로 둡니다.",
+   "task_found": false,
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "태스크 state.json 없음(세션이 TASK 전에 멈춤)"
+   ],
+   "trend_warnings": []
+  },
+  {
+   "run": "opd2-r2",
+   "variant": "//opd2",
+   "rep": 2,
+   "timeout": false,
+   "wall_min": 13.8,
+   "cost_usd": 5.07,
+   "turns": 59,
+   "output_tokens": 37330,
+   "result_text": "[부트스트랩] ✅ session.project ⏳ PM\n\n요구서대로 `stockctl --version`을 구현했고 검증·리뷰를 모두 통과했습니다. 다만 변경은 아직 커밋되지 않은 상태입니다.\n\n## 🎯 결론\n1) **구현 완료, 머지 대기(ready_for_merge)** — 브랜치 `feat/OP-TASK-001`(작업본 `.opal-worktrees/task_001`)에서 요구서의 5개 수용 기준을 모두 충족했습니다.\n   - `python -m stockctl --version`은 `stockctl 0.1.0` 한 줄을 출력하고 exit 0으로 끝납니다. 버전은 `__version__`에서 가져오고, 저장소 파일은 만들지도 읽지도 않습니다. `docs/CLI.md`에 한 줄을 추가했습니다.\n   - 변경은 세 파일뿐입니다: `stockctl/cli.py`(argparse 버전 옵션 한 줄 + `@header` 설명 갱신), `docs/CLI.md`, 새 테스트 `tests/test_version.py`.\n2) **테스트를 실제로 돌려 확인** — 실행 증거를 남긴 결과, 기존 2건과 신규 3건 등 pytest 5건이 모두 통과했습니다.\n   - 구현자, 검증자, 리뷰어를 각각 별도 에이전트로 돌렸고 판정은 모두 pass, 리뷰 차단 이슈는 없습니다. add/remove/list의 출력과 종료 코드(0/1/2)도 그대로입니다.\n3) **진행 중 고친 문제** — 처음 작성한 신규 테스트가 `stockctl`을 import하지 못해, 기능 부재가 아닌 엉뚱한 이유로 실패하고 있었습니다.\n   - 검증 에이전트가 찾아냈고, 테스트가 저장소 루트를 경로로 쓰도록 고친 뒤 다시 확인했습니다. 이제 구현 전에는 의도한 이유(`--version` 미지원)로 실패합니다.\n\n## 📌 추가 확인 사항\n1) [리스크] 체크포인트 커밋이 거부돼 변경이 작업본에 커밋되지 않은 채로 있습니다.\n   - 거부 사유는 `checkpoint_ownership_denied`입니다. opd2는 태스크 소유권 lease를 잡지 않는데, 우회 경로(state-tool, 세션 hook)는 가짜 상태를 만들게 되므로 쓰지 않았습니다. 이 결함은 `DONE.md`에 개선 후보로 기록했습니다.\n2) [이월] 전용 터미널 세션은 띄우지 않았습니다.\n   - 런처가 opd2 상태 파일과 호환된다는 보장이 없어, 현재 세션이 작업본에서 직접 진행했습니다.\n3) [미확인] 허브 쪽 변경 두 가지는 정리하지 않았습니다.\n   - OPAL 도구가 태스크 번호를 매기면서 허브의 `.opal/MEMORY.json`을 바꿨고(`last_task_number` 1), `.opal/run/`도 만들었습니다.\n- 그 외 2건 — 리뷰어의 비차단 의견: 버전 하드코딩 금지는 테스트가 아니라 리뷰로만 보장되고, `list --version`처럼 서브커맨드 뒤에 쓰면 exit 2입니다(요구 범위 밖).\n\n---\n▶️ 사용자 결정 필요: 미커밋 변경(3개 파일 + 태스크 폴더)을 커밋하고 `main`에 merge할지 결정해 주세요. 권장안은 이 대화에서 승인을 받아 `feat/OP-TASK-001`에 커밋한 뒤 `main`에 `--ff-only`로 merge하는 것입니다. 이유는 검증·리뷰가 모두 끝났고 커밋만 소유권 문제로 막혀 있어서입니다. 승인하지 않으면 변경은 작업본에 그대로 남습니다. 커밋과 merge를 진행할까요?",
+   "task_found": false,
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "태스크 state.json 없음(세션이 TASK 전에 멈춤)"
+   ],
+   "trend_warnings": []
+  }
+ ]
+}
