@@ -9,10 +9,11 @@ tags:
 sources:
 - task:021
 - task:115
-related: [daemon-as-tool-orchestrator, project-id-query-param-pattern, deploy-artifact-verification-lesson, opal-architecture, brain-tool, state-tool]
+- task:172
+related: [daemon-as-tool-orchestrator, project-id-query-param-pattern, deploy-artifact-verification-lesson, opal-architecture, brain-tool, state-tool, console-auth-default-deny-gate, console-entry-token-channel, legacy-brain-spawn-policy-gate]
 source_ref: dashboard/
 created: 2026-06-15
-updated: '2026-09-12'
+updated: '2026-10-01'
 status: active
 ---
 ## 개요
@@ -78,7 +79,15 @@ opal-cli console open     # 브라우저 열기
 - 배포 경로: `~/.opal/dashboard-server/` (install-mac.sh `install_dashboard()` 함수)
 - 기본 포트: **7823**
 
+## 접근 통제 (태스크 172)
+
+모든 `/api/` 요청은 세션이 있어야 하며, 세션은 `opal-cli console open`이 발급한 1회성 진입 token 교환으로만 얻는다. 세션이 없으면 브라우저는 데이터 없는 잠금 화면과 재진입 안내만 보인다. 구형 Brain은 서버 정책으로 기본 꺼져 있고 위험 확인 후 켤 수 있다. 근거: `dashboard/backend/auth.py`, `dashboard/backend/adapters/brain_policy.py`, `tasks/172-261001-opd-콘솔-POST-인증-게이트/DONE.md:5-8`. 설치본 반영에는 설치본 갱신 후 Console 재기동이 필요하다.
+
 ## 관련 페이지
+
+- [[console-auth-default-deny-gate]]
+- [[console-entry-token-channel]]
+- [[legacy-brain-spawn-policy-gate]]
 
 - [[daemon-as-tool-orchestrator]]
 - [[project-id-query-param-pattern]]

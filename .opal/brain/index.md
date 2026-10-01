@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-10-01 12:38
+> 갱신: 2026-10-01 16:24
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -105,9 +105,11 @@
 - [[conditional-artifact-gate-ineligibility]] — 조건부 산출물은 존재 게이트 대상이 아니다 #gate-design #verification #artifact #task-091
 - [[conditional-precheck-over-unconditional-alibi-call]] — 조건부 선조회 — 무조건 조회는 알리바이가 된다 #governance #coverage #alibi-call #verification-design #opd
 - [[config-file-concurrent-write-defense-standard]] — 설정 파일 동시 쓰기 방어 표준 #architecture #concurrency #backend #pattern #file-io
+- [[console-auth-default-deny-gate]] — Console API 인증 게이트 — 단일 미들웨어 기본 거부 #console #auth #security
 - [[console-brain-exit-guard-pattern]] — 콘솔 브레인 이탈 가드 4경로 패턴 #brain #ux #guard #console #session-management
 - [[console-brain-subscription-auth]] — Console 브레인 질의 인증 — 종량제 API 금지, 소유자 구독 사용 #console #brain #auth #cost #task-036
 - [[console-brain-volatile-single-session]] — 콘솔 브레인 휘발성 단일 세션 설계 전환 #brain #session-management #architecture #console #ux
+- [[console-entry-token-channel]] — Console 진입 token — 파일 기반 1회 소비 채널 #console #auth #opal-cli
 - [[console-open-health-readiness]] — Console open의 health 기반 준비 확인 #console #opal-cli #readiness
 - [[console-settings-incremental-scope-policy]] — 콘솔 설정 화면 점진 확장 방침 #product-decision #console #scope #security
 - [[console-write-exception-router-isolation]] — 콘솔 쓰기 예외 라우터 격리 패턴 #architecture #console #security #pattern #write-isolation
@@ -178,6 +180,7 @@
 - [[knowledge-assets-as-flow-entrypoint]] — 지식 자산은 흐름의 끝이 아니라 시작점이다 — 참조 순서 기준 계층 배치 + 도구·자산 범주 분리 #architecture #knowledge-asset #layering #diagram #decision
 - [[lean-core-relocation-benefit-precondition]] — lean core 이관 이익의 전제 조건 — PM 전용 + Phase B 기 로드 #lean-core #agent-md #relocation #pm-tier #assistant-tier
 - [[lease-handoff-before-terminal-launch]] — 실행 주체 인계는 수신자 id가 아니라 대상 루트를 키로 한다 #lease #ownership #worktree #handoff #task-150 #pattern
+- [[legacy-brain-spawn-policy-gate]] — 구형 Brain 정책 — Registry 진입점과 spawn 직전 게이트 #console #brain #security
 - [[legacy-row-address-gate-insertion-regression]] — 레거시 행번호 파이프라인에 게이트 행 삽입 시 전수 수정 결합 회귀 #state-tool #pipeline #legacy-row #regression #scenario-gate #task-075
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[literal-version-test-expectation-fragility]] — 리터럴 버전번호를 테스트 기대값으로 쓰면 동시 작업이 깨뜨린다 #testing #concurrency #test-scenario #lesson

@@ -9,9 +9,10 @@ sources:
 - opal/tools/opal-cli/lib/console.sh
 - docs/ARCHITECTURE.md
 - tasks/168-260930-oppm-콘솔-준비확인-후-오픈/evidence/verification.md
-related: [opal-console]
+- task:172
+related: [opal-console, console-entry-token-channel]
 created: '2026-09-30'
-updated: '2026-09-30'
+updated: '2026-10-01'
 status: draft
 ---
 ## 결정
@@ -24,6 +25,10 @@ status: draft
 
 PID 레코드는 종료 권한을 판정할 때만 사용한다. `/health`가 응답하는 이미 실행 중인 비소유 Console은 종료하거나 레코드를 바꾸지 않고 열 수 있어야 한다.
 
+## 인증 마커와 진입 token (태스크 172)
+
+준비 확인 뒤 `open`은 `/health`의 인증 마커를 확인한다. 마커가 없는 구버전 데몬이면 브라우저를 열지 않고 재기동을 안내하며 실패한다. 마커가 있으면 1회성 진입 token을 발급해 URL fragment로 전달한다. (근거: task:172 PLAN§D-11, D-12)
+
 ## 근거
 
 - `opal/tools/opal-cli/lib/console.sh` — start/status/open과 PID 소유권 구현
@@ -32,4 +37,5 @@ PID 레코드는 종료 권한을 판정할 때만 사용한다. `/health`가 �
 
 ## 관련 페이지
 
+- [[console-entry-token-channel]]
 - [[opal-console]]
