@@ -1,0 +1,37 @@
+{
+ "scenario": "function-todo-crud",
+ "mode": "function",
+ "variant": "//opds design=opus/high impl=sonnet/low",
+ "rep": 1,
+ "vidx": 1,
+ "utterance": "//opds 요구서 /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-176/39b1b7a5-a283-4de9-b1e6-120a0bdcb558/scratchpad/measure-function-todo-crud/opds-design-opus-high-impl-sonnet-low-r1/REQUEST.md 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다. 격리 저장소 안에서 필요한 사용자 gate와 local merge/finalize는 승인한다. 이 승인은 모의 저장소 밖 merge·push·배포로 확장되지 않는다.",
+ "start": 1790873516.286765,
+ "framework": "v0.7.3-72-gbb257506+9c962d",
+ "settings": {
+  "declared": {
+   "design": {
+    "model": "opus",
+    "effort": "high"
+   },
+   "impl": {
+    "model": "sonnet",
+    "effort": "low"
+   }
+  },
+  "applied": {
+   "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5"
+   ],
+   "agent_overrides": {
+    "opal-task-agent": "06f8257228f2e3cb9950da458e70186895a2d5fa9cb896ecefed35ce92694c45",
+    "opal-be-agent": "59508175b1b2f8ffb69b5e61970ac5fdb38bb0e9a9e40a838327dd3ef96ebfa0",
+    "opal-fe-agent": "2f847954c283f2032be7080497261f1da47a3ccfb193775b7bd5b0aa6a59ac0a"
+   },
+   "agents_missing": []
+  }
+ },
+ "exit": 0,
+ "timeout": false,
+ "end": 1790875315.2361758
+}

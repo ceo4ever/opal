@@ -1,0 +1,1239 @@
+{
+ "scenario": "function-todo-crud",
+ "mode": "function",
+ "runs": [
+  {
+   "run": "opds-design-opus-high-impl-sonnet-low-r1",
+   "variant": "//opds design=opus/high impl=sonnet/low",
+   "rep": 1,
+   "timeout": false,
+   "wall_min": 30.0,
+   "settings": {
+    "declared": {
+     "design": {
+      "model": "opus",
+      "effort": "high"
+     },
+     "impl": {
+      "model": "sonnet",
+      "effort": "low"
+     }
+    },
+    "applied": {
+     "models": [
+      "claude-opus-5-5",
+      "claude-sonnet-5-5"
+     ],
+     "agent_overrides": {
+      "opal-task-agent": "06f8257228f2e3cb9950da458e70186895a2d5fa9cb896ecefed35ce92694c45",
+      "opal-be-agent": "59508175b1b2f8ffb69b5e61970ac5fdb38bb0e9a9e40a838327dd3ef96ebfa0",
+      "opal-fe-agent": "2f847954c283f2032be7080497261f1da47a3ccfb193775b7bd5b0aa6a59ac0a"
+     },
+     "agents_missing": []
+    }
+   },
+   "cost_usd": 15.81,
+   "turns": 20,
+   "output_tokens": 17225,
+   "result_text": "캡틴, 요구서대로 TODO CRUD 웹 앱을 `//opds`(agentic, 워크트리)로 끝까지 수행했고 로컬 `main` 병합까지 마쳤습니다.\n\n## 🎯 결론\n1) **요구서 전체 충족(검증 완료)** — 화면, API 6종, 검증·예외 처리, 영속성을 표준 라이브러리만으로 구현했습니다.\n   - 시나리오 11/11 통과(RED 7건은 구현 전에 실패를 먼저 확인), `main`에서 `python -m pytest tests/ -q` 9 passed, 실제 브라우저(Playwright)로 화면 생성·유지 확인, 기존 `tests/test_basic.py` 유지.\n2) **TEST에서 실제 결함 2건을 찾아 고침(수정 상한 3회 중 2회 사용)** — 명세를 완화하지 않고 제품 코드를 수정했습니다.\n   - 첫째, 빈 목록일 때 목록 영역이 화면에 보이지 않던 문제를 \"No todos yet.\" 안내 표시로 고쳤습니다. 둘째, 서버 기본 접속 대기열(5)이 동시 접속 20건 중 일부를 끊던 문제를 128로 늘려 고쳤습니다. 수정 전 8회 중 5회 실패, 수정 후 PM 실행 15/15·테스트 에이전트 실행 10/10 통과입니다.\n3) **로컬 병합과 마감 완료** — `feat/OP-TASK-001`을 ff-only로 병합했습니다(현재 `main` = `8d39e83`). 작업 이력을 MEMORY에 반영하고 태스크 상태를 `done`으로 확정했습니다. 원격이 없어 push는 하지 않았습니다.\n   - 변경 파일: `todo_web/store.py`(신규), `todo_web/app.py`, `tests/test_todo_api.py`(신규). 산출물은 `tasks/001-261002-opds-TODO-CRUD-웹앱-구현/`(DONE.md, AGENTIC-LOG.md)에 있습니다.\n\n## 📌 추가 확인 사항\n1) [리스크] 처음 작성한 RED 테스트에 응답 헤더를 읽는 부분의 결함이 있었는데, 구현 전에는 모든 테스트가 같은 404에서 먼저 실패해 가려졌습니다.\n   - 작성 에이전트가 해당 1줄만 고쳤고 기대 결과는 바꾸지 않았습니다. 같은 문제의 재발 방지 제안을 FW 개선함에 1건 기록했습니다.\n2) [미확인] 로컬 개선 후보 1건은 `improve-tool`이 `invalid_args`로 기록하지 못했습니다.\n   - 내용은 DONE.md와 AGENTIC-LOG #18~#20에 남겨 두었습니다.\n3) [이월] 워크트리 `.opal-worktrees/task_001`과 브랜치는 남아 있습니다.\n   - worktree 제거는 승인 범위 밖이라 실행하지 않았습니다. 전용 터미널 세션 기동도 같은 이유로 하지 않고 이 세션에서 계속 진행했습니다.\n- 그 외 1건 — Canva·Gmail·Google Drive 등 claude.ai 커넥터 몇 개는 인증되지 않았고 shadcn MCP는 연결에 실패했습니다. 이번 작업에는 영향이 없었습니다.\n\n---\n▶ PM 다음 작업: 추가로 할 작업이 없습니다. 워크트리 정리(`worktree-tool remove --project-root <허브> --task 001`)는 캡틴이 지시하면 실행합니다.",
+   "test_fix_iterations": 0,
+   "task_found": true,
+   "task": "001-261002-opds-TODO-CRUD-웹앱-구현",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opds",
+   "gate_iterations": 1,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 0,
+   "raw_commits": 0,
+   "subagent_runs": 9,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 7.9,
+    "execute": 5.2,
+    "test": 10.0,
+    "close": 1.8
+   },
+   "log_error": 3,
+   "log_fix": 4,
+   "stage_log": {
+    "TASK": {
+     "DECISION": 2
+    },
+    "PLAN": {
+     "DECISION": 2,
+     "GATE": 2
+    },
+    "EXECUTE": {
+     "DECISION": 1,
+     "GATE": 3,
+     "ERROR": 1,
+     "FIX": 2
+    },
+    "TEST": {
+     "DECISION": 4,
+     "ERROR": 2,
+     "FIX": 2,
+     "GATE": 1
+    },
+    "CLOSE": {
+     "DECISION": 1,
+     "IMPROVE": 1,
+     "GATE": 2
+    }
+   },
+   "corrections": [
+    {
+     "stage": "EXECUTE",
+     "kind": "발견",
+     "text": "W-2 워커 blocked 보고: 잠긴 RED 테스트 `tests/test_todo_api.py:108`이 `Resp(r.status, r, r.read())`로 `HTTPResponse` 객체를 headers로 저장해 `resp.headers.get(...)`(`:128,136,143`)이 `AttributeError`. PM 재현: `hasattr(HTTPResponse,'get') == False`, `pytest tes"
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "교정",
+     "text": "(#9 참조) opal-test-agent에 하네스 결함만 수정 지시 — `Resp`의 headers를 `r.msg`(HTTPMessage)로 교체, 기대 계약(assertion) 불변. 구현자(opal-be-agent)는 테스트를 수정하지 않음(작성자≠구현자 유지)."
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "교정",
+     "text": "(#9·#10 결과) opal-test-agent가 `tests/test_todo_api.py:108` 1줄만 `Resp(r.status, r.msg, r.read())`로 수정, assertion 불변, scenario lock 유지(red 7/7). PM 재실행 `python -m pytest tests/ -q` → 9 passed."
+    },
+    {
+     "stage": "TEST",
+     "kind": "발견",
+     "text": "TEST 1차: 10 pass / 1 fail. S-9 A1 \"클릭 전 4요소 보임\" 실패 — 빈 목록에서 `section#todo-list`·`ul#todo-items` 높이 0(`run/s9_probe_empty.out`). A2~A4(생성·표시·새로고침 유지·API 존재)는 pass. 최종 회귀 9 passed, 보안 Pass(시크릿 0, innerHTML 0, XSS 프로브 텍스트 표시)."
+    },
+    {
+     "stage": "TEST",
+     "kind": "교정",
+     "text": "(#15·#16 결과) `todo_web/app.py` `_INDEX_HTML`에 `p#todo-empty` 추가 + `render`에서 `hidden` 토글(+2줄). 워커 Playwright 자가 확인: 빈 상태 `#todo-list` visible True, 생성 후 `#todo-empty` 숨김(`run/fix1-selfcheck.out`)."
+    },
+    {
+     "stage": "TEST",
+     "kind": "발견",
+     "text": "워커가 S-8 간헐 실패(Connection reset by peer) 보고, 수정 이전 HEAD에서도 재현. PM 재현: `pytest ...::test_s8_persistence_and_concurrency` 8회 중 5 fail. 원인: `ThreadingHTTPServer.request_queue_size == 5`(listen backlog)라 동시 접속 20건이 backlog를 넘으면 macOS가 RST. RED 시"
+    },
+    {
+     "stage": "TEST",
+     "kind": "교정",
+     "text": "(#18·#19 결과) `todo_web/app.py`에 `TodoHTTPServer(ThreadingHTTPServer)`(`request_queue_size = 128`, `daemon_threads = True`) 추가, `main()`이 사용. 워커: S-8 20/20, 전체 9 passed ×3, health OK. PM 독립 재현: S-8 15/15, 전체 9 passed."
+    }
+   ],
+   "stage_min": {
+    "TASK": 4.6,
+    "PLAN": 19.3,
+    "EXECUTE": 0.0,
+    "TEST": 0.2,
+    "CLOSE": 0.8
+   },
+   "decision_requests": 0,
+   "framework": "v0.7.3-72-gbb257506+9c962d",
+   "existing_tests_ok": true,
+   "hidden_summary": "6 passed in 2.61s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: checkpoint_commits"
+   ],
+   "trend_warnings": []
+  },
+  {
+   "run": "opds-design-opus-high-impl-sonnet-low-r2",
+   "variant": "//opds design=opus/high impl=sonnet/low",
+   "rep": 2,
+   "timeout": false,
+   "wall_min": 30.6,
+   "settings": {
+    "declared": {
+     "design": {
+      "model": "opus",
+      "effort": "high"
+     },
+     "impl": {
+      "model": "sonnet",
+      "effort": "low"
+     }
+    },
+    "applied": {
+     "models": [
+      "claude-opus-5-5",
+      "claude-sonnet-5-5"
+     ],
+     "agent_overrides": {
+      "opal-task-agent": "06f8257228f2e3cb9950da458e70186895a2d5fa9cb896ecefed35ce92694c45",
+      "opal-be-agent": "59508175b1b2f8ffb69b5e61970ac5fdb38bb0e9a9e40a838327dd3ef96ebfa0",
+      "opal-fe-agent": "2f847954c283f2032be7080497261f1da47a3ccfb193775b7bd5b0aa6a59ac0a"
+     },
+     "agents_missing": []
+    }
+   },
+   "cost_usd": 13.1,
+   "turns": 128,
+   "output_tokens": 101904,
+   "result_text": "마무리 단계입니다. run-log 보관함 사건 3건이 표준 로그에 아직 반영되지 않아 마지막 `pm.report` 기록이 `run_log_pending`으로 거부됐습니다. run-log는 shadow 모드이고, 보관함은 Stop hook의 drain 경로가 비우게 되어 있습니다. 결과에는 영향이 없어 참고 사항으로만 남깁니다.\n\n---\n\n📋 알투[PM]: 001 TODO CRUD 웹 앱 구현 | CLOSE\n\n✅ [CLOSE] 태스크 완료\n📎 산출물: `tasks/001-261002-opds-TODO-CRUD-웹앱-구현/DONE.md`, 판단 기록은 `AGENTIC-LOG.md`\n\n캡틴, 요구서 내용을 TASK로 그대로 옮겨 `//opds`로 진행했습니다(agentic · worktree · PM 조율). 설계는 이 세션이 맡았고, 구현은 `opal-be-agent`(sonnet/low), 테스트는 `opal-test-agent`가 맡았습니다. `main`에 ff-only로 merge했습니다(`a9a34f4`).\n\n## 🎯 결론\n1) **요구사항 충족** — 요구서의 화면·API 6종·검증/예외·영속성이 모두 구현됐고, 독립 검증을 통과했습니다.\n   - 테스트 시나리오 14건이 모두 PASS입니다. 재시작 후 데이터 유지, 손상된 데이터 파일이면 기동하지 않고 exit 1로 끝나는 동작, 20건 동시 생성에서 항목이 사라지지 않는 것, 실제 브라우저에서의 생성·새로고침·오류 표시까지 확인했습니다. 허브 `main`에서 `python -m pytest -q`를 다시 돌려 11 passed입니다.\n2) **PLAN에 없던 변경 1건을 사후 승인** — 구현 워커가 `todo_web/app.py`에 `ThreadingHTTPServer.request_queue_size = 128`을 추가했습니다.\n   - 기본 backlog 5에서는 동시 생성 테스트(S-8)가 매번 연결 reset으로 실패하는 것을 직접 재현했습니다. 실제 서버도 같은 클래스를 쓰기 때문에 동시 접속 시 연결이 끊기지 않는 이점이 있어 승인했습니다. 다만 이 설정은 `todo_web.app`을 import한 프로세스 전체에 적용됩니다.\n3) **컨벤션 검사는 통과로 처리했지만 판정은 INCOMPLETE** — `docs/CONVENTIONS.md`가 없어서 검사 도구가 PASS 판정을 낼 수 없는 구조입니다.\n   - 차단 finding은 0건이고, 권고 1건(새 테스트 파일 헤더의 `\"exports\": []`)은 기존 `tests/test_basic.py`와 같은 관례라 오탐으로 판단했습니다.\n\n## 📌 추가 확인 사항\n1) [미확인] 워크트리 전용 터미널(orca)은 띄우지 않았습니다. 띄우면 설계가 다른 모델의 세션으로 넘어가 요청하신 설계/구현 역할 분리가 깨지기 때문에 이 세션이 직접 진행했습니다(AGENTIC-LOG #2).\n2) [리스크] 허브에 커밋되지 않은 변경 3개(`.opal/MEMORY.json`, 태스크 `state.json`·`STATE.md`)가 남아 있고, worktree `task_1`도 제거하지 않았습니다. 하네스 규칙상 허브 `main` 커밋과 worktree 제거는 사용자 몫이고, 승인해 주신 merge/finalize 범위에도 포함되지 않아서입니다.\n3) [이월] 진행 중 발견한 OPAL 개선 후보 4건을 `~/.opal/fw-inbox`에 기록했습니다. receipt 경로가 다른 측정 세션(r1)과 충돌한 문제, 도구가 워크트리에서 로컬 개선 후보를 기록하지 못하는 결함 등입니다. 그 외 로컬 후보 1건은 해당 결함 때문에 AGENTIC-LOG에만 남아 있습니다.\n\n---\n▶️ 사용자 결정 필요: 허브 `main`의 미커밋 3파일(채번·작업 이력·완료 상태)을 커밋하고 worktree `task_1`을 제거할까요? 권장은 둘 다 진행하는 것입니다. 기록이 저장소에 남고 작업본이 정리되며, 코드는 이미 merge돼 있어 기능에는 영향이 없습니다. 보류하시면 허브 작업트리가 dirty 상태로 남습니다.",
+   "test_fix_iterations": 0,
+   "task_found": true,
+   "task": "001-261002-opds-TODO-CRUD-웹앱-구현",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opds",
+   "gate_iterations": 1,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 0,
+   "raw_commits": 0,
+   "subagent_runs": 6,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 10.1,
+    "execute": 4.7,
+    "test": 8.1,
+    "close": 2.6
+   },
+   "log_error": 4,
+   "log_fix": 0,
+   "stage_log": {
+    "TASK": {
+     "ERROR": 1,
+     "DECISION": 1,
+     "GATE": 1
+    },
+    "PLAN": {
+     "ERROR": 1,
+     "DECISION": 1,
+     "GATE": 1
+    },
+    "EXECUTE": {
+     "GATE": 2,
+     "ERROR": 1,
+     "DECISION": 1,
+     "IMPROVE": 2
+    },
+    "TEST": {
+     "GATE": 1,
+     "DECISION": 1
+    },
+    "CLOSE": {
+     "ERROR": 1,
+     "GATE": 1,
+     "IMPROVE": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "TASK",
+     "kind": "발견",
+     "text": "`pm.activate` receipt를 공유 `/tmp/pm_activate.json`에 저장했다가 다른 측정 세션(r1)이 같은 경로를 덮어써 `verify`가 `stale_receipt`(project-agent 경로 불일치)로 실패"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "발견",
+     "text": "`verify --design-gate-check` 결정론 누락 3건: `## Findings > 문서 갱신`에 백틱 경로(`docs/PROJECT.md`, `todo_web/`, `tests/`)를 적어 `finding not in work items`"
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "발견",
+     "text": "W-2(`opal-be-agent`)가 PLAN에 없는 `ThreadingHTTPServer.request_queue_size = 128`(모듈 수준 전역 설정)을 `todo_web/app.py`에 추가(미승인 폴백). 사유: S-8 20건 동시 생성이 기본 listen backlog 5에서 `ConnectionResetError`"
+    },
+    {
+     "stage": "CLOSE",
+     "kind": "발견",
+     "text": "`close.done_md` mark가 `worker_duration_undeclared`(row 3 PLAN/작업)로 차단 — PM 경로에서 PM이 직접 쓴 PLAN 행에 워커 소요 선언을 누락"
+    }
+   ],
+   "stage_min": {
+    "TASK": 6.5,
+    "PLAN": 17.4,
+    "EXECUTE": 0.0,
+    "TEST": 0.0,
+    "CLOSE": 1.6
+   },
+   "decision_requests": 0,
+   "framework": "v0.7.3-72-gbb257506+9c962d",
+   "existing_tests_ok": true,
+   "hidden_summary": "6 passed in 4.81s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: checkpoint_commits"
+   ],
+   "trend_warnings": []
+  },
+  {
+   "run": "opds-design-opus-high-impl-sonnet-medium-r1",
+   "variant": "//opds design=opus/high impl=sonnet/medium",
+   "rep": 1,
+   "timeout": false,
+   "wall_min": 26.4,
+   "settings": {
+    "declared": {
+     "design": {
+      "model": "opus",
+      "effort": "high"
+     },
+     "impl": {
+      "model": "sonnet",
+      "effort": "medium"
+     }
+    },
+    "applied": {
+     "models": [
+      "claude-opus-5-5",
+      "claude-sonnet-5-5"
+     ],
+     "agent_overrides": {
+      "opal-task-agent": "cde08a0dc9ad8fd94e2901472c6e13fb009187ca9442b7d34716f5ce7f928a97",
+      "opal-be-agent": "6a51728627934700e010bea4c2827f9c59c2c167e98d9f17c006ff6f30894794",
+      "opal-fe-agent": "e63688dc62a6190153de5e977f1cde556d4bdba51119625ed95c2f91104c0b1b"
+     },
+     "agents_missing": []
+    }
+   },
+   "cost_usd": 11.01,
+   "turns": 107,
+   "output_tokens": 87343,
+   "result_text": "요구서대로 TODO CRUD 웹 앱을 `//opds`(agentic·worktree·PM 조율)로 구현했고, 지금은 TEST 단계의 마지막 PM Gate 앞에서 멈춰 있습니다. 시나리오 11개 중 10개는 통과로 기록됐고, S-11 하나는 결과 기록이 막혔습니다. 기록이 막힌 원인은 제가 시나리오를 초기화할 때 넣은 설정 값입니다.\n\n## 🎯 결론\n1) **구현** — 요구서의 화면·API 6종·검증·영속성 계약이 모두 실제 동작으로 확인됐습니다.\n   - 실서버 HTTP 테스트(S-1, S-3~S-9)와 기존 테스트(S-10)가 통과했고, 전체 회귀는 `python3 -m pytest -q` 10 passed입니다. 외부 패키지는 쓰지 않았습니다.\n   - S-2는 실제 브라우저로 확인했습니다. 화면에서 만든 항목이 목록에 나오고 새로고침 뒤에도 남아 있으며, 빈 제목을 내면 오류 문구가 뜹니다. 스크린샷도 제가 직접 봤습니다.\n2) **S-11(제약 확인용 정적 검사)** — 검사 내용은 충족했지만 통과로 기록할 수가 없습니다.\n   - 확인 결과: 표준 라이브러리 밖 import 0, 의존성 선언 파일 0, 커밋된 변경 11개 경로가 모두 계획한 범위 안입니다.\n   - 기록이 안 되는 이유: 제가 S-11에 `required_fidelity=real-usage`를 넣었는데, 이 값은 브라우저·API 같은 e2e 실행기 증거가 있어야만 통과를 받습니다. 스크립트와 git으로 하는 검사에는 정직하게 댈 실행기가 없습니다. 잠긴 기록 파일을 직접 고치면 도구를 우회하는 것이고, 다시 초기화하면 RED 증거가 사라지기 때문에 둘 다 하지 않았습니다.\n3) **사전 승인으로 처리한 설계 결정** — 요구서가 정하지 않은 외부 계약 2건은 이번 요청의 \"필요한 사용자 gate 승인\"을 근거로 확정했습니다.\n   - API 세부: 경로별 404/405와 `Allow` 헤더, 오류 판정 순서(415 → 잘못된 JSON 400 → 404 → 검증 실패 400), 제목은 앞뒤 공백을 지우고 저장, ID는 1부터 증가하고 삭제 후 재사용하지 않음.\n   - 저장 구조: `--data` 파일을 `{next_id, todos}` 형태로 두고, 임시 파일에 쓴 뒤 `os.replace`로 한 번에 교체합니다.\n\n## 📌 추가 확인 사항\n1) [리스크] S-11의 범위 검사는 요구서 그대로 미추적 파일까지 포함하면 OPAL 런타임 파일(`.opal/run/.runtime/*` 3개)에 걸립니다.\n   - 이 파일들은 태스크 시작 전부터 있던 도구 파일이고 구현 결과물이 아니라서, 빼고 판정하는 게 맞다고 봅니다.\n2) [이월] 최종 컨벤션 검사, CLOSE(DONE.md·회고·finalize), 허브 `main`으로의 로컬 merge가 남아 있습니다.\n   - 지금까지의 작업은 worktree 브랜치 `feat/OP-TASK-001`에 커밋 2개로 들어가 있고, `main`은 아직 그대로입니다.\n3) [이월] 워크트리 전용 터미널은 띄우지 않았습니다.\n   - 띄우면 남은 작업 전체가 standard 모델 세션으로 넘어가 \"설계=opus\" 측정 구성이 바뀌기 때문입니다. 판단 근거는 AGENTIC-LOG에 남겼습니다.\n\n---\n▶️ 사용자 결정 필요: 제 권고는 1번입니다. 제가 기록 파일에서 S-11의 `required_fidelity`만 `real-http`로 바로잡고, 이미 받아 둔 검사 증거로 테스트 에이전트가 S-11을 다시 기록하게 한 뒤 CLOSE와 로컬 merge까지 마치는 방식입니다. 2번은 S-11을 차단 상태로 둔 채 알려진 예외로 문서화하고 마감하는 방식인데, TEST Gate의 \"BLOCKED 0건\" 기준을 어기게 됩니다. 1번(바로잡고 재기록 후 마감)으로 진행할까요, 2번(차단 유지 상태로 예외 문서화 후 마감)으로 할까요?",
+   "test_fix_iterations": 0,
+   "task_found": true,
+   "task": "001-261002-opds-TODO-CRUD-웹앱",
+   "actor": "coordinator",
+   "status": "blocked",
+   "pipeline_complete": false,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opds",
+   "gate_iterations": 1,
+   "gate_evidence": false,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 2,
+   "raw_commits": 0,
+   "subagent_runs": 5,
+   "worker_blocked": 0,
+   "pm_decision_request": true,
+   "phase_min": {
+    "design": 10.3,
+    "execute": 4.3
+   },
+   "log_error": 3,
+   "log_fix": 2,
+   "stage_log": {
+    "TASK": {
+     "DECISION": 3,
+     "GATE": 1
+    },
+    "PLAN": {
+     "DECISION": 1,
+     "ESCALATION": 1,
+     "GATE": 3,
+     "ERROR": 2,
+     "FIX": 2
+    },
+    "EXECUTE": {
+     "GATE": 2,
+     "DECISION": 2
+    },
+    "TEST": {
+     "GATE": 1,
+     "DECISION": 1,
+     "ERROR": 1,
+     "ESCALATION": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "PLAN",
+     "kind": "발견",
+     "text": "decision_clarity 자가점검에서 `Allow` 헤더 method 순서와 화면 오류 표시 해제 시점이 구현자 선택으로 남아 있음을 발견"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "교정",
+     "text": "#8 참조 — DC-1에 경로별 `Allow` 고정값(`GET` / `GET, POST` / `GET, PATCH, DELETE`), DC-8에 성공 시 `#form-error` 비움·실패 시 `message` 우선 표시를 명시"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "발견",
+     "text": "PM이 시나리오 평가 결과 파일에 `reasons`를 요약해 저장한 것을 발견(점수·gaps는 원문 동일)"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "교정",
+     "text": "#12 참조 — 평가자 반환 원문으로 `run/design-gate-i1-scenario.json`을 다시 저장하고 combine 재실행(결과 동일 pass) 후 record"
+    },
+    {
+     "stage": "TEST",
+     "kind": "발견",
+     "text": "S-11(check)이 `blocked`로 기록됨. 원인: PM이 `scenario-init`에서 S-11 `required_fidelity`를 `real-usage`로 지정 — 이 값은 e2e profile·실행기 관측이 있는 구조화 verdict만 pass로 받으므로 스크립트·git 검사는 정직한 pass 기록 경로가 없음. 검사 내용 자체는 충족(①0 ②0 ③ 커밋 변경 11경로 모두 범위 내). ③ 문면의 미추적 경로 "
+    }
+   ],
+   "stage_min": {
+    "TASK": 2.9,
+    "PLAN": 7.4,
+    "EXECUTE": 4.3,
+    "TEST": 7.4
+   },
+   "decision_requests": 1,
+   "framework": "v0.7.3-72-gbb257506+9c962d",
+   "existing_tests_ok": true,
+   "hidden_summary": "6 passed in 4.49s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: pipeline_complete",
+    "준수 불충족: gate_evidence"
+   ],
+   "trend_warnings": []
+  },
+  {
+   "run": "opds-design-opus-high-impl-sonnet-medium-r2",
+   "variant": "//opds design=opus/high impl=sonnet/medium",
+   "rep": 2,
+   "timeout": false,
+   "wall_min": 42.8,
+   "settings": {
+    "declared": {
+     "design": {
+      "model": "opus",
+      "effort": "high"
+     },
+     "impl": {
+      "model": "sonnet",
+      "effort": "medium"
+     }
+    },
+    "applied": {
+     "models": [
+      "claude-opus-5-5",
+      "claude-sonnet-5-5"
+     ],
+     "agent_overrides": {
+      "opal-task-agent": "cde08a0dc9ad8fd94e2901472c6e13fb009187ca9442b7d34716f5ce7f928a97",
+      "opal-be-agent": "6a51728627934700e010bea4c2827f9c59c2c167e98d9f17c006ff6f30894794",
+      "opal-fe-agent": "e63688dc62a6190153de5e977f1cde556d4bdba51119625ed95c2f91104c0b1b"
+     },
+     "agents_missing": []
+    }
+   },
+   "cost_usd": 18.31,
+   "turns": 149,
+   "output_tokens": 122079,
+   "result_text": "캡틴, 요구서대로 TODO CRUD 웹 앱 opds 태스크 001을 끝까지 수행했고, 사전 승인하신 범위 안에서 허브 `main`에 local fast-forward merge까지 마쳤습니다.\n\n## 🎯 결론\n1) **요구서 전 항목 구현·검증 완료** — 화면, API 6종, 입력 검증·오류 응답, JSON 파일 영속성이 동작합니다. 외부 패키지는 없고 기존 테스트도 그대로 통과합니다.\n   - 최종 SHA `faf3417`에서 시나리오 S-1~S-10 10건이 모두 PASS입니다. 브라우저(headless Chromium)로 생성·완료·삭제를 확인했고, merge 후 허브 `main`에서도 `pytest` 8 passed입니다.\n2) **TEST에서 1건이 실패해 1회 수정한 뒤 다시 검증했습니다** — 기준을 완화하지 않고 구현을 고쳤습니다.\n   - 목록이 비어 있으면 목록 영역 높이가 0이라 화면에 보이지 않았습니다. 같은 수정에서 보안 검사가 찾은 오류 2건도 고쳤습니다. 매우 긴 숫자 id와 깊게 중첩된 JSON에 응답 없이 연결이 끊기던 문제로, 이제 각각 JSON 404와 400을 돌려줍니다.\n3) **요구서에 없는 API 세부 동작은 제가 정했습니다** — 사전 승인을 근거로 사용자 gate를 통과시켰습니다.\n   - 주요 결정: id는 1부터 증가하는 정수이고 삭제 후 재사용하지 않습니다. description·completed는 생략할 수 있습니다. 빈 PATCH는 400이고, 오류 코드는 6종입니다. 전체 목록은 PLAN.md D-1~D-12에 있습니다.\n\n## 📌 추가 확인 사항\n1) [미반영] 기존 요구 범위 밖이라 고치지 않은 보안 Low 항목이 있습니다. 하나는 요청 본문 크기 상한이 없다는 점입니다(잘못된 Content-Type으로 2MB를 보내면 클라이언트가 415 대신 Broken pipe를 받습니다). 다른 하나는 Host·Origin 헤더를 검증하지 않는다는 점입니다.\n   - Critical·High는 0건입니다. 컨벤션 검사의 High 1건은 테스트 파일 헤더의 빈 `exports`를 지적한 것인데, 기존 테스트 파일과 같은 패턴이라 오탐으로 판정했습니다.\n2) [하네스 이탈] 워크트리 전용 터미널은 띄우지 않았습니다. 띄우면 캡틴의 Orca 앱에 새 에이전트 세션이 열리는데, 승인하신 범위가 아니라고 판단해 이 세션에서 직접 이어서 진행했습니다.\n3) [리스크] 이 머신에서 다른 측정 세션(r1, sonnet-low-r1)의 서버 프로세스를 발견했습니다. 손대지 않았고, 이번 태스크에서 남은 서버만 종료했습니다.\n- 그 외 개선 후보 6건은 OPAL 도구 이슈로 fw-inbox에 기록했습니다. 전체 판단 근거는 태스크 폴더의 `AGENTIC-LOG.md`(29건)에 있습니다.\n\n---\n▶️ 사용자 결정 필요: merge 뒤 귀속 단계에서 허브 `main` 작업트리에 커밋되지 않은 변경 3개(`.opal/MEMORY.json`, 태스크의 `STATE.md`, `state.json`)가 생겼습니다. 이 3개를 `main`에 커밋하고 워크트리 `task_001`을 제거할까요? 권고는 \"커밋 후 제거\"입니다. 두 작업 모두 사전 승인하신 local merge/finalize 범위 밖이라 실행하지 않았습니다. 진행하지 않으면 허브 작업트리가 dirty 상태로, 워크트리는 디스크에 남습니다.",
+   "test_fix_iterations": 0,
+   "task_found": true,
+   "task": "001-261002-opds-TODO-CRUD-웹앱",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opds",
+   "gate_iterations": 1,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 0,
+   "raw_commits": 0,
+   "subagent_runs": 11,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 11.3,
+    "execute": 6.6,
+    "test": 17.6,
+    "close": 2.2
+   },
+   "log_error": 5,
+   "log_fix": 2,
+   "stage_log": {
+    "TASK": {
+     "DECISION": 3,
+     "GATE": 1,
+     "IMPROVE": 1
+    },
+    "PLAN": {
+     "DECISION": 2,
+     "GATE": 2,
+     "ERROR": 1
+    },
+    "EXECUTE": {
+     "FIX": 1,
+     "GATE": 2,
+     "DECISION": 1,
+     "ERROR": 2,
+     "IMPROVE": 1
+    },
+    "TEST": {
+     "GATE": 2,
+     "ERROR": 2,
+     "FIX": 1,
+     "DECISION": 3
+    },
+    "CLOSE": {
+     "DECISION": 1,
+     "GATE": 2,
+     "IMPROVE": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "PLAN",
+     "kind": "발견",
+     "text": "정정: #6~#9의 시점 표기는 추정값으로 잘못 기재됨. 실제 `date.js` 기준 #6~#9는 모두 2026-10-02 02:05~02:07 사이"
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "교정",
+     "text": "TEST-SCENARIO §S-10 `surface_kind`/`profile`을 `web_ui`/`browser` → `hybrid`/`hybrid`로 정정. 근거: S-10 단계에 API executor(st-4·st-6)가 있어 `test-tool scenario-init`이 `scenario_contract_invalid: executor contract mismatch`로 거부(검증 내용·assertion 불변)"
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "발견",
+     "text": "정정: #11~#13의 시점 표기가 실제보다 1분 앞서 기재됨(실제 02:08~02:12)"
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "발견",
+     "text": "워커 자가 점검이 남긴 이 태스크 작업본 소속 서버 프로세스 1개(port 18765)를 발견해 종료. 같은 머신의 다른 측정 세션(r1·sonnet-low-r1) 프로세스는 건드리지 않음"
+    },
+    {
+     "stage": "TEST",
+     "kind": "발견",
+     "text": "실패 원인 판정: S-10 a-1은 기준 문구(\"목록 영역이 보인다\")를 완화하지 않고 실제 UX 결함으로 판정. 보안 GC-002(4300자리 초과 id → int() ValueError, 깊은 중첩 JSON → RecursionError)는 응답 없이 연결이 끊겨 AC-5·D-1·D-2(JSON 404/400) 계약 위반"
+    },
+    {
+     "stage": "TEST",
+     "kind": "교정",
+     "text": "#19 대응: `test.fix_1`(fix 1/3) — opal-be-agent fix 모드로 `todo_web/app.py`만 수정(빈 목록 min-height + 빈 상태 문구, `_route` int 실패 → 404, `json.loads` RecursionError → 400). `verify --fix-mode` immutability pass, pytest 8 passed"
+    },
+    {
+     "stage": "TEST",
+     "kind": "발견",
+     "text": "opal-test-agent가 `scenario-mark --verdict-json` 입력 형식 실수(observed_evidence dict)로 test-scenario.json이 `scenario_contract_invalid` 상태가 되자 해당 필드 1개를 직접 수리(백업 `run/e2e/test-scenario.json.before-repair`). spec존·lock은 불변 확인. 도구가 검증 전에 저장하고 복구 명령"
+    }
+   ],
+   "stage_min": {
+    "TASK": 3.7,
+    "PLAN": 32.7,
+    "EXECUTE": 0.0,
+    "TEST": 0.0,
+    "CLOSE": 1.3
+   },
+   "decision_requests": 0,
+   "framework": "v0.7.3-72-gbb257506+9c962d",
+   "existing_tests_ok": true,
+   "hidden_summary": "6 passed in 1.59s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: checkpoint_commits"
+   ],
+   "trend_warnings": []
+  },
+  {
+   "run": "opds-design-opus-medium-impl-haiku-medium-r1",
+   "variant": "//opds design=opus/medium impl=haiku/medium",
+   "rep": 1,
+   "timeout": false,
+   "wall_min": 37.6,
+   "settings": {
+    "declared": {
+     "design": {
+      "model": "opus",
+      "effort": "medium"
+     },
+     "impl": {
+      "model": "haiku",
+      "effort": "medium"
+     }
+    },
+    "applied": {
+     "models": [
+      "claude-haiku-4-5-20251001",
+      "claude-opus-5-5",
+      "claude-sonnet-5-5"
+     ],
+     "agent_overrides": {
+      "opal-task-agent": "c5988fad00e624bf6f9417cb5ca9ba927e149021a2f15ed059e8ef80bc3e5fc6",
+      "opal-be-agent": "3a20c2ccdea08a487934b9e5942ed8f6c1f55ee0bd8f9fb7ab51c50f28a4ebbb",
+      "opal-fe-agent": "747eeac3404f57b792ef3abbefefa0703fffe5d178472737f1ae95e9cc9ebc94"
+     },
+     "agents_missing": []
+    }
+   },
+   "cost_usd": 13.33,
+   "turns": 121,
+   "output_tokens": 88683,
+   "result_text": "캡틴, 요구서대로 TODO CRUD 웹 앱을 완성해 격리 저장소의 `main`에 반영했습니다. 저장소 밖으로는 merge·push·배포를 하지 않았습니다.\n\n## 🎯 결론\n1) **구현** — 요구서의 화면, API 6종, 검증·예외, 영속성 요구를 모두 충족했습니다.\n   - `python -m pytest -q` 11 passed(기존 2건 + 신규 9건). 시나리오 11/11 PASS이며, 실제 서버 재기동 후 데이터 유지, 동시 생성 20건 유실 없음, 실제 브라우저에서 생성과 오류 표시를 확인했습니다.\n2) **검증 과정** — 설계와 결과물을 모두 독립 에이전트가 판정했습니다.\n   - 구현 전 설계 검토는 1회에 통과했습니다. 구현 워커(haiku)의 1차 결과는 테스트를 통과했지만 계약 위반 5건이 있어 재작업 1회로 고쳤습니다. 저장 실패 시 메모리 불변, 405 적용 범위, PATCH의 404 판정 순서, 오류 `message` 누락, 화면 스크립트의 XSS 위험이었습니다.\n   - 컨벤션 검사 High 2건(테스트 파일의 공통 헤더 부재, `exports` 빈 배열)도 고쳐 최종 Critical/High 0건입니다.\n3) **마감** — `main`을 `68238b4`로 fast-forward merge했고, 작업 이력 귀속과 상태 확정(`done`)을 마친 뒤 워크트리를 회수했습니다.\n   - 회수 때 dirty 가드만 `--force`로 넘겼습니다. 남은 미커밋 파일은 이 세션의 OPAL 훅 런타임(`.opal/run/.runtime`)뿐이었고, merge 완료와 미push 0을 확인한 뒤였습니다. 다른 가드는 그대로 통과했습니다.\n\n## 📌 추가 확인 사항\n1) [미확인] 허브에 아직 커밋하지 않은 변경이 남아 있습니다: `.opal/MEMORY.json`(작업 이력·개선 후보 2건), 태스크 `STATE.md`·`state.json`(완료 상태).\n   - 규칙상 허브 `main`은 제가 직접 커밋하지 않으므로 캡틴이 커밋해 주셔야 합니다. 이미 merge된 브랜치 `feat/OP-TASK-001`도 지우지 않고 그대로 두었습니다.\n2) [리스크] 워크트리 전용 터미널은 띄우지 않았습니다.\n   - 같은 태스크를 다른 자율 세션이 동시에 실행하는 것을 막으려는 판단이며, AGENTIC-LOG에 이유를 기록했습니다.\n3) [리스크] OPAL 도구에서 이상 3건이 나왔습니다.\n   - improve-tool이 워크트리에서 필요한 `--task-path`를 넘기지 않아 실패합니다. FW 개선 후보로 기록했습니다.\n   - finalize가 개선 후보를 `applied`로 표시했지만 허브 MEMORY에는 들어가지 않아, 허브에 직접 다시 기록했습니다.\n   - 마지막 진행 보고 기록(`log-event`)이 `run_log_pending`으로 거부됐습니다.\n- 그 외 1건 — 컨벤션 Low advisory 2건(`todo_web/store.py`)은 고치지 않고 DONE.md에 남겼습니다.\n\n---\n▶ PM 다음 작업: 없음. 허브의 미커밋 변경을 커밋하는 일만 캡틴께 남아 있습니다.",
+   "test_fix_iterations": 0,
+   "task_found": true,
+   "task": "001-261002-opds-TODO-CRUD-웹앱",
+   "actor": "coordinator",
+   "status": "done",
+   "pipeline_complete": true,
+   "state_valid": false,
+   "runlog_pending": 2,
+   "runlog_first_pending": {
+    "event": "state.changed",
+    "task_step": null,
+    "summary": "status: completed_unmerged → done",
+    "data": {
+     "from": "completed_unmerged",
+     "to": "done",
+     "row_key": "current_status"
+    }
+   },
+   "profile": "opds",
+   "gate_iterations": 1,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": true,
+   "checkpoint_commits": 0,
+   "raw_commits": 0,
+   "subagent_runs": 0,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {},
+   "log_error": 0,
+   "log_fix": 1,
+   "stage_log": {},
+   "corrections": [],
+   "stage_min": {},
+   "decision_requests": 0,
+   "framework": "v0.7.3-72-gbb257506+9c962d",
+   "existing_tests_ok": true,
+   "hidden_summary": "6 passed in 5.83s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: state_valid",
+    "준수 불충족: runlog_pending",
+    "준수 불충족: checkpoint_commits"
+   ],
+   "trend_warnings": []
+  },
+  {
+   "run": "opds-design-opus-medium-impl-haiku-medium-r2",
+   "variant": "//opds design=opus/medium impl=haiku/medium",
+   "rep": 2,
+   "timeout": false,
+   "wall_min": 29.2,
+   "settings": {
+    "declared": {
+     "design": {
+      "model": "opus",
+      "effort": "medium"
+     },
+     "impl": {
+      "model": "haiku",
+      "effort": "medium"
+     }
+    },
+    "applied": {
+     "models": [
+      "claude-haiku-4-5-20251001",
+      "claude-opus-5-5",
+      "claude-sonnet-5-5"
+     ],
+     "agent_overrides": {
+      "opal-task-agent": "c5988fad00e624bf6f9417cb5ca9ba927e149021a2f15ed059e8ef80bc3e5fc6",
+      "opal-be-agent": "3a20c2ccdea08a487934b9e5942ed8f6c1f55ee0bd8f9fb7ab51c50f28a4ebbb",
+      "opal-fe-agent": "747eeac3404f57b792ef3abbefefa0703fffe5d178472737f1ae95e9cc9ebc94"
+     },
+     "agents_missing": []
+    }
+   },
+   "cost_usd": 12.56,
+   "turns": 19,
+   "output_tokens": 12398,
+   "result_text": "✅ [CLOSE] 태스크 완료\n📎 산출물: `tasks/001-261002-opds-TODO-CRUD-웹앱/DONE.md`\n\n캡틴, 요구서대로 TODO CRUD 웹 앱 구현을 마쳤습니다. 격리 저장소 안에서만 `main`에 merge했고 merge 후 귀속까지 끝냈습니다. push·배포는 하지 않았습니다.\n\n## 🎯 결론\n1) **요구서 전 항목 구현 완료** — 실제 서버 프로세스로 9개 시나리오를 돌려 모두 통과했습니다.\n   - 화면, `/health`, CRUD API, 400/415/405/404 오류 응답, 재시작 후 데이터 유지, 20건 동시 쓰기를 확인했습니다.\n   - 브라우저 화면은 Playwright로 직접 열어 생성한 항목이 목록에 뜨는지 확인했습니다.\n   - merge 후 `main`에서 `python -m pytest -q` 결과는 7 passed입니다.\n2) **계약을 지키는 범위** — 기존 실행 명령과 기존 테스트(`tests/test_basic.py`)는 그대로이고, 외부 패키지는 쓰지 않았습니다.\n   - 변경 파일: `todo_web/app.py`, `todo_web/store.py`(신규), `tests/test_todo_api.py`(신규)\n   - 화면은 요구서 범위인 목록과 생성만 제공합니다. 수정·삭제는 API로만 됩니다.\n3) **검토에서 잡아 고친 문제** — BE 워커 결과를 두 번 반려하고 다시 시키는 과정에서 PLAN과 다른 동작 7건을 고쳤습니다(PATCH 판정 순서, HEAD 응답 본문, 삭제 실패 시 복구 등).\n   - TEST 1차에서는 2건을 고쳤습니다. 서버의 동시 연결 대기열이 작아 20건 동시 요청 중 연결이 끊기던 문제, 브라우저의 favicon 404 콘솔 에러입니다. 이후 S-6 동시 쓰기 시나리오를 7번 연속 돌려 모두 통과했습니다.\n   - 사용자에게 올릴 사안은 없었고, 재시도 횟수는 모두 상한 안이었습니다. 전체 경위는 `AGENTIC-LOG.md`에 있습니다.\n\n## 📌 추가 확인 사항\n1) [미처리] worktree `.opal-worktrees/task_001`과 브랜치 `feat/OP-TASK-001`은 지우지 않고 남겨 두었습니다.\n   - 승인해 주신 건 local merge/finalize까지라, worktree 제거는 그 범위 밖으로 판단했습니다.\n2) [미처리] 개선 후보 2건이 프로젝트 메모리에 저장되지 않았습니다.\n   - `improve-tool`이 worktree 안에서 실패해서(`invalid_args`), 두 건은 `AGENTIC-LOG.md` #21에만 적어 두었습니다.\n   - 나머지 1건(동시 세션의 `/tmp` receipt 경로 충돌)은 프레임워크 개선함(fw-inbox)에 기록했습니다.\n3) [참고] 이 세션 초반에 `/tmp`의 receipt 파일이 동시에 돌던 다른 측정 세션에 덮어써졌습니다. 이후 receipt는 이 세션 전용 경로에 저장했습니다.\n   - 같은 일이 다시 생기지 않도록 2번의 프레임워크 개선함 기록과 같은 내용으로 남겼습니다.\n\n---\n▶️ 사용자 결정 필요: worktree를 정리할지 여쭙니다. 이미 `main`에 merge됐고 미처리 요청이 없어 제거 조건은 충족됩니다. 제거를 권하는데, 지우면 브랜치 작업본 정리 외에 잃는 건 없고 남겨 두면 디스크만 차지합니다. `worktree-tool remove --task 001`로 지금 정리할까요?",
+   "test_fix_iterations": 0,
+   "task_found": true,
+   "task": "001-261002-opds-TODO-CRUD-웹앱",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opds",
+   "gate_iterations": 1,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 0,
+   "raw_commits": 0,
+   "subagent_runs": 5,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 5.8,
+    "execute": 12.9,
+    "test": 5.2,
+    "close": 1.4
+   },
+   "log_error": 4,
+   "log_fix": 3,
+   "stage_log": {
+    "TASK": {
+     "ERROR": 1,
+     "DECISION": 2,
+     "GATE": 1
+    },
+    "PLAN": {
+     "DECISION": 1,
+     "GATE": 2
+    },
+    "EXECUTE": {
+     "DECISION": 1,
+     "GATE": 2,
+     "ERROR": 2,
+     "FIX": 2
+    },
+    "TEST": {
+     "ERROR": 1,
+     "DECISION": 1,
+     "FIX": 1,
+     "GATE": 2
+    },
+    "CLOSE": {
+     "DECISION": 1,
+     "IMPROVE": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "TASK",
+     "kind": "발견",
+     "text": "pm.activate receipt를 공유 `/tmp/pm_activate.json`에 저장했다가 동시 실행 세션이 덮어써 verify가 `stale_receipt`(다른 run 경로) 반환"
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "발견",
+     "text": "W-2 1차 결과 PM Gate Fail(pytest 7 passed이나 PLAN 계약 위반): ① PATCH가 404를 415/400보다 먼저 판정(D-7) ② `/api/todos` HEAD·OPTIONS가 404(D-6은 405) ③ HEAD 응답에 본문 전송(D-10) ④ `TodoStore.delete` 저장 실패 롤백이 원본 복원 대신 재필터(D-4 롤백 위반) ⑤ `_dispatch`의 `self._send_htm"
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "교정",
+     "text": "#10 ERROR 6건을 같은 워커(opal-be-agent)에 fix 지시(루핑 1/3)"
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "발견",
+     "text": "W-2 재작업 1 결과: #10의 6건 해소 확인(직접 Read, pytest 7 passed). 신규 1건: PATCH 본문에 알 수 없는 필드만 있으면(`{\"foo\":1}`) 200 no-op — D-8 \"PATCH는 title·description·completed 중 최소 1개 필수(없으면 400)\" 위반. 또한 빈 필드 검사가 404보다 앞(D-7 ⑤→⑥ 순서)"
+    },
+    {
+     "stage": "EXECUTE",
+     "kind": "교정",
+     "text": "#12 ERROR를 같은 워커에 fix 지시(루핑 2/3)"
+    },
+    {
+     "stage": "TEST",
+     "kind": "발견",
+     "text": "TEST 1차: 9건 중 7 pass, 2 fail. S-6: 20 동시 연결 중 일부 `ConnectionResetError`(6회 중 3회) — `ThreadingHTTPServer` 기본 `request_queue_size=5` 초과, H-1 실결함. S-7: 기능 assertion 3건 pass, 브라우저 자동 `/favicon.ico` 요청 404로 콘솔 error 1건 → no-console-errors fail. "
+    },
+    {
+     "stage": "TEST",
+     "kind": "교정",
+     "text": "#15 ERROR를 W-2 담당 opal-be-agent에 fix 모드 지시(TEST fix 1/3): 서버 listen backlog 상향 + 아이콘 link"
+    }
+   ],
+   "stage_min": {
+    "TASK": 1.7,
+    "PLAN": 23.0,
+    "EXECUTE": 0.0,
+    "TEST": 0.0,
+    "CLOSE": 0.6
+   },
+   "decision_requests": 0,
+   "framework": "v0.7.3-72-gbb257506+9c962d",
+   "existing_tests_ok": true,
+   "hidden_summary": "6 passed in 1.83s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: checkpoint_commits"
+   ],
+   "trend_warnings": []
+  },
+  {
+   "run": "opds-r1",
+   "variant": "//opds",
+   "rep": 1,
+   "timeout": false,
+   "wall_min": 25.6,
+   "settings": {
+    "declared": {
+     "design": null,
+     "impl": null
+    },
+    "applied": {
+     "models": [
+      "claude-opus-5-5",
+      "claude-sonnet-5-5"
+     ],
+     "agent_overrides": {},
+     "agents_missing": []
+    }
+   },
+   "cost_usd": 12.5,
+   "turns": 121,
+   "output_tokens": 91176,
+   "result_text": "캡틴, 요구서 기준 TODO CRUD 웹 앱 구현을 끝냈어요. 격리 저장소 `main`에 `--ff-only`로 local merge까지 마쳤어요. 허브 `main`에서 `python -m pytest -q` 결과는 12 passed예요.\n\n## 🎯 결론\n1) **요구서 전 항목 구현** — 화면, API 6종, 검증과 예외, 영속성이 모두 동작하고 시나리오 13/13 PASS예요.\n   - 구현 전 실패 테스트 10건을 먼저 확인한 뒤 구현했어요. 서버 재시작 후 데이터 유지, 20건 동시 요청에서 유실 없음, 실제 브라우저에서 생성·완료 토글·삭제까지 확인했어요. 외부 패키지는 추가하지 않았고 기존 테스트 파일은 수정하지 않았어요.\n2) **설계 게이트 1회 통과, TEST 수정 2회** — 독립 평가자 판정은 설계 4축 PASS, 시나리오 2/2/2점이에요.\n   - 수정 2회는 둘 다 테스트 파일의 `@header` 형식 문제였고(누락 → `exports` 빈 배열), 기능 결함은 아니었어요. 최종 컨벤션 검사는 Critical/High 0건이에요.\n3) **승인 범위 안에서만 진행** — 격리 저장소 안의 local merge와 finalize만 했어요.\n   - remote가 없어서 push·배포는 없어요. 허브 `main`에 커밋하거나 워크트리를 제거하는 건 하지 않았어요.\n\n변경 파일은 `todo_web/app.py`(수정), `todo_web/store.py`(신규), `tests/test_todo_api.py`(신규)예요. 상세 기록은 `tasks/001-261002-opds-할일-CRUD-웹앱/DONE.md`와 `AGENTIC-LOG.md`에 있어요.\n\n## 📌 추가 확인 사항\n1) [이월] 허브 `main`에 커밋하지 않은 변경이 남아 있어요: `.opal/MEMORY.json`(태스크 번호 증가·작업 이력)과 태스크의 `STATE.md`·`state.json`(완료 처리). 허브 `main` 커밋은 사전 승인 범위 밖이라 그대로 두었어요.\n   - 워크트리 `.opal-worktrees/task_001`도 남겨 두었어요. 정리하려면 `worktree-tool remove --project-root <허브> --task 001`을 실행하면 돼요.\n2) [미확인] 요구서가 정하지 않은 동작은 사전 승인을 근거로 제가 확정했어요.\n   - 정수 ID(재사용 없음), 빈 PATCH는 400, 오류 코드 목록 고정, 손상된 데이터 파일이면 덮어쓰지 않고 exit 2로 기동 거부. 계약 전문은 `PLAN.md` D-2~D-5에 있어요.\n3) [리스크] 진행 중 OPAL 도구 이상 3건이 있었어요.\n   - `/tmp` 고정 경로에 둔 receipt 파일을 다른 세션이 덮어써서 PM 활성화 검증이 한 번 stale로 실패했어요. 세션 고유 경로로 다시 받아 통과했어요.\n   - `improve-tool record --scope local`이 워크트리에서 `invalid_args`로 실패해서, 개선 후보 2건은 AGENTIC-LOG에만 남겼어요.\n   - 허브로 merge한 뒤 run_log 경고(`run_log_missing`)가 1건 나왔어요.\n   - 그 외 1건 — Orca 전용 워크트리 터미널은 띄우지 않았어요. 띄우면 이 세션이 쓰기 권한을 넘겨 끝까지 진행할 수 없어서였고, 이 판단은 AGENTIC-LOG에 기록했어요.\n\n---\n▶️ 사용자 결정 필요: 허브 `main`에 남은 미커밋 변경 3개 파일(`.opal/MEMORY.json`, 태스크 `STATE.md`·`state.json`)을 커밋하고 워크트리 `task_001`도 제거할까요?\n- 권고: 커밋과 제거를 둘 다 하는 걸 권해요. 태스크가 이미 완료·merge 상태라서 남은 변경은 기록 마감뿐이에요.\n- 영향: 커밋하면 작업 이력이 저장소에 남고, 워크트리를 제거하면 `.opal-worktrees`가 정리돼요. 둘 다 격리 저장소 안의 일이고 외부 push는 없어요.",
+   "test_fix_iterations": 0,
+   "task_found": true,
+   "task": "001-261002-opds-할일-CRUD-웹앱",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opds",
+   "gate_iterations": 1,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 0,
+   "raw_commits": 0,
+   "subagent_runs": 10,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 8.0,
+    "execute": 4.1,
+    "test": 7.9,
+    "close": 1.9
+   },
+   "log_error": 3,
+   "log_fix": 2,
+   "stage_log": {
+    "TASK": {
+     "DECISION": 2,
+     "GATE": 1
+    },
+    "PLAN": {
+     "DECISION": 2,
+     "GATE": 3
+    },
+    "EXECUTE": {
+     "DECISION": 3,
+     "GATE": 2
+    },
+    "TEST": {
+     "GATE": 3,
+     "DECISION": 1,
+     "ERROR": 2,
+     "FIX": 2
+    },
+    "CLOSE": {
+     "GATE": 2,
+     "IMPROVE": 2,
+     "ERROR": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "TEST",
+     "kind": "발견",
+     "text": "컨벤션 checker: High 1(GC-001 tests/test_todo_api.py:1 @header docstring 누락). test.pm_gate 기준 Critical/High 0 미충족"
+    },
+    {
+     "stage": "TEST",
+     "kind": "교정",
+     "text": "#17 참조 — fix 1/3(opal-test-agent): @header docstring 추가, docstring 줄만 diff, pytest 12 passed, S-1~S-10 재mark pass"
+    },
+    {
+     "stage": "TEST",
+     "kind": "발견",
+     "text": "컨벤션 재검사: 직전 GC-001 해소, 신규 High 1(precheck 기계 규칙: tests/test_todo_api.py @header exports 빈 배열)"
+    },
+    {
+     "stage": "TEST",
+     "kind": "교정",
+     "text": "#19 참조 — fix 2/3(opal-test-agent): exports에 테스트 함수 10개 기재, docstring 영역만 diff, pytest 12 passed, precheck 0건, S-1~S-10 재mark pass"
+    },
+    {
+     "stage": "CLOSE",
+     "kind": "발견",
+     "text": "improve-tool record --scope local이 워크트리 project-root에서 memory-tool delegation failed: invalid_args. 허브 MEMORY 우회 쓰기 하지 않음"
+    }
+   ],
+   "stage_min": {
+    "TASK": 3.5,
+    "PLAN": 17.2,
+    "EXECUTE": 0.0,
+    "TEST": 0.0,
+    "CLOSE": 1.2
+   },
+   "decision_requests": 0,
+   "framework": "v0.7.3-72-gbb257506+9c962d",
+   "existing_tests_ok": true,
+   "hidden_summary": "6 passed in 5.88s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: checkpoint_commits"
+   ],
+   "trend_warnings": []
+  },
+  {
+   "run": "opds-r2",
+   "variant": "//opds",
+   "rep": 2,
+   "timeout": false,
+   "wall_min": 23.3,
+   "settings": {
+    "declared": {
+     "design": null,
+     "impl": null
+    },
+    "applied": {
+     "models": [
+      "claude-opus-5-5",
+      "claude-sonnet-5-5"
+     ],
+     "agent_overrides": {},
+     "agents_missing": []
+    }
+   },
+   "cost_usd": 10.47,
+   "turns": 119,
+   "output_tokens": 83472,
+   "result_text": "📋 알투[PM]: 001 TODO CRUD 웹 앱 구현 | CLOSE ✅\n\n캡틴, 요구서에 적힌 TODO CRUD 웹 앱을 다 만들었고, 격리 저장소의 `main`에 local merge(`bf456bf`)까지 끝냈습니다.\n\n## 🎯 결론\n1) **요구서 대로 동작합니다**\n   - 서버는 `python -m todo_web.app ... --data <파일>`로 뜹니다. 화면, CRUD API 6종, 오류 응답(400/404/405/415, `error` 필드가 있는 JSON), 재시작 뒤에도 남는 저장 모두 실제 서버를 띄워 확인했습니다. 런타임은 Python 표준 라이브러리만 씁니다.\n   - 검증 결과: `pytest` 11건 통과(기존 2건 + 신규 9건), 시나리오 12개 전부 PASS, 브라우저 테스트에서 화면으로 만든 항목이 새로고침 뒤에도 보였습니다. 신규 테스트 9건은 구현 전에 실패하는 것을 먼저 확인해 두었습니다.\n2) **요구서에 없던 동작은 제가 정했습니다**\n   - 오류를 판정하는 순서, 저장 파일 형식(`{next_id, todos}`), 삭제한 ID는 다시 쓰지 않기, 데이터 파일이 손상돼 있으면 서버를 띄우지 않고 종료 코드 1로 끝내기, 화면은 목록과 생성만 두기입니다.\n   - 사용자 확인이 필요한 결정이었지만, 이번 세션에서 미리 주신 gate 승인으로 처리했고 기록으로 남겨 두었습니다. 다르게 원하시면 말씀해 주세요.\n3) **테스트 중 문제 두 가지를 고쳤습니다**\n   - 첫 로드 때 브라우저가 요청하는 `/favicon.ico`가 404를 받아 콘솔 오류가 1건 났습니다. 화면에 favicon 링크 한 줄을 넣어 없앴고, 다시 확인해 콘솔 오류 0건입니다.\n   - 테스트 결과를 기록하는 OPAL 도구에 결함이 있었습니다. 허용되지 않는 값을 검사 없이 저장해서 결과 파일 전체를 읽을 수 없게 됐습니다. 도구로는 되돌릴 수 없어서, 브라우저 테스트 1건의 결과 칸만 기록 전 상태로 제가 직접 되돌렸고, 그다음 도구로 다시 기록했습니다. 원본 사본은 남겨 두었습니다. OPAL 개선 후보로도 올렸습니다.\n\n## 📌 추가 확인 사항\n1) [미확인] 허브에 커밋하지 않은 변경이 남아 있습니다: `.opal/MEMORY.json`(태스크 번호, 작업 이력, 개선 후보), 완료 처리된 `STATE.md`·`state.json`\n   - 승인받은 범위가 local merge까지라서 merge 외에 `main`에 따로 커밋하지 않았습니다.\n2) [이월] 워크트리 `.opal-worktrees/task_001`과 브랜치 `feat/OP-TASK-001`은 그대로 두었습니다. 지우려면 `worktree-tool remove --task 001`를 실행하면 됩니다.\n3) [리스크] 이번 태스크 실행 기록 하나(마지막 완료 보고)는 남기지 못했습니다. 아직 반영되지 않은 내부 이벤트 2건 때문에 도구가 막았고, 태스크 상태와 merge에는 영향이 없습니다.\n- 그 밖에 동작과 무관한 코드 스타일 지적 3건은 범위 밖이라 고치지 않았습니다. 기록은 `AGENTIC-LOG.md`에 있습니다.\n\n---\n▶️ 사용자 결정 필요: 남은 허브 변경(`MEMORY.json`·`STATE.md`·`state.json`)을 `main`에 커밋하고 워크트리를 정리할까요? 커밋하면 작업 이력과 완료 상태가 `main`에 남고, 그냥 두면 지금처럼 커밋되지 않은 채로 남습니다. 저는 둘 다 진행하는 쪽을 권합니다.",
+   "test_fix_iterations": 0,
+   "task_found": true,
+   "task": "001-261002-opds-할일-CRUD-웹앱",
+   "actor": "coordinator",
+   "status": "completed_unmerged",
+   "pipeline_complete": true,
+   "state_valid": true,
+   "runlog_pending": 0,
+   "profile": "opds",
+   "gate_iterations": 1,
+   "gate_evidence": true,
+   "worktree_task": true,
+   "checkpoint_policy": "branch",
+   "oppb_archive_count": 0,
+   "oppb_archive_ok": true,
+   "oppb_legacy_root_absent": true,
+   "oppb_worktree_finalized": false,
+   "checkpoint_commits": 0,
+   "raw_commits": 0,
+   "subagent_runs": 8,
+   "worker_blocked": 0,
+   "pm_decision_request": false,
+   "phase_min": {
+    "design": 8.0,
+    "execute": 3.1,
+    "test": 7.0,
+    "close": 1.6
+   },
+   "log_error": 2,
+   "log_fix": 2,
+   "stage_log": {
+    "TASK": {
+     "DECISION": 3,
+     "GATE": 1
+    },
+    "PLAN": {
+     "ERROR": 1,
+     "FIX": 1,
+     "DECISION": 1,
+     "GATE": 2
+    },
+    "EXECUTE": {
+     "GATE": 2
+    },
+    "TEST": {
+     "ERROR": 1,
+     "DECISION": 1,
+     "FIX": 1,
+     "GATE": 1,
+     "IMPROVE": 1
+    },
+    "CLOSE": {
+     "GATE": 1
+    }
+   },
+   "corrections": [
+    {
+     "stage": "PLAN",
+     "kind": "발견",
+     "text": "사전 검사 `--code-scan-citation-check` unmet(citation_absent), `--design-gate-check`가 문서 갱신 절 백틱 경로(docs/PROJECT.md 등)를 finding not in work items로 지적"
+    },
+    {
+     "stage": "PLAN",
+     "kind": "교정",
+     "text": "(#5 참조) PLAN Findings에 code-scan 결과 표 추가, 문서 갱신 절 경로를 평문으로 변경 → 두 검사 pass"
+    },
+    {
+     "stage": "TEST",
+     "kind": "발견",
+     "text": "1차 TEST(opal-test-agent): S-1~S-9·S-11·S-12 PASS, S-10 브라우저 동작 정상이나 첫 로드 `/favicon.ico` 404 콘솔 오류 1건(“콘솔 오류 없음” 기준 미충족). 또 test-tool `scenario-mark` 비-pass 분기가 `observed_executors:[\"playwright\"]`를 검증 없이 저장해 test-scenario.json 로드 불가(scenario"
+    },
+    {
+     "stage": "TEST",
+     "kind": "교정",
+     "text": "(#12 참조) fix 1/3 — opal-be-agent: app.py head에 `<link rel=\"icon\" href=\"data:,\">` 추가(add-row test.s_1, kind fix). 서버 라우트 무변경"
+    }
+   ],
+   "stage_min": {
+    "TASK": 2.2,
+    "PLAN": 5.9,
+    "EXECUTE": 3.1,
+    "TEST": 7.9,
+    "CLOSE": 0.6
+   },
+   "decision_requests": 0,
+   "framework": "v0.7.3-72-gbb257506+9c962d",
+   "existing_tests_ok": true,
+   "hidden_summary": "6 passed in 2.25s",
+   "hidden_pass_rate": 1.0,
+   "hidden_failed": [],
+   "verdict": "FAIL",
+   "fail_reasons": [
+    "준수 불충족: checkpoint_commits"
+   ],
+   "trend_warnings": []
+  }
+ ],
+ "comparison": {
+  "valid": true,
+  "frameworks": [
+   "v0.7.3-72-gbb257506+9c962d"
+  ],
+  "frameworks_by_variant": {
+   "//opds": [
+    "v0.7.3-72-gbb257506+9c962d"
+   ],
+   "//opds design=opus/high impl=sonnet/low": [
+    "v0.7.3-72-gbb257506+9c962d"
+   ],
+   "//opds design=opus/high impl=sonnet/medium": [
+    "v0.7.3-72-gbb257506+9c962d"
+   ],
+   "//opds design=opus/medium impl=haiku/medium": [
+    "v0.7.3-72-gbb257506+9c962d"
+   ]
+  },
+  "baseline": "//opds",
+  "metrics": {
+   "//opds": {
+    "wall_min": {
+     "avg": 24.450000000000003,
+     "min": 23.3,
+     "max": 25.6
+    },
+    "cost_usd": {
+     "avg": 11.485,
+     "min": 10.47,
+     "max": 12.5
+    },
+    "turns": {
+     "avg": 120.0,
+     "min": 119,
+     "max": 121
+    },
+    "subagent_runs": {
+     "avg": 9.0,
+     "min": 8,
+     "max": 10
+    },
+    "gate_iterations": {
+     "avg": 1.0,
+     "min": 1,
+     "max": 1
+    },
+    "hidden_pass_rate": {
+     "avg": 1.0,
+     "min": 1.0,
+     "max": 1.0
+    },
+    "test_fix_iterations": {
+     "avg": 0.0,
+     "min": 0,
+     "max": 0
+    }
+   },
+   "//opds design=opus/high impl=sonnet/low": {
+    "wall_min": {
+     "avg": 30.3,
+     "min": 30.0,
+     "max": 30.6
+    },
+    "cost_usd": {
+     "avg": 14.455,
+     "min": 13.1,
+     "max": 15.81
+    },
+    "turns": {
+     "avg": 74.0,
+     "min": 20,
+     "max": 128
+    },
+    "subagent_runs": {
+     "avg": 7.5,
+     "min": 6,
+     "max": 9
+    },
+    "gate_iterations": {
+     "avg": 1.0,
+     "min": 1,
+     "max": 1
+    },
+    "hidden_pass_rate": {
+     "avg": 1.0,
+     "min": 1.0,
+     "max": 1.0
+    },
+    "test_fix_iterations": {
+     "avg": 0.0,
+     "min": 0,
+     "max": 0
+    }
+   },
+   "//opds design=opus/high impl=sonnet/medium": {
+    "wall_min": {
+     "avg": 34.599999999999994,
+     "min": 26.4,
+     "max": 42.8
+    },
+    "cost_usd": {
+     "avg": 14.66,
+     "min": 11.01,
+     "max": 18.31
+    },
+    "turns": {
+     "avg": 128.0,
+     "min": 107,
+     "max": 149
+    },
+    "subagent_runs": {
+     "avg": 8.0,
+     "min": 5,
+     "max": 11
+    },
+    "gate_iterations": {
+     "avg": 1.0,
+     "min": 1,
+     "max": 1
+    },
+    "hidden_pass_rate": {
+     "avg": 1.0,
+     "min": 1.0,
+     "max": 1.0
+    },
+    "test_fix_iterations": {
+     "avg": 0.0,
+     "min": 0,
+     "max": 0
+    }
+   },
+   "//opds design=opus/medium impl=haiku/medium": {
+    "wall_min": {
+     "avg": 33.4,
+     "min": 29.2,
+     "max": 37.6
+    },
+    "cost_usd": {
+     "avg": 12.945,
+     "min": 12.56,
+     "max": 13.33
+    },
+    "turns": {
+     "avg": 70.0,
+     "min": 19,
+     "max": 121
+    },
+    "subagent_runs": {
+     "avg": 2.5,
+     "min": 0,
+     "max": 5
+    },
+    "gate_iterations": {
+     "avg": 1.0,
+     "min": 1,
+     "max": 1
+    },
+    "hidden_pass_rate": {
+     "avg": 1.0,
+     "min": 1.0,
+     "max": 1.0
+    },
+    "test_fix_iterations": {
+     "avg": 0.0,
+     "min": 0,
+     "max": 0
+    }
+   }
+  },
+  "floor": {
+   "//opds design=opus/high impl=sonnet/low": {
+    "met": true,
+    "hidden_avg": 1.0,
+    "pass_ratio": 0.0,
+    "base_hidden_avg": 1.0,
+    "base_pass_ratio": 0.0
+   },
+   "//opds design=opus/high impl=sonnet/medium": {
+    "met": true,
+    "hidden_avg": 1.0,
+    "pass_ratio": 0.0,
+    "base_hidden_avg": 1.0,
+    "base_pass_ratio": 0.0
+   },
+   "//opds design=opus/medium impl=haiku/medium": {
+    "met": true,
+    "hidden_avg": 1.0,
+    "pass_ratio": 0.0,
+    "base_hidden_avg": 1.0,
+    "base_pass_ratio": 0.0
+   }
+  }
+ }
+}

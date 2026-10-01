@@ -26,6 +26,7 @@ python3 $T run function-oppb-low-stock            # OPPB worktree·run archive �
 python3 $T run function-todo-crud                 # TODO CRUD 웹 앱 기능 실행
 python3 $T run function-stockctl-multiloc \
   --variant "//opd --no-pm" --variant "//opd" --repeat 2   # 비교 실행
+  --variant "//opds" --variant "//opds design=opus/high impl=sonnet/low" --repeat 2 --max-parallel 4   # 설계·구현 model/effort 비교
 python3 $T report /tmp/opal-skill-tester/<실행폴더>        # 보고서 재생성
 python3 $T record /tmp/opal-skill-tester/<실행폴더>        # tasks/에 기록(run은 자동 기록)
 python3 $T refresh                                        # 모든 대시보드 이력·링크 즉시 재생성(record 때 자동 수행)
