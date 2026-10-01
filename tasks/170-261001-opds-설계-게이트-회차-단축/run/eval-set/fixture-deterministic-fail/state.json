@@ -1,0 +1,239 @@
+{
+  "task_id": "fixture-deterministic-fail",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-10-01 11:36:18",
+  "updated_at": "2026-10-01 11:36:18",
+  "current_status": "in_progress",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 11:36:18",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 11:36:18",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 11:36:18",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "TEST-SCENARIO 작성",
+      "key": "plan.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 11:36:18",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "설계 게이트",
+      "key": "plan.design_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "`state-tool design-gate record`가 pass를 기록했고 현재 문서 묶음 hash가 통과 hash와 같다",
+          "evaluator design-rubric 설계 4축 PASS·시나리오 3축 기준 충족"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "conditional": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "conditional": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null,
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "pending",
+      "status_label": "⬜",
+      "timestamp": null,
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "PLAN 설계 게이트 진입",
+  "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_170/tasks/170-261001-opds-설계-게이트-회차-단축/run/eval-set/fixture-deterministic-fail",
+  "actor": "coordinator",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_b6cd32cd-901b-42ba-9bd4-0f4d78d38a9c",
+    "status": "active",
+    "pending_events": []
+  },
+  "design_gate": {
+    "status": "idle",
+    "iteration": 0,
+    "limit": 3,
+    "limit_from": 0,
+    "task_confirm_req_hash": "620c9a35283c9e165ba7f6eba1bcf5819c182b1c4579f8fd90c917c4a5bb133a",
+    "current_attempt": null,
+    "passed_bundle_hash": null,
+    "approved_bundle_hash": null,
+    "last_rewrite_target": null,
+    "history": []
+  }
+}
