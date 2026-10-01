@@ -13,9 +13,9 @@ icon: "⚡"
 ## `worker.dispatch` 진입 게이트
 
 1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
-2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
-3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
-4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch --contract-version 2 --agent opal-task-action-agent --role <role> --dispatch-id <dispatch_id>`를 반드시 실행한다. 프롬프트에 `role_doc`이 있으면 `--role-doc <role_doc>`도 함께 넘긴다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 프롬프트에 role·dispatch_id·contract_version이 없거나 verify 인자와 맞지 않거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`이고 결과의 `contract`가 2이며 결과의 `dispatch_id`·`agent.name`·`role`이 프롬프트와 같을 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
 
 > oppd Phase 3에서 개별 액션을 자율 실행하는 에이전트.
 > 기존 워커(opal-task-agent, opal-task-qa-agent, opal-test-agent)를 Agent 도구로 디스패치하여
@@ -25,7 +25,7 @@ icon: "⚡"
 
 ## 하위 워커 디스패치 게이트
 
-PLAN·QA·TEST-SCENARIO·EXECUTE·TEST 하위 워커를 호출할 때마다 현재 실행 경계의 `event-loader`로 `load --event worker.dispatch`를 새로 실행해 출력 JSON을 receipt 파일로 저장하고, 이어서 `verify --receipt <receipt-path> --event worker.dispatch`를 통과시킨다. 하위 프롬프트는 첫 줄을 정확히 `[WORKER]`로 두고 event ID, receipt 경로, `ok: true` 검증 결과와 loader가 반환한 문서 전문을 함께 주입한다. load/verify 실패 시 하위 워커를 호출하지 않고 `status: blocked`로 반환하며, 이전 디스패치의 receipt나 문서 목록을 재사용하지 않는다.
+PLAN·QA·TEST-SCENARIO·EXECUTE·TEST 하위 워커를 호출할 때마다 현재 실행 경계의 `event-loader`로 `load --event worker.dispatch --contract-version 2 --agent <하위 대상 에이전트 이름> --role <하위 역할> --dispatch-id <호출마다 새로 만든 값>`를 새로 실행해 출력 JSON을 receipt 파일로 저장하고, 이어서 `verify --receipt <receipt-path> --event worker.dispatch --contract-version 2 --agent <하위 대상 에이전트 이름> --role <하위 역할> --dispatch-id <호출마다 새로 만든 값>`를 통과시킨다. 하위 프롬프트는 첫 줄을 정확히 `[WORKER]`로 두고 `dispatch_id`·`agent`·`role`·`role_doc`·`contract_version: 2` 5개 값(role_doc이 있으면 `--role-doc <role_doc>`도 load·verify에 전달)과 event ID, receipt 경로, `ok: true` 검증 결과와 loader가 반환한 문서 전문을 함께 주입한다. verify 결과가 `ok: true`이고 `contract`가 2이며 `dispatch_id`·`agent.name`·`role`이 하위 프롬프트에 주입할 값과 같을 때만 하위 워커를 호출한다. load/verify 실패 시 하위 워커를 호출하지 않고 `status: blocked`로 반환하며, 이전 디스패치의 receipt나 문서 목록을 재사용하지 않는다.
 
 ---
 

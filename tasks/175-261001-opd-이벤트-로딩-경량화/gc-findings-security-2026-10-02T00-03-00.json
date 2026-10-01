@@ -1,0 +1,208 @@
+{
+  "check": "security",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/event-loader/event_loader.py",
+    "opal/tools/event-loader/agent_sections.py",
+    "opal/tools/state-tool/state_tool_parts/cli.py",
+    "opal/tools/state-tool/state_tool_parts/gates.py",
+    "opal/agents/opal-be-agent/AGENT.md",
+    "opal/agents/opal-capability-agent/AGENT.md",
+    "opal/agents/opal-convention-checker/AGENT.md",
+    "opal/agents/opal-db-agent/AGENT.md",
+    "opal/agents/opal-evaluator-agent/AGENT.md",
+    "opal/agents/opal-fe-agent/AGENT.md",
+    "opal/agents/opal-loop-action-agent/AGENT.md",
+    "opal/agents/opal-plan-agent/AGENT.md",
+    "opal/agents/opal-planning-agent/AGENT.md",
+    "opal/agents/opal-sdd-action-agent/AGENT.md",
+    "opal/agents/opal-security-checker/AGENT.md",
+    "opal/agents/opal-task-action-agent/AGENT.md",
+    "opal/agents/opal-task-agent/AGENT.md",
+    "opal/agents/opal-task-qa-agent/AGENT.md",
+    "opal/agents/opal-test-agent/AGENT.md",
+    "opal/agents/opal-wtm-agent/AGENT.md"
+  ],
+  "findings": [
+    {
+      "category": "CWE-345 Insufficient Verification of Data Authenticity / CWE-757 downgrade (OWASP A08)",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "OWASP-A08 / CWE-345",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/event-loader/event_loader.py",
+        "line": 681,
+        "symbol": "verify_receipt"
+      },
+      "evidence": "verify_receipt는 --manifest가 없으면 receipt 파일의 manifest_path를 그대로 신뢰한다(681행). 이어 _call_mode는 그 manifest의 worker.dispatch 선언에 contract가 없으면 인자와 무관하게 {mode: plain}을 반환한다(375행). 재현: worker.dispatch의 contract/selection을 지운 사본 manifest로 load한 receipt를 `verify --contract-version 2 --agent opal-security-checker --role checker --dispatch-id dsp-NOT-THE-REAL-ONE`로 검증하면 event_loader 직접 호출과 state-tool event-verify 모두 ok:true, contract/dispatch_id 필드 없음으로 통과했다. --manifest를 현재 manifest로 고정하면 contract_mismatch로 거부됨(대조군). 16개 AGENT.md 게이트 문장은 --manifest를 넘기지 않는다.",
+      "impact": "receipt를 쓸 수 있는 주체(오동작한 PM·하위 액션 에이전트·임시 디렉터리 쓰기 가능 프로세스)가 대상·역할·디스패치 식별자 결속과 선별 본문 해시 검사(D-9 b~e)를 전부 우회해 워커 게이트를 ok:true로 통과시킨다. 계약 2가 막으려던 receipt 재사용·대상 바꿔치기가 그대로 열린다.",
+      "remediation": {
+        "guidance": "(1) 계약 인자가 하나라도 주어졌는데 선언에 contract가 없으면 plain으로 무시하지 말고 contract_not_declared로 거부한다. (2) verify의 manifest 경로는 receipt가 아니라 실행 경계(_default_manifest 또는 명시 --manifest)에서 결정하고, receipt.manifest_path가 그 경로와 다르면 stale_receipt로 거부한다.",
+        "reference": "https://cwe.mitre.org/data/definitions/345.html",
+        "auto_fixable": false
+      },
+      "verification": "사본 manifest로 만든 receipt + v2 인자 verify가 ok:false(contract_not_declared 또는 manifest 경로 불일치)로 끝나는 회귀 테스트가 통과한다.",
+      "id": "GC-001",
+      "fingerprint": "528ac7703adcf0e6",
+      "suppression": null
+    },
+    {
+      "category": "CWE-636 Not Failing Securely / CWE-757 downgrade",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CWE-636",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/gates.py",
+        "line": 2676,
+        "symbol": "cmd_event_verify"
+      },
+      "evidence": "cmd_event_verify는 `if value:`로 빈 문자열 인자를 버린다. 재현: 구형(인자 없는) load receipt에 대해 `state-tool event-verify --agent '' --role '' --dispatch-id '' --contract-version ''`이 ok:true, contract: legacy, legacy_verified: true로 통과. 같은 인자를 event_loader verify에 직접 주면 contract_arg_invalid로 거부된다(동작 불일치). events.json worker.dispatch는 legacy_accepted: true.",
+      "impact": "PM 셸 변수 미설정 등으로 계약 인자가 빈 값이 되면 오류 대신 구형 계약으로 조용히 다운그레이드되어 대상·식별자 결속 없는 receipt가 ok:true를 받는다. PM Gate가 ok만 보면 차단되지 않는다.",
+      "remediation": {
+        "guidance": "`if value is not None:`으로 바꿔 빈 문자열도 loader에 그대로 넘겨 loader 형식 검사가 거부하게 한다.",
+        "reference": "https://cwe.mitre.org/data/definitions/636.html",
+        "auto_fixable": true
+      },
+      "verification": "state-tool event-verify에 빈 계약 인자를 넘기면 contract_arg_invalid(ok:false)가 반환되는 테스트가 통과한다.",
+      "id": "GC-002",
+      "fingerprint": "e0d290359bb09387",
+      "suppression": null
+    },
+    {
+      "category": "CWE-693 Protection Mechanism Failure (gate acceptance criterion)",
+      "severity": "medium",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CWE-693",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/agents/opal-security-checker/AGENT.md",
+        "line": 17,
+        "symbol": "worker.dispatch 진입 게이트 3"
+      },
+      "evidence": "16개 AGENT.md 게이트 2·3항(예: opal-be-agent:16-17, opal-capability-agent:19-20, opal-security-checker:16-17 등)은 verify 실행과 'ok: true'만 통과 조건으로 둔다. verify 결과의 contract == 2, dispatch_id·agent.name·role 반향값이 프롬프트 값과 같은지 확인하라는 문장이 없다. GC-001·GC-002 경로의 결과(contract 없음 또는 legacy)도 ok:true이므로 게이트 문장만으로는 걸러지지 않는다. dispatch-process.md Step 0-4도 동일.",
+      "impact": "loader/state-tool 측 우회가 발생했을 때 워커 게이트가 마지막 방어선 역할을 하지 못한다.",
+      "remediation": {
+        "guidance": "게이트 3항에 'verify 결과의 contract가 2이고 dispatch_id·agent.name·role이 프롬프트 값과 같지 않으면 blocked'를 추가하고, 가능하면 verify 명령에 --manifest <실행 경계 manifest>를 고정한다. static-check(_dispatch_line_violations)에 해당 문구 검사를 추가할 수 있다.",
+        "reference": "https://cwe.mitre.org/data/definitions/693.html",
+        "auto_fixable": false
+      },
+      "verification": "16개 AGENT.md 게이트에 결과 필드 확인 문장이 있고 static-check가 누락 시 위반을 낸다.",
+      "id": "GC-003",
+      "fingerprint": "45ddd2c7b572820e",
+      "suppression": null
+    },
+    {
+      "category": "CWE-73 External Control of File Name or Path",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CWE-73",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/event-loader/event_loader.py",
+        "line": 408,
+        "symbol": "_call_mode"
+      },
+      "evidence": "--role-doc 값은 expanduser().resolve() 후 루트 제한 없이 read_bytes()된다. 재현: --role-doc /etc/hosts로 load 시 receipt.role_doc에 /private/etc/hosts 경로와 sha256이 기록됨. 본문은 출력되지 않음. FIFO·장치 파일·대용량 파일에 대한 크기/형식 제한 없음.",
+      "impact": "임의 파일 존재·해시 오라클과 FIFO/장치 경로 지정 시 loader 블로킹·메모리 소모(DoS). 내용 유출은 없고 호출자는 동일 로컬 사용자라 영향은 제한적이다.",
+      "remediation": {
+        "guidance": "role_doc을 project_root/source_root/deployed_root 하위 일반 파일(is_file, 크기 상한)로 제한하고 범위 밖이면 path_outside_root로 거부한다(_resolve_token과 같은 relative_to 검사).",
+        "reference": "https://cwe.mitre.org/data/definitions/73.html",
+        "auto_fixable": false
+      },
+      "verification": "루트 밖 경로·FIFO를 --role-doc으로 넘기면 contract_arg_invalid/path_outside_root로 즉시 거부되는 테스트.",
+      "id": "GC-004",
+      "fingerprint": "e06f2b9e8e53358a",
+      "suppression": null
+    },
+    {
+      "category": "CWE-1286 Improper Validation of Syntactic Correctness of Input (regex anchor)",
+      "severity": "low",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CWE-1286",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/event-loader/event_loader.py",
+        "line": 396,
+        "symbol": "_call_mode"
+      },
+      "evidence": "VERSION/ROLE/DISPATCH_ID/AGENT_NAME 패턴이 `$` 앵커 + pattern.match()를 사용한다. Python `$`는 끝 개행 앞에서도 일치하므로 재현: --dispatch-id $'dsp-12345678\\n'이 통과해 receipt.dispatch_id에 'dsp-12345678\\n'이 저장됨. 경로 구분자는 허용되지 않아 경로 탈출은 불가.",
+      "impact": "문서화된 식별자 형식과 실제 수용 집합이 달라 로그·원장·비교 결과 혼동 소지. 보안 영향은 낮다.",
+      "remediation": {
+        "guidance": "pattern.fullmatch(value) 또는 `\\Z` 앵커를 사용한다.",
+        "reference": "https://docs.python.org/3/library/re.html#re.fullmatch",
+        "auto_fixable": true
+      },
+      "verification": "끝 개행이 붙은 각 계약 인자가 contract_arg_invalid로 거부되는 테스트.",
+      "id": "GC-005",
+      "fingerprint": "5563aedd74ca012e",
+      "suppression": null
+    },
+    {
+      "category": "CWE-778 Insufficient Logging / CWE-15 External Control of System Setting",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CWE-778",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/event-loader/event_loader.py",
+        "line": 345,
+        "symbol": "_ledger_path"
+      },
+      "evidence": "원장 경로(OPAL_EVENT_LOADER_LEDGER)와 기록 시각(OPAL_EVENT_LOADER_NOW)을 운영 경로에서 환경변수로 무조건 덮어쓴다. 원장 쓰기 실패(364행)는 경고만 남기고 호출을 통과시킨다. 원장 행에는 ts·op·event·project_root만 있고 시크릿은 없다.",
+      "impact": "legacy-report가 legacy_accepted 종료 판단 근거인데, 환경변수로 시각 위조·다른 파일로 전환·쓰기 실패 시 구형 호출이 누락 집계되어 너무 이른 호환 종료 또는 잔존 구형 호출 은폐가 가능하다. 임의 경로 append(mkdir parents 포함)도 가능하나 동일 사용자 권한 범위다.",
+      "remediation": {
+        "guidance": "테스트 전용 훅은 별도 플래그(예: OPAL_EVENT_LOADER_TEST=1)가 있을 때만 적용하거나 응답 warnings에 override 사용 사실을 남긴다. 쓰기 실패 경고를 legacy-report에서도 확인할 수 있게 한다.",
+        "reference": "https://cwe.mitre.org/data/definitions/778.html",
+        "auto_fixable": false
+      },
+      "verification": "환경변수 override 시 응답에 경고가 표시되고, 원장 쓰기 실패가 집계에 반영되는 테스트.",
+      "id": "GC-006",
+      "fingerprint": "c16860701fb2d825",
+      "suppression": null
+    },
+    {
+      "category": "CWE-88 Argument Injection (no issue observed)",
+      "severity": "info",
+      "confidence": "high",
+      "disposition": "informational",
+      "rule_id": "CWE-88",
+      "source_tier": "T1",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/gates.py",
+        "line": 2679,
+        "symbol": "cmd_event_verify"
+      },
+      "evidence": "state-tool → event-loader 호출은 shell=False argv 리스트이며 옵션/값을 쌍으로 extend한다. '-'로 시작하는 값은 loader argparse가 'expected one argument'로 거부(fail-closed). --agent 패턴은 '/'를 허용하지 않아 _resolve_agent 경로 탈출 불가. 문서 토큰은 _resolve_token relative_to 검사 유지. 하드코딩 시크릿·자격증명 패턴 없음.",
+      "impact": "해당 없음(관측 결과 기록).",
+      "remediation": {
+        "guidance": "현행 유지.",
+        "auto_fixable": false
+      },
+      "verification": "해당 없음.",
+      "id": "GC-007",
+      "fingerprint": "6f7725f277416be1",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "event-loader verify(worker.dispatch receipt, dsp-d300ce21...) ok:true — 워커 게이트",
+    "git diff: 대상 4개 py + 16개 AGENT.md",
+    "재현(scratchpad, OPAL_EVENT_LOADER_LEDGER 격리): P1 빈 인자 다운그레이드, P2 사본 manifest 우회, P2c --manifest 고정 대조군, P3 끝 개행 dispatch_id, P4 비계약 이벤트에 v2 인자 무시, P5 --role-doc 임의 파일 해시",
+    "활성 영역: Python CLI(파일 경로 처리, 서브프로세스, 무결성 검증), Markdown 게이트 문서. 비활성: 웹/DB/인증/의존성 감사(대상에 매니페스트·네트워크 코드 없음)"
+  ],
+  "references": [
+    "docs/SECURITY.md",
+    "~/.opal/skills/op-gc-security/references/security-baseline.md",
+    "~/.opal/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_175/tasks/175-261001-opd-이벤트-로딩-경량화/GC-SECURITY-2026-10-02T00-03-00.md"
+}

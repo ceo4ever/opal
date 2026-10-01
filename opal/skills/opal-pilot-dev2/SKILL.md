@@ -93,7 +93,9 @@ PLAN 작성 완료 후 BUILD 진입 전, Layer 1(`ac_coverage`가 `intent.accept
 **[MUST — worker.dispatch 이벤트 게이트]** Builder/Verifier/Reviewer를 호출하기 직전마다
 `pm/dispatch-process.md` §Step 0의 `worker.dispatch` load·전문 적용·`state-tool
 event-verify` 절차를 새로 수행한다 — 이전 역할이나 이전 시점의 receipt를 재사용하지
-않는다. Builder는 `docs/PROJECT.md` "프로젝트 구성" 매칭 결과에 따라 전문 에이전트
+않는다. 호출마다 `role`(builder/verifier/reviewer)과 `role_doc`(`agents/builder.md`·
+`agents/verifier.md`·`agents/reviewer.md`), 새 `dispatch_id`, `--contract-version 2`를 넘겨
+load·verify하며, 대상이 같아도 역할이 다르면 receipt를 재사용할 수 없다. Builder는 `docs/PROJECT.md` "프로젝트 구성" 매칭 결과에 따라 전문 에이전트
 (opal-fe-agent/opal-be-agent/opal-db-agent)를 우선 선택하고, 매핑이 없거나
 `docs/PROJECT.md`가 없으면 `opal-task-agent`로 폴백한다. Verifier/Reviewer는 계약이
 `lifecycle.py collect-evidence`·리뷰 판정 기반이라 FW 전문 에이전트 매핑 대상이 아니므로
