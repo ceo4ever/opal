@@ -129,4 +129,4 @@ release는 RELEASE·OBSERVE 실행 증거와 승인 후 CLOSED/observed로 끝�
 패키지 검사: python3 -m unittest discover -s <skill-dir>/tests -v.
 행동 평가는 [evals.md](references/evals.md)를 사용한다.
 현재 검증 범위와 미실행 영역은 [validation.md](references/validation.md)에 기록한다.
-전역 //opd2 별칭 등록은 별도 통합이며 현재 폴더는 직접 사용할 스킬 원본이다.
+호출 별칭 `//opd2`는 `opal/core/references/opal-skills-registry.json`에 등록되어 있다.
