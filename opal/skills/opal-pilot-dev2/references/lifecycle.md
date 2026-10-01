@@ -35,6 +35,22 @@ transition은 한 단계만 이동한다. 실패 exit 2이면 상태 유지.
 block --reason은 차단을 기록하고 unblock --reference ... --reason ...은 해결 근거를 기록한다.
 정상 전이는 계속 진행한다. 실제 외부 계약·권한 결정은 모드에 관계없이 차단한다.
 
+## PLAN 사전심사 상한과 지적 추적
+
+- 상한: 사전심사 fail 기록이 3건이 되면 도구가 `await_user: PLAN pre-review fail limit (3)
+  reached; user release required`로 상한 대기에 들어간다. 상한 대기 중에는 `review --call`,
+  `transition`(및 `verify-mark`), `rewind`, `unblock`을 거부한다. 이 상한은 rewind 상한
+  (`retries <= 3`)과 별개다.
+- 해제: `plan-review-reset --actor <실명> --reference <사용자 메시지> --reason ...`만 상한을
+  푼다. `--actor`는 실명 사용자여야 하며 `coordinator`·`builder`·`verifier`·`reviewer`는 거부된다.
+  `--reference`는 실제 사용자 메시지다.
+- 기록 필드: 사전심사 기록은 `findings`(새 지적), `resolutions`(이전 지적 해소 보고),
+  `open_findings`(그 기록 이후 남은 미해소 지적)를 가진다. 원장의 `plan_review_floor`는
+  집계·추적의 시작 지점이며 해제 시 현재 기록 수로 올라간다(기록 이력은 보존). rewind는 사전심사 기록과 `plan_review_floor`를
+  초기화한다. 새 키가 없는 변경 전 기록은 집계·추적에서 제외한다.
+- 한계: `resolved` 보고의 내용상 진위는 도구가 검증하지 못하고 독립 Reviewer의 판단에
+  맡긴다. 도구가 보증하는 것은 보고의 완전성(전건 보고·id 일치)이다.
+
 ## AC-4 실측 — lease·Stop·checkpoint·finalize
 
 AC-4의 lease·Stop·checkpoint·finalize는 opd2 전용 코드 없이 FW 공통 메커니즘으로 자동

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PLAN pre-review record",
+  "type": "object",
+  "required": ["call", "actor", "verdict", "reason", "fingerprint", "findings", "resolutions", "open_findings"],
+  "additionalProperties": false,
+  "properties": {
+    "call": {"type": "string", "enum": ["A", "B"]},
+    "actor": {"type": "string", "minLength": 1},
+    "verdict": {"type": "string", "enum": ["pass", "fail"]},
+    "reason": {"type": "string", "minLength": 1},
+    "fingerprint": {"type": "string", "minLength": 1},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "location", "remaining_choice"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "location": {"type": "string", "minLength": 1},
+          "remaining_choice": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "resolutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "status": {"type": "string", "enum": ["resolved", "unresolved"]},
+          "evidence": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "open_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "location", "remaining_choice"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "location": {"type": "string", "minLength": 1},
+          "remaining_choice": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

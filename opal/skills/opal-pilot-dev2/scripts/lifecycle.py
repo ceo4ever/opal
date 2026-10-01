@@ -4,7 +4,7 @@
   "module": "lifecycle",
   "layer": "util",
   "domain": "opal-pipeline",
-  "description": "opd2 스킬의 원장(ledger) 상태기계 CLI. Store 클래스가 <task>/run/opd2-ledger.json에 스테이지 전이(INTENT→DESIGN→PLAN→BUILD→VERIFY→REVIEW→RELEASE→OBSERVE→CLOSED)를 원자 기록하며 매 전이마다 형제 FW 도구 state-tool의 mark --task-step <key> --done을 호출해 진짜 state.json과 동기화한다. init/snapshot/advance/verify-mark 서브커맨드를 제공하며, verify-mark는 opd2 자체 기계 게이트(아티팩트 결합 해시·범위·evidence·역할 분리 등) 판정을 exit code로 반환해 state_tool.py의 apply_opd2_gate_mark_guard()가 호출하는 검증 지점으로 쓰인다.",
+  "description": "opd2 스킬의 원장(ledger) 상태기계 CLI. Store 클래스가 <task>/run/opd2-ledger.json에 스테이지 전이(INTENT→DESIGN→PLAN→BUILD→VERIFY→REVIEW→RELEASE→OBSERVE→CLOSED)를 원자 기록하며 매 전이마다 형제 FW 도구 state-tool의 mark --task-step <key> --done을 호출해 진짜 state.json과 동기화한다. init/snapshot/advance/verify-mark/plan-review-reset 서브커맨드를 제공하며(PLAN 사전심사 fail 3회 상한과 지적·해소 추적 포함), verify-mark는 opd2 자체 기계 게이트(아티팩트 결합 해시·범위·evidence·역할 분리 등) 판정을 exit code로 반환해 state_tool.py의 apply_opd2_gate_mark_guard()가 호출하는 검증 지점으로 쓰인다.",
   "exports": ["Store", "main", "snapshot", "git", "atomic", "validate"],
   "depends": ["state_tool"],
   "note": "Python 표준 라이브러리만 사용하고 모델 verdict를 조작하지 않는다(외부 의존성 금지)."
@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -29,6 +30,9 @@ ROOT = Path(__file__).resolve().parents[1]
 STATE_TOOL = Path(__file__).resolve().parents[3] / 'tools' / 'state-tool' / 'run.sh'
 STAGES = ('INTENT', 'DESIGN', 'PLAN', 'BUILD', 'VERIFY', 'REVIEW', 'RELEASE', 'OBSERVE', 'CLOSED')
 ARTIFACTS = {'INTENT': 'intent', 'DESIGN': 'spec', 'PLAN': 'plan'}
+# 173 — PLAN 사전심사 fail 기록이 이 수에 도달하면 사용자 해제(plan-review-reset) 전까지 상한 대기.
+PLAN_REVIEW_FAIL_LIMIT = 3
+PLAN_REVIEW_HOLD = f'await_user: PLAN pre-review fail limit ({PLAN_REVIEW_FAIL_LIMIT}) reached; user release required'
 
 
 def require(condition, message):
@@ -243,6 +247,24 @@ class Store:
             require(current.get(name) == expected, f'protected test changed: {name}')
         return changes
 
+    def plan_review_fails(self, state):
+        """173 — floor 이후 기록 중 findings 키가 있는(새 형식) fail 기록 수. 변경 전 기록은 세지 않는다."""
+        records = state.get('plan_reviews', [])[state.get('plan_review_floor', 0):]
+        return sum(1 for r in records if r['verdict'] == 'fail' and 'findings' in r)
+
+    def plan_review_hold(self, state):
+        return state['stage'] == 'PLAN' and self.plan_review_fails(state) >= PLAN_REVIEW_FAIL_LIMIT
+
+    def previous_findings(self, state, call):
+        """173 — 같은 Call의 최신 기록이 새 형식 fail이면 그 open_findings, 아니면 []."""
+        records = [r for r in state.get('plan_reviews', []) if r['call'] == call]
+        if records and records[-1]['verdict'] == 'fail' and 'findings' in records[-1]:
+            return records[-1]['open_findings']
+        return []
+
+    def reject_plan_review_hold(self, state):
+        require(not self.plan_review_hold(state), PLAN_REVIEW_HOLD)
+
     def plan_coverage(self, state):
         """168 ADD-1 — PLAN 사전심사 Layer 1(결정론). plan['ac_coverage'][i]는 checks[i]
         (같은 인덱스)가 커버하는 intent['acceptance'] 인덱스 목록이다. 모든 acceptance
@@ -284,6 +306,8 @@ class Store:
         바꾸지 않는다.
         """
         name = ARTIFACTS[stage]
+        if name == 'plan':
+            self.reject_plan_review_hold(state)
         artifact, checksum = self.artifact(name)
         require(artifact['change_id'] == state['change_id'], 'change ID mismatch')
         upstream = {'spec': 'intent', 'plan': 'spec'}.get(name)
@@ -345,6 +369,7 @@ class Store:
 
     def advance(self, actor):
         state = self.state()
+        self.reject_plan_review_hold(state)
         require(not state['blocked'], f'blocked: {state["blocked"]}')
         require(state['stage'] != 'CLOSED', 'already closed')
         self.chain(state)
@@ -396,7 +421,7 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('command', choices=['init', 'status', 'transition', 'validate-artifacts', 'verify-scope',
                                      'collect-evidence', 'approve', 'review', 'block', 'unblock', 'rewind',
-                                     'set-mode', 'verify-mark'])
+                                     'set-mode', 'verify-mark', 'plan-review-reset'])
     p.add_argument('task', type=Path, nargs='?',
                    help='태스크 경로 — verify-mark를 제외한 모든 명령의 위치 인자')
     # 168 W-4 — verify-mark 전용. state_tool.py의 apply_opd2_gate_mark_guard()가
@@ -419,6 +444,8 @@ def main(argv=None):
     p.add_argument('--reference', help='Actual user approval message or protected-system approval ID')
     p.add_argument('--verdict', choices=['pass', 'fail'])
     p.add_argument('--call', choices=['A', 'B'], help='review 전용 — PLAN 사전심사 독립 축 식별자')
+    p.add_argument('--findings', help='review --call fail 전용 — JSON 배열 [{id, location, remaining_choice}]')
+    p.add_argument('--resolutions', help='review --call 전용 — 이전 지적 해소 JSON 배열 [{id, status, evidence}]')
     a = p.parse_args(argv)
     try:
         if a.command == 'verify-mark':
@@ -477,12 +504,39 @@ def main(argv=None):
                     result = store.save(state, 'approval', state['approvals'][-1])
                 elif a.command == 'review':
                     if state['stage'] == 'PLAN' and a.call:
+                        store.reject_plan_review_hold(state)
                         require(a.verdict and a.reason, 'review verdict/reason required')
                         plan, _ = store.artifact('plan')
                         require(a.actor == plan['reviewer'] and a.actor != plan['builder'], 'reviewer identity mismatch')
+                        # 173 — 지적·해소 JSON 검증. 위반은 기록 전 ValueError라 원장·fail 수에 반영되지 않는다.
+                        schema = read(ROOT / 'schemas' / 'plan-review.schema.json')
+                        findings = json.loads(a.findings) if a.findings is not None else []
+                        resolutions = json.loads(a.resolutions) if a.resolutions is not None else []
+                        validate(findings, schema['properties']['findings'], 'findings')
+                        validate(resolutions, schema['properties']['resolutions'], 'resolutions')
+                        require(a.verdict == 'fail' or not findings, 'pass must have no findings')
+                        ids = [f['id'] for f in findings]
+                        seen = {x['id'] for r in state['plan_reviews'] if r['call'] == a.call
+                                for x in r.get('findings', []) + r.get('open_findings', [])}
+                        for fid in ids:
+                            require(re.fullmatch(re.escape(a.call) + r'-[1-9][0-9]*', fid), f'bad finding id: {fid}')
+                        require(len(set(ids)) == len(ids) and not seen & set(ids), 'duplicate finding id')
+                        previous = store.previous_findings(state, a.call)
+                        expected = [f['id'] for f in previous]
+                        require(sorted(r['id'] for r in resolutions) == sorted(expected),
+                                f'resolutions must cover exactly the previous findings [{", ".join(expected)}]')
+                        open_findings = ([f for f in previous
+                                          if any(r['id'] == f['id'] and r['status'] == 'unresolved' for r in resolutions)]
+                                         + findings)
+                        require(a.verdict == 'fail' or not open_findings, 'pass requires all previous findings resolved')
+                        require(a.verdict == 'pass' or open_findings, 'fail requires at least one open finding')
                         report = {'call': a.call, 'actor': a.actor, 'verdict': a.verdict, 'reason': a.reason,
-                                  'fingerprint': store.fingerprint(state)}
+                                  'fingerprint': store.fingerprint(state), 'findings': findings,
+                                  'resolutions': resolutions, 'open_findings': open_findings}
+                        validate(report, schema)
                         state['plan_reviews'].append(report)
+                        if store.plan_review_hold(state) and not state['blocked']:
+                            state['blocked'] = PLAN_REVIEW_HOLD
                         result = store.save(state, 'plan_review', report)
                     elif state['stage'] == 'REVIEW' and not a.call:
                         require(a.verdict and a.reason, 'review verdict/reason required')
@@ -526,8 +580,19 @@ def main(argv=None):
                     validate(entry, read(ROOT / 'schemas/evidence.schema.json'))
                     state['evidence'].append(entry)
                     result = store.save(state, 'evidence', entry)
+                elif a.command == 'plan-review-reset':
+                    require(a.reference and a.reason, 'reference and reason required')
+                    require(a.actor not in ('coordinator', 'builder', 'verifier', 'reviewer'), 'named human approver required')
+                    require(store.plan_review_hold(state), 'no plan review hold to reset')
+                    state['plan_review_floor'] = len(state['plan_reviews'])
+                    if state['blocked'] == PLAN_REVIEW_HOLD:
+                        state['blocked'] = None
+                    result = store.save(state, 'plan_review_reset',
+                                        {'actor': a.actor, 'reason': a.reason, 'reference': a.reference})
                 elif a.command in ('block', 'unblock', 'rewind', 'set-mode'):
                     require(a.reason, 'reason required')
+                    if a.command in ('unblock', 'rewind'):
+                        store.reject_plan_review_hold(state)
                     if a.command == 'block':
                         state['blocked'] = a.reason
                     elif a.command == 'unblock':
@@ -545,7 +610,7 @@ def main(argv=None):
                             if STAGES.index(stage) >= STAGES.index(a.gate):
                                 state['artifacts'].pop(name, None)
                         state.update(stage=a.gate, evidence=[], reviews=[], approvals=[], blocked=None,
-                                    plan_reviews=[])
+                                    plan_reviews=[], plan_review_floor=0)
                         state.pop('outcome', None)
                         if a.gate != 'BUILD':
                             state.pop('protected_tests', None)

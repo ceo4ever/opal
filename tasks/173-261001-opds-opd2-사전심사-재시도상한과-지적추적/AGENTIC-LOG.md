@@ -13,3 +13,5 @@
 | 5 | 2026-10-01 13:46 | PLAN | GATE | 설계 게이트 1회차 fail(decision_clarity 2건: rewind 시 plan_review_floor 처리, 상한 대기 검사가 advance()의 blocked 검사보다 뒤라 오류 문구가 달라짐). 시나리오 3축 평균 2.0. rewrite_target=plan. 지적 2건 모두 실재 — floor를 rewind 때 0으로 되돌리고 집계식을 `plan_reviews[floor:]`로 확정, 상한 대기 검사를 advance() 첫 줄에 두도록 PLAN·TEST-SCENARIO 반영 | design-gate-i1 |
 | 6 | 2026-10-01 13:50 | PLAN | GATE | 설계 게이트 2회차 시작(previous_gaps 2건 전달), 평가자 디스패치 | design-gate-i2 진행 중 |
 | 7 | 2026-10-01 13:55 | PLAN | GATE | 설계 게이트 2회차 pass — 설계 4축 PASS, 시나리오 3축 2.0, previous_gaps 2건 resolved. 평가자 부수 관찰: `--findings`/`--resolutions` 생략은 빈 배열과 같다고 읽힘 — 구현에서 기본값 [] 로 처리(W-3) | design-gate-i2 |
+| 8 | 2026-10-01 14:00 | EXECUTE | DECISION | 명세 체크포인트 커밋 8901c4b2 생성. 작업 트리에 이 태스크와 무관한 `tasks/150~169` 삭제·`tasks/backup` 생성이 보임(시작 시점 git status에는 없었음) — 스테이징·커밋·복원 모두 하지 않고 캡틴에게 보고 예정 | 체크포인트는 태스크 폴더만 포함 |
+| 9 | 2026-10-01 14:02 | EXECUTE | GATE | EXECUTE 진입(execute.implement advance, plan.user_confirm 자동 승인). W-1(RED 테스트, opal-test-agent red mode)·W-2(문서, opal-task-agent) 병렬 디스패치 — 파일 중첩 없음. W-3(구현)은 RED 잠금 뒤 | worker.dispatch receipt 각각 검증 |

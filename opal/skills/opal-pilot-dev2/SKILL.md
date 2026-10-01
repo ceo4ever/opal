@@ -80,9 +80,11 @@ PLAN 작성 완료 후 BUILD 진입 전, Layer 1(`ac_coverage`가 `intent.accept
 커버하는지 `lifecycle.py`가 기계적으로 검사)과 Layer 2(Reviewer의 Call A/B 독립 의미
 심사가 둘 다 현재 fingerprint에서 pass로 기록됨)를 모두 통과해야 PLAN→BUILD 전이가
 허용된다. Coordinator는 Layer 1을 먼저 자체 확인하고, 통과하면 Call A·Call B를 한 메시지
-안에서 병렬 디스패치하며, 실패한 축만 표적 재검증한다. 절차 전문은 `agents/coordinator.md`
+안에서 병렬 디스패치하며, 수정 뒤 A·B를 모두 다시 디스패치한다. 절차 전문은 `agents/coordinator.md`
 §PLAN 사전심사(BUILD 진입 전), 각 Call이 보는 축은 `agents/reviewer.md` §PLAN
-사전심사(BUILD 진입 전)를 참조한다(원문 복제 없음).
+사전심사(BUILD 진입 전)를 참조한다(원문 복제 없음). 사전심사 fail 상한과 사용자 해제는
+`agents/coordinator.md` 해당 절, 지적 항목·해소 보고 형식은 `agents/reviewer.md` 해당
+절을 참조한다.
 
 에이전트 문서는 디스패치 계약이다. 해당 단계에서 실제 독립 에이전트를 호출하고 role
 문서·아티팩트·소유 파일·검증 명령을 전달한다. Builder는 Verifier/Reviewer를 겸하지 않는다.
