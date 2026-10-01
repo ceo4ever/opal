@@ -6853,6 +6853,37 @@ def _design_gate_deterministic_check(task_path):
     return missing
 
 
+def _decision_clarity_lint(task_path):
+    """170 AC-2 — decision_clarity 유보 어휘 후보 린트 (판정 아님, 후보 위치만 반환).
+
+    PLAN.md 본문에서 펜스 코드 블록(```)과 인라인 코드 스팬(`...`)을 제외한 산문만,
+    고정 패턴 12개(추후 결정/추후 확정/추후 논의/적절히/적절한/필요시/필요에 따라/
+    상황에 따라/경우에 따라/TBD/TODO/미정)로 줄 단위 스캔해
+    "PLAN.md:<줄번호>: <해당 줄 발췌>" 문자열 리스트를 반환한다. 설계 4축의 최종 판정은
+    evaluator 소관이므로 이 함수는 FAIL을 선언하지 않는다(PLAN Decisions 참조).
+    """
+    plan_path = pathlib.Path(task_path) / "PLAN.md"
+    if not plan_path.is_file():
+        return []
+    patterns = (
+        "추후 결정", "추후 확정", "추후 논의", "적절히", "적절한",
+        "필요시", "필요에 따라", "상황에 따라", "경우에 따라",
+        "TBD", "TODO", "미정",
+    )
+    candidates = []
+    in_fence = False
+    for lineno, line in enumerate(plan_path.read_text(encoding="utf-8").splitlines(), start=1):
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        prose = re.sub(r"`[^`]*`", "", line)
+        if any(pat in prose for pat in patterns):
+            candidates.append(f"PLAN.md:{lineno}: {line.strip()}")
+    return candidates
+
+
 # ── run-log 사건 조립 공용 ─────────────────────────────────────────────────────
 
 def _design_row_change(state, task_path, command, row, to_status, events, *, owner=None, note=None):
@@ -7357,15 +7388,17 @@ def cmd_verify(args):
     code_scan_citation_check = getattr(args, "code_scan_citation_check", False)
     plan_contract_check = getattr(args, "plan_contract_check", False)
     run_log_completeness_check = getattr(args, "run_log_completeness_check", False)
+    design_gate_check = getattr(args, "design_gate_check", False)
     task_md_arg = getattr(args, "task_md", None)
 
-    # 098/106/135 — 게이트 플래그 동시 지정 거부 (무성 무시 방지, PLAN §3.3.2 / §3.4.2 (5))
+    # 098/106/135/170 — 게이트 플래그 동시 지정 거부 (무성 무시 방지, PLAN §3.3.2 / §3.4.2 (5))
     _gate_flags = [_n for _n, _v in (
         ("--clarification-check", clarification_check),
         ("--evidence-check", evidence_check),
         ("--code-scan-citation-check", code_scan_citation_check),
         ("--plan-contract-check", plan_contract_check),
         ("--run-log-completeness-check", run_log_completeness_check),
+        ("--design-gate-check", design_gate_check),
     ) if _v]
     if len(_gate_flags) > 1:
         err(command, "evidence_check_flag_conflict", flags=_gate_flags)
@@ -7376,6 +7409,38 @@ def cmd_verify(args):
         print(json.dumps({
             "ok": True, "command": command,
             **result,
+        }, ensure_ascii=False))
+        sys.exit(0)
+
+    # 170 AC-1 — design-gate 결정론 사전검사 (evaluator 호출 전 무차단 사전점검,
+    # 회차·상태 비소비). state.json 부재·PM 경로 아님은 다른 5개 플래그와 동일하게
+    # graceful skip(exit 0)으로 처리한다(load_state_json의 하드 오류 경로를 타지 않는다).
+    if design_gate_check:
+        task_dir = pathlib.Path(task_path)
+        state_file = task_dir / "state.json"
+        if not state_file.exists():
+            print(json.dumps({
+                "ok": True, "command": command,
+                "design_gate_check": "skipped",
+                "reason": "state.json not found",
+            }, ensure_ascii=False))
+            sys.exit(0)
+        with open(state_file, encoding="utf-8") as f:
+            dgc_state = json.load(f)
+        if not _is_pm_design_path(dgc_state):
+            print(json.dumps({
+                "ok": True, "command": command,
+                "design_gate_check": "skipped",
+                "reason": "not a PM design path",
+            }, ensure_ascii=False))
+            sys.exit(0)
+        deterministic_missing = _design_gate_deterministic_check(task_dir)
+        decision_clarity_candidates = _decision_clarity_lint(task_dir)
+        print(json.dumps({
+            "ok": True, "command": command,
+            "design_gate_check": "unmet" if deterministic_missing else "pass",
+            "deterministic_missing": deterministic_missing,
+            "decision_clarity_candidates": decision_clarity_candidates,
         }, ensure_ascii=False))
         sys.exit(0)
 
@@ -7956,6 +8021,12 @@ def build_parser():
                        help="state.json run_log 계약과 JSONL 사건을 대조해 누락·관측"
                             "지점을 진단한다(비차단, exit 0 유지). run_log 블록이 없으면"
                             "skipped 취급")
+    # 170 AC-1 — design-gate 결정론 사전검사 (evaluator 호출 전, 회차·상태 비소비)
+    p_vfy.add_argument("--design-gate-check", action="store_true",
+                       dest="design_gate_check",
+                       help="design-gate ①~⑦ 결정론 검사 + decision_clarity 유보 어휘 "
+                            "후보 린트를 회차·상태 소비 없이 실행한다(비차단, exit 0 유지). "
+                            "state.json 부재·PM 경로 아님은 skipped 취급")
     p_vfy.set_defaults(func=cmd_verify)
 
     # ── log-event (135 W-3, CONTRACT §2.4 state-tool.log-event) ──

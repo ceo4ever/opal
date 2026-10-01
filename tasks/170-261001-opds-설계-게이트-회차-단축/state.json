@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-10-01 08:23:42",
-  "updated_at": "2026-10-01 08:23:56",
+  "updated_at": "2026-10-01 09:59:18",
   "current_status": "in_progress",
   "rows": [
     {
@@ -23,44 +23,44 @@
       "stage": "TASK",
       "item": "사용자 확인",
       "key": "task.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 08:27:06",
+      "owner": "user",
+      "note": "캡틴 승인 확인 (이 세션에서 재확인)"
     },
     {
       "row_id": 3,
       "stage": "PLAN",
       "item": "작업",
       "key": "plan.plan_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 08:47:15",
       "owner": "PM",
-      "note": null
+      "note": "PLAN.md 작성 완료 — verify --plan-contract-check pass"
     },
     {
       "row_id": 4,
       "stage": "PLAN",
       "item": "TEST-SCENARIO 작성",
       "key": "plan.test_scenario_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 08:48:45",
       "owner": "PM",
-      "note": null
+      "note": "TEST-SCENARIO.md 작성 완료 — 결정론 검사 ①~⑦ pre-check 통과"
     },
     {
       "row_id": 5,
       "stage": "PLAN",
       "item": "설계 게이트",
       "key": "plan.design_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 09:57:58",
       "owner": "PM",
-      "note": null,
+      "note": "design gate i6 pass",
       "gate": {
         "artifacts": [
           "TASK.md",
@@ -78,22 +78,22 @@
       "stage": "PLAN",
       "item": "사용자 확인",
       "key": "plan.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 09:58:12",
       "owner": "PM",
-      "note": null
+      "note": "agentic 모드 자동 승인 — 설계 게이트 6회차 pass"
     },
     {
       "row_id": 7,
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "in_progress",
+      "status_label": "🔄",
+      "timestamp": "2026-10-01 09:59:18",
       "owner": "PM",
-      "note": null
+      "note": "EXECUTE 진입 — P1(W-1·W-2·W-3) 디스패치 시작"
     },
     {
       "row_id": 8,
@@ -210,7 +210,7 @@
       "note": null
     }
   ],
-  "next_action": "PLAN 작업 진입",
+  "next_action": "EXECUTE 작업 진행 중",
   "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_170",
   "actor": "coordinator",
   "run_log": {
@@ -221,5 +221,95 @@
     "active_run_id": "run_fcd28646-e359-4345-b697-25d6729e326a",
     "status": "active",
     "pending_events": []
+  },
+  "design_gate": {
+    "status": "pass",
+    "iteration": 6,
+    "limit": 3,
+    "limit_from": 3,
+    "task_confirm_req_hash": "3030070cce76510f01e6c36d7dba194c54ff63bc39796084ce54b68544341965",
+    "current_attempt": {
+      "iteration": 6,
+      "bundle_hash": "b8fb5339280cd9e42da32c8b05b31f0244d52b97e13656528d5c3a5935838400",
+      "files": {
+        "TASK.md": "7654c3a9f7bc6720515a21962a062d95052ccce219d44d0ff98620202899e686",
+        "PLAN.md": "159a8a887994288a4d0187b1960558cd417d2c7a3a2150ef626feffad0421b4f",
+        "TEST-SCENARIO.md": "24f8eb82e0df1ce1318dedd65aaa69a97d483e24099933e1dafd847272bde5fa"
+      },
+      "started_at": "2026-10-01 09:56:20",
+      "refinement": false
+    },
+    "passed_bundle_hash": "b8fb5339280cd9e42da32c8b05b31f0244d52b97e13656528d5c3a5935838400",
+    "approved_bundle_hash": "b8fb5339280cd9e42da32c8b05b31f0244d52b97e13656528d5c3a5935838400",
+    "last_rewrite_target": "plan",
+    "history": [
+      {
+        "iteration": 1,
+        "verdict": "rewrite",
+        "rewrite_target": "both",
+        "bundle_hash": "4aad83b9ca238e856dbc125371b7bf437519cebdec10c5ee497442cc487d4b87",
+        "reason": "design FAIL: completeness, decision_clarity, recoverability; scenario average 1.0",
+        "at": "2026-10-01 08:52:58",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 2,
+        "verdict": "rewrite",
+        "rewrite_target": "both",
+        "bundle_hash": "da2ffc60ad33af5a408685c6c0c2415999812a71e3f2be0db0c8065d2a1079cd",
+        "reason": "design FAIL: completeness, decision_clarity, recoverability; scenario average 1.333",
+        "at": "2026-10-01 09:05:10",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 3,
+        "verdict": "rewrite",
+        "rewrite_target": "both",
+        "bundle_hash": "e6608574d748209ac8658b44c07badd0832a0107902f3e4712280770b6d8d311",
+        "reason": "design FAIL: completeness, decision_clarity, executability, recoverability; scenario average 1.333",
+        "at": "2026-10-01 09:29:08",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 4,
+        "verdict": "rewrite",
+        "rewrite_target": "plan",
+        "bundle_hash": "ce9eeb85b3f8a5ab7db0f38a7944c8e0deaf044a64b88c5423428837e5738486",
+        "reason": "design FAIL: decision_clarity, executability; scenario average 2.0",
+        "at": "2026-10-01 09:50:35",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 5,
+        "verdict": "rewrite",
+        "rewrite_target": "plan",
+        "bundle_hash": "92d9f4ebc5ddbe3c0c7b8ff3c853c7f83a77b6fe20b3d721c810f212d9643cd9",
+        "reason": "design FAIL: decision_clarity, executability; scenario average 2.0",
+        "at": "2026-10-01 09:55:03",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 6,
+        "verdict": "pass",
+        "rewrite_target": null,
+        "bundle_hash": "b8fb5339280cd9e42da32c8b05b31f0244d52b97e13656528d5c3a5935838400",
+        "reason": null,
+        "at": "2026-10-01 09:57:58",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      }
+    ],
+    "refinement_pending": false
   }
 }

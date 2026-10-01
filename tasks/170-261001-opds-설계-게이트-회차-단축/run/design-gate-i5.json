@@ -1,0 +1,24 @@
+{
+  "input_bundle_hash": "92d9f4ebc5ddbe3c0c7b8ff3c853c7f83a77b6fe20b3d721c810f212d9643cd9",
+  "iteration": 5,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: W-3(b)에는 id가 \"첫 번째 ': ' 앞부분 전체\"라고만 적혀 있고 Decisions 표의 \"콜론이 없으면 전체 문자열\" 폴백이 빠져 있다 — W-3이 AGENT.md에 실제로 들어갈 계약 문안이므로 그대로 구현하면 레거시 포맷에서 id가 미정의 상태가 된다.",
+      "executability-1: 설치 직후 grep은 디스크의 배포 파일만 확인하고, 디스패치하는 PM 세션이 바뀐 정의를 재시작 없이 실제로 다시 읽는지는 확인하지 않는다."
+    ]
+  },
+  "scenario": {
+    "scores": {"goal": 2, "adoption": 2, "boundary": 2},
+    "average": 2.0,
+    "gaps": []
+  },
+  "verdict": "fail",
+  "rewrite_target": "plan",
+  "advisories": []
+}

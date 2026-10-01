@@ -19,6 +19,8 @@ TASK가 opd/opds PM 경로(state 행에 `plan.design_gate`가 있는 태스크 �
 
 이 규칙은 `state-tool design-gate start`가 결정론으로 검사한다.
 
+PM 경로에서 PLAN이 새 메커니즘을 추가/변경하면 같은 회차 안에서 TEST-SCENARIO도 갱신한다 — 원문은 `opal-pilot-dev/SKILL.md` §PM 경로
+
 ## 3. 결정과 계약
 
 `Decisions and contracts`에는 구현자가 선택할 필요가 없도록 확정된 결정, 변경 후 계약, 근거만 적는다. 폐기한 대안은 현재 구현·복구 판단에 영향을 줄 때만 한 문장으로 남긴다.
