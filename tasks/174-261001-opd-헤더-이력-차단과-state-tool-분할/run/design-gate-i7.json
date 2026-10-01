@@ -1,0 +1,34 @@
+{
+ "input_bundle_hash": "9d633892650f1e289c4569e67f40ca950a2e69c7d7e63ed5cada9044df4b16b1",
+ "iteration": 7,
+ "design": {
+  "axes": {
+   "completeness": "FAIL",
+   "decision_clarity": "PASS",
+   "executability": "PASS",
+   "recoverability": "PASS"
+  },
+  "gaps": [
+   "completeness-1: docs/CONVENTIONS.md:228 ↔ PLAN Findings·W-4·S-10 — header_history 비차단 경고 서술이 차단 전환 후 거짓이 되는데 변경 대상에 없고 S-10 검색 범위(opal/)도 제외한다."
+  ]
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "resolved_gaps": [
+  {
+   "id": "completeness-1",
+   "status": "resolved",
+   "reason": "W-4가 줄번호 인용 전부 삭제로 확정됨"
+  }
+ ],
+ "verdict": "fail",
+ "rewrite_target": "both",
+ "advisories": []
+}
