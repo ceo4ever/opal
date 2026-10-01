@@ -10,12 +10,7 @@ tags:
 - task-091
 sources:
 - task:091
-related:
-- pipeline-todo-mirror-hook-enforcement
-- opal-principles-constitution
-- state-tool
-- state-tool-task-step-key-address
-- pipeline-json-spec
+related: [pipeline-todo-mirror-hook-enforcement, opal-principles-constitution, state-tool, state-tool-task-step-key-address, pipeline-json-spec]
 created: '2026-08-14'
 updated: '2026-08-14'
 status: draft

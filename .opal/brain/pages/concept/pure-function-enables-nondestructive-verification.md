@@ -8,8 +8,7 @@ tags:
 - pure-function
 sources:
 - task:087
-related:
-- fix-validity-requires-failure-mode-reproduction
+related: [fix-validity-requires-failure-mode-reproduction]
 created: '2026-08-10'
 updated: '2026-08-10'
 status: draft

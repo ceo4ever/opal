@@ -9,9 +9,7 @@ tags:
 - oppb
 sources:
 - task:146
-related:
-- fixture-vs-real-blind-spot-lesson
-- fix-validity-requires-failure-mode-reproduction
+related: [fixture-vs-real-blind-spot-lesson, fix-validity-requires-failure-mode-reproduction]
 created: '2026-09-19'
 updated: '2026-09-19'
 status: draft

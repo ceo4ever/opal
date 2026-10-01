@@ -11,16 +11,11 @@ tags:
 sources:
 - task:051
 - task:059
-related:
-- opal-bootstrap-2tier-model
-- opal-pm-promotion-gate
-- opal-bootstrap-skip-gate
-- brain-query-latency-model
+related: [opal-bootstrap-2tier-model, opal-pm-promotion-gate, opal-bootstrap-skip-gate, brain-query-latency-model]
 created: '2026-07-02'
 updated: 2026-08-20
 status: active
 ---
-
 ## 개요
 
 OPAL 부트스트랩은 디스패치 프롬프트(또는 헤드리스 `-p` 프롬프트)의 첫 줄 마커로 로드 범위를 3단으로 구분한다. `[WORKER]`는 부트스트랩 전부(비서·PM tier 공통)를 스킵하고, `[ASSISTANT]`는 비서 tier(Phase A)까지만 로드하고 PM tier(Phase B) 승격을 억제하며, 마커가 없으면 비서+PM(Phase A+B, 프로젝트면 승격)이 그대로 진행된다. `[ASSISTANT]`는 049에서 확립된 2-tier 모델(비서/PM 분리, [[opal-bootstrap-2tier-model]])에 헤드리스 호출용 중간 단을 신설한 것이다(task:051 TASK.md §배경).

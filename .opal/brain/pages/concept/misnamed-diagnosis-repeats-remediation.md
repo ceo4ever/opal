@@ -11,10 +11,7 @@ sources:
 - skill:op-brain-ingest
 - code:opal/tools/brain-tool/brain_tool.py
 - doc:opal/core/references/pm/dispatch-process.md
-related:
-- silent-success-defect-class
-- enforcement-basis-must-be-structural-not-voluntary
-- eye-inspection-cannot-count-machine-check-at-close
+related: [silent-success-defect-class, enforcement-basis-must-be-structural-not-voluntary, eye-inspection-cannot-count-machine-check-at-close]
 created: '2026-08-27'
 updated: '2026-08-27'
 status: draft

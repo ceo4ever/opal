@@ -10,12 +10,7 @@ tags:
 sources:
 - task:082
 - task:083
-related:
-- code-scan-manifest-sharding-design
-- code-header-dual-source-inheritance
-- code-scan-tool
-- shard-policy-block-vs-nonblock-fallback-criterion
-- code-scan-gate-deadlock-init-placement
+related: [code-scan-manifest-sharding-design, code-header-dual-source-inheritance, code-scan-tool, shard-policy-block-vs-nonblock-fallback-criterion, code-scan-gate-deadlock-init-placement]
 created: '2026-08-03'
 updated: '2026-08-04'
 status: draft

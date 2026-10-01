@@ -8,10 +8,7 @@ tags:
 - fail-closed
 sources:
 - task:085
-related:
-- dl-contract-download-verify-target-identity
-- parser-drift-silent-longevity-lesson
-- silent-loss-prevention-row-accounting-invariant
+related: [dl-contract-download-verify-target-identity, parser-drift-silent-longevity-lesson, silent-loss-prevention-row-accounting-invariant]
 created: '2026-08-07'
 updated: '2026-08-07'
 status: draft

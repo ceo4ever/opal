@@ -8,8 +8,7 @@ tags:
 - guide
 sources:
 - skill:opal-start
-related:
-- skill-opal-next
+related: [skill-opal-next]
 created: '2026-06-11'
 updated: '2026-06-11'
 status: stale

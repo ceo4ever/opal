@@ -9,9 +9,7 @@ tags:
 - task-096
 sources:
 - task:096
-related:
-- unresolvable-not-absent-two-vocabulary-split
-- memory-lifecycle-graduation-workflow
+related: [unresolvable-not-absent-two-vocabulary-split, memory-lifecycle-graduation-workflow]
 created: '2026-08-20'
 updated: '2026-08-20'
 status: draft

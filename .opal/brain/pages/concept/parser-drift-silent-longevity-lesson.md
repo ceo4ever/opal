@@ -9,8 +9,7 @@ tags:
 - test-strategy
 sources:
 - task:078
-related:
-- memory-tool
+related: [memory-tool]
 created: '2026-07-29'
 updated: '2026-07-29'
 status: draft

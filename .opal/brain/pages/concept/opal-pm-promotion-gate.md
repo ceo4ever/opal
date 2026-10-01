@@ -9,16 +9,11 @@ tags:
 - project-level
 sources:
 - task:049
-related:
-- opal-bootstrap-2tier-model
-- bootstrapper-marker-ssot-single-point
-- opal-bootstrap-skip-gate
-- bootstrap-marker-skip-ladder
+related: [opal-bootstrap-2tier-model, bootstrapper-marker-ssot-single-point, opal-bootstrap-skip-gate, bootstrap-marker-skip-ladder]
 created: '2026-06-30'
 updated: '2026-07-02'
 status: active
 ---
-
 ## 개요
 
 OPAL 부트스트랩의 PM(Full) tier 승격 여부는 현재 작업 디렉토리에 프로젝트 에이전트 정의 파일이 존재하는지로 판정된다. 이 단일 파일 존재 신호가 "opi로 초기화된 프로젝트"임을 나타내는 게이트로 기능한다 (task:049 DONE.md 핵심 설계 결정 #2).

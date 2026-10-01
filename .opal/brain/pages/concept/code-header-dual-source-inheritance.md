@@ -7,10 +7,7 @@ tags:
 - architecture
 sources:
 - task:077
-related:
-- code-map-write-location-decision
-- exports-generation-tool-verification-division
-- brain-code-scan-role-division
+related: [code-map-write-location-decision, exports-generation-tool-verification-division, brain-code-scan-role-division]
 created: '2026-08-01'
 updated: '2026-08-01'
 status: draft

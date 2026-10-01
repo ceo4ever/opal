@@ -8,12 +8,7 @@ tags:
 - enforce-dont-advise
 sources:
 - task:069
-related:
-- oppl-surface-inventory-contract
-- oppl-coverage-conformance-axis-split
-- oppl-scenario-red-confirmed-gap
-- oppl-3-ssot-tool-gated-separation
-- test-tool
+related: [oppl-surface-inventory-contract, oppl-coverage-conformance-axis-split, oppl-scenario-red-confirmed-gap, oppl-3-ssot-tool-gated-separation, test-tool]
 created: '2026-07-19'
 updated: '2026-07-19'
 status: active

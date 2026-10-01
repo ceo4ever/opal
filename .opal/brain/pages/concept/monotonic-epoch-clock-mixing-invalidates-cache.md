@@ -9,9 +9,7 @@ tags:
 - lesson-learned
 sources:
 - task:103
-related:
-- opal-console
-- measurement-tool-more-fallible-than-artifact-lesson
+related: [opal-console, measurement-tool-more-fallible-than-artifact-lesson]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

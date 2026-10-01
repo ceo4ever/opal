@@ -10,10 +10,7 @@ tags:
 sources:
 - task:100
 - task:101
-related:
-- analysis-drift-pm-cross-verify-lesson
-- shared-ssot-procedure-artifact-role-split
-- decision-vs-fact-claim-separation
+related: [analysis-drift-pm-cross-verify-lesson, shared-ssot-procedure-artifact-role-split, decision-vs-fact-claim-separation]
 created: '2026-08-24'
 updated: '2026-08-24'
 status: active

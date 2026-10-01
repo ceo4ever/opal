@@ -8,9 +8,7 @@ tags:
 - task-105
 sources:
 - task:105
-related:
-- fixture-ownership-separation-closes-reward-hacking
-- score-free-tiered-verdict-ladder
+related: [fixture-ownership-separation-closes-reward-hacking, score-free-tiered-verdict-ladder]
 created: '2026-09-03'
 updated: '2026-09-03'
 status: draft

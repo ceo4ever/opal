@@ -9,10 +9,7 @@ tags:
 - responsive
 sources:
 - task:086
-related:
-- knowledge-assets-as-flow-entrypoint
-- silent-render-failure-deterministic-gate
-- vertical-writing-rotation-glyph-flip
+related: [knowledge-assets-as-flow-entrypoint, silent-render-failure-deterministic-gate, vertical-writing-rotation-glyph-flip]
 created: '2026-08-10'
 updated: '2026-08-10'
 status: draft

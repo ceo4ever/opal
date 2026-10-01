@@ -10,10 +10,7 @@ sources:
 - task:098
 - task:100
 - task:101
-related:
-- execution-observation-scope-citation-requirement
-- evidence-tier-asis-tobe-jurisdiction
-- self-confirming-validation-timing-argument
+related: [execution-observation-scope-citation-requirement, evidence-tier-asis-tobe-jurisdiction, self-confirming-validation-timing-argument]
 created: '2026-08-21'
 updated: '2026-08-24'
 status: draft

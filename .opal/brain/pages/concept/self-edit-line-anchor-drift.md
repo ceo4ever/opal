@@ -8,8 +8,7 @@ tags:
 - regression
 sources:
 - task:081
-related:
-- blind-reproduction-verification-test
+related: [blind-reproduction-verification-test]
 created: '2026-08-02'
 updated: '2026-08-02'
 status: draft

@@ -8,9 +8,7 @@ tags:
 - mirroring
 sources:
 - task:087
-related:
-- opal-adapter-platform-isolation
-- linux-install-script
+related: [opal-adapter-platform-isolation, linux-install-script]
 created: '2026-08-10'
 updated: '2026-08-10'
 status: draft

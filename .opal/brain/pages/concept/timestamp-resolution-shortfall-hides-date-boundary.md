@@ -8,9 +8,7 @@ tags:
 - lesson-learned
 sources:
 - task:103
-related:
-- state-md-journal-redefinition
-- degeneracy-rule-preserves-past-values-on-axis-split
+related: [state-md-journal-redefinition, degeneracy-rule-preserves-past-values-on-axis-split]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

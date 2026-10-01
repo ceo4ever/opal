@@ -8,9 +8,7 @@ tags:
 - pattern
 sources:
 - task:060
-related:
-- brain-prime-connection-pool-design
-- warm-handle-single-entry-injection
+related: [brain-prime-connection-pool-design, warm-handle-single-entry-injection]
 created: '2026-07-14'
 updated: '2026-07-14'
 status: active

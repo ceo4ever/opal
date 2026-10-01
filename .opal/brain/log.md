@@ -510,3 +510,5 @@
 - 신규: [[pages/concept/design-gate-deterministic-pretier-separation.md]], [[pages/concept/design-gate-gaps-resolution-roundtrip.md]]
 - 출처: task:170
 
+## [2026-10-01] lint | lint 정비: related 인라인 배열 자동 교정 270페이지(272건), 깨진 링크 2건 수정(brain-entity-discipline), 고립·링크 누락 9건 해소(관련 페이지 링크 추가 5페이지). stale 8건 판정: 제거 기능 기록 5건 유지, 3건은 task:111 sdlc-v2 축소 이후 내용이라 stale 유지. 잔여 21건은 예시 문법 오탐 broken_link 9·용어 오탐 speculative 4·의도된 stale 8
+

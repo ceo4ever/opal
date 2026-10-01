@@ -10,9 +10,7 @@ tags:
 sources:
 - task:028
 - task:105
-related:
-- adapter-body-model-level-substitution
-- model-mapping-latest-tracking
+related: [adapter-body-model-level-substitution, model-mapping-latest-tracking]
 created: '2026-06-17'
 updated: '2026-09-03'
 status: active

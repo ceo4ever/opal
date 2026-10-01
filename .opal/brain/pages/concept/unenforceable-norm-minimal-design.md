@@ -8,11 +8,7 @@ tags:
 - governance
 sources:
 - doc:opal/core/references/opal-pm.md
-related:
-- report-norm-topology-10-types
-- norm-proliferation-spiral-without-enforcement
-- template-precedence-over-prose-norms
-- lean-core-relocation-benefit-precondition
+related: [report-norm-topology-10-types, norm-proliferation-spiral-without-enforcement, template-precedence-over-prose-norms, lean-core-relocation-benefit-precondition]
 created: '2026-09-08'
 updated: '2026-09-08'
 status: draft

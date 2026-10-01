@@ -10,11 +10,7 @@ tags:
 sources:
 - task:095
 - task:034
-related:
-- state-tool-mock-guard-skill-false-positive
-- scenario-prewrite-goal-series-track
-- prewrite-self-confirming-triple-defense
-- verification-command-4-standard
+related: [state-tool-mock-guard-skill-false-positive, scenario-prewrite-goal-series-track, prewrite-self-confirming-triple-defense, verification-command-4-standard]
 created: '2026-08-19'
 updated: '2026-08-19'
 status: draft

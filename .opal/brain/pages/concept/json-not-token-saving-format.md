@@ -9,9 +9,7 @@ tags:
 - memory
 sources:
 - task:078
-related:
-- memory-tool
-- three-layer-memory-architecture
+related: [memory-tool, three-layer-memory-architecture]
 created: '2026-07-29'
 updated: '2026-07-29'
 status: draft

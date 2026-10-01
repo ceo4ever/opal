@@ -9,10 +9,7 @@ tags:
 - contract
 sources:
 - task:085
-related:
-- installer-version-priority-model
-- release-asset-presence-single-signal
-- silent-success-defect-class
+related: [installer-version-priority-model, release-asset-presence-single-signal, silent-success-defect-class]
 created: '2026-08-07'
 updated: '2026-08-07'
 status: draft

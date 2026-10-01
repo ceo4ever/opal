@@ -8,10 +8,7 @@ tags:
 - task-084
 sources:
 - task:084
-related:
-- asis-analysis-five-stage-workflow
-- opal-pm-promotion-gate
-- pm-improvement-loop-two-tracks
+related: [asis-analysis-five-stage-workflow, opal-pm-promotion-gate, pm-improvement-loop-two-tracks]
 created: '2026-08-06'
 updated: '2026-08-06'
 status: draft

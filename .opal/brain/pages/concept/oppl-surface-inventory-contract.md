@@ -8,10 +8,7 @@ tags:
 - schema
 sources:
 - task:069
-related:
-- oppl-evidence-fidelity-principle
-- oppl-coverage-conformance-axis-split
-- oppl-3-ssot-tool-gated-separation
+related: [oppl-evidence-fidelity-principle, oppl-coverage-conformance-axis-split, oppl-3-ssot-tool-gated-separation]
 created: '2026-07-19'
 updated: '2026-07-19'
 status: active

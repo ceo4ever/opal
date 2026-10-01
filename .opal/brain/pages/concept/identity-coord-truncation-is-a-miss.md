@@ -9,8 +9,7 @@ tags:
 - task-139
 sources:
 - task:139
-related:
-- 070-derivation-engine-perspective-bias-lesson
+related: [070-derivation-engine-perspective-bias-lesson]
 created: '2026-09-17'
 updated: '2026-09-17'
 status: draft

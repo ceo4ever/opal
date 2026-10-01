@@ -8,10 +8,7 @@ tags:
 - tooling
 sources:
 - task:029
-related:
-- opal-architecture
-- opal-brain-not-pilot-decision
-- opal-skill-classification-system
+related: [opal-architecture, opal-brain-not-pilot-decision, opal-skill-classification-system]
 created: '2026-06-18'
 updated: '2026-06-18'
 status: active

@@ -11,10 +11,7 @@ sources:
 - task:086
 - task:096
 - task:097
-related:
-- silent-render-failure-deterministic-gate
-- source-measured-figures-over-stale-docs
-- loop-upper-bound-ssot-pattern
+related: [silent-render-failure-deterministic-gate, source-measured-figures-over-stale-docs, loop-upper-bound-ssot-pattern]
 created: '2026-08-10'
 updated: '2026-08-21'
 status: draft

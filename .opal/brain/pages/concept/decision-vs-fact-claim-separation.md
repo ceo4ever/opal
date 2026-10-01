@@ -8,11 +8,7 @@ tags:
 - opds
 sources:
 - task:098
-related:
-- evidence-tier-asis-tobe-jurisdiction
-- verdict-tool-fail-safe-direction-design
-- clarification-gate
-- handoff-contract-table-schema-mismatch
+related: [evidence-tier-asis-tobe-jurisdiction, verdict-tool-fail-safe-direction-design, clarification-gate, handoff-contract-table-schema-mismatch]
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft

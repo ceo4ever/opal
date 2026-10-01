@@ -9,9 +9,7 @@ tags:
 - ownership
 sources:
 - task:127
-related:
-- e2e-integration-gap-pattern
-- e2e-frozen-spec-seeding-constraint
+related: [e2e-integration-gap-pattern, e2e-frozen-spec-seeding-constraint]
 created: '2026-09-18'
 updated: '2026-09-18'
 status: draft

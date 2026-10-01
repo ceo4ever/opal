@@ -4,8 +4,9 @@ title: git-sync-tool
 module: git_sync_tool
 layer: tool
 domain: workspace
-exports: [sync]
-source_ref: 'opal/tools/git-sync-tool/git_sync_tool.py'
+exports:
+- sync
+source_ref: opal/tools/git-sync-tool/git_sync_tool.py
 header_synced: 2026-07-02
 tags:
 - tool
@@ -14,14 +15,11 @@ tags:
 - safety
 sources:
 - task:052
-related:
-- opal-workspace-sync
-- fallback-approval-detached-head-precedence
+related: [opal-workspace-sync, fallback-approval-detached-head-precedence]
 created: '2026-07-02'
 updated: '2026-07-02'
 status: active
 ---
-
 ## 개요
 
 워크스페이스 아래 여러 독립 git 저장소를 순회하며 "건드려도 안전한 저장소만" 자동으로 최신화하는 결정론 도구다. 사람이 매번 여러 저장소를 수동으로 pull하는 반복 작업을 없애면서도, 로컬 미커밋 변경을 덮어쓰거나 충돌 잔재를 남기는 사고를 방지하기 위해 신설되었다 (근거: task:052 TASK§배경).

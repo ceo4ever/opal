@@ -10,10 +10,7 @@ tags:
 sources:
 - task:080
 - task:083
-related:
-- code-scan-sealed-decision-point-pattern
-- code-scan-gate-deadlock-init-placement
-- code-scan-nonblocking-limit-rollout
+related: [code-scan-sealed-decision-point-pattern, code-scan-gate-deadlock-init-placement, code-scan-nonblocking-limit-rollout]
 created: '2026-08-04'
 updated: '2026-08-04'
 status: draft

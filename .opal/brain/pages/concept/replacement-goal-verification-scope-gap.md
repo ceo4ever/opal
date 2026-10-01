@@ -11,11 +11,7 @@ tags:
 sources:
 - task:090
 - task:091
-related:
-- scenario-goal-coverage-gate-loop
-- 070-derivation-engine-perspective-bias-lesson
-- pipeline-json-full-adoption-migration
-- pm-gate-artifact-tool-enforcement
+related: [scenario-goal-coverage-gate-loop, 070-derivation-engine-perspective-bias-lesson, pipeline-json-full-adoption-migration, pm-gate-artifact-tool-enforcement]
 created: '2026-08-13'
 updated: '2026-08-14'
 status: draft

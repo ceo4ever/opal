@@ -9,15 +9,11 @@ tags:
 - lesson
 sources:
 - task:050
-related:
-- agent-md-digest-pattern
-- bootstrapper-marker-ssot-single-point
-- deploy-artifact-verification-lesson
+related: [agent-md-digest-pattern, bootstrapper-marker-ssot-single-point, deploy-artifact-verification-lesson]
 created: '2026-06-30'
 updated: '2026-06-30'
 status: active
 ---
-
 ## 개요
 
 OPAL 배포 파이프라인의 `strip_deploy_md` 함수는 소스 문서의 `## 변경이력` 섹션(한글 헤딩 한정)을 배포 시점에 제거한다. 따라서 소스 파일의 변경이력 trim은 런타임에 로드되는 배포본 토큰에 영향을 주지 않는 순수 소스 위생 작업이다. 이를 "런타임 경감 수단"으로 오판하는 것을 방지하기 위한 교훈 페이지다.

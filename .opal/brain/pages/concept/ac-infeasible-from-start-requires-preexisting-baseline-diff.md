@@ -7,8 +7,7 @@ tags:
 - task-114
 sources:
 - task:114
-related:
-- verification-dual-track-catches-author-blind-spots
+related: [verification-dual-track-catches-author-blind-spots]
 created: '2026-09-09'
 updated: '2026-09-09'
 status: draft

@@ -10,11 +10,7 @@ tags:
 - task-075
 sources:
 - task:075
-related:
-- state-tool-task-step-key-address
-- opsdd-pipeline-ssot
-- pipeline-json-spec
-- scenario-gate-pilot-fit-criteria
+related: [state-tool-task-step-key-address, opsdd-pipeline-ssot, pipeline-json-spec, scenario-gate-pilot-fit-criteria]
 created: '2026-07-23'
 updated: '2026-07-23'
 status: draft

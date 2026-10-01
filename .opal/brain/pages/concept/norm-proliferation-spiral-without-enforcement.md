@@ -8,10 +8,7 @@ tags:
 - anti-pattern
 sources:
 - task:108
-related:
-- lean-core-relocation-benefit-precondition
-- template-precedence-over-prose-norms
-- agent-md-digest-pattern
+related: [lean-core-relocation-benefit-precondition, template-precedence-over-prose-norms, agent-md-digest-pattern]
 created: '2026-09-06'
 updated: '2026-09-06'
 status: draft

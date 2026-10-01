@@ -10,12 +10,7 @@ tags:
 sources:
 - task:095
 - task:004
-related:
-- test-scenario-pipeline-redesign
-- scenario-prewrite-goal-series-track
-- 070-derivation-engine-perspective-bias-lesson
-- scenario-goal-coverage-gate-loop
-- blind-reproduction-verification-test
+related: [test-scenario-pipeline-redesign, scenario-prewrite-goal-series-track, 070-derivation-engine-perspective-bias-lesson, scenario-goal-coverage-gate-loop, blind-reproduction-verification-test]
 created: '2026-08-19'
 updated: '2026-08-19'
 status: draft

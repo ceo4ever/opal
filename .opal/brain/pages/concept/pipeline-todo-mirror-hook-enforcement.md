@@ -9,10 +9,7 @@ tags:
 - state-tool
 sources:
 - task:076
-related:
-- state-tool
-- opal-principles-constitution
-- kanban-pipeline-stage-grouping
+related: [state-tool, opal-principles-constitution, kanban-pipeline-stage-grouping]
 created: '2026-07-23'
 updated: '2026-07-23'
 status: draft

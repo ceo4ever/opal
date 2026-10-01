@@ -8,12 +8,7 @@ tags:
 - ownership
 sources:
 - task:112
-related:
-- skill-opal-pilot-sdd
-- op-sdd-spec
-- op-sdd-plan
-- op-sdd-action-plan
-- op-sdd-verify
+related: [skill-opal-pilot-sdd, op-sdd-spec, op-sdd-plan, op-sdd-action-plan, op-sdd-verify]
 created: '2026-09-10'
 updated: '2026-09-10'
 status: draft

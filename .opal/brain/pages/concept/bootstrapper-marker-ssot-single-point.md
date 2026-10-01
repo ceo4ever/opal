@@ -9,10 +9,7 @@ tags:
 - install
 sources:
 - task:040
-related:
-- opal-bootstrap-skip-gate
-- opal-adapter-platform-isolation
-- active-platform-dir-install-target-lesson
+related: [opal-bootstrap-skip-gate, opal-adapter-platform-isolation, active-platform-dir-install-target-lesson]
 created: '2026-06-24'
 updated: '2026-06-24'
 status: draft

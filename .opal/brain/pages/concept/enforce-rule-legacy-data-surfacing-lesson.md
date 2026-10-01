@@ -2,20 +2,17 @@
 type: concept
 title: enforce 규칙 신설 시 잔존 데이터 표면화 — 배포 전 실 데이터 스캔 필요 교훈
 tags:
-  - lesson
-  - enforce
-  - validate
-  - brain-tool
+- lesson
+- enforce
+- validate
+- brain-tool
 sources:
-  - task:053
-related:
-  - brain-validate-flatness-enforcement
-  - brain-tool
-created: "2026-07-10"
-updated: "2026-07-10"
+- task:053
+related: [brain-validate-flatness-enforcement, brain-tool]
+created: '2026-07-10'
+updated: '2026-07-10'
 status: active
 ---
-
 ## 개요
 
 새로운 결정론적 enforce 규칙(validate 등)을 도구에 추가하면, 그 규칙을 실 저장소의 기존 데이터에 적용하는 순간 이전에는 조용히 통과하던 잔존 오류가 신규 violation으로 일괄 표면화된다. task:053에서 이 현상이 두 단계로 반복 발생했다(R-K1 1페이지 4항목 → ADD-1 7페이지 24항목). 배포 전 실 데이터 스캔·정비를 같은 태스크에서 함께 처리해야, 무결성을 집행하는 도구가 배포 직후 스스로 위반을 만들어내는 자기모순을 피할 수 있다.

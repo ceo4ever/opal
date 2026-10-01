@@ -9,9 +9,7 @@ tags:
 - honest-limit
 sources:
 - task:076
-related:
-- opal-adapter-platform-isolation
-- state-tool
+related: [opal-adapter-platform-isolation, state-tool]
 created: '2026-07-23'
 updated: '2026-07-23'
 status: draft

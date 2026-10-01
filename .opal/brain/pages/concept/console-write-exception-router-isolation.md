@@ -10,10 +10,7 @@ tags:
 sources:
 - task:036
 - task:061
-related:
-- daemon-as-tool-orchestrator
-- opal-console
-- opal-security-model
+related: [daemon-as-tool-orchestrator, opal-console, opal-security-model]
 created: '2026-07-14'
 updated: '2026-07-14'
 status: active

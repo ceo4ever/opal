@@ -7,11 +7,7 @@ tags:
 - task-084
 sources:
 - task:084
-related:
-- asis-analysis-five-stage-workflow
-- self-edit-line-anchor-drift
-- anchor-load-condition-must-match-target
-- inherit-new-boundary-fixed-before-writing
+related: [asis-analysis-five-stage-workflow, self-edit-line-anchor-drift, anchor-load-condition-must-match-target, inherit-new-boundary-fixed-before-writing]
 created: '2026-08-06'
 updated: '2026-08-06'
 status: draft

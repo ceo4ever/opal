@@ -9,8 +9,7 @@ tags:
 - opd
 sources:
 - task:100
-related:
-- new-ssot-pointer-not-value-copy
+related: [new-ssot-pointer-not-value-copy]
 created: '2026-08-24'
 updated: '2026-08-24'
 status: draft

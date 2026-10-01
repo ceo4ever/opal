@@ -8,9 +8,7 @@ tags:
 - task-105
 sources:
 - task:105
-related:
-- context-tag-suppresses-false-positive-without-removing-hit
-- fixture-vs-real-blind-spot-lesson
+related: [context-tag-suppresses-false-positive-without-removing-hit, fixture-vs-real-blind-spot-lesson]
 created: '2026-09-03'
 updated: '2026-09-03'
 status: draft

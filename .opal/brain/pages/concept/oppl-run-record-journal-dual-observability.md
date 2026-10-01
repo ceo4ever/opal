@@ -8,11 +8,7 @@ tags:
 - journal
 sources:
 - task:067
-related:
-- opal-agent-stream-json-passthrough
-- opal-action-monitor
-- oppl-internal-channel-opal-agent
-- opal-loop-action-agent
+related: [opal-agent-stream-json-passthrough, opal-action-monitor, oppl-internal-channel-opal-agent, opal-loop-action-agent]
 created: '2026-07-17'
 updated: '2026-07-17'
 status: active

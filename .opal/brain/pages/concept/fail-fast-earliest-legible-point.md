@@ -8,8 +8,7 @@ tags:
 - fail-fast
 sources:
 - task:087
-related:
-- silent-success-defect-class
+related: [silent-success-defect-class]
 created: '2026-08-10'
 updated: '2026-08-10'
 status: draft

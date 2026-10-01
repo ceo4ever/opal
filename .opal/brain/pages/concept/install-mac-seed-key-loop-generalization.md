@@ -8,8 +8,7 @@ tags:
 - task-083
 sources:
 - task:083
-related:
-- code-scan-manifest-sharding-design
+related: [code-scan-manifest-sharding-design]
 created: '2026-08-04'
 updated: '2026-08-04'
 status: draft

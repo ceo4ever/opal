@@ -9,12 +9,7 @@ tags:
 sources:
 - task:116
 - task:133
-related:
-- state-tool
-- memory-tool
-- bootstrap-marker-skip-ladder
-- conditional-precheck-over-unconditional-alibi-call
-- worktree-task-root-allocator-root-split
+related: [state-tool, memory-tool, bootstrap-marker-skip-ladder, conditional-precheck-over-unconditional-alibi-call, worktree-task-root-allocator-root-split]
 created: '2026-09-11'
 updated: '2026-09-15'
 status: active

@@ -8,10 +8,7 @@ tags:
 - contract
 sources:
 - task:085
-related:
-- dl-contract-download-verify-target-identity
-- silent-success-defect-class
-- external-tool-boundary-stub-insufficient-lesson
+related: [dl-contract-download-verify-target-identity, silent-success-defect-class, external-tool-boundary-stub-insufficient-lesson]
 created: '2026-08-07'
 updated: '2026-08-07'
 status: draft

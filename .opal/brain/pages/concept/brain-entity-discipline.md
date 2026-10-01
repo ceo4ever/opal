@@ -1,14 +1,18 @@
 ---
 type: concept
 title: brain entity 작성 규율 표준화
-tags: [brain, knowledge, curation, provenance]
-sources: [task:038]
-related: [brain-tool, opal-brain-skill, citation-rules]
+tags:
+- brain
+- knowledge
+- curation
+- provenance
+sources:
+- task:038
+related: [brain-tool, skill-opal-brain, business-terminology-first-principle]
 created: 2026-06-23
-updated: 2026-06-23
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 brain의 entity 페이지 품질을 보장하기 위해 **5섹션 표준 구조 + 입력 큐레이션 선행 + provenance 3종 태깅**으로 작성 규율을 표준화했다. code-scan @header의 기계 전사에서 벗어나 설계 의도(WHY)와 관계(HOW)를 사고하여 합성하도록 강제한다.
@@ -64,5 +68,5 @@ entity 작성 **전**에 WHY 소스를 큐레이션한다:
 ## 관련 페이지
 
 - [[brain-tool]] — entity 페이지 관리·ingest 도구
-- [[opal-brain-skill]] — brain init 시드 및 분석 스킬
-- [[citation-rules]] — §8 비즈니스 용어 우선 및 부록 분리 규칙
+- [[skill-opal-brain]] — brain init 시드 및 분석 스킬
+- [[business-terminology-first-principle]] — citation-rules §8 비즈니스 용어 우선 및 부록 분리 규칙

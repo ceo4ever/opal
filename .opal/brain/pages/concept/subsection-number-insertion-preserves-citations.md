@@ -9,12 +9,7 @@ tags:
 sources:
 - task:095
 - task:084
-related:
-- section-append-at-tail-preserves-backrefs
-- self-edit-line-anchor-drift
-- legacy-row-address-gate-insertion-regression
-- anchor-load-condition-must-match-target
-- scenario-prewrite-goal-series-track
+related: [section-append-at-tail-preserves-backrefs, self-edit-line-anchor-drift, legacy-row-address-gate-insertion-regression, anchor-load-condition-must-match-target, scenario-prewrite-goal-series-track]
 created: '2026-08-19'
 updated: '2026-08-19'
 status: draft

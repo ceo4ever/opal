@@ -2,28 +2,21 @@
 type: entity
 title: memory-tool — 프로젝트 메모리 인덱스·히스토리 결정론적 집행 CLI
 tags:
-  - tool
-  - memory
-  - cli
-  - lifecycle
+- tool
+- memory
+- cli
+- lifecycle
 sources:
-  - task:045
-  - task:078
-  - task:079
-  - task:088
-  - task:096
-related:
-  - state-tool
-  - three-layer-memory-architecture
-  - close-history-auto-link-enforce-conversion
-  - guard-precision-none-passthrough-early-return
-  - unresolvable-not-absent-two-vocabulary-split
-  - tool-created-state-flagged-by-consumer-as-reminder
-created: "2026-06-26"
-updated: "2026-08-20"
+- task:045
+- task:078
+- task:079
+- task:088
+- task:096
+related: [state-tool, three-layer-memory-architecture, close-history-auto-link-enforce-conversion, guard-precision-none-passthrough-early-return, unresolvable-not-absent-two-vocabulary-split, tool-created-state-flagged-by-consumer-as-reminder]
+created: '2026-06-26'
+updated: '2026-08-20'
 status: active
 ---
-
 ## 개요
 
 `memory-tool`은 OPAL 프로젝트의 메모리 인덱스·히스토리를 결정론적으로 집행하는 CLI 도구다. "반드시"를 산문이 아니라 도구가 강제한다(PRINCIPLES.md Core Stance: "Enforce, don't just advise")는 원칙에 따라, 길이캡·히스토리 FIFO·졸업 워크플로우를 자동화한다. `state-tool`의 구조(run.sh + Python, ok/err/ERROR_CODES)를 재사용하여 표준 라이브러리만으로 구현했다. (근거: task:045 PLAN §3.2.2)

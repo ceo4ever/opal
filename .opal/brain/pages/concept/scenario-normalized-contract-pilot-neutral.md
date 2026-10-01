@@ -11,10 +11,7 @@ tags:
 sources:
 - task:073
 - task:075
-related:
-- scenario-goal-coverage-gate-loop
-- oppl-surface-inventory-contract
-- scenario-gate-pilot-fit-criteria
+related: [scenario-goal-coverage-gate-loop, oppl-surface-inventory-contract, scenario-gate-pilot-fit-criteria]
 created: '2026-07-23'
 updated: '2026-07-23'
 status: draft

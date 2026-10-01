@@ -10,10 +10,7 @@ tags:
 sources:
 - task:082
 - task:083
-related:
-- code-scan-nonblocking-limit-rollout
-- code-scan-manifest-sharding-design
-- code-scan-classification-ladder-design
+related: [code-scan-nonblocking-limit-rollout, code-scan-manifest-sharding-design, code-scan-classification-ladder-design]
 created: '2026-08-04'
 updated: '2026-08-04'
 status: draft

@@ -8,8 +8,7 @@ tags:
 - lesson
 sources:
 - task:122
-related:
-- verification-only-workitem-needs-remediation-owner
+related: [verification-only-workitem-needs-remediation-owner]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: active

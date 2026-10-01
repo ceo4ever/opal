@@ -10,12 +10,7 @@ tags:
 - task-094
 sources:
 - task:094
-related:
-- state-tool
-- state-md-journal-redefinition
-- green-tests-do-not-imply-contract-conformance
-- silent-render-failure-deterministic-gate
-- degraded-execution-with-explicit-gap
+related: [state-tool, state-md-journal-redefinition, green-tests-do-not-imply-contract-conformance, silent-render-failure-deterministic-gate, degraded-execution-with-explicit-gap]
 created: '2026-08-16'
 updated: '2026-08-16'
 status: draft

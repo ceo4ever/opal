@@ -9,11 +9,7 @@ tags:
 - task-095
 sources:
 - task:095
-related:
-- active-platform-dir-install-target-lesson
-- deploy-artifact-verification-lesson
-- strip-deploy-runtime-token-neutral
-- scenario-prewrite-goal-series-track
+related: [active-platform-dir-install-target-lesson, deploy-artifact-verification-lesson, strip-deploy-runtime-token-neutral, scenario-prewrite-goal-series-track]
 created: '2026-08-19'
 updated: '2026-08-19'
 status: draft

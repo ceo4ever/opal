@@ -9,10 +9,7 @@ tags:
 - pm-discipline
 sources:
 - task:119
-related:
-- red-first-hybrid-verification-track
-- op-dev-test-scenario
-- agentic-output-direct-verification-lesson
+related: [red-first-hybrid-verification-track, op-dev-test-scenario, agentic-output-direct-verification-lesson]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft

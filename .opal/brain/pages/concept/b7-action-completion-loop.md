@@ -9,15 +9,11 @@ tags:
 - b7
 sources:
 - task:031
-related:
-- skill-opal-pilot-project-dev
-- wbs-세분화-단일책임-수용시나리오
-- loop-upper-bound-ssot-pattern
+related: [skill-opal-pilot-project-dev, wbs-세분화-단일책임-수용시나리오, loop-upper-bound-ssot-pattern]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active
 ---
-
 ## 개념 요약
 
 oppd Phase 3의 액션 실행을 선형 6단계에서 triage 기반 경계 재설계 루프로 전환한 설계 결정. VERIFY 실패를 구현/설계/회귀 3종으로 분류해 계층별 라우팅하며, Guards 상한 내에서 성공까지 순환한다.

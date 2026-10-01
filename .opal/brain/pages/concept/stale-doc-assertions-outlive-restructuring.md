@@ -9,11 +9,7 @@ tags:
 - assertion
 sources:
 - task:119
-related:
-- parser-drift-silent-longevity-lesson
-- ac-infeasible-from-start-requires-preexisting-baseline-diff
-- source-measured-figures-over-stale-docs
-- absence-assertion-is-enforcement-not-residue
+related: [parser-drift-silent-longevity-lesson, ac-infeasible-from-start-requires-preexisting-baseline-diff, source-measured-figures-over-stale-docs, absence-assertion-is-enforcement-not-residue]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft

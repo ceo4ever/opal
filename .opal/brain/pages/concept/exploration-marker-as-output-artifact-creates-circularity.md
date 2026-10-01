@@ -7,8 +7,7 @@ tags:
 - task-114
 sources:
 - task:114
-related:
-- code-scan-gate-deadlock-init-placement
+related: [code-scan-gate-deadlock-init-placement]
 created: '2026-09-09'
 updated: '2026-09-09'
 status: draft

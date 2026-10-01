@@ -25,12 +25,7 @@ sources:
 - task:077
 - code:opal/tools/code-scan/
 - task:107
-related:
-- brain-code-scan-role-division
-- code-header-dual-source-inheritance
-- exports-generation-tool-verification-division
-- regulation-tool-four-way-mismatch
-- prohibit-by-property-not-name
+related: [brain-code-scan-role-division, code-header-dual-source-inheritance, exports-generation-tool-verification-division, regulation-tool-four-way-mismatch, prohibit-by-property-not-name]
 created: '2026-08-01'
 updated: '2026-09-06'
 status: draft

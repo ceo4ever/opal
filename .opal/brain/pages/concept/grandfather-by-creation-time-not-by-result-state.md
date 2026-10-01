@@ -9,10 +9,7 @@ tags:
 - lesson-learned
 sources:
 - task:103
-related:
-- enforce-rule-legacy-data-surfacing-lesson
-- backward-compat-default-value-discipline
-- enforcement-basis-must-be-structural-not-voluntary
+related: [enforce-rule-legacy-data-surfacing-lesson, backward-compat-default-value-discipline, enforcement-basis-must-be-structural-not-voluntary]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

@@ -9,9 +9,7 @@ tags:
 - guard
 sources:
 - task:048
-related:
-- version-stamp-export-subst-decision
-- red-test-determinism-abort-trap
+related: [version-stamp-export-subst-decision, red-test-determinism-abort-trap]
 created: '2026-06-29'
 updated: '2026-06-29'
 status: active

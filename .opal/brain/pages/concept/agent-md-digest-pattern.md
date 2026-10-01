@@ -11,12 +11,7 @@ tags:
 sources:
 - task:050
 - task:108
-related:
-- opal-bootstrap-2tier-model
-- dedup-pointer-over-copy
-- bootstrapper-marker-ssot-single-point
-- lean-core-relocation-benefit-precondition
-- norm-proliferation-spiral-without-enforcement
+related: [opal-bootstrap-2tier-model, dedup-pointer-over-copy, bootstrapper-marker-ssot-single-point, lean-core-relocation-benefit-precondition, norm-proliferation-spiral-without-enforcement]
 created: '2026-06-30'
 updated: '2026-09-06'
 status: active

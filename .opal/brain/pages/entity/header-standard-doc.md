@@ -13,11 +13,7 @@ tags:
 - code-scan
 sources:
 - task:107
-related:
-- code-scan-tool
-- regulation-tool-four-way-mismatch
-- prohibit-by-property-not-name
-- tag-removal-is-not-history-removal
+related: [code-scan-tool, regulation-tool-four-way-mismatch, prohibit-by-property-not-name, tag-removal-is-not-history-removal]
 created: '2026-09-06'
 updated: '2026-09-06'
 status: draft

@@ -10,8 +10,7 @@ tags:
 sources:
 - task:036
 - task:094
-related:
-- brain-tool
+related: [brain-tool]
 created: '2026-08-20'
 updated: '2026-08-20'
 status: draft

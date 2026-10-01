@@ -8,12 +8,7 @@ tags:
 - task-084
 sources:
 - task:084
-related:
-- asis-workflow-order-over-new-skill
-- asis-analysis-five-stage-workflow
-- dedup-pointer-over-copy
-- readme-ssot-principle
-- opal-principles-constitution
+related: [asis-workflow-order-over-new-skill, asis-analysis-five-stage-workflow, dedup-pointer-over-copy, readme-ssot-principle, opal-principles-constitution]
 created: '2026-08-06'
 updated: '2026-08-06'
 status: draft

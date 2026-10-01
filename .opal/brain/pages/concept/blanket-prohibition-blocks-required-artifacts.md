@@ -9,9 +9,7 @@ tags:
 - lesson-learned
 sources:
 - task:103
-related:
-- worker-bypassed-blocked-tool-filename-trigger
-- delegation-only-file-gate-bypass
+related: [worker-bypassed-blocked-tool-filename-trigger, delegation-only-file-gate-bypass]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

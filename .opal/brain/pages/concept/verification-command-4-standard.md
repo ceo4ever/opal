@@ -11,14 +11,11 @@ tags:
 - standard
 sources:
 - task:033
-related:
-- skill-opal-pilot-project-dev
-- analysis-drift-pm-cross-verify-lesson
+related: [skill-opal-pilot-project-dev, analysis-drift-pm-cross-verify-lesson]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active
 ---
-
 ## 개요
 
 OPAL 자동 검증 체계에서 사용하는 검증 명령을 L1~L3b 4종 계층으로 표준화한 결정. SSOT는 `opal/skills/opal-pilot-project-dev/references/verification-loop-guide.md`이며, cascade 가이드(wbs-guide·roadmap-guide·parallel-execution-guide 등)는 이 SSOT를 따르는 예시 정합만 수행한다.

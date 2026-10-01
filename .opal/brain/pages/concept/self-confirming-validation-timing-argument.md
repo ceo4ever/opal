@@ -9,11 +9,7 @@ tags:
 - opd
 sources:
 - task:101
-related:
-- prewrite-self-confirming-triple-defense
-- blind-reproduction-verification-test
-- template-precedence-over-prose-norms
-- measurement-tool-more-fallible-than-artifact-lesson
+related: [prewrite-self-confirming-triple-defense, blind-reproduction-verification-test, template-precedence-over-prose-norms, measurement-tool-more-fallible-than-artifact-lesson]
 created: '2026-08-24'
 updated: '2026-08-24'
 status: draft

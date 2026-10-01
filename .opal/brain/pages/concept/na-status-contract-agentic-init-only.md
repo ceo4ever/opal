@@ -8,9 +8,7 @@ tags:
 - task-090
 sources:
 - task:090
-related:
-- state-tool
-- mark-force-decision-log-scope
+related: [state-tool, mark-force-decision-log-scope]
 created: '2026-08-13'
 updated: '2026-08-13'
 status: draft

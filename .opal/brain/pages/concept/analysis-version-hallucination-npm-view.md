@@ -10,14 +10,11 @@ tags:
 - lesson-learned
 sources:
 - task:033
-related:
-- analysis-drift-pm-cross-verify-lesson
-- verification-command-4-standard
+related: [analysis-drift-pm-cross-verify-lesson, verification-command-4-standard]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active
 ---
-
 ## 개요
 
 ANALYSIS 워커(특히 light 모델)가 라이브러리 버전을 훈련 데이터 기반 구버전으로 단정하는 환각 패턴. PM이 `npm view <pkg> version` 실측 교차검증으로 차단한 사례. 기존 [[analysis-drift-pm-cross-verify-lesson]] 패턴의 "버전 환각" 재현 사례다.

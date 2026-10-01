@@ -9,8 +9,7 @@ tags:
 - evaluator
 sources:
 - task:081
-related:
-- self-edit-line-anchor-drift
+related: [self-edit-line-anchor-drift]
 created: '2026-08-02'
 updated: '2026-08-02'
 status: draft

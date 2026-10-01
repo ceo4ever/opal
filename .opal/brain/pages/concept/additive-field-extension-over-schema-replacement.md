@@ -9,10 +9,7 @@ tags:
 sources:
 - task:105
 - task:114
-related:
-- skill-registry-validate-extension
-- community-skill-user-registry
-- skill-registry-project-scope-4source-merge
+related: [skill-registry-validate-extension, community-skill-user-registry, skill-registry-project-scope-4source-merge]
 created: '2026-09-03'
 updated: '2026-09-09'
 status: draft

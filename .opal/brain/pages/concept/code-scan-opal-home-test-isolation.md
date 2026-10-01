@@ -8,9 +8,7 @@ tags:
 - task-083
 sources:
 - task:083
-related:
-- code-scan-sealed-decision-point-pattern
-- shard-policy-block-vs-nonblock-fallback-criterion
+related: [code-scan-sealed-decision-point-pattern, shard-policy-block-vs-nonblock-fallback-criterion]
 created: '2026-08-04'
 updated: '2026-08-04'
 status: draft

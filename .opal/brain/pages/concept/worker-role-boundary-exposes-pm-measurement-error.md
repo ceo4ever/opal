@@ -8,9 +8,7 @@ tags:
 - opds
 sources:
 - task:098
-related:
-- measurement-tool-more-fallible-than-artifact-lesson
-- evaluator-self-weakness-disclosure-pattern
+related: [measurement-tool-more-fallible-than-artifact-lesson, evaluator-self-weakness-disclosure-pattern]
 created: '2026-08-21'
 updated: '2026-08-21'
 status: draft

@@ -10,11 +10,7 @@ tags:
 - architecture
 sources:
 - task:120
-related:
-- skill-opal-pilot-gc
-- opal-skill-classification-system
-- opal-security-model
-- opal-conventions
+related: [skill-opal-pilot-gc, opal-skill-classification-system, opal-security-model, opal-conventions]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft

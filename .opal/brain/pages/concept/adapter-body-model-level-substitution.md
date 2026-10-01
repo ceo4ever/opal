@@ -10,10 +10,7 @@ tags:
 - constitution
 sources:
 - task:032
-related:
-- opal-adapter-platform-isolation
-- model-mapping-latest-tracking
-- codex-dispatch-inline-injection
+related: [opal-adapter-platform-isolation, model-mapping-latest-tracking, codex-dispatch-inline-injection]
 created: '2026-06-21'
 updated: '2026-06-21'
 status: active

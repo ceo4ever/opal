@@ -9,11 +9,9 @@ tags:
 - real-usage
 sources:
 - task:143
-related:
-- green-tests-do-not-imply-contract-conformance
-- fixture-vs-real-blind-spot-lesson
+related: [green-tests-do-not-imply-contract-conformance, fixture-vs-real-blind-spot-lesson]
 created: '2026-09-18'
-updated: '2026-09-18'
+updated: '2026-10-01'
 status: draft
 ---
 ## 개요
@@ -36,3 +34,8 @@ status: draft
 ## 영향 범위
 
 번들러 산출물을 정적 서빙하는 모든 SPA 화면. 특히 라우트 깊이가 2단 이상으로 늘어나는 변경, `base` 설정을 상대경로로 둔 프로젝트.
+
+## 관련 페이지
+
+- [[green-tests-do-not-imply-contract-conformance]] — 테스트 GREEN과 계약 준수의 분리
+- [[fixture-vs-real-blind-spot-lesson]] — 픽스처와 실물의 사각지대

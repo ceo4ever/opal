@@ -9,9 +9,7 @@ tags:
 - task-091
 sources:
 - task:091
-related:
-- round-trip-pre-state-assertion-false-green-guard
-- replacement-goal-verification-scope-gap
+related: [round-trip-pre-state-assertion-false-green-guard, replacement-goal-verification-scope-gap]
 created: '2026-08-14'
 updated: '2026-08-14'
 status: draft

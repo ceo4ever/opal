@@ -4,7 +4,8 @@ title: pipeline.json (pilot 파이프라인 정의 SSOT)
 module: pipeline_spec
 layer: schema
 domain: opal-pipeline
-exports: [pipeline-spec.schema.json]
+exports:
+- pipeline-spec.schema.json
 source_ref: opal/tools/state-tool/schema/pipeline-spec.schema.json
 header_synced: 2026-07-23
 tags:
@@ -14,14 +15,11 @@ tags:
 - task-070
 sources:
 - task:070
-related:
-- state-tool
-- state-tool-task-step-key-address
+related: [state-tool, state-tool-task-step-key-address]
 created: '2026-07-23'
 updated: '2026-07-23'
 status: active
 ---
-
 ## 개요
 
 pilot(opp/opd/opds/opdw 등)의 task-step 파이프라인 정의를 SKILL.md 마크다운 표 대신 담는 구조화 JSON 파일이다. 각 pilot 디렉토리의 `references/pipeline.json`에 위치하며, state-tool init이 이 파일을 읽어 STATE.md 행을 생성한다.

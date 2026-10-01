@@ -8,9 +8,7 @@ tags:
 - lesson
 sources:
 - task:140
-related:
-- skill-opal-skill-creator
-- readme-ssot-principle
+related: [skill-opal-skill-creator, readme-ssot-principle]
 created: '2026-09-18'
 updated: '2026-09-18'
 status: draft

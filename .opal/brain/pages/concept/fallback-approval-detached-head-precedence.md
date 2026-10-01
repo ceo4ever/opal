@@ -8,8 +8,7 @@ tags:
 - lesson
 sources:
 - task:052
-related:
-- git-sync-tool
+related: [git-sync-tool]
 created: '2026-07-02'
 updated: '2026-07-02'
 status: active

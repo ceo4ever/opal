@@ -8,8 +8,7 @@ tags:
 - testing
 sources:
 - task:067
-related:
-- opal-agent-stream-json-passthrough
+related: [opal-agent-stream-json-passthrough]
 created: '2026-07-17'
 updated: '2026-07-17'
 status: active

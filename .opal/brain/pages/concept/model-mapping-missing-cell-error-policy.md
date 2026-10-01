@@ -2,21 +2,18 @@
 type: concept
 title: 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기)
 tags:
-  - model
-  - mapping
-  - error
-  - policy
-  - setting
+- model
+- mapping
+- error
+- policy
+- setting
 sources:
-  - task:046
-related:
-  - model-mapping-2layer-override
-  - model-mapping-latest-tracking
-created: "2026-06-28"
-updated: "2026-06-28"
+- task:046
+related: [model-mapping-2layer-override, model-mapping-latest-tracking]
+created: '2026-06-28'
+updated: '2026-06-28'
 status: active
 ---
-
 ## 개요
 
 전역(`~/.opal/setting.json`)과 프로젝트(`setting.local.json`) 어느 쪽에도 해당 플랫폼·레벨 셀이 존재하지 않으면 OPAL은 디스패치를 **오류로 중단**한다. 표 폴백(`opal-model-mapping.md` §2) 및 `"default"` 값은 더 이상 유효하지 않다.

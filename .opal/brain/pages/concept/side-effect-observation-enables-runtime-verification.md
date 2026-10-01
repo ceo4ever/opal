@@ -8,10 +8,7 @@ tags:
 - task-114
 sources:
 - task:114
-related:
-- negative-scenario-requires-3-condition-and
-- negative-control-proves-verification-not-weakened
-- scenario-goal-coverage-gate-loop
+related: [negative-scenario-requires-3-condition-and, negative-control-proves-verification-not-weakened, scenario-goal-coverage-gate-loop]
 created: '2026-09-09'
 updated: '2026-09-09'
 status: draft

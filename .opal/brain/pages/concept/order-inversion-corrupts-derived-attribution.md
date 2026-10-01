@@ -8,9 +8,7 @@ tags:
 - lesson-learned
 sources:
 - task:103
-related:
-- upper-bound-clamp-preserves-sum-identity
-- force-flag-side-effect-trial-run-first
+related: [upper-bound-clamp-preserves-sum-identity, force-flag-side-effect-trial-run-first]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

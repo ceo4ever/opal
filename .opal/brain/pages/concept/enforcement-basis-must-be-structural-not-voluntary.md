@@ -10,11 +10,7 @@ tags:
 - lesson-learned
 sources:
 - task:103
-related:
-- delegation-only-file-gate-bypass
-- worker-bypassed-blocked-tool-filename-trigger
-- code-scan-split-execution-precedes-block
-- guard-precision-none-passthrough-early-return
+related: [delegation-only-file-gate-bypass, worker-bypassed-blocked-tool-filename-trigger, code-scan-split-execution-precedes-block, guard-precision-none-passthrough-early-return]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

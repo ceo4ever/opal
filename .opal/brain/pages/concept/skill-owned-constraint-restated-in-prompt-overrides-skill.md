@@ -11,10 +11,7 @@ sources:
 - skill:op-brain-ingest
 - code:opal/tools/brain-tool/brain_tool.py
 - doc:opal/core/references/pm/dispatch-process.md
-related:
-- instruction-without-tool-path-forces-violation
-- template-precedence-over-prose-norms
-- blanket-prohibition-blocks-required-artifacts
+related: [instruction-without-tool-path-forces-violation, template-precedence-over-prose-norms, blanket-prohibition-blocks-required-artifacts]
 created: '2026-08-27'
 updated: '2026-08-27'
 status: draft

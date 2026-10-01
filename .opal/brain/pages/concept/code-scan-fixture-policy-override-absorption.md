@@ -10,9 +10,7 @@ tags:
 sources:
 - task:082
 - task:083
-related:
-- code-scan-two-axis-threshold-design
-- code-scan-nonblocking-limit-rollout
+related: [code-scan-two-axis-threshold-design, code-scan-nonblocking-limit-rollout]
 created: '2026-08-04'
 updated: '2026-08-04'
 status: draft

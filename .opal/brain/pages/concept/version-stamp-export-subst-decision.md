@@ -9,10 +9,7 @@ tags:
 - architecture
 sources:
 - task:048
-related:
-- installer-version-priority-model
-- red-test-commit-coercion-guard-lesson
-- opal-adapter-platform-isolation
+related: [installer-version-priority-model, red-test-commit-coercion-guard-lesson, opal-adapter-platform-isolation]
 created: '2026-06-29'
 updated: '2026-06-29'
 status: active

@@ -11,10 +11,7 @@ sources:
 - skill:op-brain-ingest
 - code:opal/tools/brain-tool/brain_tool.py
 - doc:opal/core/references/pm/dispatch-process.md
-related:
-- blanket-prohibition-blocks-required-artifacts
-- skill-owned-constraint-restated-in-prompt-overrides-skill
-- enforcement-basis-must-be-structural-not-voluntary
+related: [blanket-prohibition-blocks-required-artifacts, skill-owned-constraint-restated-in-prompt-overrides-skill, enforcement-basis-must-be-structural-not-voluntary]
 created: '2026-08-27'
 updated: '2026-08-27'
 status: draft

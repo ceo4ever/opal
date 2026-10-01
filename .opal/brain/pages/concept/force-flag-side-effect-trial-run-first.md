@@ -9,9 +9,7 @@ tags:
 - lesson-learned
 sources:
 - task:103
-related:
-- mark-force-decision-log-scope
-- order-inversion-corrupts-derived-attribution
+related: [mark-force-decision-log-scope, order-inversion-corrupts-derived-attribution]
 created: '2026-08-26'
 updated: '2026-08-26'
 status: draft

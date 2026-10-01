@@ -9,9 +9,7 @@ tags:
 - session-management
 sources:
 - task:063
-related:
-- console-brain-volatile-single-session
-- opal-console
+related: [console-brain-volatile-single-session, opal-console]
 created: '2026-07-15'
 updated: '2026-07-15'
 status: active

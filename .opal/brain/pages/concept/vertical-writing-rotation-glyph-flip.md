@@ -9,9 +9,7 @@ tags:
 - verification-blind-spot
 sources:
 - task:086
-related:
-- silent-render-failure-deterministic-gate
-- agentic-output-direct-verification-lesson
+related: [silent-render-failure-deterministic-gate, agentic-output-direct-verification-lesson]
 created: '2026-08-10'
 updated: '2026-08-10'
 status: draft

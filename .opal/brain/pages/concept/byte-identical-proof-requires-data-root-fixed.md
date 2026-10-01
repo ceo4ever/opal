@@ -9,11 +9,7 @@ tags:
 sources:
 - task:118
 - task:119
-related:
-- regression-pin-of-task-time-fact
-- parser-drift-silent-longevity-lesson
-- worktree-task-root-allocator-root-split
-- switch-first-plumbing-later-verification
+related: [regression-pin-of-task-time-fact, parser-drift-silent-longevity-lesson, worktree-task-root-allocator-root-split, switch-first-plumbing-later-verification]
 created: '2026-09-12'
 updated: '2026-09-12'
 status: draft

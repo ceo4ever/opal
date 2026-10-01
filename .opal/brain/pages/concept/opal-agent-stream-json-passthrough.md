@@ -9,10 +9,7 @@ tags:
 sources:
 - task:067
 - task:131
-related:
-- oppl-run-record-journal-dual-observability
-- opal-action-monitor
-- oppl-internal-channel-opal-agent
+related: [oppl-run-record-journal-dual-observability, opal-action-monitor, oppl-internal-channel-opal-agent]
 created: '2026-07-17'
 updated: '2026-09-14'
 status: active

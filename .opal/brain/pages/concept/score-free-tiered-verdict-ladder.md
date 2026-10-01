@@ -8,8 +8,7 @@ tags:
 - task-105
 sources:
 - task:105
-related:
-- verdict-tool-fail-safe-direction-design
+related: [verdict-tool-fail-safe-direction-design]
 created: '2026-09-03'
 updated: '2026-09-03'
 status: draft

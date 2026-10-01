@@ -8,8 +8,7 @@ tags:
 - call-graph
 sources:
 - task:087
-related:
-- code-scan-gate-deadlock-init-placement
+related: [code-scan-gate-deadlock-init-placement]
 created: '2026-08-10'
 updated: '2026-08-10'
 status: draft

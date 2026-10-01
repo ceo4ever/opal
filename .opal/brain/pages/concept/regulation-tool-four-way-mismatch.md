@@ -7,10 +7,7 @@ tags:
 - convention
 sources:
 - task:107
-related:
-- code-scan-tool
-- prohibit-by-property-not-name
-- code-scan-two-axis-threshold-design
+related: [code-scan-tool, prohibit-by-property-not-name, code-scan-two-axis-threshold-design]
 created: '2026-09-06'
 updated: '2026-09-06'
 status: draft

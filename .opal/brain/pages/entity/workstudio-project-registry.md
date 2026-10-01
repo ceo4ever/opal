@@ -13,8 +13,7 @@ tags:
 - project-registry
 sources:
 - task:128
-related:
-- electron-main-owned-project-registry
+related: [electron-main-owned-project-registry]
 created: '2026-09-13'
 updated: '2026-09-13'
 status: draft

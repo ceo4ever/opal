@@ -8,9 +8,7 @@ tags:
 - lesson
 sources:
 - task:052
-related:
-- opal-workspace-sync
-- skill-registry-validate-extension
+related: [opal-workspace-sync, skill-registry-validate-extension]
 created: '2026-07-02'
 updated: '2026-07-02'
 status: active

@@ -10,9 +10,7 @@ tags:
 sources:
 - task:081
 - task:097
-related:
-- governance-single-owner-rule-mapping
-- replacement-edit-new-path-before-old-path-removal
+related: [governance-single-owner-rule-mapping, replacement-edit-new-path-before-old-path-removal]
 created: '2026-08-02'
 updated: '2026-08-21'
 status: draft

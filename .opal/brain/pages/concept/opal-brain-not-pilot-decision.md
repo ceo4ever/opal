@@ -9,10 +9,7 @@ tags:
 - architecture
 sources:
 - task:029
-related:
-- skill-opal-brain
-- opal-architecture
-- skill-registry-validate-extension
+related: [skill-opal-brain, opal-architecture, skill-registry-validate-extension]
 created: '2026-06-18'
 updated: '2026-06-18'
 status: active

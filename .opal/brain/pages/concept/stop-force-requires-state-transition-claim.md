@@ -9,11 +9,7 @@ tags:
 - task-138
 sources:
 - task:138
-related:
-- worktree-locates-hub-by-issued-copy
-- ownership-tool
-- state-tool
-- actor-axis-orthogonal-to-mode
+related: [worktree-locates-hub-by-issued-copy, ownership-tool, state-tool, actor-axis-orthogonal-to-mode]
 created: '2026-09-18'
 updated: '2026-09-18'
 status: draft

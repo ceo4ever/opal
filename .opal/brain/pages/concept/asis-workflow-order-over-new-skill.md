@@ -8,11 +8,7 @@ tags:
 - task-084
 sources:
 - task:084
-related:
-- asis-analysis-five-stage-workflow
-- inherit-new-boundary-fixed-before-writing
-- opal-pm-promotion-gate
-- readme-ssot-principle
+related: [asis-analysis-five-stage-workflow, inherit-new-boundary-fixed-before-writing, opal-pm-promotion-gate, readme-ssot-principle]
 created: '2026-08-06'
 updated: '2026-08-06'
 status: draft

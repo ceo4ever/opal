@@ -11,11 +11,7 @@ tags:
 sources:
 - task:065
 - task:131
-related:
-- opal-loop-action-agent
-- oppl-two-loop-orchestrator
-- oppl-3-ssot-tool-gated-separation
-- oppl-scenario-red-confirmed-gap
+related: [opal-loop-action-agent, oppl-two-loop-orchestrator, oppl-3-ssot-tool-gated-separation, oppl-scenario-red-confirmed-gap]
 created: '2026-07-17'
 updated: '2026-09-14'
 status: active

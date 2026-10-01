@@ -10,11 +10,7 @@ tags:
 sources:
 - task:095
 - task:081
-related:
-- long-running-worker-infra-failure-mitigation
-- agentic-output-direct-verification-lesson
-- mitigation-recurs-without-ssot-registration
-- scenario-prewrite-goal-series-track
+related: [long-running-worker-infra-failure-mitigation, agentic-output-direct-verification-lesson, mitigation-recurs-without-ssot-registration, scenario-prewrite-goal-series-track]
 created: '2026-08-19'
 updated: '2026-08-19'
 status: draft

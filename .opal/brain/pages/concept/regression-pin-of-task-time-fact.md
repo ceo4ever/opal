@@ -7,10 +7,7 @@ tags:
 - header-standard
 sources:
 - task:107
-related:
-- regression-only-coverage-gate
-- exports-generation-tool-verification-division
-- worktree-tasks-fixture-structural-limit
+related: [regression-only-coverage-gate, exports-generation-tool-verification-division, worktree-tasks-fixture-structural-limit]
 created: '2026-09-06'
 updated: '2026-09-06'
 status: draft

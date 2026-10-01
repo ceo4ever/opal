@@ -10,9 +10,7 @@ tags:
 sources:
 - task:056
 - task:061
-related:
-- oppl-two-loop-orchestrator
-- oppl-3-ssot-tool-gated-separation
+related: [oppl-two-loop-orchestrator, oppl-3-ssot-tool-gated-separation]
 created: '2026-07-10'
 updated: '2026-07-14'
 status: active

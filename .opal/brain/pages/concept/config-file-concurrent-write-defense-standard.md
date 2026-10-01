@@ -9,10 +9,7 @@ tags:
 - file-io
 sources:
 - task:061
-related:
-- console-write-exception-router-isolation
-- pool-lock-idiom-contract
-- opal-console
+related: [console-write-exception-router-isolation, pool-lock-idiom-contract, opal-console]
 created: '2026-07-14'
 updated: '2026-07-14'
 status: active

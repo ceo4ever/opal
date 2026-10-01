@@ -9,12 +9,7 @@ tags:
 - task-138
 sources:
 - task:138
-related:
-- worktree-task-root-allocator-root-split
-- worktree-tool
-- worktree-slot-existence-to-occupancy-judgment
-- worktree-workspace-isolation-axis
-- red-corpus-precedes-contract-fabricates-layout
+related: [worktree-task-root-allocator-root-split, worktree-tool, worktree-slot-existence-to-occupancy-judgment, worktree-workspace-isolation-axis, red-corpus-precedes-contract-fabricates-layout]
 created: '2026-09-18'
 updated: '2026-09-18'
 status: draft

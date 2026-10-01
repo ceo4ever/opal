@@ -8,10 +8,7 @@ tags:
 - monitor
 sources:
 - task:067
-related:
-- oppl-run-record-journal-dual-observability
-- opal-agent-stream-json-passthrough
-- opal-loop-action-agent
+related: [oppl-run-record-journal-dual-observability, opal-agent-stream-json-passthrough, opal-loop-action-agent]
 created: '2026-07-17'
 updated: '2026-07-17'
 status: active
