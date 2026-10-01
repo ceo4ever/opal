@@ -11,6 +11,7 @@ sources:
 - task:118
 - task:119
 - task:169
+- doc:docs/proposals/archives/opal-worktree-task-ownership.md
 related: [worktree-workspace-isolation-axis, worktree-tasks-fixture-structural-limit, worktree-slot-existence-to-occupancy-judgment, worktree-tool, three-layer-memory-architecture, state-aware-path-resolution-unblocks-merge, switch-first-plumbing-later-verification, worktree-close-brain-write-contract]
 created: '2026-09-12'
 updated: '2026-10-01'

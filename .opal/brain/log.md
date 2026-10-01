@@ -500,3 +500,10 @@
 - 신규: [[pages/concept/opd2-state-tool-integration.md]]
 - 출처: task:168
 
+## [2026-10-01] ingest | ingest --all: 신규 37페이지 + 기존 21페이지 출처 보강 (스킬 24·태스크 9·run-log 3·e2e 1·적용 제안서 10). 제외: docs/backup 6·미적용/폐기 제안서 9·e2e 계약 데이터 2
+- 신규: [[op-gc-security]], [[op-gc-convention]], [[op-gc-report]], [[opal-pilot-project-build]], [[op-oppb-project-slice]], [[op-oppb-knowledge-finalize]], [[opal-skill-tester]], [[opal-pilot-dev2]], [[opal-code-map-builder]], [[opal-e2e]], [[opal-help]], [[opal-eli5]], [[opal-grill]], [[e2e-journey-library]], [[run-log-prd]], [[run-log-trd]], [[run-log-contract]], [[e2e-harness-three-responsibility-split]], [[worktree-multirepo-capsule-ownership]], [[oppl-bounded-convergence-runtime]], [[scenario-table-parse-fail-loud]], [[terminal-host-detection-from-own-process-lineage]], [[hook-session-identity-from-envelope-only]], [[codex-session-handoff-identity-recovery]], [[pm-design-path-independent-gate]], [[e2e-environment-config-ownership]], [[opst-oppb-profile-detects-finalize-violation]], [[codex-worktree-boot-ownership-handoff]]
+- 출처: ingest-scan:all
+
+## [2026-10-01] ingest | 정정: 직전 ingest --all 기록의 수치를 실측으로 바로잡는다 — 신규 28페이지, 기존 17페이지 출처 보강, 반영 소스 47건(스킬 24·태스크 9·run-log 3·e2e 1·적용 제안서 10). 제외 17건: docs/backup 6·폐기/미적용 제안서 9·e2e 계약 데이터 2
+- 출처: ingest-scan:all
+

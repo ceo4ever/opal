@@ -11,14 +11,10 @@ tags:
 sources:
 - task:122
 - task:156
-related:
-- auto-approve-user-confirmation-axis-separation
-- worktree-tool
-- state-tool
-- opal-self-pm
-- self-pm-tool
+- doc:docs/proposals/archives/opal-pm-direct-execution.md
+related: [auto-approve-user-confirmation-axis-separation, worktree-tool, state-tool, opal-self-pm, self-pm-tool]
 created: '2026-09-12'
-updated: '2026-09-24'
+updated: '2026-10-01'
 status: active
 ---
 ## 현행 계약 (task 156)

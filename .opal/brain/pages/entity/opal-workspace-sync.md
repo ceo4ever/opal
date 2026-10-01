@@ -4,8 +4,9 @@ title: opal-workspace-sync (alias opws)
 module: opal-workspace-sync
 layer: skill
 domain: workspace
-exports: [opws]
-source_ref: 'opal/skills/opal-workspace-sync/SKILL.md'
+exports:
+- opws
+source_ref: opal/skills/opal-workspace-sync/SKILL.md
 header_synced: 2026-07-02
 tags:
 - skill
@@ -14,14 +15,12 @@ tags:
 - operator
 sources:
 - task:052
-related:
-- git-sync-tool
-- skill-registry-index-registration-required-for-discovery
+- skill:opal-workspace-sync
+related: [git-sync-tool, skill-registry-index-registration-required-for-discovery]
 created: '2026-07-02'
-updated: '2026-07-02'
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 워크스페이스 단위로 여러 git 저장소를 안전하게 일괄 최신화하고 싶을 때 호출하는 오케스트레이션 스킬이다 (alias `opws`). 결정론적인 저장소 순회·pull 자체는 [[git-sync-tool]]에 위임하고, 이 스킬은 "어느 경로를 대상으로 할지 결정", "결과를 사람이 읽을 보고서로 정리", "문제 저장소의 후속 조치를 승인받는 것"만 책임진다 (근거: task:052 TASK§확정 설계 방향).

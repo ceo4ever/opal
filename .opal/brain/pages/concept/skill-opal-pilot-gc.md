@@ -10,15 +10,10 @@ tags:
 sources:
 - skill:opal-pilot-gc
 - task:120
-related:
-- gc-finding-schema
-- opal-skill-classification-system
-- close-retrospective-hardstep
-- opal-security-model
-- opal-conventions
-- opal-project-definition
+- doc:docs/proposals/archives/opal-gc-capability-refactor.md
+related: [gc-finding-schema, opal-skill-classification-system, close-retrospective-hardstep, opal-security-model, opal-conventions, opal-project-definition]
 created: '2026-06-11'
-updated: '2026-09-12'
+updated: '2026-10-01'
 status: active
 ---
 ## 개념 요약

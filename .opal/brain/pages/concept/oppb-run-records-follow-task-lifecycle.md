@@ -9,9 +9,10 @@ tags:
 sources:
 - opal/tools/oppb-runtime-tool/oppb_runtime_tool.py
 - docs/proposals/opal-oppb-project-build-pilot.md
+- task:158
 related: []
 created: '2026-09-26'
-updated: '2026-09-26'
+updated: '2026-10-01'
 status: draft
 ---
 <!--

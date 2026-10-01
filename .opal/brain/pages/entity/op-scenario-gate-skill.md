@@ -17,6 +17,7 @@ sources:
 - task:073
 - task:075
 - task:167
+- skill:op-scenario-gate
 related: [scenario-goal-coverage-gate-loop, opal-evaluator-agent, test-tool, scenario-gate-pilot-fit-criteria, scenario-economy-advisory-gate, state-tool]
 created: '2026-07-23'
 updated: '2026-10-01'

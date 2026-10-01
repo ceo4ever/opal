@@ -14,13 +14,10 @@ tags:
 - task-114
 sources:
 - task:114
-related:
-- skill-registry-project-scope-4source-merge
-- skill-opal-skill-manager
-- skill-opal-skill-creator
-- skill-opal-project-init
+- skill:opal-skill-wizard
+related: [skill-registry-project-scope-4source-merge, skill-opal-skill-manager, skill-opal-skill-creator, skill-opal-project-init]
 created: '2026-09-09'
-updated: '2026-09-09'
+updated: '2026-10-01'
 status: draft
 ---
 ## 개요

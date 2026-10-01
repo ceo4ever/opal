@@ -1,14 +1,20 @@
 ---
 type: entity
 title: opal-pilot-data-design (opdd)
-tags: [pilot, orchestrator, data-design, db]
-sources: [task:019]
+tags:
+- pilot
+- orchestrator
+- data-design
+- db
+sources:
+- task:019
+- skill:opal-pilot-data-design
+- doc:docs/proposals/archives/opal-data-design.md
 related: [op-data-dictionary-skill, op-data-model-skill, op-data-ddl-skill, opdd-pipeline-flow]
 created: 2026-06-12
-updated: 2026-06-12
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 DB 설계 파이프라인 오케스트레이터. `TASK → DICT → MODEL → DDL/MIGRATION → QA → CLOSE` 6단계를 조율하며, 전 단계 워커로 `opal-db-agent` 단일 에이전트를 디스패치한다.

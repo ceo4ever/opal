@@ -9,13 +9,10 @@ tags:
 - oppl
 sources:
 - task:056
-related:
-- skill-opal-pilot-project-dev
-- skill-opal-pilot-sdd
-- loop-upper-bound-ssot-pattern
-- opal-evaluator-agent
+- skill:opal-pilot-project-loop
+related: [skill-opal-pilot-project-dev, skill-opal-pilot-sdd, loop-upper-bound-ssot-pattern, opal-evaluator-agent]
 created: '2026-07-10'
-updated: '2026-07-10'
+updated: '2026-10-01'
 status: active
 ---
 ## 개념 요약

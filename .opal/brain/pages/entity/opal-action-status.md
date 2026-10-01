@@ -8,11 +8,10 @@ tags:
 - operator
 sources:
 - task:068
-related:
-- opal-action-monitor
-- oppl-run-record-journal-dual-observability
+- skill:opal-action-status
+related: [opal-action-monitor, oppl-run-record-journal-dual-observability]
 created: '2026-07-18'
-updated: '2026-07-18'
+updated: '2026-10-01'
 status: active
 ---
 ## 개요

@@ -1,14 +1,20 @@
 ---
 type: entity
 title: opal-improve (//opim)
-tags: [skill, operator, improvement, pm-loop, tool-gated]
-sources: [task:058]
+tags:
+- skill
+- operator
+- improvement
+- pm-loop
+- tool-gated
+sources:
+- task:058
+- skill:opal-improve
 related: [improve-tool, pm-improvement-loop-two-tracks, local-fw-improvement-classification]
 created: 2026-07-20
-updated: 2026-07-20
+updated: '2026-10-01'
 status: active
 ---
-
 ## 개요
 
 PM 개선 루프의 온디맨드 실행 스킬이다. 관찰·분류·기록·보고·승인의 5단계 프로세스로 개선 후보를 수집하고, improve-tool을 통해 결정론적으로 기록한다. 로컬 PM 개선(프로젝트 `.opal/`)과 FW 개선(전역 `~/.opal/fw-inbox/`)을 2원화하여 분류한다.

@@ -10,6 +10,7 @@ tags:
 - opds
 sources:
 - task:167
+- doc:docs/proposals/archives/opal-test-scenario-economy-gate.md
 related: [scenario-goal-coverage-gate-loop, op-scenario-gate-skill, test-tool, state-tool, op-dev-test-scenario]
 created: '2026-10-01'
 updated: '2026-10-01'
