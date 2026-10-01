@@ -1,0 +1,38 @@
+{
+ "scenario": "function-todo-crud",
+ "mode": "function",
+ "variant": "//opds design=opus/medium impl=haiku/medium",
+ "rep": 2,
+ "vidx": 3,
+ "utterance": "//opds 요구서 /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-176/39b1b7a5-a283-4de9-b1e6-120a0bdcb558/scratchpad/measure-function-todo-crud/opds-design-opus-medium-impl-haiku-medium-r2/REQUEST.md 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다. 격리 저장소 안에서 필요한 사용자 gate와 local merge/finalize는 승인한다. 이 승인은 모의 저장소 밖 merge·push·배포로 확장되지 않는다.",
+ "start": 1790873516.746817,
+ "framework": "v0.7.3-72-gbb257506+9c962d",
+ "settings": {
+  "declared": {
+   "design": {
+    "model": "opus",
+    "effort": "medium"
+   },
+   "impl": {
+    "model": "haiku",
+    "effort": "medium"
+   }
+  },
+  "applied": {
+   "models": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5",
+    "claude-sonnet-5-5"
+   ],
+   "agent_overrides": {
+    "opal-task-agent": "c5988fad00e624bf6f9417cb5ca9ba927e149021a2f15ed059e8ef80bc3e5fc6",
+    "opal-be-agent": "3a20c2ccdea08a487934b9e5942ed8f6c1f55ee0bd8f9fb7ab51c50f28a4ebbb",
+    "opal-fe-agent": "747eeac3404f57b792ef3abbefefa0703fffe5d178472737f1ae95e9cc9ebc94"
+   },
+   "agents_missing": []
+  }
+ },
+ "exit": 0,
+ "timeout": false,
+ "end": 1790875266.85828
+}

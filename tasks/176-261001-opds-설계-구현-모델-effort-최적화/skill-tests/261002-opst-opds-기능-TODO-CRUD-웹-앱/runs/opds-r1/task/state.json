@@ -1,0 +1,306 @@
+{
+  "task_id": "001-261002-opds-할일-CRUD-웹앱",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-10-02 01:54:45",
+  "updated_at": "2026-10-02 02:16:39",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 01:55:00",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 01:58:16",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:15:29",
+      "owner": "PM",
+      "note": "PM 직접 작성(coordinator PM 경로), 워커 미디스패치",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "TEST-SCENARIO 작성",
+      "key": "plan.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:00:17",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "설계 게이트",
+      "key": "plan.design_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:02:03",
+      "owner": "PM",
+      "note": "design gate i1 pass",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "`state-tool design-gate record`가 pass를 기록했고 현재 문서 묶음 hash가 통과 hash와 같다",
+          "evaluator design-rubric 설계 4축 PASS·시나리오 3축 기준 충족"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:02:43",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:06:52",
+      "owner": "PM",
+      "note": null,
+      "step": "2/2",
+      "worker_duration_minutes": 5
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:10:14",
+      "owner": "PM",
+      "note": null,
+      "worker_duration_minutes": 6
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "fix 1/3: tests/test_todo_api.py @header docstring 추가(컨벤션 GC-001)",
+      "key": "test.fix_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:11:42",
+      "owner": "PM",
+      "note": null,
+      "test_change_kind": "fix",
+      "worker_duration_minutes": 3
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "fix 2/3: tests/test_todo_api.py @header exports에 테스트 함수명 기재(컨벤션 precheck)",
+      "key": "test.fix_2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:13:36",
+      "owner": "PM",
+      "note": null,
+      "test_change_kind": "fix",
+      "worker_duration_minutes": 1
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:14:47",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 12,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:15:21",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:15:29",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:15:43",
+      "owner": "PM",
+      "note": "no-op: docs/PROJECT.md 구조·스택 서술이 구현 후에도 사실과 일치",
+      "conditional": true
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:15:43",
+      "owner": "PM",
+      "note": "skipped: .opal/brain 없음",
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:16:14",
+      "owner": "PM",
+      "note": "개선 후보 2건(local 1·fw 1) AGENTIC-LOG #23·#24 기록. improve-tool local 위임 실패(invalid_args, 워크트리)"
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:16:39",
+      "owner": "PM",
+      "note": "finalize closed, 위반 0",
+      "conditional": true
+    },
+    {
+      "row_id": 18,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 02:16:39",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-176/39b1b7a5-a283-4de9-b1e6-120a0bdcb558/scratchpad/measure-function-todo-crud/opds-r1/repo/.opal-worktrees/task_001",
+  "actor": "coordinator",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_3cf63cee-ba28-4e87-b43e-b5c269b0bcc0",
+    "status": "active",
+    "pending_events": []
+  },
+  "design_gate": {
+    "status": "pass",
+    "iteration": 1,
+    "limit": 3,
+    "limit_from": 0,
+    "task_confirm_req_hash": "724b67f33a43a461a606efddb8a8890f4992be458a00a0b0a5c306e971bc2ade",
+    "current_attempt": {
+      "iteration": 1,
+      "bundle_hash": "a6aa0fa2da5a59cefc3889d1ac6148683a09452ca980a60f570aaa539b9120ca",
+      "files": {
+        "TASK.md": "4d39de79e636c5b5704c8caab283f424d172e22b6918005d974df4352a2c34e4",
+        "PLAN.md": "7ce4560b4b01387285071ddd64b3b6d7258d6eddb24049bf22ca6aa9f99061a0",
+        "TEST-SCENARIO.md": "7eb6e25971e9f83bc005ac67dc16c14fba720702f9b96194ecac265950faa88c"
+      },
+      "started_at": "2026-10-02 02:00:23",
+      "refinement": false
+    },
+    "passed_bundle_hash": "a6aa0fa2da5a59cefc3889d1ac6148683a09452ca980a60f570aaa539b9120ca",
+    "approved_bundle_hash": "a6aa0fa2da5a59cefc3889d1ac6148683a09452ca980a60f570aaa539b9120ca",
+    "last_rewrite_target": null,
+    "history": [
+      {
+        "iteration": 1,
+        "verdict": "pass",
+        "rewrite_target": null,
+        "bundle_hash": "a6aa0fa2da5a59cefc3889d1ac6148683a09452ca980a60f570aaa539b9120ca",
+        "reason": null,
+        "at": "2026-10-02 02:02:03",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      }
+    ]
+  },
+  "test_timing": {
+    "intervals": [
+      {
+        "kind": "auto",
+        "id": "pytest-s1-10",
+        "started_at": "2026-10-01T17:08:22.290352+00:00",
+        "ended_at": "2026-10-01T17:08:27.453542+00:00"
+      },
+      {
+        "kind": "auto",
+        "id": "e2e-s12",
+        "started_at": "2026-10-01T17:08:45.864428+00:00",
+        "ended_at": "2026-10-01T17:09:20.719776+00:00"
+      }
+    ]
+  }
+}

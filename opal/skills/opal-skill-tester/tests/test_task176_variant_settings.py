@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "opal-skill-tester",
   "description": "TASK-176 S-1~S-5 (RED-first) — opst 변형 토큰(`design=`·`impl=`) 파싱, 설정 적용·기록, FW 지문 비교 무효, 품질 하한 판정, TEST 수정 반복 수집, --max-parallel 동시 실행 상한을 검증한다. 실제 모델은 호출하지 않고 PATH 앞의 가짜 `claude`만 쓴다.",
-  "exports": []
+  "exports": ["test_s1_parse_full_tokens", "test_s1_parse_design_only_effort_omitted_and_order_free", "test_s1_parse_no_tokens_is_empty_settings", "test_s1_parse_invalid_values_rejected_with_variant_setting_invalid", "test_s1_stripped_command_is_looked_up_in_profiles", "test_s2_design_and_impl_settings_applied_and_recorded", "test_s3_framework_mismatch_marks_comparison_invalid", "test_s3_framework_match_shows_quality_floor_and_keeps_existing_items", "test_s4_quality_floor_verdicts_and_metric_ranges", "test_s4_test_fix_iterations_counts_fix_rows", "test_s5_max_parallel_caps_concurrency_and_mixes_variants", "test_s5_without_max_parallel_all_start_together"]
 }
 """
 import hashlib

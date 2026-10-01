@@ -1,0 +1,33 @@
+---
+template: sdlc-v2
+---
+# TEST-SCENARIO: stockctl 다중 위치 재고·이동·감사·가져오기·충돌 감지
+
+> 입력: [TASK.md](TASK.md), [PLAN.md](PLAN.md) | 작성자: PM
+
+## Setup
+
+- 환경: 워크트리 루트(`.opal-worktrees/task_001`)에서 Python 3 + pytest. CLI는 `python -m stockctl --store <tmp>/s.json ...`으로 subprocess 호출한다(`docs/CONVENTIONS.md`). 행동 시나리오 S-1~S-11은 `tests/test_multiloc.py`의 테스트 함수(이름에 S-ID 포함, 예 `test_s3_...`)로 구현되며 실행 명령은 `python -m pytest -q tests/test_multiloc.py -k s<N>`이다.
+- 공통 데이터: 각 테스트는 pytest `tmp_path` 아래 독립 저장소 `s.json`을 쓴다. 감사 로그는 `s.json.audit.jsonl`, CSV 입력은 `tmp_path/items.csv`, 거부 파일은 `tmp_path/items.csv.rejected.csv`다. "바이트 불변"은 명령 전후 `Path.read_bytes()` 비교(파일이 없으면 계속 없음)로 판정한다.
+- 대역 사용과 한계: 사용하지 않음. 모든 시나리오가 실제 CLI 프로세스와 실제 파일을 쓴다.
+- 실행 조건: 자동 실행. 사람 협업 없음.
+- 병렬 그룹: S-1, S-2, S-3, S-4, S-5, S-6, S-7, S-8, S-9, S-10, S-11
+
+## Scenarios
+
+| ID | 유형 | 검증 대상 | 조건 | 행동 | 기대 결과 | 방법·환경 | 시점 |
+|---|---|---|---|---|---|---|---|
+| S-1 | integration | AC-1 | 저장소 파일 없음 | `version` 실행 → `add A1 --qty 5` → `add A1 --qty 3 --location WH2` → `version` 실행 | 첫 `version` stdout `0`; 두 add 모두 exit 0; 저장소 JSON이 `version == 2`, `items["A1"] == {"name": "A1", "locations": {"MAIN": 5, "WH2": 3}}`; 마지막 `version` stdout `2`; `s.json.tmp`가 남지 않음 | pytest + subprocess | 구현 전 RED |
+| S-2 | integration | AC-1, C-3 | 기존 형식 저장소 `{"items": {"A1": {"name": "Apple", "qty": 7, "location": "WH1"}, "B2": {"name": "Bolt", "qty": 3, "location": "MAIN"}}}` (version 키 없음) | `version` → `list` → (바이트 비교) → `add B2 --qty 1` | `version` stdout `0`; `list` stdout이 정확히 `A1\tApple\tWH1\t7` / `B2\tBolt\tMAIN\t3` 두 줄; 읽기 명령 후 저장소 바이트 불변; add 후 저장소가 `version == 1`, `A1 == {"name": "Apple", "locations": {"WH1": 7}}`, `B2 == {"name": "Bolt", "locations": {"MAIN": 4}}`이고 어느 품목에도 `qty`·`location` 키가 없음; `s.json.tmp` 없음 | pytest + subprocess | 구현 전 RED |
+| S-3 | integration | AC-2, C-4 | 빈 저장소 | `add A1 --qty 5 --location WH2` → `add A1 --qty 2 --location WH2 --name Apple` → `remove A1 --qty 3 --location WH2` → `add A1 --qty 4` → `remove A1 --qty 1` → (바이트·감사 줄 수 기록) → `remove ZZ --qty 1` → `remove A1 --qty 5 --location WH2` → `remove A1 --qty 1 --location NOPE` | stdout 순서대로 `A1 qty=5`, `A1 qty=7`, `A1 qty=4`, `A1 qty=4`, `A1 qty=3`, 모두 exit 0이고 name이 `Apple`; `remove ZZ`는 exit 1; WH2 부족 remove와 없는 위치 remove는 각각 exit 2, stderr가 `insufficient:`로 시작; 실패 3건 동안 저장소 바이트와 감사 로그 줄 수 불변 | pytest + subprocess | 구현 전 RED |
+| S-4 | integration | AC-3 | 빈 저장소에 `add B2 --qty 1`, `add A1 --qty 3 --location WH2`, `add A1 --qty 2`, `add A1 --qty 4 --location ZONE`, `remove A1 --qty 4 --location ZONE` | `list` | stdout이 정확히 `A1\tA1\tMAIN\t2`, `A1\tA1\tWH2\t3`, `B2\tB2\tMAIN\t1` 세 줄(이 순서), ZONE(수량 0) 줄 없음, exit 0 | pytest + subprocess | 구현 전 RED |
+| S-5 | integration | AC-4 | `add A1 --qty 5`, 이때 version = 1 | `transfer A1 --from MAIN --to WH2 --qty 2` | stdout `A1 MAIN->WH2 2`, exit 0; 저장소 `locations == {"MAIN": 3, "WH2": 2}`, `version == 2` | pytest + subprocess | 구현 전 RED |
+| S-6 | integration | AC-4, C-4 | `add A1 --qty 5` 후 저장소 바이트·감사 로그 바이트 기록 | `transfer ZZ --from MAIN --to WH2 --qty 1`, `transfer A1 --from MAIN --to WH2 --qty 6`, `transfer A1 --from MAIN --to WH2 --qty 0`, `transfer A1 --from MAIN --to WH2 --qty -1`, `transfer A1 --from MAIN --to MAIN --qty 1` 각각 실행 | 종료 코드 순서대로 1, 2, 5, 5, 5; 2는 stderr `insufficient:` 시작, 5는 stderr `invalid:` 시작; 매 실행 후 저장소 바이트와 감사 로그 바이트가 기록값과 동일 | pytest + subprocess | 구현 전 RED |
+| S-7 | integration | AC-5, C-4 | 빈 저장소 | `add A1 --qty 5` → `remove A1 --qty 2` → `remove A1 --qty 99`(실패) → `transfer A1 --from MAIN --to WH2 --qty 1` | `s.json.audit.jsonl`이 정확히 3줄이고 각 줄은 JSON 객체로 키 집합이 정확히 `{ts, op, sku, changes}`; `datetime.fromisoformat(ts)` 성공; `(op, sku, changes)`가 순서대로 `("add", "A1", {"MAIN": 5})`, `("remove", "A1", {"MAIN": -2})`, `("transfer", "A1", {"MAIN": -1, "WH2": 1})` | pytest + subprocess | 구현 전 RED |
+| S-8 | integration | AC-6 | S-7과 같은 명령 순서 실행 완료 / 별도 tmp에 감사 로그 없는 저장소 | `history A1`, `history NOPE`, (감사 로그 없는 저장소에서) `history A1` | `history A1` stdout 3줄이 최신순으로 각각 탭 3필드이고 2·3필드가 `transfer`/`MAIN:-1,WH2:+1`, `remove`/`MAIN:-2`, `add`/`MAIN:+5`이며 1필드는 감사 로그의 해당 `ts`와 같음; `history NOPE`와 감사 로그 없는 `history A1`은 stdout 빈 문자열, exit 0 | pytest + subprocess | 구현 전 RED |
+| S-9 | integration | AC-7, AC-5 | 빈 저장소에 `add B2 --qty 1`(version 1); CSV `sku,name,location,qty` + `A1,Apple,MAIN,5` / `A1,Apple,WH2,2` / `B2,Bolt,MAIN,3` | `import-csv items.csv` | stdout `applied 3, rejected 0`, exit 0; `version == 2`(저장 1회); `items.csv.rejected.csv` 없음; `list`가 `A1\tApple\tMAIN\t5`, `A1\tApple\tWH2\t2`, `B2\tBolt\tMAIN\t4`; 감사 로그 마지막 2줄이 op `import`이고 A1 `changes == {"MAIN": 5, "WH2": 2}`, B2 `changes == {"MAIN": 3}` | pytest + subprocess | 구현 전 RED |
+| S-10 | integration | AC-7 | 빈 저장소; CSV 헤더 + `A1,Apple,MAIN,5` / `B2,Bolt,MAIN,0` / `C3,Cog,MAIN,-2` / `D4,Dial,MAIN,abc` / `E5,Eel,MAIN,1.5` / `F6,,MAIN,1` / `G7,Gear,,1` | `import-csv items.csv` | stdout `applied 1, rejected 6`, exit 3; `items.csv.rejected.csv`를 csv로 읽으면 헤더 `sku,name,location,qty,reason`과 6행이고 각 행의 앞 4열은 원래 값 그대로, `reason`은 비어 있지 않음; 저장소에는 A1 MAIN 5만 있고 B2~G7 없음; `version == 1` | pytest + subprocess | 구현 전 RED |
+| S-11 | integration | AC-8, C-4 | `add A1 --qty 5`, `add A1 --qty 1`로 version = 2; 유효 CSV 1행 준비; 저장소·감사 로그 바이트 기록 | `add A1 --qty 1 --expect-version 1`, `remove A1 --qty 1 --expect-version 1`, `transfer A1 --from MAIN --to WH2 --qty 1 --expect-version 1`, `import-csv items.csv --expect-version 1` 각각 실행 → 이어서 `add A1 --qty 1 --expect-version 2` → `version` | 앞의 4건 모두 exit 4, stderr가 정확히 `conflict: expected 1, found 2`, 저장소·감사 로그 바이트 불변, `items.csv.rejected.csv` 없음; 마지막 add는 exit 0이고 `version` stdout `3` | pytest + subprocess | 구현 전 RED |
+| S-12 | check | C-2 | 구현 완료 | `python -m pytest -q tests/` 실행, `git diff --exit-code main -- tests/test_basic.py` 실행 | pytest 전체 통과(실패 0), `tests/test_basic.py` diff 없음(exit 0) | 워크트리 루트에서 셸 실행 | 구현 후 |
+| S-13 | check | C-1, C-3, C-5 | 구현 완료 | `stockctl/*.py`·`tests/test_multiloc.py`의 `import`/`from` 문 추출, @header 존재 확인, `stockctl/store.py`에서 `os.replace` 사용 확인 | import 대상이 모두 표준 라이브러리 또는 패키지 내부(`.`·`stockctl`)이며 외부 패키지 0건(pytest는 테스트 실행기로만 사용하고 import하지 않아도 됨); `stockctl/store.py`·`stockctl/cli.py`·`tests/test_multiloc.py` 상단에 module/layer/domain/description/exports를 가진 @header 존재; `stockctl/store.py` 저장 경로가 임시 파일 기록 후 `os.replace` 사용 | 셸 grep + Read | 구현 후 |
+| S-14 | check | AC-9 | 문서 갱신 완료 | `docs/CLI.md` Read | `locations`·`version` 저장 형식, 명령 `add`·`remove`·`list`·`transfer`·`history`·`import-csv`·`version`, 옵션 `--location`·`--expect-version`, 출력 형식(`SKU\tNAME\tLOC\tQTY`, `SKU A->B N`, `applied N, rejected M`, `TS\tOP\tLOC:DELTA,...`), 종료 코드 0·1·2·3·4·5의 의미, `.audit.jsonl`·`.rejected.csv` 경로가 모두 기술되어 있고 PLAN §Decisions and contracts와 모순 없음 | Read 대조 | 구현 후 |

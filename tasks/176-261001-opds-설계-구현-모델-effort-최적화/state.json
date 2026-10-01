@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-10-01 23:15:08",
-  "updated_at": "2026-10-01 23:21:47",
-  "current_status": "in_progress",
+  "updated_at": "2026-10-02 07:32:10",
+  "current_status": "blocked",
   "rows": [
     {
       "row_id": 1,
@@ -89,31 +89,33 @@
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "in_progress",
-      "status_label": "🔄",
-      "timestamp": "2026-10-01 23:21:47",
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:19:24",
+      "owner": "user",
+      "note": "캡틴 결정: 현행(sonnet 5.5 설계·구현) 유지. W-7 값 변경 없음",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 8,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:32:05",
       "owner": "PM",
-      "note": null
+      "note": null,
+      "worker_duration_unknown": true
     },
     {
       "row_id": 9,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 07:32:10",
       "owner": "PM",
       "note": null,
       "gate": {
@@ -210,7 +212,7 @@
       "note": null
     }
   ],
-  "next_action": "EXECUTE 작업 진행 중",
+  "next_action": "CLOSE DONE.md 생성 진입",
   "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_176",
   "actor": "coordinator",
   "run_log": {
