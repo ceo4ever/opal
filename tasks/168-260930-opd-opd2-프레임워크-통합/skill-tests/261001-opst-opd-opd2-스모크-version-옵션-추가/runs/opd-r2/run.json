@@ -1,0 +1,12 @@
+{
+ "scenario": "smoke-version-flag",
+ "mode": "smoke",
+ "variant": "//opd",
+ "rep": 2,
+ "utterance": "//opd 요구서 /tmp/opal-skill-tester/smoke-version-flag-20261001-094401/opd-r2/REQUEST.md 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다.",
+ "start": 1790815442.193723,
+ "framework": "v0.7.3+c4ace6",
+ "exit": 0,
+ "timeout": false,
+ "end": 1790816391.3304582
+}
