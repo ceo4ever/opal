@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-10-01 23:15:08",
-  "updated_at": "2026-10-01 23:15:26",
+  "updated_at": "2026-10-01 23:21:47",
   "current_status": "in_progress",
   "rows": [
     {
@@ -23,20 +23,20 @@
       "stage": "TASK",
       "item": "사용자 확인",
       "key": "task.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:16:19",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
     },
     {
       "row_id": 3,
       "stage": "PLAN",
       "item": "작업",
       "key": "plan.plan_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:19:18",
       "owner": "PM",
       "note": null
     },
@@ -45,9 +45,9 @@
       "stage": "PLAN",
       "item": "TEST-SCENARIO 작성",
       "key": "plan.test_scenario_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:20:19",
       "owner": "PM",
       "note": null
     },
@@ -56,11 +56,11 @@
       "stage": "PLAN",
       "item": "설계 게이트",
       "key": "plan.design_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:21:46",
       "owner": "PM",
-      "note": null,
+      "note": "design gate i1 pass",
       "gate": {
         "artifacts": [
           "TASK.md",
@@ -78,20 +78,20 @@
       "stage": "PLAN",
       "item": "사용자 확인",
       "key": "plan.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:21:47",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
     },
     {
       "row_id": 7,
       "stage": "EXECUTE",
       "item": "작업",
       "key": "execute.implement",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "in_progress",
+      "status_label": "🔄",
+      "timestamp": "2026-10-01 23:21:47",
       "owner": "PM",
       "note": null
     },
@@ -210,7 +210,7 @@
       "note": null
     }
   ],
-  "next_action": "PLAN 작업 진입",
+  "next_action": "EXECUTE 작업 진행 중",
   "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_176",
   "actor": "coordinator",
   "run_log": {
@@ -221,5 +221,39 @@
     "active_run_id": "run_a5845275-bf7f-4559-a9e0-42d5273b13ec",
     "status": "active",
     "pending_events": []
+  },
+  "design_gate": {
+    "status": "pass",
+    "iteration": 1,
+    "limit": 3,
+    "limit_from": 0,
+    "task_confirm_req_hash": "881eeb962f32ac7bd578fd5b540915ae4386c8ddaec500df5ec443360a7bac7e",
+    "current_attempt": {
+      "iteration": 1,
+      "bundle_hash": "03c221a5b80d21c6cad7b26ca599a6f15f1880d66d784020fca15485c3698126",
+      "files": {
+        "TASK.md": "8e52dda41b2896d54755119015b2690f9e5687bfe8bea954a91d9b5b6de91b2e",
+        "PLAN.md": "e78c85f46a605032389dcdd9687cfcd06ac50503699273a027fbda41866220d0",
+        "TEST-SCENARIO.md": "2e3d3b59a2762d98ea76d18ca15475106a9b9fdd2d16ce0ce73c75d11c9ed665"
+      },
+      "started_at": "2026-10-01 23:20:23",
+      "refinement": false
+    },
+    "passed_bundle_hash": "03c221a5b80d21c6cad7b26ca599a6f15f1880d66d784020fca15485c3698126",
+    "approved_bundle_hash": "03c221a5b80d21c6cad7b26ca599a6f15f1880d66d784020fca15485c3698126",
+    "last_rewrite_target": null,
+    "history": [
+      {
+        "iteration": 1,
+        "verdict": "pass",
+        "rewrite_target": null,
+        "bundle_hash": "03c221a5b80d21c6cad7b26ca599a6f15f1880d66d784020fca15485c3698126",
+        "reason": null,
+        "at": "2026-10-01 23:21:39",
+        "advisories": [],
+        "advisory_responses": [],
+        "refinement": false
+      }
+    ]
   }
 }

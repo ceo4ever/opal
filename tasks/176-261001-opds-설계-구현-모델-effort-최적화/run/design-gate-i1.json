@@ -1,0 +1,26 @@
+{
+  "input_bundle_hash": "03c221a5b80d21c6cad7b26ca599a6f15f1880d66d784020fca15485c3698126",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "pass",
+  "rewrite_target": null
+}

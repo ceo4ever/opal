@@ -56,6 +56,11 @@ Pilot 프로필은 `scripts/skill_tester.py`의 `PROFILES`가 소유한다. 프�
 | `gate_iterations` | 설계 게이트 history 길이 또는 목표-커버 게이트 history 길이 |
 | `log_error`, `log_fix` | `AGENTIC-LOG.md`의 `ERROR`·`FIX` 행 수 |
 | `worker_blocked` | run-log `worker.blocked` 사건 수 |
+| `test_fix_iterations` | `state.json` 행 중 `item`이 `fix 작업`으로 시작하는 수(TEST 실패 후 수정 반복) |
+
+## 4-1. 변형 설정 비교
+
+비교 실행의 `변형 비교` 표는 수치 지표마다 `평균 (최소~최대)`를 보인다. 첫 변형이 기준이며 후보의 `hidden_pass_rate` 평균과 PASS 비율이 모두 기준 이상일 때만 `하한 충족`이다. 미충족 후보는 결정 대상이 아니다. 묶음 안 `framework` 지문이 하나가 아니면 비교 전체가 무효이며 하한 판정을 내지 않는다.
 
 최근 3회 중앙값보다 늘어나면 경고한다.
 

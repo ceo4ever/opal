@@ -9,7 +9,7 @@
     "DEFAULT_AGENT", "DEFAULT_AGENTS", "DEFAULT_UTTERANCE_TEMPLATE",
     "load_launcher_settings", "resolve_command", "resolve_argv_template",
     "resolve_agent_name", "load_model_mapping", "resolve_builder_model",
-    "MODEL_INJECTION", "BUILDER_MODEL_LEVEL",
+    "MODEL_INJECTION", "BUILDER_MODEL_LEVEL", "BUILDER_MODEL_LEVEL_KEY",
     "resolve_builder_effort", "EFFORT_INJECTION", "BUILDER_EFFORT_KEY",
     "resolve_agent_provider"
   ],
@@ -62,6 +62,10 @@ PLACEHOLDER_META_DIR = "{meta_dir}"
 
 MODELS_BLOCK_KEY = "models"
 BUILDER_MODEL_LEVEL = "standard"
+# 기본 레벨을 바꾸는 선택 키 — `launcher.builderModelLevel.<에이전트|provider>` ∈ light|standard|advanced
+# (전역→로컬 에이전트 키 단위 덮어쓰기). 미설정·알 수 없는 값은 `BUILDER_MODEL_LEVEL`이다.
+BUILDER_MODEL_LEVEL_KEY = "builderModelLevel"
+MODEL_LEVELS = ("light", "standard", "advanced")
 # 에이전트 이름 → (models provider, 주입 옵션, 이미 지정된 것으로 볼 옵션들).
 # 목록 밖 에이전트(gemini·cursor-agent 등)는 주입하지 않는다.
 MODEL_INJECTION = {
@@ -147,6 +151,12 @@ def _apply_layer(resolved: dict, block: dict) -> None:
             if isinstance(name, str) and isinstance(value, str) and value:
                 resolved[BUILDER_EFFORT_KEY][name] = value
 
+    builder_level = block.get(BUILDER_MODEL_LEVEL_KEY)
+    if isinstance(builder_level, dict):
+        for name, value in builder_level.items():
+            if isinstance(name, str) and isinstance(value, str) and value:
+                resolved[BUILDER_MODEL_LEVEL_KEY][name] = value
+
     agents = block.get("agents")
     if isinstance(agents, dict):
         for name, entry in agents.items():
@@ -170,6 +180,7 @@ def load_launcher_settings(project_root=None) -> dict:
         "utterance_template": DEFAULT_UTTERANCE_TEMPLATE,
         "leasePollTimeoutSec": DEFAULT_LEASE_POLL_TIMEOUT_SEC,
         BUILDER_EFFORT_KEY: {},
+        BUILDER_MODEL_LEVEL_KEY: {},
     }
 
     _apply_layer(resolved, _launcher_block(_read_json_object(GLOBAL_SETTING_PATH)))
@@ -325,8 +336,10 @@ def resolve_builder_model(settings: dict, agent=None, project_root=None) -> tupl
 
     - 주입 대상이 아닌 에이전트, 템플릿에 이미 모델 옵션이 있는 경우, 매핑 값이
       `inherit`인 경우는 `(None, None)` — 주입하지 않는다(사용자 지정 우선).
-    - 주입 대상인데 `models.<provider>.standard` 셀이 전역·로컬 둘 다 없으면
-      `(None, "models.<provider>.standard")` — 추정·폴백하지 않는다.
+    - 레벨은 `settings["builderModelLevel"]`(에이전트 이름 키가 provider 키를 이긴다)로 정하며
+      미설정·알 수 없는 값은 `standard`다.
+    - 주입 대상인데 `models.<provider>.<레벨>` 셀이 전역·로컬 둘 다 없으면
+      `(None, "models.<provider>.<레벨>")` — 추정·폴백하지 않는다.
     """
     settings = settings if isinstance(settings, dict) else {}
     name, entry = _agent_entry(settings, agent)
@@ -336,9 +349,14 @@ def resolve_builder_model(settings: dict, agent=None, project_root=None) -> tupl
     provider, _flag, detect_flags = injection
     if _template_has_model_flag(entry["argv_template"], detect_flags):
         return None, None
-    model = load_model_mapping(project_root).get(provider, {}).get(BUILDER_MODEL_LEVEL)
+    levels = settings.get(BUILDER_MODEL_LEVEL_KEY)
+    levels = levels if isinstance(levels, dict) else {}
+    level = levels.get(name) or levels.get(provider)
+    if level not in MODEL_LEVELS:
+        level = BUILDER_MODEL_LEVEL
+    model = load_model_mapping(project_root).get(provider, {}).get(level)
     if not model:
-        return None, f"{MODELS_BLOCK_KEY}.{provider}.{BUILDER_MODEL_LEVEL}"
+        return None, f"{MODELS_BLOCK_KEY}.{provider}.{level}"
     if model == MODEL_INHERIT:
         return None, None
     return model, None

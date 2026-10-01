@@ -580,3 +580,107 @@ def test_env_prefix_skips_invalid_names_and_quotes_values(layers):
     assert settings.resolve_command(layers.load(), agent="x", task_path=TASK_PATH) == (
         f"GOOD='a b' claude \"{TASK_PATH} 이어서 수행\""
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TASK-176 S-6 (RED-first) — `launcher.builderModelLevel.<에이전트|provider>`로 주입 모델 레벨 선택
+# ─────────────────────────────────────────────────────────────────────────────
+
+LEVEL_MODELS = {
+    "claude": {"light": "haiku", "standard": "sonnet", "advanced": "opus"},
+    "codex": {"light": "gpt-5.6-luna", "standard": "gpt-5.6-terra", "advanced": "gpt-5.6-sol"},
+}
+
+
+def _level_launcher(level):
+    return {"builderModelLevel": level}
+
+
+def test_task176_builder_model_level_key_constant():
+    from worktree_launcher import settings
+
+    assert getattr(settings, "BUILDER_MODEL_LEVEL_KEY", None) == "builderModelLevel"
+
+
+def test_task176_level_unset_and_bogus_use_standard_cell(layers):
+    layers.write_global({"models": LEVEL_MODELS})
+    assert _builder(layers) == ("sonnet", None)
+
+    layers.write_global({"models": LEVEL_MODELS, "launcher": _level_launcher({"claude": "bogus"})})
+    assert _builder(layers) == ("sonnet", None)
+
+
+def test_task176_level_advanced_injects_advanced_cell_into_command(layers):
+    from worktree_launcher import settings
+
+    layers.write_global({"models": LEVEL_MODELS, "launcher": _level_launcher({"claude": "advanced"})})
+    model, error = _builder(layers)
+
+    assert (model, error) == ("opus", None)
+    assert settings.resolve_command(layers.load(), task_path=TASK_PATH, model=model) == (
+        f'claude --model opus "{TASK_PATH} 이어서 수행"'
+    )
+    # 다른 provider는 영향을 받지 않는다(standard).
+    assert _builder(layers, "codex") == ("gpt-5.6-terra", None)
+
+
+def test_task176_level_light_uses_light_cell(layers):
+    layers.write_global({"models": LEVEL_MODELS, "launcher": _level_launcher({"claude": "light"})})
+
+    assert _builder(layers) == ("haiku", None)
+
+
+def test_task176_level_agent_key_beats_provider_key(layers):
+    acct = {"provider": "codex", "argv_template": 'codex --no-daemon --add-dir "{meta_dir}" "{utterance}"'}
+    layers.write_global({
+        "models": LEVEL_MODELS,
+        "launcher": {"agents": {"acct2": acct}, **_level_launcher({"codex": "light", "acct2": "advanced"})},
+    })
+
+    assert _builder(layers, "codex") == ("gpt-5.6-luna", None)
+    assert _builder(layers, "acct2") == ("gpt-5.6-sol", None)
+
+
+def test_task176_level_inherit_cell_injects_nothing(layers):
+    models = {"claude": {"standard": "sonnet", "advanced": "inherit"}}
+    layers.write_global({"models": models, "launcher": _level_launcher({"claude": "advanced"})})
+
+    assert _builder(layers) == (None, None)
+
+
+def test_task176_level_missing_cell_is_unresolved_error(layers):
+    layers.write_global({
+        "models": {"claude": {"standard": "sonnet"}},
+        "launcher": _level_launcher({"claude": "advanced"}),
+    })
+
+    assert _builder(layers) == (None, "models.claude.advanced")
+
+
+def test_task176_level_with_effort_orders_model_then_effort(layers):
+    from worktree_launcher import settings
+
+    layers.write_global({"models": LEVEL_MODELS, "launcher": {
+        **_level_launcher({"claude": "advanced"}), "builderEffort": {"claude": "high"},
+    }})
+    loaded = layers.load()
+    model, error = _builder(layers)
+    effort = settings.resolve_builder_effort(loaded)
+
+    assert (model, error, effort) == ("opus", None, "high")
+    assert settings.resolve_command(loaded, task_path=TASK_PATH, model=model, effort=effort) == (
+        f'claude --model opus --effort high "{TASK_PATH} 이어서 수행"'
+    )
+
+
+def test_task176_level_local_overrides_global_per_agent_key(layers):
+    layers.write_global({
+        "models": LEVEL_MODELS,
+        "launcher": _level_launcher({"claude": "advanced", "codex": "light"}),
+    })
+    layers.write_local({"launcher": _level_launcher({"claude": "light"})})
+
+    loaded = layers.load()
+    assert loaded.get("builderModelLevel") == {"claude": "light", "codex": "light"}
+    assert _builder(layers) == ("haiku", None)
+    assert _builder(layers, "codex") == ("gpt-5.6-luna", None)
