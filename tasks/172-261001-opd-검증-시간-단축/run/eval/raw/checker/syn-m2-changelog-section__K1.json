@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": "low",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 26.6,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 22181,
+  "stop_reason": "end_turn",
+  "session_id": "0aa21bac-52f5-45bb-aa4d-99c9b8e8599b",
+  "total_cost_usd": 0.1391986,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 23941,
+   "cache_read_input_tokens": 87073,
+   "output_tokens": 2600,
+   "output_tokens_details": {
+    "thinking_tokens": 26
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 23941,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 780,
+     "cache_read_input_tokens": 28867,
+     "cache_creation_input_tokens": 864,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 864
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 2600,
+    "cacheReadInputTokens": 87073,
+    "cacheCreationInputTokens": 23941,
+    "webSearchRequests": 0,
+    "costUSD": 0.1391986,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 26,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K1/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K1/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"demo-guide.md 변경 구간(2–18줄)을 검사했다. finding은 1건이다. GC-001(advisory)은 13줄에 `## 변경이력` 절이 추가됐다는 내용으로, opal-doc-standard.md §5 위반이다. 이력은 git과 DONE.md가 소유하므로 이력 절을 제거해야 한다. 이 finding은 사전 검사(precheck)가 낸 것이다. 모델 검사에서 추가된 finding은 없다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \".../out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \".../out/convention-review-input-2026-10-01T00-00-00.json\",\n    \".../out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \".../out/GC-CONVENTION-2026-10-01T00-00-00.md\"\n  ]\n}\n```\n\n`changed_files`의 경로는 모두 `output_dir`(`/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K1/out`) 아래에 있고, 위에서는 `...`으로 줄여 적었다.\n\n진입 게이트의 `event-loader verify`는 `ok: true`로 통과했다.",
+  "ttft_ms": 1309,
+  "type": "result",
+  "duration_ms": 23375,
+  "uuid": "96eacaf8-8159-4485-86b8-191393202902",
+  "ttft_stream_ms": 960,
+  "time_to_request_ms": 47,
+  "first_content_frame_ms": 960,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

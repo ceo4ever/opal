@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": "low",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 37.4,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 32655,
+  "stop_reason": "end_turn",
+  "session_id": "d5431065-0dca-479d-99c0-ae038706c11e",
+  "total_cost_usd": 0.1979896,
+  "usage": {
+   "input_tokens": 16,
+   "cache_creation_input_tokens": 30669,
+   "cache_read_input_tokens": 186208,
+   "output_tokens": 3804,
+   "output_tokens_details": {
+    "thinking_tokens": 81
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 30669,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 652,
+     "cache_read_input_tokens": 35595,
+     "cache_creation_input_tokens": 864,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 864
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 16,
+    "outputTokens": 3804,
+    "cacheReadInputTokens": 186208,
+    "cacheCreationInputTokens": 30669,
+    "webSearchRequests": 0,
+    "costUSD": 0.1979896,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 81,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-j1-korean-identifier__K1/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-j1-korean-identifier__K1/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"변경 구간 8~25행을 검사했다. 사전 검사(기계 규칙 4종)는 0건이다. 모델 검사에서 blocking 1건(GC-001)이 나왔다. 20~25행의 함수명·매개변수·변수가 한글인데, CONVENTIONS.md §언어 규칙은 코드/변수/필드명을 English로 정한다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \"out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \"out/convention-review-input-2026-10-01T00-00-00.json\",\n    \"out/model-findings.json\"\n  ]\n}\n```\n\n`changed_files`의 경로는 모두 `output_dir` 기준 상대 경로다. 평가 하네스 지시에 따라 `convention-precheck/run.sh`는 저장소 소스 경로로 실행했다.",
+  "ttft_ms": 1902,
+  "type": "result",
+  "duration_ms": 34363,
+  "uuid": "e5b44c96-844c-4c53-9dd8-df64a0c42625",
+  "ttft_stream_ms": 1568,
+  "time_to_request_ms": 56,
+  "first_content_frame_ms": 1569,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

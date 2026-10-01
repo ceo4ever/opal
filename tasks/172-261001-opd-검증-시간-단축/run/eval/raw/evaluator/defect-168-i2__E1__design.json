@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 51.7,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 46608,
+  "stop_reason": "end_turn",
+  "session_id": "4a12ccb5-71b3-426a-ab14-a329a77c6861",
+  "total_cost_usd": 0.18694079999999996,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 12121,
+   "cache_read_input_tokens": 97104,
+   "output_tokens": 3526,
+   "output_tokens_details": {
+    "thinking_tokens": 940
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 12121,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2740,
+     "cache_read_input_tokens": 29849,
+     "cache_creation_input_tokens": 740,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 740
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 3526,
+    "cacheReadInputTokens": 97104,
+    "cacheCreationInputTokens": 12121,
+    "webSearchRequests": 0,
+    "costUSD": 0.18694079999999996,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 940,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "판정 결과(JSON만 반환, 파일 생성 없음):\n\n```json\n{\n  \"input_bundle_hash\": \"27522876917ef63792862d076b7e3a5b9c51cfe3f699079408d6fcf4ccf38387\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"FAIL\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"FAIL\",\n      \"recoverability\": \"FAIL\"\n    },\n    \"gaps\": [\n      \"completeness-1: PLAN.md:34 (## Findings > 미확인 가정) — \\\"semi-agentic·agentic 모드별 user_confirm 담당자 차이를 아직 조사하지 않았다\\\"는 가정을 해소하는 Work item이 없다. 위험 표 PLAN.md:52 H-1의 설계 대응도 \\\"없음(아직 미해결)\\\"이어서, TASK.md:33 AC-2를 충족하는 데 필요한 조사와 결정이 구현자에게 넘어가 있다\",\n      \"completeness-2: PLAN.md:46 (W-1 완료 기준 연결 AC-1, AC-2) — W-1이 AC-1과 AC-2를 연결은 하지만, AC가 요구하는 '명시'를 만들 산출물(전이별로 어떤 행을 마크하는지 보여 주는 대응표, 모드별 담당자 표)이 PLAN 어디에도 없다. AC를 무엇으로 충족할지 구현자가 정해야 한다\",\n      \"decision_clarity-1: PLAN.md:40 (D-1 변경 후 계약) — \\\"각 전이가 어떤 행을 마크하는지는 구현 중 lifecycle.py 코드를 보면서 정한다\\\"고 되어 있다. lifecycle.py의 각 전이가 state.json의 어느 행을 마크하는지가 구현자의 선택으로 남아 있다\",\n      \"decision_clarity-2: PLAN.md:40 (D-1 변경 후 계약) — \\\"semi-agentic은 사용자가, agentic은 PM이 마크하거나 혹은 자동 승인될 수도 있다 — 모드별 정확한 담당자는 아직 정하지 않았다\\\"고 되어 있다. user_confirm 행의 담당자(사용자/PM/자동 승인)를 모드별로 고르는 일이 구현자에게 남아 있다\",\n      \"executability-1: PLAN.md:46 (W-1 구체적 변경) — \\\"어떤 행을 마크할지, user_confirm 행을 누가 마크할지는 구현하면서 정한다\\\"고 되어 있다. Work item만으로는 구현할 수 없고 추가 설계가 필요하다. 구현자가 전이↔행 대응과 담당자를 직접 설계해야 한다\",\n      \"recoverability-1: PLAN.md:56 (## Release and recovery) — \\\"별도 배포 절차 없음(축소판)\\\"만 있다. lifecycle.py 변경을 적용한 뒤의 검증 순서와, 잘못된 행 마크로 state.json 상태가 어긋났을 때 되돌리는 경로(lifecycle.py 원복, state.json 행 정정 절차)가 없다. 적용과 복구 방법이 구현자의 선택으로 남아 있다\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\n설계 4축이 모두 FAIL입니다.\n\n- **completeness(완전성)**: TASK의 AC-1과 AC-2는 W-1에 연결은 되어 있습니다. 하지만 미확인 가정인 user_confirm 담당자를 해소하는 Work item이 없고, 위험 H-1의 설계 대응도 \"없음\"입니다.\n- **decision_clarity(결정 명확성)**: D-1이 전이↔행 대응과 모드별 user_confirm 담당자를 모두 \"구현 중 정한다\"로 열어 두었습니다. 그대로 미결정입니다.\n- **executability(실행 가능성)**: W-1의 담당·파일·순서는 분명합니다. 그러나 \"구현하면서 정한다\"는 표현 때문에 앵커의 \"추가 설계 없이 구현 가능\" 조건을 충족하지 못합니다.\n- **recoverability(복구 가능성)**: 적용 뒤 검증 순서와 실패 시 복구 경로가 둘 다 없습니다.\n\n참고로 fixture 주석에 적힌 원본 판정은 executability와 recoverability가 PASS였습니다. 이번에는 앵커 문구를 그대로 적용해 두 축도 FAIL로 판정했습니다. 원본 gaps 원문에 있는 close.done_md~close.final 담당자 문제는 이 축소판 TASK에 해당 요구가 없어서 gap에 넣지 않았습니다.\n\n`previous_gaps` 입력이 없어서 `resolved_gaps`는 빈 배열이고, `scope: design`이므로 `advisories`도 빈 배열입니다. 부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 쓰지 않았습니다. 시나리오 결과와 합쳐 최종 판정을 내는 일은 `design-gate combine`이 맡습니다.\n\n`worker.dispatch` receipt는 시작할 때 직접 다시 확인했고 `ok: true`(문서 4건 확인)였습니다.",
+  "ttft_ms": 7225,
+  "type": "result",
+  "duration_ms": 47965,
+  "uuid": "5b6e3d23-9b86-4733-9548-4e1698b090ee",
+  "ttft_stream_ms": 4478,
+  "time_to_request_ms": 73,
+  "first_content_frame_ms": 4479,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

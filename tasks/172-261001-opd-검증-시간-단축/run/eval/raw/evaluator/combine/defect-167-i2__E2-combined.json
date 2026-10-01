@@ -1,0 +1,34 @@
+{
+  "input_bundle_hash": "481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: `TASK.md` §Constraints: \"C-1: 기존 record 계약의 필수 필드를 바꾸지 않는다.\" ↔ `PLAN.md` §Work items W-1·§Risks — C-1이 Work item·Risk·시나리오 어디에도 이어지지 않는다. 그래서 W-1의 '빈 결과로 기록'을 할 때 필수 필드를 채울지, 비울지, 생략할지를 구현자가 정해야 한다",
+      "completeness-2: `PLAN.md` §Findings 미확인 가정: \"exit 16과 17의 차이(완전 미디스패치 vs 부분 디스패치)가 record 처리에 어떤 영향을 주는지 아직 확인하지 않았다.\" — 이 가정이 §Risks에도 시나리오에도 이어지지 않는다. `TEST-SCENARIO.md` §Scenarios S-1은 exit 16만 다룬다. 그래서 exit 17(부분 디스패치)을 exit 16과 같게 처리할지 따로 처리할지를 구현자가 정해야 한다",
+      "decision_clarity-1: `PLAN.md` §Decisions and contracts D-1: \"coverage가 exit 16/17을 반환하면 PM이 상황에 맞게 record를 생략하거나 빈 결과로 기록할 수 있다 — 구체적 분기 기준은 아직 정하지 않았다.\" — record를 생략할지 빈 결과로 기록할지, 그리고 어떤 조건에서 어느 쪽을 택할지가 정해져 있지 않다",
+      "decision_clarity-2: `PLAN.md` §Risks H-1 설계 대응: \"없음(아직 미해결)\" — 미디스패치 회차를 설계 게이트 반복 상한 계산에서 1회로 셀지 말지가 정해져 있지 않다",
+      "executability-1: `PLAN.md` §Work items W-1 구체적 변경: \"(정확한 기준은 구현 중 정리)\" — Work item만 보고는 구현할 수 없다. design-gate.md에 쓸 분기 기준을 구현자가 구현 중에 직접 설계해야 한다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.0,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md` §Scenarios S-1 기대 결과 — 'PM이 record를 생략하거나 빈 결과로 기록한다(정확한 분기 기준 미정)'가 두 동작을 모두 합격으로 받아들인다. 그래서 AC-1(exit 16 또는 17 회차의 record 처리가 명확함)을 검증할 판정 기준이 없고, 생략할지 빈 결과로 기록할지는 구현자에게 남아 있다. exit 17 회차에서 record를 어떻게 처리할지도 시나리오가 정하지 않았다."
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

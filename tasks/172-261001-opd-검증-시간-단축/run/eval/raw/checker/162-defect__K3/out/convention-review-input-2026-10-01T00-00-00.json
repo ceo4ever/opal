@@ -1,0 +1,240 @@
+{
+  "base_sha": "c6e295d467aace71d994ca139819061f64143d02",
+  "head_sha": "48f25a5aac77d320b4f491ddb938992acba50328",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "docs/CONVENTIONS.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          238,
+          273
+        ]
+      ]
+    },
+    {
+      "path": "docs/PROJECT.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          110,
+          131
+        ],
+        [
+          268,
+          288
+        ]
+      ]
+    },
+    {
+      "path": "opal/agents/opal-test-agent/AGENT.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          12,
+          51
+        ],
+        [
+          60,
+          80
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/events.json",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          343,
+          367
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/harness/guards.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          91,
+          102
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/harness/pm-review-gate.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          90,
+          111
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/harness/test-cycle.md",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          33
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/op-dev-execute/references/execute-guide.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          72,
+          95
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/op-dev-test-scenario/references/test-scenario-guide.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          7,
+          27
+        ],
+        [
+          34,
+          55
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-pilot-dev/SKILL.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          257,
+          298
+        ],
+        [
+          310,
+          332
+        ],
+        [
+          386,
+          406
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/tests/test_event_loader_test_event.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          39
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/schema/state.schema.json",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          215,
+          278
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          420,
+          447
+        ],
+        [
+          455,
+          475
+        ],
+        [
+          586,
+          621
+        ],
+        [
+          4694,
+          4737
+        ],
+        [
+          4751,
+          4772
+        ],
+        [
+          4835,
+          4921
+        ],
+        [
+          7603,
+          7646
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_state_tool_test_cycle.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          126
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          37,
+          92
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-tool/worktree_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          11,
+          31
+        ],
+        [
+          1839,
+          1901
+        ],
+        [
+          2932,
+          2956
+        ]
+      ]
+    }
+  ]
+}

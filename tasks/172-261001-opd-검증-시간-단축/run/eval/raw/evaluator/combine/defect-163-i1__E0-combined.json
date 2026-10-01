@@ -1,0 +1,34 @@
+{
+  "input_bundle_hash": "3a9f4f63d8de726b9dc2584772f5629b5adf4d2bebf6bbf3826d6fc4e6574215",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: TASK.md:28 (## Constraints C-1) ↔ PLAN.md:42-52 (## Work items, ## Risks), TEST-SCENARIO.md:20-23 — 제약 C-1 '기존 checkpoint 커밋 포맷을 바꾸지 않는다'가 Work item, Risk, 시나리오 어디에도 연결되지 않았다. D-1 후보인 '로컬에만 확정'이나 '권한 상승 재시도'가 커밋 포맷을 보존하는지 확인할 방법이 없어, 포맷 보존을 지킬지와 그 검증 방법이 구현자에게 맡겨져 있다.",
+      "decision_clarity-1: PLAN.md:40 (## Decisions and contracts D-1) — '권한을 상승시켜 재시도하거나, 혹은 허브 쓰기를 포기하고 로컬에만 확정할 수도 있다 — 어느 쪽인지는 구현 중 상황을 보고 정한다'라고 되어 있다. checkpoint 허브 쓰기 실패 시 권한 상승 재시도와 로컬 확정 중 무엇을 할지, 그리고 그때의 오류 코드와 복구 안내 문구가 정해지지 않아 구현자가 골라야 한다.",
+      "decision_clarity-2: PLAN.md:46 (## Work items W-1 구체적 변경) — 'cmux가 없는 환경은 status 조회를 지원하거나, 지원하지 않으면 그에 맞게 안내한다(구체적 지원 여부는 미정)'라고 되어 있다. cmux가 없을 때 status를 지원할지, 미지원이면 어떤 계약(오류 코드, 종료 동작, 안내 문구)을 따를지가 구현자에게 남아 있다.",
+      "executability-1: PLAN.md:46 (## Work items W-1) — '권한 상승 재시도 또는 로컬 확정 중 적절한 쪽을 적용한다'라고 되어 있어, W-1만 보고는 추가 설계 없이 구현할 수 없다. 분기 조건, 재시도 여부와 횟수, 반환 오류 코드를 구현자가 새로 설계해야 한다. PLAN.md:52 H-1의 설계 대응도 '없음(아직 미해결)'이라 막힌 부분을 풀어 줄 근거가 없다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 1,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.333,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md` §Scenarios S-1: \"오류 코드와 복구 안내가 반환된다(구체적 방식 미정)\" — 어떤 오류 코드와 복구 안내가 나와야 하는지(권한 상승 재시도 결과인지, 로컬 확정 안내인지)를 구현자가 정해야 하므로 AC-1 목표의 통과·실패를 가를 기준이 없다. `PLAN.md` §Decisions and contracts D-1의 양자택일이 확정되지 않은 것이 원인이다",
+      "boundary-1: `TEST-SCENARIO.md` §Scenarios S-2: \"안전하게 동작하거나 명확히 실패한다(지원 여부 미정)\" — cmux 미설치 경계에서 status 조회를 지원할지, 정해진 오류로 실패할지를 구현자가 정해야 한다. 두 결과를 모두 통과로 인정하므로 경계 계약을 검증하지 못한다(`PLAN.md` §Work items W-1: \"구체적 지원 여부는 미정\")"
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

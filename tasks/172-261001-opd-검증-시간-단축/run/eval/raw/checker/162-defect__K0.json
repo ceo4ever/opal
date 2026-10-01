@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": null,
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 57.1,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 49029,
+  "stop_reason": "end_turn",
+  "session_id": "aa86f611-832c-4467-86cd-f11160be2d39",
+  "total_cost_usd": 0.35186979999999995,
+  "usage": {
+   "input_tokens": 22,
+   "cache_creation_input_tokens": 55096,
+   "cache_read_input_tokens": 392109,
+   "output_tokens": 5302,
+   "output_tokens_details": {
+    "thinking_tokens": 822
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 55096,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 798,
+     "cache_read_input_tokens": 54175,
+     "cache_creation_input_tokens": 921,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 921
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 22,
+    "outputTokens": 5302,
+    "cacheReadInputTokens": 392109,
+    "cacheCreationInputTokens": 55096,
+    "webSearchRequests": 0,
+    "costUSD": 0.35186979999999995,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 822,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 13,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/162-defect__K0/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/162-defect__K0/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"대상 16개 파일 중 High 2건(blocking)이 나왔습니다. 신규 테스트 파일 2개에 @header 블록이 없습니다. GC-001은 test_event_loader_test_event.py, GC-002는 test_state_tool_test_cycle.py입니다. 모델 검사 finding은 0건입니다. state_tool.py와 worktree_tool.py의 헤더 description이 낡은 점은 변경 구간 밖이라 finding에서 뺐고, 보고서 참고란에만 적었습니다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"gc-findings-convention-2026-10-01T00-00-00.json\",\n    \"gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \"convention-review-input-2026-10-01T00-00-00.json\"\n  ]\n}\n```\n\n`changed_files`의 경로는 모두 `output_dir`(`.../162-defect__K0/out/`) 기준 상대 경로입니다.\n\n`worker.dispatch` receipt 검증은 `ok: true`로 통과했습니다.\n\n`check_status`가 `pass`인데 blocking finding이 2건 있는 것은 도구가 낸 값을 그대로 둔 결과입니다. `pass`는 검사가 모두 수행됐다는 뜻으로 읽었습니다. 이 의미는 `gc-finding-schema.md` §2에서 확인하지 못했습니다.",
+  "ttft_ms": 2133,
+  "type": "result",
+  "duration_ms": 51863,
+  "uuid": "a52f370e-5a2a-4fe0-8beb-f3cd75255696",
+  "ttft_stream_ms": 1354,
+  "time_to_request_ms": 381,
+  "first_content_frame_ms": 1354,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

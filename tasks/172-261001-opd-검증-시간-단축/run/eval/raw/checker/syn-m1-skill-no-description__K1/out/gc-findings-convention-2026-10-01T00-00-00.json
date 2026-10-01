@@ -1,0 +1,46 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/skills/op-demo-check/SKILL.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "ad30895c751c8cfd",
+      "category": "frontmatter:description",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/skills/op-demo-check/SKILL.md",
+        "line": 1
+      },
+      "evidence": "SKILL.md 첫 frontmatter에 `description` 키가 없다",
+      "impact": "에이전트·스킬 로더가 정의를 식별하지 못할 수 있다",
+      "remediation": {
+        "guidance": "첫 YAML frontmatter에 `description` 키를 추가한다",
+        "reference": "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+        "auto_fixable": false
+      },
+      "verification": "파일 첫 frontmatter에 `description:`가 있다",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base 39b9b231c9f096dfff0f3be1c71f18173375aa76 HEAD -> 39b9b231c9f096dfff0f3be1c71f18173375aa76",
+    "git diff --name-status --diff-filter=ACMR 39b9b231c9f0 HEAD -> 1 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4",
+    "model findings dropped: out_of_range=0, mechanical_rule=0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

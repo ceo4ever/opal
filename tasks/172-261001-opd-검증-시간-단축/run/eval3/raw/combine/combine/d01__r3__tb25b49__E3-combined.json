@@ -1,0 +1,28 @@
+{
+  "input_bundle_hash": "c0ba0a7a3c50b36ce6a8ec725e23d47ff8f120f71185c5f0a357db7afa5ba5a8",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md §Work items W-3·§Findings ### 문서 갱신 — TASK.md AC-2는 'opd·opds CLOSE와 merge 후 안내'를 함께 정합 대상으로 명시하지만 PLAN은 `opal/skills/opal-pilot-dev/SKILL.md`만 고치고 opds(`opal/skills/opal-pilot-dev-short/SKILL.md`)는 언급하지 않는다. opds SKILL에도 CLOSE 스텝 3 op-brain-ingest 디스패치와 `<프로젝트-루트>/.opal/brain/` 표기가 있다(`opal-pilot-dev-short/SKILL.md:195-197`). 그런데 D-8(ingested_pages로 DONE 선언 보정)·D-10(프로젝트 루트 = 워크트리 자신)·merge 후 index/충돌 안내를 opds에도 적용할지, opds는 워크트리를 쓰지 않아 해당이 없다고 볼지를 정하지 않아서 그 판단이 구현자에게 남는다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

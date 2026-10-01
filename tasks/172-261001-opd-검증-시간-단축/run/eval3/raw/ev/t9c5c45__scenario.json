@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "medium",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/246cf129-7d08-4ea2-82da-97b704032cf4/scratchpad/e3w/work/fx/t9c5c45",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2121 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 37.5,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 33265,
+  "stop_reason": "end_turn",
+  "session_id": "a20e1ae6-c0e8-45dd-bc1c-368265e9c107",
+  "total_cost_usd": 0.3844736,
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 37926,
+   "cache_read_input_tokens": 103508,
+   "output_tokens": 3017,
+   "output_tokens_details": {
+    "thinking_tokens": 853
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 37926,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2542,
+     "cache_read_input_tokens": 47053,
+     "cache_creation_input_tokens": 3259,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 3259
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 6,
+    "outputTokens": 3017,
+    "cacheReadInputTokens": 103508,
+    "cacheCreationInputTokens": 37926,
+    "webSearchRequests": 0,
+    "costUSD": 0.3844736,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 853,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 3,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"2c4d1bcab562e6a2cf6533ed19dd90f74ff6763b103176da0be803ad0c174eb1\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 0, \"adoption\": 2, \"boundary\": 1},\n    \"average\": 1.0,\n    \"gaps\": [\n      \"goal-1: TEST-SCENARIO.md §Scenarios S-1 '기대 결과' 열 — 기대 결과가 \\\"D-1 (a)/(b)/(c) 중 하나로 정합이 맞춰진다(구체적 방법 미정)\\\"로 적혀 있어 결과를 관찰해 통과/실패를 가를 수 없다. AC-1(\\\"맞추는 방법이 명확히 하나로 정해진다\\\")을 검증하는 시나리오가 사실상 없다. 테스트 작성자가 (a) 워커 page 집합 ⊆ D인지, (b) finalize 후 DONE.md 선언이 워커 결과와 같아지는지, (c) PM 역반영 후 선언이 워커 결과와 같아지는지 중 무엇을 단언할지 직접 골라야 한다\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [\n    {\n      \"id\": \"A-1\",\n      \"kind\": \"cheaper_layer\",\n      \"targets\": [\"S-1\"],\n      \"basis\": \"S-1은 행동이 'op-brain-ingest 워커 디스패치 후 finalize'인 실호출 서브에이전트 시나리오다. 그런데 이 시나리오가 검증하는 계약은 워커가 쓴 page 경로 집합과 DONE.md 선언 집합 D의 정합, 그리고 finalize의 ATTRIBUTION_COMMIT_BLOCKED 반응뿐이다. 둘 다 기록된 결과 파일만으로 증명할 수 있다. 하나는 워커 결과 JSON이나 워크트리 변경 경로 목록이고, 다른 하나는 finalize 출력이다. AC-1의 수용 기준은 모델의 판단 품질이 아니다. '방법·환경' 열에는 `[실호출 1회]` 표지가 없고 'unit'으로만 적혀 있어, 행동(실제 워커 디스패치 후 finalize)과 표기된 계층이 서로 다르다.\",\n      \"recommendation\": \"S-1에서 실제 워커 디스패치를 빼고, 미리 기록된 워커 결과 fixture(D 밖 경로 1건 포함)를 finalize에 넣는 방식으로 바꾼다. 그다음 정해진 정합 방법의 결과를 단언한다. 예: (a)라면 D 밖 쓰기가 거부되는지, (b)/(c)라면 갱신된 DONE.md 선언이 워커 결과와 같은지, 그리고 C-1 차단 동작이 그대로인지 확인한다. 실호출이 필요하면 `[실호출 1회]`로 표시한 별도 시나리오 하나로 분리한다.\"\n    }\n  ]\n}\n```\n\n판정 근거 요약 (verify `ok: true`, 문서 4건 적용 후 진행):\n- **① goal = 0**: 시나리오는 S-1 하나뿐이다. 그 기대 결과가 \"(a)/(b)/(c) 중 하나 … 구체적 방법 미정\"이라 단언할 수 있는 결과가 없고, 그래서 AC-1을 검증하지 못한다. PLAN D-1의 미결정이 시나리오에 그대로 넘어온 것이다.\n- **⑤ adoption = 2**: 이 목표는 기존 방식을 새 방식으로 교체하는 것이 아니다. 두 집합을 맞추는 것이므로 채택/잔존을 검증할 대상이 없다.\n- **⑥ boundary = 1**: S-1의 조건 \"워커가 D 밖 page를 씀\"은 경계 경로를 겨냥하므로 0점은 아니다. 다만 기대 결과가 정해지지 않았고, C-1(ATTRIBUTION_COMMIT_BLOCKED 동작 불변)과 부딪히는 경우를 직접 확인하지 않아 2점에도 못 미친다.\n- 0점인 축(goal)이 있고 평균도 1.0으로 1.5에 못 미치므로 시나리오 쪽은 통과선을 넘지 못한다. 부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 이 결과에 넣지 않았다. 두 값을 계산하는 일은 `design-gate combine`이 맡는다.\n- 파일은 만들지 않았고, 바뀐 파일도 없다.",
+  "ttft_ms": 4414,
+  "type": "result",
+  "duration_ms": 34278,
+  "uuid": "56b2f16d-6241-4f55-965f-7b3b18ee688d",
+  "ttft_stream_ms": 2065,
+  "time_to_request_ms": 27,
+  "first_content_frame_ms": 2066,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

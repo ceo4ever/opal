@@ -1,0 +1,30 @@
+{
+  "input_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:73-74 (D-4·D-5) — `required: false` 계층이 실행됐다가 `fail`이면 어떻게 처리할지 정하지 않았다. D-4의 '`fail` 뒤 계층은 `not_run`'은 필수 여부를 따지지 않아 후속 필수 계층이 멈춘다. 그런데 전체 `fail`은 '필수 계층에 `fail`'일 때만이고, `incomplete` 조건에도 필수 계층의 `not_run`이 없다. 그래서 선행 `pass`가 1개라도 있으면 필수 검사가 미실행인데 전체 `pass`/exit 0이 된다(AC-7 위반 가능). 비필수 실패가 실행을 멈추는지, 전체를 `fail`로 만드는지, 필수 `not_run`을 전체 상태에 어떻게 반영할지를 구현자가 정해야 한다",
+      "decision_clarity-2: PLAN.md:72 (D-3) — 경로 처리 방식이 비어 있다. 상대 경로 `--changed-files`를 프로젝트 루트와 프로세스 cwd 중 어디 기준으로 풀지, `file_globs`를 basename과 프로젝트 상대 경로 중 무엇에 맞출지 정하지 않았다(예: `src/**/*.ts` 같은 패턴의 의미가 달라진다). `{files}` 자리에 여러 파일을 넣을 때 구분·셸 인용 방식, `scope.checked`를 요청 원문 그대로 둘지 정규화할지도 구현자에게 남아 있다",
+      "decision_clarity-3: PLAN.md:73 (D-4) — 전체 `incomplete` 사유가 여러 개 겹칠 때 무엇을 고를지 정하지 않았다(예: 필수 계층 1개는 `not_configured`, 나머지는 `not_applicable`이면 `required_layer_unverified`와 `no_check_executed`가 동시에 성립). PLAN.md:76 (D-7)의 최상위 `reason`이 `fail`일 때 가질 값과 계층 `check.status`의 값 범위도 정해지지 않았다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

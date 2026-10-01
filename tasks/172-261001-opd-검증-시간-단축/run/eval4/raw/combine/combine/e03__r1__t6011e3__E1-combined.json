@@ -1,0 +1,38 @@
+{
+  "input_bundle_hash": "c0ba0a7a3c50b36ce6a8ec725e23d47ff8f120f71185c5f0a357db7afa5ba5a8",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:67 (W-3), PLAN.md:54 (D-10) — TASK.md:39 AC-2 has two halves. The first half requires the worktree CLOSE procedure to direct updates to related docs and planning documents (산출물) on the same branch. The PLAN covers only the brain-ingest half. D-10 and W-3(a) add the 'worktree itself vs hub' note to `<프로젝트-루트>` in CLOSE step 3 (op-brain-ingest) only. CLOSE step 2, '관련 문서 업데이트' (opal/skills/opal-pilot-dev/SKILL.md:334-337, `<프로젝트-루트>/docs/PROJECT.md`), uses the same ambiguous term. No Finding, work item or scenario (S-6 only greps for D-8/D-9/D-10/D-15 wording) states or checks that step 2 is done on the same branch. The implementer still has to decide whether to change step 2, or to confirm and record that no change is needed."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6의 유형은 check(정적 검사, 조건 '없음')이다. 그런데 행동에 `scripts/install-mac.sh` 재배포를 1회 실행해 `~/.opal/`에 쓰고, 그 결과를 diff하는 실행 단계가 섞여 있다. 앞의 grep 검사와 달리 환경에 부작용을 남기는 동적 검증이고, 순서상 구현 완료 뒤 재배포라는 조건(D-12, C-4)이 필요하다.",
+      "recommendation": "재배포와 `~/.opal/tools/brain-tool/brain_tool.py` diff 확인을 S-6에서 떼어 별도 시나리오로 옮긴다. 그 시나리오는 integration으로 분류하고 조건을 '구현 완료 후 재배포'로 둔다. 나머지 grep·docstring·git diff 경로 확인은 S-6에 check로 남긴다."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

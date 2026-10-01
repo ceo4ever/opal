@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "low",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "low",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/246cf129-7d08-4ea2-82da-97b704032cf4/scratchpad/e3w/work/fx/t483ff1",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2121 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 23.7,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 19329,
+  "stop_reason": "end_turn",
+  "session_id": "73f11f2a-9cfc-4d21-ad96-cb33b9b237fd",
+  "total_cost_usd": 0.3725556,
+  "usage": {
+   "input_tokens": 4,
+   "cache_creation_input_tokens": 41378,
+   "cache_read_input_tokens": 57678,
+   "output_tokens": 1499,
+   "output_tokens_details": {
+    "thinking_tokens": 178
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 41378,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1116,
+     "cache_read_input_tokens": 45292,
+     "cache_creation_input_tokens": 8472,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 8472
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 4,
+    "outputTokens": 1499,
+    "cacheReadInputTokens": 57678,
+    "cacheCreationInputTokens": 41378,
+    "webSearchRequests": 0,
+    "costUSD": 0.3725556,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 178,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 2,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\nThe receipt check passed (`ok: true`, 4 documents checked) before scoring began. No files were created.\n\nWhy each score:\n- **Goal = 2:** The task's goal is to separate the install check from the real check, and the scenarios test it at the real-tool and deployed-install level, beyond stubs:\n  - S-9 runs the real ruff, mypy and pytest. It covers a passing case and three failing cases (one per tool) and saves versions and output.\n  - S-10 runs the real eslint, tsc and vitest the same way, with four cases.\n  - S-13 checks the installed copy against the source by hash, then runs it from a new login shell and expects `status:\"pass\"`.\n- **Adoption = 2:** This task replaces one rule with another (`check` was used as the validation command, now `run` is). Both sides are covered:\n  - Old behaviour must be gone: S-1 shows an old config with only `check` does not run `check` and does not treat it as `run` (no marker file is created). S-8 shows the `ruff .` string no longer appears anywhere.\n  - New behaviour must be used: S-2 covers the explicitly migrated config. S-8 covers the global template and inferred configs. S-11 covers the consumer docs and matching the consumer list against grep results.\n- **Boundary = 2:** The failure and edge paths are tested directly:\n  - Missing `run` and empty execution are covered by S-1 and S-4.\n  - An install-check failure is kept distinct from a check failure (S-2b vs S-3, which return different exit codes).\n  - A failure stops the later layers, which are marked `not_run` (S-3).\n  - Changed files are filtered by pattern, missing files and files outside the project (S-5).\n  - Tools that cannot take a file list get no file arguments (S-5).\n  - Optional and required layers left unconfigured are handled separately (S-7).\n  - If a real tool cannot be installed, the row is reported as BLOCKED, not passed.\n\nNo advisories: S-1 to S-8 use stubs and S-9 and S-10 use real tools, so the two groups do not duplicate each other's checks, and none of the scenarios is on a more expensive test layer than it needs or is misclassified. No `previous_gaps` were passed in, so `resolved_gaps` is empty.",
+  "ttft_ms": 5933,
+  "type": "result",
+  "duration_ms": 20507,
+  "uuid": "ea387f31-d068-4c59-9c98-592901a9239e",
+  "ttft_stream_ms": 2785,
+  "time_to_request_ms": 29,
+  "first_content_frame_ms": 2785,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

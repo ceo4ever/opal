@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "medium",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/246cf129-7d08-4ea2-82da-97b704032cf4/scratchpad/e3w/work/fx/ta3d18a",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2121 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 50.8,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 46158,
+  "stop_reason": "end_turn",
+  "session_id": "ec693f57-db9e-4c2a-9ee9-9de3f78b9e43",
+  "total_cost_usd": 0.6733589999999999,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 69516,
+   "cache_read_input_tokens": 241155,
+   "output_tokens": 3448,
+   "output_tokens_details": {
+    "thinking_tokens": 803
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 69516,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1538,
+     "cache_read_input_tokens": 78872,
+     "cache_creation_input_tokens": 3030,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 3030
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 3448,
+    "cacheReadInputTokens": 241155,
+    "cacheCreationInputTokens": 69516,
+    "webSearchRequests": 0,
+    "costUSD": 0.6733589999999999,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 803,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: scenario) 채점 완료. scores goal 2, adoption 2, boundary 2, average 2.0. gaps와 advisories는 0건이다. 결과 결합과 verdict 산출은 design-gate combine이 맡는다.\",\n  \"input_bundle_hash\": \"8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": [],\n    \"axis_reasons\": {\n      \"goal\": \"TASK §Proposed outcome은 '실제 도구로 정상·위반 양쪽 사례를 검증'과 '실행한 검사의 명령·범위·결과·설정 출처 확인'을 요구한다. 이 요구를 사용자·운영 계층에서 직접 검증하는 시나리오가 있다. S-9(Python)와 S-10(TS)은 TEST-SCENARIO.md:185-186에서 실제 ruff·mypy·pytest·eslint·tsc·vitest를 정상 사례와 위반 3종에 실행한다. 정상은 exit 0, 위반은 exit 5와 계층 fail로 기대하고 버전·stdout을 evidence/real-tools/에 보존한다. S-13은 TEST-SCENARIO.md:189에서 정식 설치 뒤 새 로그인 셸로 배포본 resolve/unit이 실제 `ruff check .`·`mypy .`·`pytest`를 실행해 pass하는지 확인한다. S-6(:182)은 cwd·config.source/path·계층 cmd/exit/scope 관측(AC-3)을 공개 CLI 출력으로 단언한다. .scenario-coverage-input.json에서는 is_goal_scenario 플래그가 모두 false지만, 본문 내용으로 판단해 2점을 준다.\",\n      \"adoption\": \"교체형 목표다. 설치 확인용 check를 검사로 실행하던 경로를 run 계약으로 바꾼다. 새 계약의 채택은 세 시나리오가 확인한다. S-8(:184)은 전역 템플릿·pyproject 추론·package.json 추론에서 run 필드가 있고 check≠run인지, ruff run이 'ruff check .'인지 본다. S-11(1)(:187)은 execute-guide·opal-test-agent 소비자의 새 계약 반영을 본다. S-13(:189)은 배포본 템플릿과 스키마의 run 필드를 본다. 구형 경로가 남지 않았는지도 확인한다. S-1(:177)은 구형 설정에서 check가 실행되지도 run으로 대체되지도 않는지(표식 파일 미생성) 단언한다. S-8은 모든 출력에 `ruff .` 문자열이 없는지 본다. S-11(4)는 grep한 비이력 소비자와 Findings 목록이 빠짐없이 대응하는지 본다. 채택과 잔존을 모두 검증하므로 2점이다.\",\n      \"boundary\": \"실패·경계 경로를 직접 검증하는 시나리오가 있다. run 누락은 S-1, 설치 확인 실패와 검사 실패의 구분은 S-2(b)와 S-3, stop-on-fail 뒤 not_run 잔존은 S-3이 다룬다. 빈 계층·glob 불일치에 의한 빈 실행은 S-4(a)(b)가 본다. changed-files의 missing·outside_project·pattern_mismatch 제외와 file_scope_unsupported는 S-5가 본다. 선택 계층과 필수 계층의 incomplete 분기는 S-7이 본다. 실제 도구 위반 3종은 S-9/S-10이 다루고, 공급 실패는 BLOCKED로 처리한다(Setup :169). 근거 위치는 TEST-SCENARIO.md:177-186이다. 2점이다.\"\n    }\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```",
+  "ttft_ms": 4729,
+  "type": "result",
+  "duration_ms": 47594,
+  "uuid": "8d868d8a-524e-4a46-97a9-36ae1320f297",
+  "ttft_stream_ms": 2244,
+  "time_to_request_ms": 26,
+  "first_content_frame_ms": 2244,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

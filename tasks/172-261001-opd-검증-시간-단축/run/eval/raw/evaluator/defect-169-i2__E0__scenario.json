@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 50.1,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 44616,
+  "stop_reason": "end_turn",
+  "session_id": "c68995f1-38c7-41ff-95f4-24a95e21a71f",
+  "total_cost_usd": 0.17695460000000002,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 10783,
+   "cache_read_input_tokens": 93893,
+   "output_tokens": 3594,
+   "output_tokens_details": {
+    "thinking_tokens": 1095
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 10783,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2837,
+     "cache_read_input_tokens": 26661,
+     "cache_creation_input_tokens": 2590,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 2590
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 3594,
+    "cacheReadInputTokens": 93893,
+    "cacheCreationInputTokens": 10783,
+    "webSearchRequests": 0,
+    "costUSD": 0.17695460000000002,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 1095,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"2c4d1bcab562e6a2cf6533ed19dd90f74ff6763b103176da0be803ad0c174eb1\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 0, \"adoption\": 2, \"boundary\": 0},\n    \"average\": 0.67,\n    \"gaps\": [\n      \"goal-1: TEST-SCENARIO.md:22 (S-1 기대 결과) — AC-1(TASK.md \\\"정합 방법이 명확히 하나로 정해진다\\\")을 검증하는 유일한 시나리오인데, 기대 결과가 \\\"D-1 (a)/(b)/(c) 중 하나로 정합이 맞춰진다(구체적 방법 미정)\\\"이다. 어떤 결과가 통과인지 판정할 기준이 없다. 워커가 D 밖 page를 썼을 때 최종 page 집합과 DONE.md 선언이 어떤 상태여야 하는지 고르는 일이 구현자에게 남아 있다. 이 상태는 (a) 쓰기 거부, (b) DONE 선언 자동 갱신, (c) PM 역반영 대기 중 하나다.\",\n      \"boundary-1: TEST-SCENARIO.md:22 (S-1)·PLAN.md:52 (H-1)·TASK.md C-1 — S-1의 조건은 경계(D 밖 page 쓰기)지만 기대 결과가 정해지지 않아 경계를 실제로 검증하지 못한다. C-1(finalize의 ATTRIBUTION_COMMIT_BLOCKED 차단 동작 불변)과 H-1(귀속 커밋이 조용히 실패하는 경로)을 다루는 실패·부정 시나리오도 없다. 선언 밖 변경이 차단되는지, 그 실패를 관측하는 신호가 무엇인지 정하는 일이 구현자에게 남아 있다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [\n    {\n      \"id\": \"A-1\",\n      \"kind\": \"cheaper_layer\",\n      \"targets\": [\"S-1\"],\n      \"basis\": \"S-1의 행동은 'op-brain-ingest 워커 디스패치 후 finalize'로 서브에이전트를 실제로 호출한다. 하지만 검증할 계약은 '워커가 쓴 page 경로 집합 ↔ DONE.md 선언 집합 D의 정합'과 '선언 밖 변경 시 finalize 차단'이다. 둘 다 워커 결과 파일(기록된 page 경로 목록)을 고정 입력으로 주면 증명된다. 워커의 판단 품질은 AC-1의 수용 기준이 아니고, 방법·환경 열에 [실호출 1회] 표지도 없다. 방법 열은 'unit'인데 행동은 실디스패치여서 서로 맞지 않는다.\",\n      \"recommendation\": \"S-1을 '기록된 워커 결과(D 밖 경로가 포함된 page 목록 fixture) → finalize 정합 처리' 단위 검증으로 바꾼다. 실디스패치가 필요하면 [실호출 1회] 표지를 붙인 별도 시나리오로 분리한다.\"\n    }\n  ],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope=scenario) 채점 완료: scores={goal:0, adoption:2, boundary:0}, average=0.67. gaps 2건, advisory 1건(cheaper_layer)\",\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n**판정 요약**\n- 진입 게이트: `event-loader verify --event worker.dispatch`를 직접 실행해 `ok: true`(문서 4건 검증)를 확인한 뒤 진행했습니다.\n- **goal 0점**: AC-1을 검증하는 시나리오는 S-1 하나입니다. 그런데 기대 결과가 세 선택지 중 미정으로 남아 있어 통과/실패를 가를 수 없습니다.\n- **adoption 2점**: 이번 목표는 기존 동작을 바꾸는 것이 아니라 정합 방법을 정하는 것이어서 교체형이 아닙니다. 그래서 2점입니다.\n- **boundary 0점**: S-1의 조건은 경계 상황이지만 기대 결과가 비어 있어 실제로는 검증하지 못합니다. C-1과 H-1 같은 실패 경로도 다루지 않습니다.\n- `scope: scenario` 부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 쓰지 않았습니다. 이번 호출에는 `previous_gaps`가 없어서 `resolved_gaps`는 빈 배열입니다. 파일은 만들지 않았습니다.\n- 그대로 합치면 시나리오 쪽은 통과선 미달입니다. 0점 축이 두 개이고 평균 0.67이 1.5에 못 미칩니다. 최종 verdict는 `design-gate combine`이 결정합니다.",
+  "ttft_ms": 4941,
+  "type": "result",
+  "duration_ms": 46078,
+  "uuid": "2133aafc-4550-414c-be67-aedc5068ee18",
+  "ttft_stream_ms": 2534,
+  "time_to_request_ms": 55,
+  "first_content_frame_ms": 2534,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

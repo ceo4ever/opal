@@ -1,0 +1,32 @@
+{
+  "input_bundle_hash": "3a9f4f63d8de726b9dc2584772f5629b5adf4d2bebf6bbf3826d6fc4e6574215",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:40 (## Decisions and contracts, D-1 변경 후 계약) — checkpoint 허브 쓰기 실패 시 '권한 상승 후 재시도'와 '허브 쓰기 포기 후 로컬 확정' 중 무엇을 할지가 구현자에게 남아 있다. 하나로 확정하고 그 계약(재시도 횟수·조건 또는 로컬 확정 후 후속 허브 동기화 방식)을 명시해야 한다.",
+      "decision_clarity-2: PLAN.md:46 (## Work items, W-1 구체적 변경) — cmux 미설치 환경에서 status 조회를 지원할지, 미지원 시 어떤 계약(안전 진행이냐 명확 실패냐, 반환 메시지·종료 코드)을 따를지가 구현자에게 남아 있다.",
+      "decision_clarity-3: TASK.md:32 (AC-1) ↔ PLAN.md:36-40 (## Decisions and contracts) — AC-1이 요구하는 '명확한 오류 코드'의 값·형식과 복구 안내 문구·내용이 정의되지 않아 오류 코드 체계 설계가 구현자에게 남아 있다.",
+      "executability-1: PLAN.md:46 (## Work items, W-1) — 'D-1에 따라 … 중 적절한 쪽을 적용한다'는 미결정 D-1을 참조하므로, Work item만으로는 분기 동작을 정할 수 없고 구현 전에 추가 설계가 필요하다.",
+      "executability-2: PLAN.md:52 (## Risks, H-1 설계 대응) — 설계 대응이 '없음(아직 미해결)'이라 두 방식이 섞이는 위험을 막는 구현 지침이 없다. D-1을 확정한 뒤 대응을 기재해야 한다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 1,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 1.667,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

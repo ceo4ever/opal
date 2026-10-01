@@ -1,0 +1,30 @@
+{
+  "input_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:71-72 (D-2·D-3) — 두 결정이 비어 있다. 첫째, 범위 판정과 설치 확인 중 무엇을 먼저 하는지 정하지 않았다. D-3의 `no_matching_files` → `not_applicable` 판정과 D-2 ②의 `check` 선행 실행 중 어느 쪽이 먼저인지 알 수 없다. 그래서 대상 파일이 0개일 때 `check`를 실행할지 구현자가 정해야 한다. 둘째, `run` 없이 `run_files`만 있는 도구를 어떻게 다룰지 정하지 않았다. D-2 ①을 따르면 `not_configured`이고, TEST-SCENARIO S-4(b)의 'run_files만 쓰는 도구'를 따르면 `not_applicable`이다. 어느 쪽인지 구현자가 정해야 한다",
+      "decision_clarity-2: PLAN.md:73 (D-4) — 전체 `incomplete`의 사유 코드 세 개(`required_layer_unverified`·`no_check_executed`·`no_layers_declared`)가 동시에 성립할 때 최상위 `reason`을 무엇으로 낼지 정하지 않았다. 예를 들어 S-1처럼 필수 계층이 `not_configured`이면서 `pass` 계층이 0개인 경우다. 우선순위를 구현자가 정해야 한다",
+      "decision_clarity-3: PLAN.md:73-74 (D-4·D-5) — `required: false` 계층이 `fail`일 때 두 가지가 비어 있다. 하나는 이 실패도 stop-on-fail로 후속 계층을 `not_run` 처리하는지다. 다른 하나는 그 뒤 필수 계층이 `not_run`이면 전체 상태를 어떻게 정하는지다. 지금 규칙에서 `incomplete` 조건은 `tool_unavailable`·`not_configured`뿐이고 `not_run`은 빠져 있다. 그래서 앞 계층이 통과했다면 전체가 `pass`로 귀결될 수 있다. 처리 방식을 구현자가 정해야 한다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

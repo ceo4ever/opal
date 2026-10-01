@@ -1,0 +1,28 @@
+{
+ "findings": [
+  {
+   "id": "GC-001",
+   "fingerprint": "f177568de9b98185",
+   "category": "네이밍",
+   "severity": "medium",
+   "confidence": "high",
+   "disposition": "blocking",
+   "rule_id": "CONVENTIONS.md §언어 규칙",
+   "source_tier": "T0",
+   "location": {
+    "file": "opal/tools/demo-tool/demo_tool.py",
+    "line": 20,
+    "symbol": "합계_계산"
+   },
+   "evidence": "demo_tool.py:20-25 함수명 `합계_계산`, 파라미터 `숫자_목록`, 지역 변수 `결과`·`숫자`가 한글 식별자다. 같은 파일의 `average`·`values`는 영문이다.",
+   "impact": "'코드/변수/필드명: English' 규칙에 어긋나고 파일 내 식별자 언어가 불일치한다.",
+   "remediation": {
+    "guidance": "영문 snake_case로 변경한다. 예: `sum_values(values)`, 지역 변수 `total`·`value`. 호출처 확인 후 리네이밍한다.",
+    "reference": "docs/CONVENTIONS.md §언어 규칙",
+    "auto_fixable": true
+   },
+   "verification": "demo_tool.py에서 비ASCII 식별자 grep 결과가 0건이다.",
+   "suppression": null
+  }
+ ]
+}

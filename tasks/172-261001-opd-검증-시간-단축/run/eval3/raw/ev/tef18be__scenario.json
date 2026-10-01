@@ -1,0 +1,123 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/e3w/work/fx/tef18be",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2121 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 49.1,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 44417,
+  "stop_reason": "end_turn",
+  "session_id": "7475438e-2318-4323-8d00-2c9c6ff87a83",
+  "total_cost_usd": 0.6215928,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 61911,
+   "cache_read_input_tokens": 236124,
+   "output_tokens": 3952,
+   "output_tokens_details": {
+    "thinking_tokens": 936
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 61911,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2358,
+     "cache_read_input_tokens": 71427,
+     "cache_creation_input_tokens": 2866,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 2866
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 3952,
+    "cacheReadInputTokens": 236124,
+    "cacheCreationInputTokens": 61911,
+    "webSearchRequests": 0,
+    "costUSD": 0.6215928,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 936,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "판정은 통과 수준이지만, 이번 `scope: scenario` 부분 호출이라 `verdict`는 쓰지 않습니다(결합은 `design-gate combine` 소관). receipt 검증은 `ok: true`(4개 문서 확인)였고, 만든 파일은 없습니다.\n\n- **목표 달성 2점:** S-9·S-10이 실제 도구로 정상·위반 양쪽을 확인하고, S-13이 정식 설치된 배포본을 새 로그인 셸에서 실행해 목표를 직접 검증합니다.\n- **채택/잔존 2점:** 채택은 S-8·S-11·S-13, 잔존 제거는 S-1·S-8·S-11이 각각 확인합니다.\n- **경계/부정 2점:** 실패·경계 경로를 S-1~S-7이 계약 단위로, S-9·S-10이 실제 도구로 직접 검증합니다.\n- **advisory 1건:** S-11은 실행 행동이 없는 정적 문서 검사인데 행동 시나리오 표에 들어 있습니다(`misclassified`).\n- **입력 참고:** `.scenario-coverage-input.json`은 모든 시나리오의 `is_goal/adoption/boundary` 플래그가 `false`입니다. 채점은 이 플래그가 아니라 `TEST-SCENARIO.md` 본문 기준으로 했습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [\n    {\n      \"id\": \"A-1\",\n      \"kind\": \"misclassified\",\n      \"targets\": [\"S-11\"],\n      \"basis\": \"TEST-SCENARIO.md §Scenarios S-11 행의 행동은 (1) execute-guide.md·opal-test-agent/AGENT.md 문서 확인, (2) Markdown 상태값 grep, (3) gc-finding-schema.md git diff --stat, (4) 소비자 문자열 grep과 Findings 대조이며, 방법·환경도 '결정론 문서 검사'다. 시스템을 실행하는 단계 없이 정적 산출물만 검사하므로 행동 시나리오가 아니라 Check(정적 검사)에 해당한다. 같은 표의 S-1~S-10·S-13은 CLI 실행 결과를 관측하는 행동 시나리오다.\",\n      \"recommendation\": \"S-11을 행동 시나리오 표에서 빼 Check(정적 검사)로 재분류한다. 검증 대상 AC-1·AC-4·C-4 연결은 Check 쪽에 유지한다. S-12 (2)의 git status·diff 범위 검사도 같은 기준으로 Check 분리를 검토한다.\"\n    }\n  ]\n}\n```\n\n**축별 근거 (TEST-SCENARIO.md 인용)**\n\n- **① 목표 달성 = 2**\n  - S-9는 Python 사례 4종에 실제 ruff·mypy·pytest를 실행합니다. 정상이면 exit 0이고, 위반이면 exit 5와 함께 실패 계층의 stdout(ruff 규칙 코드, mypy `error:`, pytest `failed`)이 남습니다.\n  - S-10은 TS 4종에 실제 eslint·tsc·vitest를 같은 방식으로 실행합니다.\n  - S-13은 정식 설치 뒤 새 로그인 셸에서 배포본 `~/.opal/tools/test-tool/run.sh unit`이 실제 `ruff check .`·`mypy .`·`pytest`를 실행해 `status:\"pass\"`인지 확인합니다.\n  - 명령·범위·설정 출처 관측은 S-5·S-6이 공개 CLI JSON으로 직접 확인합니다.\n- **⑤ 채택/잔존 = 2** (교체형 목표: AC-4 \"구형 경로가 남지 않는다\")\n  - 채택: S-8은 전역 템플릿과 Python·TS 추론 출력 모두에 `run`이 있고 `check`≠`run`인지 봅니다. S-11 (1)은 소비자 문서가 새 계약으로 바뀌었는지, S-13 (3)은 배포본 resolve 결과가 ruff `run:\"ruff check .\"`인지 확인합니다.\n  - 잔존: S-1은 구형 설정에서 check를 실행하지도 run으로 대체하지도 않는지(표식 파일 미생성) 봅니다. S-8은 어느 출력에도 `ruff .` 문자열이 없는지, S-11 (4)는 grep에 나온 소비자가 모두 Findings에서 처리됐는지 확인합니다.\n- **⑥ 경계/부정 = 2**\n  - S-1: run 누락\n  - S-2(b): 설치 확인 실패를 검사 실패와 구별\n  - S-3: 앞 계층 실패 뒤 `not_run`\n  - S-4: 빈 계층, 매칭 파일 0개\n  - S-5: 존재하지 않는 파일(`missing`), 프로젝트 밖 경로(`outside_project`), 패턴 불일치(`pattern_mismatch`), 파일 단위 미지원\n  - S-7: 필수 계층이 검증되지 않은 경우\n  - S-9·S-10: 실제 도구의 위반 사례\n\n`previous_gaps` 입력이 없어서 `resolved_gaps`는 빈 배열입니다.",
+  "ttft_ms": 4776,
+  "type": "result",
+  "duration_ms": 45770,
+  "uuid": "5789c1fa-b4a1-439a-8ec4-169d59562507",
+  "ttft_stream_ms": 2962,
+  "time_to_request_ms": 53,
+  "first_content_frame_ms": 2962,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

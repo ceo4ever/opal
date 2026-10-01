@@ -1,0 +1,37 @@
+{
+  "input_bundle_hash": "27522876917ef63792862d076b7e3a5b9c51cfe3f699079408d6fcf4ccf38387",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md ## Findings > ### 미확인 가정 — 'semi-agentic·agentic 모드별 user_confirm 담당자 차이를 아직 조사하지 않았다'는 가정이 Work item·Risks·시나리오 어디에서도 해소되지 않는다. Risks H-1의 설계 대응은 '없음(아직 미해결)'이다. 그래서 AC-2를 어떻게 충족할지는 구현자가 정해야 한다.",
+      "completeness-2: PLAN.md ## Work items W-1 — AC-1·AC-2에 연결되어 있지만, AC-1이 요구하는 '전이별 state.json 행 명시'와 AC-2가 요구하는 'user_confirm 담당자 명시'를 PLAN이 직접 정하지 않는다. 모드별 정확한 동작을 정하는 일이 구현자에게 넘어간다.",
+      "decision_clarity-1: PLAN.md ## Decisions and contracts D-1 — '각 전이가 어떤 행을 마크하는지는 구현 중 lifecycle.py 코드를 보면서 정한다'라고 적혀 있다. 전이와 state.json 행의 대응(외부 동작 계약)이 정해지지 않아 구현자가 골라야 한다.",
+      "decision_clarity-2: PLAN.md ## Decisions and contracts D-1 — 'semi-agentic은 사용자가, agentic은 PM이 마크하거나 혹은 자동 승인될 수도 있다'라고 적혀 있다. user_confirm 행을 모드별로 누가 마크할지(사용자/PM/자동 승인)가 정해지지 않아 구현자가 골라야 한다.",
+      "executability-1: PLAN.md ## Work items W-1 '구체적 변경' — '어떤 행을 마크할지, user_confirm 행을 누가 마크할지는 구현하면서 정한다'라고 적혀 있다. 추가 설계 없이는 Work item을 구현할 수 없고, 호출할 state-tool mark의 인자(행 id)가 정해지지 않았다.",
+      "recoverability-1: PLAN.md ## Release and recovery — '별도 배포 절차 없음(축소판)'만 적혀 있다. lifecycle.py 변경을 적용·검증하는 순서도 없고, 잘못된 행 마크로 state.json이 어긋났을 때 되돌리는 경로도 없다. 실패하면 어떻게 복구할지는 구현자가 정해야 한다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 0
+    },
+    "average": 0.667,
+    "gaps": [
+      "goal-1: TEST-SCENARIO.md §Scenarios S-1 — 기대 결과가 \"state.json의 어떤 행이 마크되는지 확인(정확한 대응 미정)\"이라 AC-1의 전이↔행 대응을 판정할 기준이 없다. 어떤 전이가 어떤 행을 마크해야 통과인지를 구현자가 정하게 남아 있다",
+      "goal-2: TEST-SCENARIO.md §Scenarios S-2 — 기대 결과가 \"담당자(사용자/PM/자동)가 누구인지 확인(미정)\"이라 AC-2를 판정할 수 없다. semi-agentic user_confirm 행의 담당자를 구현자가 정하게 남아 있다. agentic 모드는 시나리오에 아예 없다",
+      "boundary-1: TEST-SCENARIO.md §Scenarios — 경계·부정 경로가 하나도 없다. 적용할 수 있는 경계가 있다: agentic 모드 user_confirm(PLAN D-1의 '자동 승인될 수도'), 담당자가 아닌 주체가 마크하려는 경우의 거부, C-1(state.json 스키마 불변) 위반 여부. 이 중 무엇을 검증할지 구현자가 정하게 남아 있다"
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

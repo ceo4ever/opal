@@ -1,0 +1,90 @@
+{
+  "findings": [
+    {
+      "fingerprint": "1e95bd0ecd324b48",
+      "category": "주석 언어",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §언어 규칙 + 인접 코드 관측(주석 한국어)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+        "line": 47,
+        "symbol": "start"
+      },
+      "evidence": "이번 변경이 추가한 주석 4줄(L47-50)이 영문이다. 기준 커밋의 같은 파일 주석은 한국어 2줄·영문 0줄이다.",
+      "impact": "같은 파일 안에서 주석 언어가 섞여 문서 본문 한국어 원칙과 인접 코드 관례에서 벗어난다.",
+      "remediation": {
+        "guidance": "추가한 주석을 한국어로 옮긴다(식별자·오류 코드는 영문 유지).",
+        "auto_fixable": false
+      },
+      "verification": "변경 구간의 `#` 주석에 한글이 포함됐는지 확인한다.",
+      "suppression": null
+    },
+    {
+      "fingerprint": "366827ffe16ffc1e",
+      "category": "주석 언어",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §언어 규칙 + 인접 코드 관측(주석 한국어)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+        "line": 184,
+        "symbol": "main"
+      },
+      "evidence": "이번 변경이 추가한 주석 4줄(L184-187)이 영문이다. 기준 커밋의 같은 파일 주석은 한국어 14줄·영문 0줄이다.",
+      "impact": "같은 파일 안에서 주석 언어가 섞여 문서 본문 한국어 원칙과 인접 코드 관례에서 벗어난다.",
+      "remediation": {
+        "guidance": "추가한 주석을 한국어로 옮긴다(식별자·오류 코드는 영문 유지).",
+        "auto_fixable": false
+      },
+      "verification": "변경 구간의 `#` 주석에 한글이 포함됐는지 확인한다.",
+      "suppression": null
+    },
+    {
+      "fingerprint": "cb46b508bc7957c0",
+      "category": "주석 언어",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §언어 규칙 + 인접 코드 관측(주석 한국어)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+        "line": 62
+      },
+      "evidence": "이번 변경이 추가한 주석 10줄(L62, 368, 568-569, 651-653, 663-665)이 영문이다. 기준 커밋의 같은 파일 주석은 한국어 27줄·영문 0줄이다.",
+      "impact": "같은 파일 안에서 주석 언어가 섞여 문서 본문 한국어 원칙과 인접 코드 관례에서 벗어난다.",
+      "remediation": {
+        "guidance": "추가한 주석을 한국어로 옮긴다(식별자·오류 코드는 영문 유지).",
+        "auto_fixable": false
+      },
+      "verification": "변경 구간의 `#` 주석에 한글이 포함됐는지 확인한다.",
+      "suppression": null
+    },
+    {
+      "fingerprint": "941c7c82c269385c",
+      "category": "주석 언어",
+      "severity": "low",
+      "confidence": "medium",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §언어 규칙 + 인접 코드 관측(주석 한국어)",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+        "line": 41
+      },
+      "evidence": "이번 변경이 추가한 주석 2줄(L41-42)이 영문이다. 기준 커밋의 같은 파일 주석은 한국어 17줄·영문 0줄이다.",
+      "impact": "같은 파일 안에서 주석 언어가 섞여 문서 본문 한국어 원칙과 인접 코드 관례에서 벗어난다.",
+      "remediation": {
+        "guidance": "추가한 주석을 한국어로 옮긴다(식별자·오류 코드는 영문 유지).",
+        "auto_fixable": false
+      },
+      "verification": "변경 구간의 `#` 주석에 한글이 포함됐는지 확인한다.",
+      "suppression": null
+    }
+  ]
+}

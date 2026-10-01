@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 43.5,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 38524,
+  "stop_reason": "end_turn",
+  "session_id": "d5b8308b-28c8-4e79-b214-e48ce6ab3a6f",
+  "total_cost_usd": 0.23969,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 19706,
+   "cache_read_input_tokens": 96150,
+   "output_tokens": 3139,
+   "output_tokens_details": {
+    "thinking_tokens": 554
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 19706,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2190,
+     "cache_read_input_tokens": 28911,
+     "cache_creation_input_tokens": 9263,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 9263
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 3139,
+    "cacheReadInputTokens": 96150,
+    "cacheCreationInputTokens": 19706,
+    "webSearchRequests": 0,
+    "costUSD": 0.23969,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 554,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "시나리오 3축은 모두 2점이고 평균 2.0이다. `scope: scenario` 부분 호출이라 `verdict`와 `rewrite_target`은 쓰지 않았고, 파일도 만들지 않았다. receipt 검증은 `ok: true`였다(필수 문서 4건 확인). 직전 회차 gaps를 받지 않아 `resolved_gaps`는 빈 배열이다.\n\n```json\n{\n  \"input_bundle_hash\": \"6af7a3f22658edfbb4d04b8ba7aaabd4defe044f54abf95e5410731cfe32a9e4\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: scenario) 채점 완료: scores={goal:2, adoption:2, boundary:2}, average=2.0, gaps 0건, advisories 0건\",\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n**축별 근거**\n- **① 목표 달성 = 2**: TEST-SCENARIO.md:21의 S-3이 목표 경로를 처음부터 끝까지 실제 CLI로 검증한다. 순서는 이렇다.\n  1. 워크트리 안에서 `--allocator-root` 없이 `brain-tool add-page`를 호출한다.\n  2. `worktree-tool finalize`가 `S ⊆ D`를 판정하고 귀속 커밋을 만든다.\n  3. 허브 `main`에 `git merge`한다.\n\n  기대 결과는 \"merge 이후 별도 page 반영 단계 없이 이 커밋만으로 지식이 이동함을 직접 확인\"이다. 이 문장이 TASK.md의 Proposed outcome과 AC-1을 운영 계층에서 그대로 검증한다. S-7(:25)은 누락 후보 백필(AC-5)을 검증한다.\n- **⑤ 채택/잔존 = 2**: 이번 작업은 \"merge 후 허브 finalize가 page를 반영한다\"는 계약을 \"브랜치에 직접 쓴다\"로 바꾸는 교체형이다.\n  - 채택: S-1(:19)에서 예전 `allocator_root_required` 거부가 사라졌는지, S-3에서 새 경로로 merge만 하면 반영되는지 검증한다.\n  - 잔존: S-6(:24)이 6개 파일에 \"merge 후 허브 finalize가 수행\" 같은 옛 문구가 남지 않았는지 grep한다. 새 계약 문구가 있는지, 재배포 후 diff가 비어 있는지도 확인한다.\n- **⑥ 경계/부정 = 2**: 실패·경계 경로를 직접 검증한다.\n  - S-2(c)(:20): 상대경로 `--allocator-root`는 계속 거부된다.\n  - S-4(:22): 선언하지 않은 brain 경로는 finalize가 차단하고, MEMORY.json 워크트리 쓰기 거부 회귀 테스트도 다시 돌린다.\n  - S-12(:27): 같은 page의 같은 구간을 두 브랜치가 고치면 git이 conflict marker를 내고, 양쪽 문장이 모두 남은 상태에서 D-15 절차로 해결한다.\n\n  여기에 S-2(a)/(b)가 허브 명시 쓰기와 비워크트리 쓰기가 바뀌지 않았는지 확인한다(C-1, C-2).\n\n**advisory를 내지 않은 이유**: S-1과 S-3은 모두 워크트리에서 기본값으로 쓰는 경로를 다루지만 서로를 대신하지 않는다. S-1은 구현 전 RED인 unit 테스트이고 `update-page`까지 검증한다. S-3은 finalize와 merge를 거치는 integration 테스트다. S-5와 S-12는 각각 union으로 자동 해결되는 공유 파일과 수동 해결이 필요한 page 충돌을 다뤄 검증 신호가 다르다. 실호출(서브에이전트·외부 서비스) 시나리오는 없다. 중복, 계층 과잉, 분류 오류는 찾지 못했다.\n\n**참고**: 정규화 페이로드(`.scenario-coverage-input.json`)에는 모든 시나리오의 `is_goal_scenario`, `is_adoption_scenario`, `is_boundary_scenario` 플래그가 `false`로 되어 있다. 위 점수는 이 플래그가 아니라 TEST-SCENARIO.md의 시나리오 내용을 직접 읽고 매겼다. 결정론 검사가 이 플래그를 쓴다면 내 점수와 어긋날 수 있다.",
+  "ttft_ms": 5583,
+  "type": "result",
+  "duration_ms": 39992,
+  "uuid": "a0bc234e-748c-4469-bd87-a97fc5efa8f6",
+  "ttft_stream_ms": 2791,
+  "time_to_request_ms": 75,
+  "first_content_frame_ms": 2792,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

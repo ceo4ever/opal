@@ -1,0 +1,32 @@
+{
+  "input_bundle_hash": "481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:38 (D-1) — coverage exit 16/17 회차에서 record를 생략할지, 빈 결과로 기록할지, 그 분기 기준을 무엇으로 할지가 PM과 구현자의 선택으로 남아 있다. PLAN.md:32 미확인 가정(exit 16=완전 미디스패치 vs 17=부분 디스패치)을 조사해 exit 코드별로 record 처리 하나를 확정하고, 그 처리가 반복 상한 집계(H-1)에 어떻게 반영되는지까지 계약으로 고정해야 한다.",
+      "executability-1: PLAN.md:44 (W-1 '구체적 변경') — '정확한 기준은 구현 중 정리'라서 구현자가 record 분기 기준을 직접 설계해야 한다. D-1을 확정한 뒤 W-1에 exit 16과 exit 17 각각의 처리와 design-gate.md에 넣을 서술을 구체적으로 적어야 한다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 0
+    },
+    "average": 0.667,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md:20` (S-1 기대 결과) — record를 '생략'할지 '빈 결과로 기록'할지가 구현자에게 남아 있다. 두 결과를 모두 통과로 받으므로 AC-1의 '처리 방식이 명확함'을 검증할 수 없고, exit 17 회차 시나리오도 없다. 회차 유형(exit 16/17)별로 기대 record 형태(생략 여부, 기록 필드·값)를 하나로 정한 오라클이 필요하다.",
+      "boundary-1: `TEST-SCENARIO.md` §Scenarios — 경계 검증을 넣을지가 구현자에게 남아 있다. 대상은 exit 16과 17의 구분, exit 0 정상 경로 회귀(`PLAN.md` §Findings 회귀 확인), C-1 기존 record 필수 필드 불변(`TASK.md` §Constraints), 미디스패치 회차의 반복 상한 집계 반영 여부(`PLAN.md` §Risks H-1)다. 현재는 exit 16 기본 경로 한 건뿐이다."
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

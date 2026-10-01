@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "haiku",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 125.0,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 117585,
+  "stop_reason": "end_turn",
+  "session_id": "e0df9769-32af-4663-8021-d34daa5e6858",
+  "total_cost_usd": 0.29627069999999994,
+  "usage": {
+   "input_tokens": 185,
+   "cache_creation_input_tokens": 60187,
+   "cache_read_input_tokens": 1053867,
+   "output_tokens": 14065,
+   "output_tokens_details": {
+    "thinking_tokens": 5289
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 60187,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 8,
+     "output_tokens": 1237,
+     "cache_read_input_tokens": 66231,
+     "cache_creation_input_tokens": 1238,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1238
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-haiku-4-5-20251001": {
+    "inputTokens": 185,
+    "outputTokens": 14065,
+    "cacheReadInputTokens": 1053867,
+    "cacheCreationInputTokens": 60187,
+    "webSearchRequests": 0,
+    "costUSD": 0.29627069999999994,
+    "contextWindow": 200000,
+    "maxOutputTokens": 32000,
+    "thinkingTokens": 5289,
+    "canonicalModel": "claude-haiku-4-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 29,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "---\n\n## ✅ 컨벤션 검사 완료\n\n```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"변경 구간 컨벤션 검사 완료 — 기계적 규칙 0개, 모델 기반 검사 0개 findings. docs/CONVENTIONS.md 부재로 인해 모든 판정은 advisory. 상세 사항은 보고서 참조.\",\n  \"status\": \"completed\",\n  \"check_status\": \"partial\",\n  \"missing_capabilities\": [\n    \"docs/CONVENTIONS.md 부재 — 모든 finding이 advisory로 처리됨\"\n  ],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/169-pass__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\"\n  ]\n}\n```\n\n### 📋 검사 결과 요약\n\n| 항목 | 결과 |\n|------|------|\n| **검사 대상** | 3개 파일 (Python 소스 + 테스트) |\n| **검사 범위** | git diff 기준 변경 구간 (base_ref: 502115de^) |\n| **기계적 규칙 findings** | 0개 |\n| **모델 기반 findings** | 0개 |\n| **총 findings** | **0개 ✓** |\n| **기준 문서** | docs/CONVENTIONS.md 부재 (advisory 처리) |\n| **검사 상태** | `partial` (기준 문서 결측) |\n\n### 📊 세부 내용\n\n**변경 구간 검사 결과**:\n- ✅ 기계적 규칙 4종 (header, frontmatter, 표준, 네이밍) → 위반 없음\n- ✅ 모델 기반 검토 (코드 스타일, PEP 8) → 위반 없음\n- ✅ 3개 파일 모두 컨벤션 준수\n\n**산출물**:\n- 📄 Markdown 보고서: GC-CONVENTION-2026-10-01T00-00-00.md\n- 📊 Findings JSON: gc-findings-convention-2026-10-01T00-00-00.json (findings: 0개, status: pass)\n\n---",
+  "ttft_ms": 4053,
+  "type": "result",
+  "duration_ms": 121777,
+  "uuid": "ab34cef1-4215-4382-b448-d92b1347c30b",
+  "ttft_stream_ms": 789,
+  "time_to_request_ms": 59,
+  "first_content_frame_ms": 789,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

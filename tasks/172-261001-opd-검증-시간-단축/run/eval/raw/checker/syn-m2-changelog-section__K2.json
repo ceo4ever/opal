@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 34.0,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 29648,
+  "stop_reason": "end_turn",
+  "session_id": "cf41109b-7013-4c4f-8dcd-1236baf70694",
+  "total_cost_usd": 0.1771566,
+  "usage": {
+   "input_tokens": 14,
+   "cache_creation_input_tokens": 27707,
+   "cache_read_input_tokens": 155753,
+   "output_tokens": 3515,
+   "output_tokens_details": {
+    "thinking_tokens": 61
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 27707,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 904,
+     "cache_read_input_tokens": 32782,
+     "cache_creation_input_tokens": 715,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 715
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 14,
+    "outputTokens": 3515,
+    "cacheReadInputTokens": 155753,
+    "cacheCreationInputTokens": 27707,
+    "webSearchRequests": 0,
+    "costUSD": 0.1771566,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 61,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 10,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K2/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K2/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"demo-guide.md 변경 구간(2–18줄)을 검사했고 finding은 1건(advisory)입니다. GC-001(medium)은 13줄에 `## 변경이력` 절과 버전 표가 추가된 것으로, opal-doc-standard.md §5 위반입니다. 이력은 git과 DONE.md로 위임하세요. 모델 검사에서 추가로 나온 finding은 없습니다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K2/out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K2/out/convention-review-input-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K2/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K2/out/GC-CONVENTION-2026-10-01T00-00-00.md\"\n  ]\n}\n```",
+  "ttft_ms": 1671,
+  "type": "result",
+  "duration_ms": 30929,
+  "uuid": "86b0d99a-404d-48d6-9a0c-ceb0309659bf",
+  "ttft_stream_ms": 1378,
+  "time_to_request_ms": 62,
+  "first_content_frame_ms": 1379,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

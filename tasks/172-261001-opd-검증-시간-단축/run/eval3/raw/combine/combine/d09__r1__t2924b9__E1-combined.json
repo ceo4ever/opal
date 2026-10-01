@@ -1,0 +1,47 @@
+{
+  "input_bundle_hash": "2c4d1bcab562e6a2cf6533ed19dd90f74ff6763b103176da0be803ad0c174eb1",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: TASK.md:33 (AC-1), PLAN.md:46 (W-1) — AC-1은 \"맞추는 방법이 명확히 하나로 정해진다\"를 요구한다. 그러나 이 AC에 연결된 유일한 Work item W-1은 \"(a)/(b)/(c) 중 적절한 방법을 적용한다(구체적 선택은 구현 중 결정)\"이다. AC-1을 충족하는 결정이 설계 안에 없고, 구현자가 그 결정을 직접 내려야 한다.",
+      "completeness-2: PLAN.md:34 (## Findings > 미확인 가정), PLAN.md:52 (H-1) — 미확인 가정 \"워커 page 경로가 DONE.md 선언과 항상 일치\"를 검증하는 Work item이 없다. 대응 Risk H-1의 설계 대응도 \"없음(아직 미해결)\"이어서 가정이 Work item·Risks 어디로도 이어지지 않는다. 가정이 틀렸을 때 어떻게 처리할지는 구현자에게 남는다.",
+      "completeness-3: TASK.md:29 (C-1), PLAN.md:26 (## Findings > 회귀 확인) — Findings는 ATTRIBUTION_COMMIT_BLOCKED가 \"영향 없음\"이라고 단정한다. 그런데 H-1(PLAN.md:52)은 선언 밖 page를 쓰면 귀속 커밋이 조용히 실패할 수 있다며 상호작용을 인정한다. 두 서술이 충돌하고, C-1 유지를 확인하는 Work item·시나리오도 없다. C-1 보존 방법은 구현자에게 남는다.",
+      "decision_clarity-1: PLAN.md:40 (D-1) — 워커 page 집합과 DONE 선언 집합 D를 맞추는 방법이 (a) 워커가 D에 선언된 경로만 쓴다, (b) 워커 결과로 DONE 선언을 갱신한다, (c) PM이 워커 결과를 선언에 역반영한다의 세 가지로 나열만 되어 있다. 계약은 \"어느 쪽을 쓸지는 구현자가 상황에 맞게 정한다\"이다. 외부 동작·계약 결정이 구현자에게 남아 있다.",
+      "decision_clarity-2: PLAN.md:52 (H-1) — 워커가 D 밖의 page를 썼을 때의 실패 정책이 정의되지 않았다. 차단, 선언 갱신, 경고 후 진행 중 무엇을 할지와, 귀속 커밋이 조용히 실패하는 것을 막는 방법이 구현자에게 남아 있다.",
+      "executability-1: PLAN.md:46 (W-1) — W-1의 구체적 변경은 \"(a)/(b)/(c) 중 적절한 방법을 적용한다(구체적 선택은 구현 중 결정)\"이다. Work item만으로는 추가 설계 없이 구현할 수 없다. 변경 대상 SKILL.md에 어떤 절차와 문구를 넣을지도 정해지지 않았다.",
+      "recoverability-1: PLAN.md:56 (## Release and recovery) — 내용이 \"별도 배포 절차 없음(축소판)\"뿐이다. 적용·검증 순서가 없고, 워커가 선언 밖 page를 써서 finalize가 막히거나 귀속 커밋이 실패했을 때의 복구 경로(재실행, 선언 수정, 롤백)도 없다. 복구 방식은 구현자에게 남는다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.0,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md:22` (S-1 기대 결과) — 기대 결과가 \"D-1 (a)/(b)/(c) 중 하나로 정합이 맞춰진다(구체적 방법 미정)\"라서 성공으로 볼 결과(워커가 D 밖 page 쓰기를 거부하는지, DONE 선언이 갱신되는지, PM이 역반영하는지)를 테스트 작성자가 고르게 남아 있다. AC-1(`TASK.md` §Acceptance criteria: \"방법이 명확히 하나로 정해진다\")을 검증하려면 정해진 한 방법의 관찰 가능한 결과(최종 page 집합 = 선언 집합)를 기대 결과로 적어야 한다.",
+      "boundary-1: `TEST-SCENARIO.md:22` (S-1) — '워커가 D 밖 page를 쓰는' 경계 조건은 있지만, 그때 finalize가 ATTRIBUTION_COMMIT_BLOCKED로 막는지 정합 처리 뒤 통과하는지 기대 결과가 정해지지 않았다. C-1(`TASK.md` §Constraints: 선언 밖 변경 차단 동작 불변)과 H-1(`PLAN.md` §Risks: \"귀속 커밋이 조용히 실패할 수 있다\")이 회귀하지 않았는지 확인하는 시나리오도 없다."
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "cheaper_layer",
+      "targets": [
+        "S-1"
+      ],
+      "basis": "S-1의 행동은 op-brain-ingest 서브에이전트를 디스패치하는 것이다(`TEST-SCENARIO.md:16` Setup·`TEST-SCENARIO.md:22`). 그런데 검증할 계약(워커가 쓴 page 집합과 DONE.md 선언 집합 D의 정합, finalize 차단 동작)은 워커 결과로 기록된 page 목록 파일을 finalize에 입력하는 것만으로 증명할 수 있다. 모델의 판단 품질은 AC-1의 수용 기준이 아니고, 방법·환경 열에 `[실호출 1회]` 표지도 없다. 방법·환경을 'unit'으로 적어 놓고 Setup에서는 워커를 실제로 디스패치하는 점도 서로 맞지 않는다.",
+      "recommendation": "Setup의 실디스패치를 빼고, D 밖 page가 섞인 기록 결과 fixture를 finalize에 넣는 unit 시나리오로 바꾼다. 실호출이 꼭 필요하면 `[실호출 1회]` 표지와 그 근거가 되는 AC를 함께 적는다."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

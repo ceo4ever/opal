@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 51.0,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 42980,
+  "stop_reason": "end_turn",
+  "session_id": "5f554468-82ec-49bc-a2de-a18a94d4f170",
+  "total_cost_usd": 0.28472719999999996,
+  "usage": {
+   "input_tokens": 18,
+   "cache_creation_input_tokens": 45957,
+   "cache_read_input_tokens": 241816,
+   "output_tokens": 5250,
+   "output_tokens_details": {
+    "thinking_tokens": 273
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 45957,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1208,
+     "cache_read_input_tokens": 50634,
+     "cache_creation_input_tokens": 1113,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1113
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 18,
+    "outputTokens": 5250,
+    "cacheReadInputTokens": 241816,
+    "cacheCreationInputTokens": 45957,
+    "webSearchRequests": 0,
+    "costUSD": 0.28472719999999996,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 273,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 11,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/163-pass__K2/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/163-pass__K2/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"컨벤션 검사 결과 finding은 6건이고, 모두 blocking입니다. 6건 모두 사전 검사가 낸 @header 회귀입니다. 기준 커밋에는 @header가 있었지만 현재는 없습니다. 대상은 테스트 파일 6개(test_session_start.py, test_adapter_orca.py, test_cli.py, test_integration.py, test_launcher_core.py, test_settings.py)입니다. 변경 구간 모델 검사에서는 추가 위반이 없었습니다. merge 출력의 status는 pass이며, 이 값은 도구가 판정한 것이라 재판정하지 않았습니다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/163-pass__K2/out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/163-pass__K2/out/convention-review-input-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/163-pass__K2/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/163-pass__K2/out/GC-CONVENTION-2026-10-01T00-00-00.md\"\n  ]\n}\n```\n\n- **상태 불일치 가능성:** `check_status`가 `pass`인데 blocking finding이 6건 있습니다. 사전 검사와 merge 도구가 `pass`를 냈고 스킬이 도구 결과 재판정을 금지해서 그대로 전달했습니다. 호출자는 `findings`의 disposition도 함께 확인하세요.\n- **`opal/...` 상대 경로 참조:** 스킬이 지정한 `opal/core/references/harness/gc-finding-schema.md`와 `opal/core/references/opal-doc-standard.md`는 읽지 않았습니다. 보고서의 기준 문서 목록에는 `opal-doc-standard.md`를 적었지만 열어서 적용하지는 않았습니다.",
+  "ttft_ms": 1631,
+  "type": "result",
+  "duration_ms": 47474,
+  "uuid": "5ebf99cc-948d-4259-bfbe-a43cfe87b5b1",
+  "ttft_stream_ms": 1279,
+  "time_to_request_ms": 60,
+  "first_content_frame_ms": 1279,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

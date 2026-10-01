@@ -1,0 +1,36 @@
+{
+  "input_bundle_hash": "c0ba0a7a3c50b36ce6a8ec725e23d47ff8f120f71185c5f0a357db7afa5ba5a8",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6은 `유형: check`(정적 검사)이고 조건도 '없음(정적 검사)'이다. 그런데 행동에 '재배포 1회 실행 후 `~/.opal/tools/brain-tool/brain_tool.py`를 `opal/tools/brain-tool/brain_tool.py`와 diff'가 들어 있다. 설치 스크립트를 실행해 배포본(`~/.opal/`)의 상태를 바꾸고 그 결과를 관측하는 행동 검증이다(D-12). 정적 grep 검사와 성격이 다른 검증 신호가 Check 시나리오 하나에 섞여 있다.",
+      "recommendation": "재배포와 diff 확인(D-12, C-4 배포 검증)을 행동 시나리오(예: `integration`, 시점 `구현 후`, 조건 '`opal/` 변경 완료 상태')로 분리하라. S-6은 grep, `git diff --name-only`, `install-mac.sh` 정적 확인만 남겨 순수 Check로 유지하라."
+    }
+  ],
+  "verdict": "pass",
+  "rewrite_target": null
+}

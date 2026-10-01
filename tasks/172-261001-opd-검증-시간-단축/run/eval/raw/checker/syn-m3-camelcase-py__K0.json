@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": null,
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 22.3,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 18045,
+  "stop_reason": "end_turn",
+  "session_id": "38e9452a-4473-4182-802f-cfab34b24ac8",
+  "total_cost_usd": 0.138227,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 24231,
+   "cache_read_input_tokens": 87015,
+   "output_tokens": 2388,
+   "output_tokens_details": {
+    "thinking_tokens": 39
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 24231,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 630,
+     "cache_read_input_tokens": 28618,
+     "cache_creation_input_tokens": 1403,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1403
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 2388,
+    "cacheReadInputTokens": 87015,
+    "cacheCreationInputTokens": 24231,
+    "webSearchRequests": 0,
+    "costUSD": 0.138227,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 39,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m3-camelcase-py__K0/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m3-camelcase-py__K0/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"finding 1건(advisory, medium)이다. GC-001은 `demoHelper.py`가 Python 파일 snake_case 규칙(CONVENTIONS.md §네이밍 규칙 §파일/폴더)에 맞지 않는다는 내용이고, 권장 파일명은 `demo_helper.py`다. 사전 검사(precheck)가 이 finding을 냈다. 모델 검사는 파일 전체를 읽었지만 추가 finding이 없었다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \"out/convention-review-input-2026-10-01T00-00-00.json\",\n    \"out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \"out/GC-CONVENTION-2026-10-01T00-00-00.md\"\n  ]\n}\n```\n\n`changed_files`의 경로는 모두 `output_dir` 기준 상대 경로다.",
+  "ttft_ms": 1243,
+  "type": "result",
+  "duration_ms": 18989,
+  "uuid": "3feb02cb-d002-4da1-8a5e-413373feae3f",
+  "ttft_stream_ms": 986,
+  "time_to_request_ms": 52,
+  "first_content_frame_ms": 986,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

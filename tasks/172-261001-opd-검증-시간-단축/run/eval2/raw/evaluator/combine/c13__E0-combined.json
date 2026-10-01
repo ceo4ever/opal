@@ -1,0 +1,33 @@
+{
+  "input_bundle_hash": "481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: `PLAN.md` §Decisions and contracts D-1: \"PM이 상황에 맞게 record를 생략하거나 빈 결과로 기록할 수 있다 — 구체적 분기 기준은 아직 정하지 않았다\" — coverage exit 16/17 회차에서 record를 생략할지, 빈 결과로 기록할지, 그 분기 기준이 무엇인지 구현자가 정해야 한다. 외부 동작(record 실패 정책)이 결정되지 않았다",
+      "decision_clarity-2: `PLAN.md` §Findings 미확인 가정: \"exit 16과 17의 차이(완전 미디스패치 vs 부분 디스패치)가 record 처리에 어떤 영향을 주는지 아직 확인하지 않았다\" — exit 16과 17을 같은 경로로 처리할지 다르게 처리할지(특히 부분 디스패치 결과를 어떻게 쓸지) 구현자가 정해야 한다",
+      "decision_clarity-3: `PLAN.md` §Risks H-1 설계 대응: \"없음(아직 미해결)\" — 미디스패치 회차를 설계 게이트 반복 상한에 셀지 말지 구현자가 정해야 한다. 이 결정이 없으면 PM마다 반복 횟수 집계가 달라진다",
+      "executability-1: `PLAN.md` §Work items W-1 구체적 변경: \"생략하거나 빈 결과로 기록하는 식으로 처리하도록 서술을 추가한다(정확한 기준은 구현 중 정리)\" — W-1만 보고는 design-gate.md에 무엇을 쓸지 정할 수 없어, 구현자가 구현 중에 분기 기준을 직접 설계해야 한다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.0,
+    "gaps": [
+      "goal-1: TEST-SCENARIO.md:L20 (S-1 기대 결과) — 기대 결과가 'PM이 record를 생략하거나 빈 결과로 기록한다(정확한 분기 기준 미정)'라는 이지선다라서 어느 쪽을 해도 통과한다. 생략·빈 결과 기록 중 무엇이 정답인지, 그리고 반복 상한 집계에 그 회차가 들어가는지가 구현자와 테스터의 선택으로 남는다. 그래서 AC-1의 '처리 방법이 명확하다'를 판정할 기준이 없다."
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

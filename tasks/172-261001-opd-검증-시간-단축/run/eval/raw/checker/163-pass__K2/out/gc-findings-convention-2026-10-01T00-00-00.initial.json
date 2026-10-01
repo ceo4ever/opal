@@ -1,0 +1,180 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+    "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+    "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+    "opal/tools/ownership-tool/tests/test_codex_identity.py",
+    "opal/tools/ownership-tool/tests/test_session_start.py",
+    "opal/tools/worktree-launcher/tests/test_adapter_orca.py",
+    "opal/tools/worktree-launcher/tests/test_cli.py",
+    "opal/tools/worktree-launcher/tests/test_codex_handoff.py",
+    "opal/tools/worktree-launcher/tests/test_integration.py",
+    "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+    "opal/tools/worktree-launcher/tests/test_settings.py",
+    "opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py",
+    "opal/tools/worktree-launcher/worktree_launcher/cli.py",
+    "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+    "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+    "opal/tools/worktree-tool/schema/worktree.schema.json",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py",
+    "scripts/install-mac.sh",
+    "scripts/install/windows.ps1",
+    "scripts/tests/test_agent_adapter_fields.sh"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "4459170470cc10d2",
+      "category": "@header",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/ownership-tool/tests/test_session_start.py",
+        "line": 1
+      },
+      "evidence": "code-scan scan --json 결과가 비어 있다. 기준 커밋에는 @header가 있었으나 지금 없다(회귀)",
+      "impact": "코드 지도(code-scan)에서 이 파일이 누락되어 모듈 탐색·헤더 커버리지가 깨진다",
+      "remediation": {
+        "guidance": "파일 상단에 module·layer·domain·description·exports를 갖춘 @header 블록을 작성한다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/ownership-tool/tests/test_session_start.py --json 이 헤더를 반환한다",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "4459170470cc10d2",
+      "category": "@header",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_adapter_orca.py",
+        "line": 1
+      },
+      "evidence": "code-scan scan --json 결과가 비어 있다. 기준 커밋에는 @header가 있었으나 지금 없다(회귀)",
+      "impact": "코드 지도(code-scan)에서 이 파일이 누락되어 모듈 탐색·헤더 커버리지가 깨진다",
+      "remediation": {
+        "guidance": "파일 상단에 module·layer·domain·description·exports를 갖춘 @header 블록을 작성한다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/worktree-launcher/tests/test_adapter_orca.py --json 이 헤더를 반환한다",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "4459170470cc10d2",
+      "category": "@header",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_cli.py",
+        "line": 1
+      },
+      "evidence": "code-scan scan --json 결과가 비어 있다. 기준 커밋에는 @header가 있었으나 지금 없다(회귀)",
+      "impact": "코드 지도(code-scan)에서 이 파일이 누락되어 모듈 탐색·헤더 커버리지가 깨진다",
+      "remediation": {
+        "guidance": "파일 상단에 module·layer·domain·description·exports를 갖춘 @header 블록을 작성한다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/worktree-launcher/tests/test_cli.py --json 이 헤더를 반환한다",
+      "suppression": null
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "4459170470cc10d2",
+      "category": "@header",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_integration.py",
+        "line": 1
+      },
+      "evidence": "code-scan scan --json 결과가 비어 있다. 기준 커밋에는 @header가 있었으나 지금 없다(회귀)",
+      "impact": "코드 지도(code-scan)에서 이 파일이 누락되어 모듈 탐색·헤더 커버리지가 깨진다",
+      "remediation": {
+        "guidance": "파일 상단에 module·layer·domain·description·exports를 갖춘 @header 블록을 작성한다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/worktree-launcher/tests/test_integration.py --json 이 헤더를 반환한다",
+      "suppression": null
+    },
+    {
+      "id": "GC-005",
+      "fingerprint": "4459170470cc10d2",
+      "category": "@header",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+        "line": 1
+      },
+      "evidence": "code-scan scan --json 결과가 비어 있다. 기준 커밋에는 @header가 있었으나 지금 없다(회귀)",
+      "impact": "코드 지도(code-scan)에서 이 파일이 누락되어 모듈 탐색·헤더 커버리지가 깨진다",
+      "remediation": {
+        "guidance": "파일 상단에 module·layer·domain·description·exports를 갖춘 @header 블록을 작성한다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/worktree-launcher/tests/test_launcher_core.py --json 이 헤더를 반환한다",
+      "suppression": null
+    },
+    {
+      "id": "GC-006",
+      "fingerprint": "4459170470cc10d2",
+      "category": "@header",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/worktree-launcher/tests/test_settings.py",
+        "line": 1
+      },
+      "evidence": "code-scan scan --json 결과가 비어 있다. 기준 커밋에는 @header가 있었으나 지금 없다(회귀)",
+      "impact": "코드 지도(code-scan)에서 이 파일이 누락되어 모듈 탐색·헤더 커버리지가 깨진다",
+      "remediation": {
+        "guidance": "파일 상단에 module·layer·domain·description·exports를 갖춘 @header 블록을 작성한다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/worktree-launcher/tests/test_settings.py --json 이 헤더를 반환한다",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base 7a6b3017^ HEAD -> c6e295d467aace71d994ca139819061f64143d02",
+    "git diff --name-status --diff-filter=ACMR c6e295d467aa HEAD -> 21 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

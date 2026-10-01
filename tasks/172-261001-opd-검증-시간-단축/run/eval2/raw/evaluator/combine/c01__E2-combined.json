@@ -1,0 +1,55 @@
+{
+  "input_bundle_hash": "96944daaa30a59a0389908d9bb8e3d78964623bae569758cc0f7d29117e9ed6f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": [
+        "S-1",
+        "S-2"
+      ],
+      "basis": "TEST-SCENARIO.md:19 S-1의 'live 허브 owner → owner_lease_mismatch, registry 바이트 불변'과 TEST-SCENARIO.md:20 S-2의 '기대 owner 불일치 시 전이 0회'는 같은 `--owner-from-lease` 원자 비교(PLAN.md:34 'registry lock 안에서 검사, 불일치 시 registry 바이트 불변')를 같은 pytest/worktree-tool 계층에서 검증한다. 두 시나리오의 거부 신호가 겹친다.",
+      "recommendation": "S-1의 lease 상태 거부(pending·만료·부재)와 S-2의 owner 일치·불일치·동시 변경을 하나의 `ownership-set --owner-from-lease` 판정표 시나리오로 합친다. 공통 기대값 'registry 바이트 불변'은 한 번만 검증한다. launcher 쪽 '단일 실패 복구 경로' 확인은 S-3에 맡긴다."
+    },
+    {
+      "id": "A-2",
+      "kind": "cheaper_layer",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "TEST-SCENARIO.md:24 S-6은 '구현 전 RED' 시점에 '실제 Codex sandbox'를 실행한다. 그러나 검증 대상인 권한 오류의 즉시 분류(30초 대기 없음, `registry_write_denied`)와 codex-start의 `registry_owner_deferred_to_hub` 비치명화 계약은 `os.open` errno 주입 pytest의 기록된 결과로 증명할 수 있다. 실제 Codex 실행에서 AC-4를 확인하는 일은 S-9(TEST-SCENARIO.md:27, 설치본·실제 Codex, AC-4 연결)가 이미 맡는다. 모델 판단 품질은 AC-4의 수용 기준이 아니다.",
+      "recommendation": "S-6의 방법·환경을 'pytest / worktree-tool·ownership-tool(errno 주입)'으로 좁힌다. 실제 Codex sandbox에서 권한 거부를 관측하는 일은 S-9·S-10의 배포 후 실측에 명시적으로 합친다."
+    },
+    {
+      "id": "A-3",
+      "kind": "misclassified",
+      "targets": [
+        "S-7"
+      ],
+      "basis": "TEST-SCENARIO.md:25 S-7은 시점이 '구현 후'이고 정규화 입력의 red_required가 false다. 그러나 검증 대상은 새 동작이다. PLAN.md:48 W-4에 따르면 구 기본 argv와 정확히 일치할 때만 `--no-daemon`으로 이관하고, 신규 설정에는 `--no-daemon` 기본값을 적용한다. 현재 소스(PLAN.md:37 `settings.py:38`)에서는 구 argv가 이관되지 않으므로 installer bash 테스트로 구현 전에 RED를 만들 수 있다. 이 시나리오는 사후 Check가 아니라 행동 시나리오다.",
+      "recommendation": "S-7의 시점을 '구현 전 RED'로 바꿔 행동 시나리오로 재분류한다. test_settings.py와 installer bash 테스트에서 구 기본 argv가 이관되지 않는 현재 실패를 먼저 고정한다."
+    }
+  ],
+  "verdict": "pass",
+  "rewrite_target": null
+}

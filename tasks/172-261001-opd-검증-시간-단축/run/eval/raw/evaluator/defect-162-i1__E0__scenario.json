@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 50.1,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 45439,
+  "stop_reason": "end_turn",
+  "session_id": "5f6cabf1-f44e-4534-92c6-916267d6f94f",
+  "total_cost_usd": 0.1667234,
+  "usage": {
+   "input_tokens": 8,
+   "cache_creation_input_tokens": 10216,
+   "cache_read_input_tokens": 94317,
+   "output_tokens": 3305,
+   "output_tokens_details": {
+    "thinking_tokens": 946
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 10216,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2585,
+     "cache_read_input_tokens": 27132,
+     "cache_creation_input_tokens": 1552,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1552
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 8,
+    "outputTokens": 3305,
+    "cacheReadInputTokens": 94317,
+    "cacheCreationInputTokens": 10216,
+    "webSearchRequests": 0,
+    "costUSD": 0.1667234,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 946,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: scenario) 채점 완료: scores={goal:1, adoption:2, boundary:0}, average=1.0 — boundary 축 0점\",\n  \"input_bundle_hash\": \"7595abbdfdb7b8a6af749fff40e3de0bd85e098527879771fc6403ab5c9b5a58\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 1, \"adoption\": 2, \"boundary\": 0},\n    \"average\": 1.0,\n    \"gaps\": [\n      \"boundary-1: TEST-SCENARIO.md:L21 (S-2) — 기대 결과가 \\\"중복 호출이 안전하게 처리된다(구체적 동작 미정)\\\"로 되어 있어 합격 판정 기준이 없다. 두 번째 `start`를 거부할지, 덮어쓸지, 무시할지와 그때의 종료 코드·응답을 구현자가 정해야 한다\",\n      \"boundary-2: TASK.md:L32 (AC-2) ↔ TEST-SCENARIO.md:L18-L21 — AC-2의 '`start` 없이 `stop`' 누락 호출 경로를 검증하는 시나리오가 없다. 오류로 처리할지, 아무 일도 하지 않을지 구현자가 정해야 한다\",\n      \"boundary-3: TASK.md:L33 (AC-3) ↔ TEST-SCENARIO.md:L18-L21 — 측정 상한(8시간)을 넘긴 세션의 상태 전이와 재개를 검증하는 시나리오가 없다. 어떤 상태로 바꿀지와 재개 방법을 구현자가 정해야 한다\",\n      \"boundary-4: TASK.md:L27 (C-2) ↔ TEST-SCENARIO.md:L18-L21 — 측정이 실패해도 TEST 단계 진행을 막지 않는지(fail-safe) 검증하는 시나리오가 없다. 실패 시 종료 코드와 호출자 동작을 구현자가 정해야 한다\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n채점 근거:\n\n- **① 목표 달성 (goal) = 1점**: S-1(`TEST-SCENARIO.md:L20`)은 CLI에서 `start`→`stop`을 실행해 소요시간(분)이 나오는지 직접 확인합니다. 목표의 핵심 경로는 검증되므로 0점은 아닙니다. 하지만 Proposed outcome(`TASK.md:L18`)에 있는 \"소요시간을 state.json에 반영한다\"는 확인하는 시나리오가 없습니다. C-1(state.json 스키마 키 집합 불변)도 확인하지 않습니다. 그래서 목표를 사용자·운영 계층에서 끝까지 검증하는 2점에는 못 미칩니다.\n- **⑤ 채택/잔존 (adoption) = 2점**: 수작업 기록을 대체하기는 하지만, 기존 시스템이나 경로를 교체하는 목표는 아닙니다. 새 CLI만 추가하고 기존 state-tool 경로는 건드리지 않습니다(`PLAN.md:L24`).\n- **⑥ 경계/부정 (boundary) = 0점**: 이 작업에는 실패·경계 경로가 여러 개 있습니다(AC-2 중복·누락 호출, AC-3 상한 초과, C-2 fail-safe). S-2는 그중 하나를 다루려 하지만 기대 결과가 \"미정\"이라 합격 여부를 판정할 수 없습니다. 나머지 경로는 시나리오가 없습니다. 결국 판정 가능한 시나리오는 정상 경로 S-1뿐이라 0점 앵커에 해당합니다.\n\n최소 1점이 안 되는 축(boundary)이 있고 평균이 1.0으로 기준(1.5) 미만입니다. 다만 이번 호출은 `scope: scenario`인 부분 결과라서 계약대로 `verdict`·`rewrite_target`은 쓰지 않았습니다. 둘을 정하는 일은 `design-gate combine` 몫입니다.\n\n이번 호출에는 `previous_gaps`가 없어 `resolved_gaps`는 빈 배열입니다. 시나리오가 S-1·S-2 두 건뿐이고 서로 중복되거나 분류가 틀린 것이 없어서 advisory는 만들지 않았습니다.\n\n`worker.dispatch` receipt는 진입 시 직접 verify해 `ok: true`(문서 4건)를 확인했습니다. 파일은 만들지 않았습니다.",
+  "ttft_ms": 7649,
+  "type": "result",
+  "duration_ms": 46714,
+  "uuid": "f71847ab-6012-403a-9e83-e7ab6d6bbe55",
+  "ttft_stream_ms": 5017,
+  "time_to_request_ms": 87,
+  "first_content_frame_ms": 5017,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

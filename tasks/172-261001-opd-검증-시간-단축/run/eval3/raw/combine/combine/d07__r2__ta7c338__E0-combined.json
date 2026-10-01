@@ -1,0 +1,38 @@
+{
+  "input_bundle_hash": "6af7a3f22658edfbb4d04b8ba7aaabd4defe044f54abf95e5410731cfe32a9e4",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:46 (D-3)·PLAN.md:65 (W-2) — W-2는 `op-oppb-knowledge-finalize/SKILL.md`에서 brain-tool 차단을 근거로 든 §입력 :35-38 한 곳만 고친다(D-3은 '이 문구만'이라고 범위를 한정한다). 그런데 같은 파일 STEP 쓰기 절 :132-133에도 \"`--allocator-root`는 … 회고적 학습 쓰기의 유일한 허용 경로이며, 미지정·상대경로는 `allocator_root_required`로 거부된다\"는 서술이 있다. D-1을 적용하면 '미지정' 호출은 거부되지 않고 cwd(task_root)에 쓰므로 이 서술은 거짓이 된다. Findings §문서 갱신과 W-2 변경 대상에 이 위치가 없고, S-6의 grep 대상 문구('merge 후 허브 finalize가 수행'·'merge 후 귀속 후처리')로도 잡히지 않는다. 이 위치를 그대로 둘지, '명시하면 그 루트에만 쓴다, 미지정이면 cwd 작업본에 쓰므로 oppb P5에서는 반드시 명시한다'로 고칠지를 구현자가 정해야 한다(AC-2 '같은 전제를 쓰는 다른 문서 정합' 미충족)."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "TEST-SCENARIO.md:24 S-6은 `유형: check`이고 조건이 `없음(정적 검사)`이다. 그런데 행동에 `재배포 1회 실행 후 ~/.opal/tools/brain-tool/brain_tool.py를 opal/tools/brain-tool/brain_tool.py와 diff`가 들어 있다. 이 부분은 install 스크립트를 실제로 실행하고 배포본(~/.opal/)을 바꾸는 행동 검증이다. 그래서 정적 grep 검사(AC-2 문구 잔존·docstring 근거)와 성격이 다르고, 실행 시점도 다르다.",
+      "recommendation": "S-6은 grep과 `git diff --name-only` 정적 검사만 남깁니다. install-mac.sh 재배포와 배포본 diff(D-12, C-4)는 `유형: integration` 또는 `regression`, `시점: 구현 후`인 행동 시나리오로 따로 분리합니다."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

@@ -1,0 +1,41 @@
+{
+  "input_bundle_hash": "96944daaa30a59a0389908d9bb8e3d78964623bae569758cc0f7d29117e9ed6f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:51 (W-6), PLAN.md:66 — AC-6(TASK.md:27)의 162 재기동과 첫 checkpoint 실측 결과를 승인 뒤 누가 실행하고 어디에 기록할지 정해진 Work item이 없다. S-9·S-10 담당과 완료 기준 연결을 구현자가 정해야 한다",
+      "completeness-2: PLAN.md:20 (Findings §회귀 확인) — test_adapter_cmux/test_adapter_generic/test_lease 재실행이 어느 Work item의 완료 기준에도 연결되어 있지 않다. 회귀 확인을 언제, 누가 할지 구현자가 정해야 한다",
+      "decision_clarity-1: PLAN.md:20, PLAN.md:46 (W-1) — recovery_required가 status·remove 가드, 허브 브리핑, Console의 허용 집합에 닿을 때 소비자를 수정할지, 수정한다면 어느 Work item이 맡을지, 아니면 범위 밖으로 둘지가 '조사·기록'으로만 남아 있다",
+      "recoverability-1: PLAN.md:66 (Release and recovery §실패 시) — install 뒤 설치본 검증이나 162 재기동이 실패할 때 이전 배포본으로 되돌리는 방법과 이관된 사용자 setting의 원복 방법이 없다. 배포 뒤 복구 절차를 구현자가 정해야 한다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "cheaper_layer",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6(TEST-SCENARIO.md:24)은 방법·환경 열에 '실제 Codex sandbox'를 넣어 구현 전 RED 시점부터 Codex를 실제로 호출하도록 요구한다. 그런데 S-6이 증명할 계약은 모두 기록된 결과로 증명할 수 있다: (1) lock `os.open`의 EPERM/EACCES/EROFS가 30초 대기 없이 `registry_write_denied`로 분류된다, (2) lease claim 성공 후 registry 기록만 거부되면 codex-start가 `ok`와 `registry_owner_deferred_to_hub` 진단을 반환한다, (3) foreign owner는 실패한다. 이 셋은 pytest의 errno 주입과 반환 JSON·경과 시간 기록으로 확인된다. 실제 Codex sandbox에서의 권한 거부와 정상 부팅은 배포 후 S-9(AC-4, 설치본·실제 Codex)와 S-10(권한 거부 시 상승 경로)이 이미 확인한다. 모델 판단 품질은 AC-4의 수용 기준이 아니며 `[실호출 1회]` 표지도 없다.",
+      "recommendation": "S-6의 방법·환경을 'pytest / worktree-tool·ownership-tool(errno 주입)'으로 좁힌다. 실제 Codex sandbox의 권한 거부 실측은 S-9·S-10의 배포 후 관측 기록에 맡긴다. 실 sandbox에서 errno 종류를 직접 확인할 필요가 있다면 `[실호출 1회]` 표지와 그 근거를 S-6에 명시한다."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

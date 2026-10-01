@@ -1,0 +1,39 @@
+{
+  "input_bundle_hash": "6af7a3f22658edfbb4d04b8ba7aaabd4defe044f54abf95e5410731cfe32a9e4",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md §Work items W-5 '구체적 변경' 셀(`brain-tool log --op ingest ... --new \"<페이지1>,...,<페이지6>\"`) — 같은 셀이 6건을 신규 2건(add-page)과 갱신 4건(update-page)으로 나누면서도 log 명령은 6건 전부를 `--new`에 넣으라고 고정한다. brain_tool.py `log` 서브파서에는 `--updated` 인자가 따로 있다(502115de^ brain_tool.py:1570-1571). 그래서 구현자는 명령을 그대로 실행해 갱신 4건을 log.md에 '신규'로 잘못 남길지, `--new`(test-cycle-early-human-handoff·scenario-economy-advisory-gate)와 `--updated`(test-tool·scenario-goal-coverage-gate-loop·op-scenario-gate-skill·state-tool)로 나눌지 스스로 정해야 한다",
+      "decision_clarity-2: PLAN.md §Release and recovery '적용 순서' 항목(\"`.gitattributes` 2줄 + W-5 백필 6 page를 하나의 커밋으로 먼저 main에 반영\") — D-4·D-14·W-4·W-5는 이 블록을 '정확히 4줄(빈 줄+주석+union 규칙 2줄)'로 바이트 단위까지 고정하고, 내용이 다르면 `.gitattributes` 자체가 충돌한다고 근거를 댄다. 그런데 사용자에게 1순위로 전하는 이 안내만 '2줄'이라고 적어서, 완료 보고와 brain-backfill-report.md의 커밋 대상 안내를 2줄 기준으로 쓸지 4줄 기준으로 쓸지 구현자가 골라야 한다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 1,
+      "boundary": 2
+    },
+    "average": 1.667,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6은 `유형: check`(정적 검사)인데, 행동 열에 '재배포 1회 실행 후 `~/.opal/tools/brain-tool/brain_tool.py`와 diff'(TEST-SCENARIO.md:24)가 들어 있다. 이는 install 스크립트를 실제로 실행하고 `~/.opal/`에 쓰는 부수효과를 동반한 행동 검증이다. 정적 grep 검증과 배포 행동 검증이 한 check 시나리오에 섞여 있어, 실행 조건(배포본 덮어쓰기)과 실패 귀속이 분리되지 않는다.",
+      "recommendation": "재배포+diff(D-12, C-4)는 별도 행동 시나리오(예: `유형: integration`, `시점: 구현 후`)로 떼어 내고, S-6은 grep·`git diff --name-only` 정적 검사만 남긴다."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

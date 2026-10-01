@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 37.6,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 32798,
+  "stop_reason": "end_turn",
+  "session_id": "5b8b708f-fb79-454e-a908-596798dd8904",
+  "total_cost_usd": 0.185435,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 11989,
+   "cache_read_input_tokens": 121015,
+   "output_tokens": 3264,
+   "output_tokens_details": {
+    "thinking_tokens": 856
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 11989,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1610,
+     "cache_read_input_tokens": 27946,
+     "cache_creation_input_tokens": 2511,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 2511
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 3264,
+    "cacheReadInputTokens": 121015,
+    "cacheCreationInputTokens": 11989,
+    "webSearchRequests": 0,
+    "costUSD": 0.185435,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 856,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "S-1·S-2의 기대 결과가 둘 다 \"미정\"으로 열려 있어 목표를 판정할 기준이 없고, 실패·경계 시나리오도 없습니다.\n\n```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: scenario) 채점 완료: scores={goal:0, adoption:2, boundary:0}, average=0.67 — 목표·경계 축 미달\",\n  \"input_bundle_hash\": \"27522876917ef63792862d076b7e3a5b9c51cfe3f699079408d6fcf4ccf38387\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 0, \"adoption\": 2, \"boundary\": 0},\n    \"average\": 0.67,\n    \"gaps\": [\n      \"goal-1: `TEST-SCENARIO.md` §Scenarios S-1 — 기대 결과가 \\\"state.json의 어떤 행이 마크되는지 확인(정확한 대응 미정)\\\"이라서, PLAN 완료 전이가 어느 행을 마크해야 통과인지는 구현자·검증자가 정해야 한다. AC-1이 요구하는 '전이별로 마크하는 행 명시'를 판정할 기준이 없다. 또 PLAN 전이 하나만 다루고 나머지 전이는 다루지 않는다.\",\n      \"goal-2: `TEST-SCENARIO.md` §Scenarios S-2 — 기대 결과가 \\\"담당자(사용자/PM/자동)가 누구인지 확인(미정)\\\"이라서, semi-agentic 모드에서 user_confirm 행을 누가 마크해야 통과인지가 열려 있다. agentic 모드 시나리오는 아예 없어, AC-2의 'semi-agentic·agentic 모드 담당자 명시'를 검증하지 못한다.\",\n      \"boundary-1: `TEST-SCENARIO.md` §Scenarios — 두 시나리오 모두 정상 경로만 다룬다. 적용할 수 있는 실패·경계 경로가 있는데도 검증하지 않아 그 처리 방식이 구현자 선택으로 남는다. 예: 순서가 맞지 않는 전이에서 mark를 호출할 때의 거부·무시 여부, agentic 모드의 자동 승인 경로, C-1에 따라 state.json 스키마가 바뀌지 않았는지 확인하는 검증.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n축별 근거는 다음과 같습니다.\n- **goal = 0**: S-1·S-2가 AC-1·AC-2를 대상으로 하지만, 기대 결과가 \"미정\"이라 통과·실패를 가를 수 없습니다. 실제로는 목표를 검증하는 시나리오가 없는 것과 같습니다. agentic 모드도 다루지 않습니다.\n- **adoption = 2**: 이 태스크는 기존 동작을 교체하는 목표가 아니어서 적용되지 않으므로 앵커상 2점입니다. PLAN의 회귀 확인에 \"기존 opal-pilot-dev(v1) 경로는 영향 없음(별도 스킬)\"이라고 적혀 있습니다.\n- **boundary = 0**: 적용할 수 있는 실패·경계 경로(잘못된 전이, 자동 승인, C-1 스키마 불변)가 있는데 정상 경로 시나리오만 있습니다.\n- **advisories는 비었습니다**: 두 시나리오는 대상 AC와 모드가 달라 겹치지 않고 둘 다 unit 계층입니다. 그래서 subsumed·mergeable·cheaper_layer·misclassified 중 어느 지적에도 해당하지 않습니다.\n\nverdict와 rewrite_target은 부분 결과 계약에 따라 넣지 않았습니다. 이 점수는 `design-gate combine`이 결합합니다. 참고로 시나리오 축만 보면 0점 축이 둘이고 평균 0.67이 1.5에 못 미쳐 통과 조건을 채우지 못합니다.\n\n진입할 때 `event-loader verify` 결과는 `ok: true`였고, 확인된 문서는 4건입니다. 파일은 만들거나 고치지 않았습니다.",
+  "ttft_ms": 3118,
+  "type": "result",
+  "duration_ms": 34258,
+  "uuid": "cd9b280e-9e38-4b73-b4dc-d412071b9760",
+  "ttft_stream_ms": 1139,
+  "time_to_request_ms": 50,
+  "first_content_frame_ms": 1139,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

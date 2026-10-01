@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "medium",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/fx/c15",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2089 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 38.4,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 33995,
+  "stop_reason": "end_turn",
+  "session_id": "482d8751-abd4-4570-a93a-dd3dc612b8b2",
+  "total_cost_usd": 0.2892924,
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 25681,
+   "cache_read_input_tokens": 127602,
+   "output_tokens": 2915,
+   "output_tokens_details": {
+    "thinking_tokens": 952
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 25681,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2332,
+     "cache_read_input_tokens": 50786,
+     "cache_creation_input_tokens": 3727,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 3727
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 6,
+    "outputTokens": 2915,
+    "cacheReadInputTokens": 127602,
+    "cacheCreationInputTokens": 25681,
+    "webSearchRequests": 0,
+    "costUSD": 0.2892924,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 952,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 3,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"2c4d1bcab562e6a2cf6533ed19dd90f74ff6763b103176da0be803ad0c174eb1\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 0, \"adoption\": 2, \"boundary\": 1},\n    \"average\": 1.0,\n    \"gaps\": [\n      \"goal-1: TEST-SCENARIO.md:22 (S-1 기대 결과) — AC-1(TASK.md:33)은 정합 방법을 '하나로 정해진다'고 요구하지만, S-1의 기대 결과는 'D-1 (a)/(b)/(c) 중 하나로 정합이 맞춰진다(구체적 방법 미정)'입니다. 어떤 결과가 나와도 통과하므로 목표를 검증하지 못합니다. 무엇을 관측해야 성공인지(예: (a)라면 finalize 후 워커가 쓴 page 집합이 D의 부분집합, (b)라면 DONE.md 선언이 워커 결과와 같음)가 구현자의 선택으로 남아 있습니다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [\n    {\n      \"id\": \"A-1\",\n      \"kind\": \"cheaper_layer\",\n      \"targets\": [\"S-1\"],\n      \"basis\": \"S-1의 행동은 'op-brain-ingest 워커 디스패치 후 finalize'입니다(TEST-SCENARIO.md:22). 즉 서브에이전트를 실제로 디스패치합니다. 검증할 계약은 워커가 기록한 page 경로 목록과 DONE.md 선언 집합 D의 집합 관계, 그리고 선언 밖 page가 있을 때의 finalize 처리입니다. 이 계약은 워커 결과 파일(쓴 page 경로 목록)을 픽스처로 고정하면 증명할 수 있습니다. 모델의 판단 품질은 AC-1의 수용 기준이 아니고, 방법·환경 열에 [실호출 1회] 표지도 없습니다. 방법 열은 'unit'인데 행동은 실디스패치여서 서로 맞지도 않습니다.\",\n      \"recommendation\": \"워커 실호출을 빼고, D 밖 경로를 포함한 워커 결과 파일 픽스처를 finalize에 입력하는 단위 시나리오로 바꾸세요. 집합 관계와 차단·갱신 결과는 기록된 출력으로 판정합니다.\"\n    }\n  ]\n}\n```\n\n- **목표(0점):** AC-1을 다루는 시나리오는 S-1 하나뿐입니다. 그런데 S-1의 기대 결과가 '구체적 방법 미정'이라 어떤 결과든 통과합니다. 그래서 목표 검증 시나리오가 사실상 없다고 판정했습니다.\n- **채택/잔존(2점):** 교체형 목표가 아니어서 앵커 2점을 줬습니다.\n- **경계/부정(1점):** S-1의 조건 '워커가 D 밖의 page를 추가로 쓰는 경우'는 경계 경로를 가리킵니다. 하지만 기대 결과가 정해지지 않아 직접 검증으로 볼 수 없습니다. C-1의 ATTRIBUTION_COMMIT_BLOCKED 차단 동작이 유지되는지 확인하는 시나리오도 없습니다. 0점은 아니어서 gap으로 올리지 않았지만 2점에는 못 미칩니다.\n- 이번은 부분 호출(`scope: scenario`)이라 계약대로 `verdict`와 `rewrite_target`은 넣지 않았습니다. 다만 목표 축이 0점이고 평균이 1.0이라 1.5에 못 미치므로, `design-gate combine`에서 시나리오 쪽은 미달로 결합될 것입니다.\n- `previous_gaps`가 입력되지 않아 `resolved_gaps`는 빈 배열입니다.\n- receipt 검증 결과는 `ok: true`(문서 4건)였습니다. 파일은 만들거나 수정하지 않았습니다.",
+  "ttft_ms": 5621,
+  "type": "result",
+  "duration_ms": 35028,
+  "uuid": "33d0ecb6-69ed-4877-ad3e-5a789f074004",
+  "ttft_stream_ms": 2964,
+  "time_to_request_ms": 59,
+  "first_content_frame_ms": 2964,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

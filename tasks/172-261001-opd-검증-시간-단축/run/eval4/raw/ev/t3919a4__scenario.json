@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "medium",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/246cf129-7d08-4ea2-82da-97b704032cf4/scratchpad/e4w/work/fx/t3919a4",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2121 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 51.1,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 46439,
+  "stop_reason": "end_turn",
+  "session_id": "e0807164-af78-4d97-af43-22f539b50b74",
+  "total_cost_usd": 0.4937912,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 48384,
+   "cache_read_input_tokens": 210996,
+   "output_tokens": 3224,
+   "output_tokens_details": {
+    "thinking_tokens": 1033
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 48384,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2138,
+     "cache_read_input_tokens": 58291,
+     "cache_creation_input_tokens": 2479,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 2479
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 3224,
+    "cacheReadInputTokens": 210996,
+    "cacheCreationInputTokens": 48384,
+    "webSearchRequests": 0,
+    "costUSD": 0.4937912,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 1033,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "The receipt check passed (`ok: true`, 4 documents verified). I scored the 13 rows in `TEST-SCENARIO.md` (S-1 to S-13) on the three scenario axes and found no gaps; all three axes score 2/2. There is one optional suggestion to merge overlapping checks. No files were created. There were no previous gaps, so `resolved_gaps` is empty. As this call's scope requires, the result has no `verdict` or `rewrite_target`; `design-gate combine` adds those.\n\n```json\n{\n  \"input_bundle_hash\": \"2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [\n    {\n      \"id\": \"A-1\",\n      \"kind\": \"mergeable\",\n      \"targets\": [\"S-6\", \"S-8\"],\n      \"basis\": \"S-6 runs `resolve` against three sources (project, global, infer) and checks each `source_path`. Two of its setups are the same as S-8's: (a) the global template injected through `OPAL_TEST_TOOLS_GLOBAL`, and (b) a project with only pyproject.toml. S-8 runs `resolve` again on those same two setups and checks only that the commands are `run`. The command and the input settings are duplicated; only the assertions differ.\",\n      \"recommendation\": \"Fold S-6's `source_path` checks for global and infer into rows (a) and (b) of S-8, so each `resolve` run is checked once for both where the config came from and its `run` value. S-6 then keeps only the project-source `unit` check: `cwd`, `config.*`, and the per-layer fields.\"\n    }\n  ],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope=scenario) scored: scores={goal:2, adoption:2, boundary:2}, average=2.0, gaps 0, advisories 1\",\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\nWhy each axis scored 2:\n- **Goal (2):** S-9 and S-10 run the real tools (ruff, mypy and pytest for Python; eslint, tsc and vitest for TS) on normal and violation cases. S-13 runs the deployed copy from a new login shell and gets a real pass. Both read only the public CLI's stdout JSON and exit code. Together they directly test the goal: install check and real check are kept apart, and the command, scope, result and config source are visible to the user.\n- **Adoption (2):** Both sides of the replacement are tested.\n  - New path in use: S-8 (template, inferred output, schema) and S-13 (deployed copy).\n  - Old path gone: S-1 shows an old config does not run `check`, and does not use it in place of `run`. S-8 confirms the string `ruff .` no longer appears. S-11 checks the consumer docs against a grep of the tree.\n- **Boundary (2):** These failure and edge paths are tested directly:\n  - install check failure (S-2b), kept separate from a check failure (S-3);\n  - stopping after a failure (S-3);\n  - no layers declared, and no matching files (S-4);\n  - excluded files: pattern mismatch, missing, and outside the project; plus a tool that can't check single files (S-5);\n  - required vs. optional layers that aren't set up (S-7).",
+  "ttft_ms": 5770,
+  "type": "result",
+  "duration_ms": 47585,
+  "uuid": "3dbb2966-cc77-4a4c-9f3f-8c1148d24186",
+  "ttft_stream_ms": 3340,
+  "time_to_request_ms": 30,
+  "first_content_frame_ms": 3340,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "high",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 81.8,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 76322,
+  "stop_reason": "end_turn",
+  "session_id": "b2983617-65df-47fb-b618-a5eab16b9594",
+  "total_cost_usd": 0.4592212,
+  "usage": {
+   "input_tokens": 14,
+   "cache_creation_input_tokens": 37498,
+   "cache_read_input_tokens": 250106,
+   "output_tokens": 5458,
+   "output_tokens_details": {
+    "thinking_tokens": 1994
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 37498,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 3896,
+     "cache_read_input_tokens": 54077,
+     "cache_creation_input_tokens": 1889,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1889
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 14,
+    "outputTokens": 5458,
+    "cacheReadInputTokens": 250106,
+    "cacheCreationInputTokens": 37498,
+    "webSearchRequests": 0,
+    "costUSD": 0.4592212,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 1994,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "판정은 `completed`로 마쳤습니다. 설계 4축 중 3개가 FAIL이고 `recoverability`만 PASS입니다. 진입 게이트의 `event-loader verify` 결과는 `ok: true`였고, receipt의 `required_documents` 4건 전문을 적용한 뒤 진행했습니다. 파일은 만들지 않았습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"FAIL\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"FAIL\",\n      \"recoverability\": \"PASS\"\n    },\n    \"gaps\": [\n      \"completeness-1: `TASK.md` §Constraints: \\\"C-1: 기존 record 계약의 필수 필드를 바꾸지 않는다.\\\" ↔ `PLAN.md` §Work items W-1·§Risks — C-1이 Work item·Risk·시나리오 어디에도 이어지지 않는다. 그래서 W-1의 '빈 결과로 기록'을 할 때 필수 필드를 채울지, 비울지, 생략할지를 구현자가 정해야 한다\",\n      \"completeness-2: `PLAN.md` §Findings 미확인 가정: \\\"exit 16과 17의 차이(완전 미디스패치 vs 부분 디스패치)가 record 처리에 어떤 영향을 주는지 아직 확인하지 않았다.\\\" — 이 가정이 §Risks에도 시나리오에도 이어지지 않는다. `TEST-SCENARIO.md` §Scenarios S-1은 exit 16만 다룬다. 그래서 exit 17(부분 디스패치)을 exit 16과 같게 처리할지 따로 처리할지를 구현자가 정해야 한다\",\n      \"decision_clarity-1: `PLAN.md` §Decisions and contracts D-1: \\\"coverage가 exit 16/17을 반환하면 PM이 상황에 맞게 record를 생략하거나 빈 결과로 기록할 수 있다 — 구체적 분기 기준은 아직 정하지 않았다.\\\" — record를 생략할지 빈 결과로 기록할지, 그리고 어떤 조건에서 어느 쪽을 택할지가 정해져 있지 않다\",\n      \"decision_clarity-2: `PLAN.md` §Risks H-1 설계 대응: \\\"없음(아직 미해결)\\\" — 미디스패치 회차를 설계 게이트 반복 상한 계산에서 1회로 셀지 말지가 정해져 있지 않다\",\n      \"executability-1: `PLAN.md` §Work items W-1 구체적 변경: \\\"(정확한 기준은 구현 중 정리)\\\" — Work item만 보고는 구현할 수 없다. design-gate.md에 쓸 분기 기준을 구현자가 구현 중에 직접 설계해야 한다\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\n축별 판정 근거:\n\n- **completeness — FAIL**:\n  - 연결된 것: `PLAN.md` §Findings 직접 변경(`design-gate.md`)은 W-1로, AC-1은 W-1과 S-1로 이어집니다.\n  - 빠진 것: 제약 C-1(필수 필드 불변)과 미확인 가정(exit 16과 17의 차이)이 Work item·Risk·시나리오 어디에도 이어지지 않습니다.\n- **decision_clarity — FAIL**: D-1이 처리 방식을 \"상황에 맞게 … 생략하거나 빈 결과로 기록\"으로 열어 두었습니다. H-1의 대응도 \"없음(아직 미해결)\"입니다. 둘 다 실패 정책과 저장 방식을 구현자의 선택으로 남깁니다.\n- **executability — FAIL**:\n  - 문제: W-1에 \"정확한 기준은 구현 중 정리\"라고 적혀 있어, 구현 중에 추가 설계가 필요합니다.\n  - 충족: 담당(opal-task-agent), 순서(P1, 선행 작업 없음), 파일 소유권(`design-gate.md` 단일)은 명확합니다.\n- **recoverability — PASS**: `PLAN.md` §Release and recovery에 \"별도 배포 절차 없음(문서 변경, 축소판)\"이라고 적혀 있습니다. 문서 1개만 바꾸고 배포가 없으므로, 실패하면 그 문서를 되돌리면 됩니다. 적용과 복구에서 구현자가 따로 정할 것은 없습니다.\n\n참고로 fixture 주석에는 원본 i2가 `completeness=PASS`, `executability=PASS`로 기록되어 있습니다. 이번 판정은 이 두 축을 FAIL로 봐서 그 기록과 다릅니다. 근거는 Phase 1-D 앵커입니다. completeness 앵커는 C도 연결 대상에 넣고, executability 앵커는 \"추가 설계 없이 구현 가능\"을 요구합니다. 이 원문 그대로 판정했습니다.\n\n이번 호출은 `scope: design`이라 `verdict`와 `rewrite_target`은 넣지 않았습니다. 이 둘은 `design-gate combine`이 계산합니다. `previous_gaps`를 받지 않아 `resolved_gaps`는 빈 배열이고, `scope: design` 규칙에 따라 `advisories`도 빈 배열입니다.",
+  "ttft_ms": 4532,
+  "type": "result",
+  "duration_ms": 78425,
+  "uuid": "7b7ead38-c79a-47b5-b101-d26c7f1e4508",
+  "ttft_stream_ms": 2235,
+  "time_to_request_ms": 49,
+  "first_content_frame_ms": 2236,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

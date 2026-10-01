@@ -1,0 +1,27 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/demo-tool/demo_tool.py"
+  ],
+  "findings": [],
+  "evidence": [
+    "git merge-base ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615 HEAD -> ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+    "git diff --name-status --diff-filter=ACMR ad289c5a14d5 HEAD -> 1 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4",
+    "model findings dropped: out_of_range=4, mechanical_rule=0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md",
+    {
+      "path": "docs/CONVENTIONS.md",
+      "section": "언어 규칙",
+      "rule": "코드/변수/필드명은 English"
+    }
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

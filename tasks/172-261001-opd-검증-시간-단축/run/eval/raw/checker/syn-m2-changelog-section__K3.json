@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "haiku",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 158.2,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 150831,
+  "stop_reason": "end_turn",
+  "session_id": "aad727ac-1b07-4b27-9830-9e17bb481884",
+  "total_cost_usd": 0.33129159999999996,
+  "usage": {
+   "input_tokens": 201,
+   "cache_creation_input_tokens": 64614,
+   "cache_read_input_tokens": 1293526,
+   "output_tokens": 14502,
+   "output_tokens_details": {
+    "thinking_tokens": 6487
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 64614,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 8,
+     "output_tokens": 1050,
+     "cache_read_input_tokens": 70369,
+     "cache_creation_input_tokens": 1527,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1527
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-haiku-4-5-20251001": {
+    "inputTokens": 201,
+    "outputTokens": 14502,
+    "cacheReadInputTokens": 1293526,
+    "cacheCreationInputTokens": 64614,
+    "webSearchRequests": 0,
+    "costUSD": 0.33129159999999996,
+    "contextWindow": 200000,
+    "maxOutputTokens": 32000,
+    "thinkingTokens": 6487,
+    "canonicalModel": "claude-haiku-4-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 30,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "검사 완료 ✓\n\n```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"컨벤션 검사 완료: 1개 advisory finding 감지됨. 차단 사항 없음.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m2-changelog-section__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\"\n  ]\n}\n```\n\n---\n\n## 실행 결과\n\n### 검사 프로세스\n1. **receipt 검증**: ✅ 성공 (worker.dispatch 이벤트)\n2. **스킬 로드**: ✅ op-gc-convention 스킬 로드 완료\n3. **기준 문서**: ✅ docs/CONVENTIONS.md 로드\n4. **사전 검사**: ✅ convention-precheck scan (기계 규칙 4종)\n5. **변경 구간 분석**: ✅ opal/core/references/demo-guide.md (2~18줄)\n6. **모델 검사**: ✅ 변경 구간 규칙 적용\n7. **결합**: ✅ convention-precheck merge\n8. **보고서 생성**: ✅ Markdown 보고서 작성\n\n### Finding 요약\n\n| ID | 규칙 | 심각도 | 집행 수준 | 위치 | 상태 |\n|-----|------|--------|----------|------|------|\n| GC-001 | opal-doc-standard.md §5 | medium | advisory | demo-guide.md:13 | 해결 권장 |\n\n**문제**: 변경이력 절이 문서에 추가됨  \n**권장**: 이력 절 제거, git 로그·DONE.md로 위임\n\n### 판정\n\n✅ **PASS** — 모든 검사 완료, 차단 finding 없음",
+  "ttft_ms": 3768,
+  "type": "result",
+  "duration_ms": 154815,
+  "uuid": "044a2c3c-95e9-4a97-b035-2d6658724422",
+  "ttft_stream_ms": 1176,
+  "time_to_request_ms": 56,
+  "first_content_frame_ms": 1176,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

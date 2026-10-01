@@ -1,0 +1,142 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "haiku",
+ "effort": "medium",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "haiku",
+  "--effort",
+  "medium",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c02/repo",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 2935 chars>",
+  "<prompt 2228 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 154.6,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 147967,
+  "stop_reason": "end_turn",
+  "session_id": "53add689-d440-4657-ad33-9624b73b4cf2",
+  "total_cost_usd": 0.33862100000000006,
+  "usage": {
+   "input_tokens": 137,
+   "cache_creation_input_tokens": 72199,
+   "cache_read_input_tokens": 1168110,
+   "output_tokens": 15455,
+   "output_tokens_details": {
+    "thinking_tokens": 6680
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 72199,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 8,
+     "output_tokens": 790,
+     "cache_read_input_tokens": 85701,
+     "cache_creation_input_tokens": 1905,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1905
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-haiku-4-5-20251001": {
+    "inputTokens": 137,
+    "outputTokens": 15455,
+    "cacheReadInputTokens": 1168110,
+    "cacheCreationInputTokens": 72199,
+    "webSearchRequests": 0,
+    "costUSD": 0.33862100000000006,
+    "contextWindow": 200000,
+    "maxOutputTokens": 32000,
+    "thinkingTokens": 6680,
+    "canonicalModel": "claude-haiku-4-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [
+   {
+    "tool_name": "Write",
+    "tool_use_id": "toolu_01DFrahzvWishFyc6psyYgz4",
+    "tool_input": {
+     "file_path": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c02__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md",
+     "content": "# GC-CONVENTION — 컨벤션 검사 보고서\n\n**검사 일시**: 2026-10-01  \n**검사 상태**: ✅ Pass (advisory finding 1개)  \n**검사 범위**: `all`\n\n---\n\n## 개요\n\nOPAL 프레임워크 컨벤션 기준에 따라 지정된 파일의 코드·문서 스타일을 검사했습니다.\n\n| 항목 | 결과 |\n|------|------|\n| 검사 대상 파일 | 1개 |\n| 검사 완료 파일 | 1개 |\n| 강제(Enforce) Finding | 0개 |\n| 권고(Advisory) Finding | 1개 |\n| **검사 결과** | **Pass** |\n\n---\n\n## 검사 대상\n\n- `opal/core/references/demo-guide.md` (modified)\n\n---\n\n## 상세 결과\n\n### ⚠️ GC-001: 문서 이력 누적\n\n**심각도**: Medium | **확도**: High | **유형**: Advisory\n\n**위치**: `opal/core/references/demo-guide.md:13`\n\n**근거**:\n- 규칙 출처: `opal-doc-standard.md` §5\n- 기준 커밋 대비 추가된 제목줄: `## 변경이력`\n\n**문제**:\n변경 이력은 git이 갖는데 문서에 이력 절이 누적되고 있습니다. 문서 본문에 작성된 이력 표는 다음을 야기합니다:\n- 중복 기록 (git 로그와 문서)\n- 수정 시 매번 갱신 필요\n- git 로그가 정확한 근거 저장소\n\n**권고 조치**:\n이력 절(`## 변경이력` 및 버전 테이블)을 제거하고, 변경 근거는 다음으로 위임합니다:\n- **git 커밋 로그** — 변경 사항의 원문 기록\n- **task/{NNN}-*/DONE.md** — 태스크 단위 산출물 이력\n\n**자동 수정 불가**: No\n\n---\n\n## 검사 기준\n\n### 적용 문서\n\n- [`docs/CONVENTIONS.md`](file://docs/CONVENTIONS.md) — 프로젝트 코드 컨벤션\n- [`opal/core/references/opal-doc-standard.md`](file://opal/core/references/opal-doc-standard.md) — 문서 작성 표준\n- [`opal/core/references/harness/gc-finding-schema.md`](file://opal/core/references/harness/gc-finding-schema.md) — Finding 스키마\n\n### 검사 범위\n\n모든 마크다운 문서에 대해 다음 카테고리를 검사합니다:\n\n- **doc-history** — 문서 내 버전 이력 누적\n- **naming** — 파일/폴더 네이밍 규칙 (kebab-case)\n- **frontmatter** — YAML frontmatter 형식 (스킬/에이전트)\n- **language** — 한글/영어 혼용 및 기술용어 병기\n\n---\n\n## 다음 단계\n\nAdvisory finding은 차단 사유가 아니며, 다음 중 선택할 수 있습니다:\n\n1. **권고 조치 수행**: 이력 절 제거 및 DONE.md로 이관\n2. **현 상태 유지**: 검사 결과 기록 후 진행\n\nCONVENTIONS.md의 `## 문서 이력과 버전` 절을 참조하여 프로젝트의 정책을 확인하시기 바랍니다.\n\n---\n\n*보고서 생성: opal-convention-checker · 2026-10-01T00-00-00 (UTC+9)*\n"
+    }
+   },
+   {
+    "tool_name": "Write",
+    "tool_use_id": "toolu_01FLjt62j6rSTqUxhfHADTV3",
+    "tool_input": {
+     "file_path": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c02__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md",
+     "content": "# GC-CONVENTION — 컨벤션 검사 보고서\n\n**검사 일시**: 2026-10-01  \n**검사 상태**: ✅ Pass (advisory finding 1개)  \n**검사 범위**: `all`\n\n---\n\n## 개요\n\nOPAL 프레임워크 컨벤션 기준에 따라 지정된 파일의 코드·문서 스타일을 검사했습니다.\n\n| 항목 | 결과 |\n|------|------|\n| 검사 대상 파일 | 1개 |\n| 검사 완료 파일 | 1개 |\n| 강제(Enforce) Finding | 0개 |\n| 권고(Advisory) Finding | 1개 |\n| **검사 결과** | **Pass** |\n\n---\n\n## 검사 대상\n\n- `opal/core/references/demo-guide.md` (modified)\n\n---\n\n## 상세 결과\n\n### ⚠️ GC-001: 문서 이력 누적\n\n**심각도**: Medium | **확도**: High | **유형**: Advisory\n\n**위치**: `opal/core/references/demo-guide.md:13`\n\n**근거**:\n- 규칙 출처: `opal-doc-standard.md` §5\n- 기준 커밋 대비 추가된 제목줄: `## 변경이력`\n\n**문제**:\n변경 이력은 git이 갖는데 문서에 이력 절이 누적되고 있습니다. 문서 본문에 작성된 이력 표는 다음을 야기합니다:\n- 중복 기록 (git 로그와 문서)\n- 수정 시 매번 갱신 필요\n- git 로그가 정확한 근거 저장소\n\n**권고 조치**:\n이력 절(`## 변경이력` 및 버전 테이블)을 제거하고, 변경 근거는 다음으로 위임합니다:\n- **git 커밋 로그** — 변경 사항의 원문 기록\n- **task/{NNN}-*/DONE.md** — 태스크 단위 산출물 이력\n\n**자동 수정 불가**: No\n\n---\n\n## 검사 기준\n\n### 적용 문서\n\n- [`docs/CONVENTIONS.md`](file://docs/CONVENTIONS.md) — 프로젝트 코드 컨벤션\n- [`opal/core/references/opal-doc-standard.md`](file://opal/core/references/opal-doc-standard.md) — 문서 작성 표준\n- [`opal/core/references/harness/gc-finding-schema.md`](file://opal/core/references/harness/gc-finding-schema.md) — Finding 스키마\n\n### 검사 범위\n\n모든 마크다운 문서에 대해 다음 카테고리를 검사합니다:\n\n- **doc-history** — 문서 내 버전 이력 누적\n- **naming** — 파일/폴더 네이밍 규칙 (kebab-case)\n- **frontmatter** — YAML frontmatter 형식 (스킬/에이전트)\n- **language** — 한글/영어 혼용 및 기술용어 병기\n\n---\n\n## 다음 단계\n\nAdvisory finding은 차단 사유가 아니며, 다음 중 선택할 수 있습니다:\n\n1. **권고 조치 수행**: 이력 절 제거 및 DONE.md로 이관\n2. **현 상태 유지**: 검사 결과 기록 후 진행\n\nCONVENTIONS.md의 `## 문서 이력과 버전` 절을 참조하여 프로젝트의 정책을 확인하시기 바랍니다.\n\n---\n\n*보고서 생성: opal-convention-checker · 2026-10-01T00-00-00 (UTC+9)*\n"
+    }
+   }
+  ],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 21,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "검사 완료 ✅\n\n## 검사 결과 요약\n\n**파일**: `opal/core/references/demo-guide.md`  \n**상태**: ✅ **Pass** (advisory finding 1개)  \n**강제 위반**: 없음\n\n### 발견 사항\n\n| ID | 카테고리 | 심각도 | 유형 | 위치 | 내용 |\n|----|---------|--------|------|------|------|\n| GC-001 | doc-history | Medium | Advisory | 라인 13 | 문서 이력 절 누적 |\n\n### 상세 내용\n\n**GC-001 — 문서 이력 누적**\n\n기준 커밋 대비 `## 변경이력` 섹션이 추가되었습니다. CONVENTIONS.md의 문서 이력 정책에 따르면:\n- 변경 이력은 git 로그가 정확한 기록소\n- 문서 본문 이력 절은 중복 기록을 야기함\n- 권고: 이력 절 제거 → git 커밋 로그 + task/{NNN}-*/DONE.md로 위임\n\n**판정**: Advisory (차단 사유 아님)\n\n---\n\n## 산출물\n\n- **보고서**: `/private/tmp/.../out/GC-CONVENTION-2026-10-01T00-00-00.md`\n- **Finding JSON**: `/private/tmp/.../out/gc-findings-convention-2026-10-01T00-00-00`\n\n---\n\n검사가 정상 완료되었습니다. Advisory finding은 권고사항이므로 현 상태로 진행하거나, 권고 조치를 적용할 수 있습니다.",
+  "ttft_ms": 9001,
+  "type": "result",
+  "duration_ms": 150590,
+  "uuid": "6076ebab-0282-40ab-9da7-138f06925c58",
+  "ttft_stream_ms": 1132,
+  "time_to_request_ms": 260,
+  "first_content_frame_ms": 1132,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

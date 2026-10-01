@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 40.8,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 35851,
+  "stop_reason": "end_turn",
+  "session_id": "313acf48-db0d-4233-bd46-b0bf35af3d70",
+  "total_cost_usd": 0.1841642,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 11911,
+   "cache_read_input_tokens": 124981,
+   "output_tokens": 3192,
+   "output_tokens_details": {
+    "thinking_tokens": 701
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 11911,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1607,
+     "cache_read_input_tokens": 29304,
+     "cache_creation_input_tokens": 1075,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1075
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 3192,
+    "cacheReadInputTokens": 124981,
+    "cacheCreationInputTokens": 11911,
+    "webSearchRequests": 0,
+    "costUSD": 0.1841642,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 701,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "`worker.dispatch` receipt 검증 결과 `ok: true`(검증 문서 4건)가 나와 판정을 진행했습니다. `previous_gaps`가 입력에 없어서 `resolved_gaps`는 빈 배열입니다. 파일은 만들지 않았습니다.\n\n```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: design) 판정 완료: completeness=FAIL, decision_clarity=FAIL, executability=FAIL, recoverability=FAIL\",\n  \"input_bundle_hash\": \"2c4d1bcab562e6a2cf6533ed19dd90f74ff6763b103176da0be803ad0c174eb1\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"FAIL\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"FAIL\",\n      \"recoverability\": \"FAIL\"\n    },\n    \"gaps\": [\n      \"completeness-1: PLAN.md:34 (## Findings > ### 미확인 가정), PLAN.md:52 (H-1) — 미확인 가정 '워커 page 경로가 DONE.md 선언과 항상 일치'가 Work item·Risks·시나리오 어디에서도 검증되거나 해소되지 않는다. H-1의 설계 대응은 '없음(아직 미해결)'이고, TASK.md:33 AC-1이 요구하는 '방법이 하나로 정해진다'를 충족하는 Work item도 없다. 불일치를 어떻게 검출하고 처리할지가 구현자에게 남아 있다.\",\n      \"completeness-2: TASK.md:29 (C-1), PLAN.md:52 (H-1) — C-1(ATTRIBUTION_COMMIT_BLOCKED 동작 보존)과 '선언 밖 page를 쓰면 귀속 커밋이 조용히 실패한다'는 위험이 W-1·S-1로 이어지지 않는다. 차단 동작을 그대로 두면서 조용한 실패를 막는 방법이 구현자에게 남아 있다.\",\n      \"decision_clarity-1: PLAN.md:40 (D-1) — 변경 후 계약이 '(a) 워커가 D에 선언된 경로만 쓴다 / (b) 워커 결과로 DONE 선언을 갱신한다 / (c) PM이 워커 결과를 선언에 역반영한다 — 어느 쪽을 쓸지는 구현자가 상황에 맞게 정한다'로 되어 있다. 외부 동작·인터페이스 계약을 세 선택지 중 무엇으로 할지가 구현자에게 남아 있다.\",\n      \"executability-1: PLAN.md:46 (W-1) — '구체적 변경'이 'D-1의 (a)/(b)/(c) 중 적절한 방법을 적용한다(구체적 선택은 구현 중 결정)'이다. 담당(opal-task-agent)·파일·실행 그룹은 명확하지만 Work item만으로는 추가 설계 없이 구현할 수 없다. 정합 방식을 고르는 설계 작업이 구현자에게 남아 있다.\",\n      \"recoverability-1: PLAN.md:54-56 (## Release and recovery) — '별도 배포 절차 없음(축소판)'만 있다. 적용 후 검증 순서와 실패 시 복구 경로가 없다. 워커가 선언 밖 page를 써서 귀속 커밋이 실패했을 때(H-1) 어떻게 검출하고 원복하거나 재시도할지가 구현자에게 남아 있다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n- **`executability` 판정:** 원본 i2에서는 PASS였지만 이번에는 FAIL로 판정했습니다. 근거는 W-1이 \"구체적 선택은 구현 중 결정\"이라고 적어 설계를 구현 단계로 넘긴다는 점입니다. 이 축의 기준이 \"Work item만으로 추가 설계 없이 구현 가능\"이라 이를 충족하지 못한다고 봤습니다. 원인은 `decision_clarity-1`과 같지만 두 축을 각각 채점했습니다.\n\n판정 기준대로 `verdict`·`rewrite_target`은 넣지 않았습니다. 이 둘의 계산은 `design-gate combine`이 맡습니다.",
+  "ttft_ms": 4463,
+  "type": "result",
+  "duration_ms": 37208,
+  "uuid": "1342993e-5beb-46b9-9945-58c073708222",
+  "ttft_stream_ms": 1694,
+  "time_to_request_ms": 52,
+  "first_content_frame_ms": 1694,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

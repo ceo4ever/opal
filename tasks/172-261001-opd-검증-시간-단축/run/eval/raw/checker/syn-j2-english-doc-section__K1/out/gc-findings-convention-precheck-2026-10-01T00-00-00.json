@@ -1,0 +1,21 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/core/references/demo-guide.md"
+  ],
+  "findings": [],
+  "evidence": [
+    "git merge-base 39b9b231c9f096dfff0f3be1c71f18173375aa76 HEAD -> 39b9b231c9f096dfff0f3be1c71f18173375aa76",
+    "git diff --name-status --diff-filter=ACMR 39b9b231c9f0 HEAD -> 1 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

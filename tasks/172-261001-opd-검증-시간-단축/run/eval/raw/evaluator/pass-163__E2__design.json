@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "high",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 56.1,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 51032,
+  "stop_reason": "end_turn",
+  "session_id": "1c8dd6fe-eb13-432b-b346-bc93b5e96d1e",
+  "total_cost_usd": 0.2810926,
+  "usage": {
+   "input_tokens": 6,
+   "cache_creation_input_tokens": 21653,
+   "cache_read_input_tokens": 67123,
+   "output_tokens": 4721,
+   "output_tokens_details": {
+    "thinking_tokens": 1957
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 21653,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 4013,
+     "cache_read_input_tokens": 24834,
+     "cache_creation_input_tokens": 15287,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 15287
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 6,
+    "outputTokens": 4721,
+    "cacheReadInputTokens": 67123,
+    "cacheCreationInputTokens": 21653,
+    "webSearchRequests": 0,
+    "costUSD": 0.2810926,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 1957,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "모든 설계 축이 PASS로 판정되어 `design.gaps`는 비어 있습니다. `worker.dispatch` receipt 검증은 `ok: true`(문서 4건 검증)였고, 그 4개 문서를 적용한 뒤 판정했습니다. 파일은 만들지 않았고 수정한 파일도 없습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"96944daaa30a59a0389908d9bb8e3d78964623bae569758cc0f7d29117e9ed6f\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"PASS\",\n      \"decision_clarity\": \"PASS\",\n      \"executability\": \"PASS\",\n      \"recoverability\": \"PASS\"\n    },\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: design) 판정 완료: 설계 4축 전부 PASS, gaps 0건\",\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n## 축별 판정 근거\n\n**completeness — PASS**\n- **AC/C 연결:** TASK.md의 AC-1~AC-6과 C-1~C-4가 PLAN.md 46~51행 Work items의 '완료 기준 연결' 열에 모두 이어집니다.\n  - AC-6과 C-4는 W-6이 맡습니다.\n  - AC-5와 C-3은 W-4가 맡습니다.\n- **직접 변경 파일:** PLAN.md 16행에 적힌 11개 파일이 모두 Work item에 배정됩니다.\n  - `worktree_tool.py`는 W-1이 맡습니다.\n  - `session_start_hook.py`, `codex_adapter.py`, `ownership_core.py`는 W-2가 맡습니다.\n  - `settings.py`, `setting.default.json`, `install-mac.sh`, `windows.ps1`는 W-4가 맡습니다.\n  - `launcher_core.py`, `cli.py`, `orca.py`는 W-3이 맡습니다.\n- **문서 갱신:** 24행의 7개 문서도 모두 배정됩니다. `worktree.schema.json`은 W-1이, 나머지 6개는 W-5가 맡습니다.\n- **미확인 가정:** H-1~H-3(28행)은 Risks(57~59행)와 시나리오로 이어집니다. H-1은 S-4, H-2는 S-8, H-3은 S-10이 확인합니다.\n\n**decision_clarity — PASS**\nDecisions 표(34~40행)가 구현자에게 선택을 남기지 않습니다.\n- owner를 원자적으로 확정하고, 불일치하면 registry 바이트를 바꾸지 않습니다.\n- 실패는 `not_created`/`created`/`unknown`로 나누어 처리하고, `recovery_required`가 되는 조건과 `recover`로 복귀하는 조건이 정해져 있습니다.\n- registry 권한 거부만 예외로 정상 처리하며, 이때 `registry_owner_deferred_to_hub` 진단을 남깁니다.\n- 설정은 구 기본 argv와 정확히 일치할 때만 이관합니다.\n- checkpoint 쓰기는 `REQUEST.md`가 허용한 경로 (b)로 확정했습니다.\n- cmux는 `unknown(status_unsupported)`로 닫습니다.\n- Codex 버전은 숫자를 추정하지 않고, `codex --help`에 옵션이 있는지로 확인합니다.\n- 상태 전이(`session_launching→recovery_required→hub_owned`)와 보존·소거할 필드는 W-1(46행)에 명시되어 있습니다.\n\n**executability — PASS**\n- 모든 행의 담당이 실제 에이전트인 `opal-task-agent`입니다.\n- 순서는 P1(W-1·W-2·W-4) → P2(W-3, W-1 선행) → P3(W-5·W-6)입니다.\n- Work item끼리 소유 파일이 겹치지 않으며, 테스트 파일도 W마다 따로 배정되어 있습니다.\n- 각 행의 '구체적 변경' 열만으로 추가 설계 없이 구현할 수 있습니다.\n\n**recoverability — PASS**\n- `## Release and recovery`(63~66행)에 적용 순서(P1→P2→P3)와 검증 범위가 있습니다. 검증 범위는 source, 설치본, 실제 Orca, 162 checkpoint로 나뉩니다.\n- 실측 경계는 설정 상한 안에서 끝내고, 미확인 상태는 자동으로 재기동하지 않습니다.\n- 실패 경로도 정해져 있습니다. 설치 전에는 source만 고쳐 재시험하고, 배포와 162 재기동은 권한 경계에서 멈춰 보고합니다. 162 복구는 `REQUEST.md` 절차를 따릅니다.\n\n## 참고\n- **REQUEST.md 부재:** PLAN이 참조하는 `REQUEST.md`(§변경 내용, §162 복구 순서)가 fixture 폴더에 없어서 원문과 대조하지 못했습니다. PLAN 자체에 결정과 계약이 충분히 적혀 있어 PASS로 판단했습니다.\n- **회귀 확인 테스트:** 20행의 회귀 확인 대상(`test_adapter_cmux.py`, `test_adapter_generic.py`, `test_lease.py`)은 어떤 Work item에도 명시되어 있지 않습니다. 다만 완전성 판정 범위(직접 변경, 문서 갱신, 미확인 가정)에 속하지 않으므로 gap으로 잡지 않았습니다.\n- **빈 배열:** `previous_gaps`가 입력되지 않아 `resolved_gaps`는 빈 배열입니다. `scope: design`이라 `advisories`도 빈 배열입니다.",
+  "ttft_ms": 4563,
+  "type": "result",
+  "duration_ms": 52374,
+  "uuid": "24131b59-92ff-453f-b936-5cfef1a3f2b4",
+  "ttft_stream_ms": 1922,
+  "time_to_request_ms": 64,
+  "first_content_frame_ms": 1922,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

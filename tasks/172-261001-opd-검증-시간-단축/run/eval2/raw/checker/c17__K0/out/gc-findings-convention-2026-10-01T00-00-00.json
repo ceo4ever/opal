@@ -1,0 +1,46 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/core/references/demo-guide.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "24cca2baaa5ebb96",
+      "category": "언어 규칙",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §언어 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/core/references/demo-guide.md",
+        "line": 15
+      },
+      "evidence": "§사용 예시(15~19행) 본문이 영어 문장 4줄이다. 같은 문서의 나머지 본문(1~11행)은 한국어이며 기준은 '문서 본문: 한국어 (기술 용어는 영어 병기)'다.",
+      "impact": "문서 본문 언어가 한국어/영어로 혼재하고 프로젝트 언어 규칙과 어긋난다.",
+      "remediation": {
+        "guidance": "15~19행을 한국어로 번역한다. average, TypeError 등 기술 용어만 영어로 병기한다.",
+        "reference": "docs/CONVENTIONS.md §언어 규칙",
+        "auto_fixable": false
+      },
+      "verification": "해당 절 본문이 한국어이고 기술 용어만 영어인지 재검사한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615 HEAD -> ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+    "git diff --name-status --diff-filter=ACMR ad289c5a14d5 HEAD -> 1 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4",
+    "model findings dropped: out_of_range=0, mechanical_rule=0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c17__K0/out/GC-CONVENTION-2026-10-01T00-00-00.md"
+}
