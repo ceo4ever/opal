@@ -3,7 +3,7 @@ template: sdlc-v2
 ---
 # TRD: 태스크 실행 로그 표준화
 
-> 1차 입력 SSOT: `docs/proposals/opal-task-run-log.md`
+> 1차 입력 SSOT: `docs/proposals/260910_태스크_실행_로그.md`
 > 요구·제약·수용 기준은 `TASK.md`, 무엇을 왜 만드는가는 `PRD.md`가 소유한다. 이 문서는 **어떻게 만들 것인가**만 소유한다.
 > 사건 스키마 필드 정의, CLI 시그니처 원문, 표면 인벤토리는 CONTRACT가 소유한다. 이 문서는 그 대상을 가리키기만 한다.
 

@@ -324,7 +324,7 @@ verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용�
 | 설계 확정 SSOT (루브릭 Base 근거) | 태스크 폴더 `SPEC.html` §04 검증 3-tier + 기준 항목, §05 CONTRACT 거버넌스 | Phase 1, Phase 5 |
 | 코드 컨벤션 (기계검증절, 참고만) | `docs/CONVENTIONS.md` | Phase 3 (컨벤션 정신 차원 참고) |
 | 시나리오 게이트 SSOT (scenario-rubric 판단축·종료조건 근거) | `~/.opal/references/harness/scenario-gate.md` §2(6축)·§5(종료조건 임계) | Phase 1-S, Phase 4 |
-| OPPB 완료조건 판정 SSOT (acceptance 4검사 근거) | `docs/proposals/opal-oppb-project-build-pilot.md` §10(검증 시점과 실행 주체)·§13.2 수용기준 9·14 | Phase 1-A, Phase 4 |
+| OPPB 완료조건 판정 SSOT (acceptance 4검사 근거) | `docs/proposals/260913_OPPB_프로젝트_빌드_Pilot.md` §10(검증 시점과 실행 주체)·§13.2 수용기준 9·14 | Phase 1-A, Phase 4 |
 | OPPB 완료조건·증거 문서 (acceptance 입력, 읽기 전용) | `{acceptance_path}`(`acceptance.json`)·`{workgraph_path}`(`workgraph.json`)·`{evidence_root}` | Phase 3 |
 
 ---

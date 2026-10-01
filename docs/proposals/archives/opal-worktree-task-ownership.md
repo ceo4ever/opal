@@ -586,7 +586,7 @@ worktree 설정에 `task_artifacts.repo`를 명시한다.
 - worktree 태스크의 run-log segment는 태스크 캡슐에 포함돼 branch와 함께 merge된다.
 - `.oppl-run/`이나 raw 로그의 추적 여부는 각 로그 제안의 보존 정책을 따른다.
 
-`docs/proposals/opal-task-run-log.md`의 task path와 R-4 fixture는 허브 강제 정규화가 아니라
+`docs/proposals/260910_태스크_실행_로그.md`의 task path와 R-4 fixture는 허브 강제 정규화가 아니라
 canonical task path resolver를 참조한다. Phase 1 적용(태스크 118)으로 세그먼트 기반 허브 강제
 정규화가 활성 계약에서 제거됐으므로 이 참조는 `harness/worktree.md` §task root와 allocator root
 계약을 따른다. 동시성 fixture는 허브 PM과 워크트리 worker가 registry를 통해 같은 워크트리 lock을

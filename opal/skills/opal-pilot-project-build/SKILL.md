@@ -23,7 +23,7 @@ version: 1.0.0
 사용자와 미니 태스크가 마주하는 표면은 P0~P5 여섯 단계와 §사용자 게이트의 6개 호출 시점뿐이며,
 DAG·Ready queue·예산·lease·candidate checkpoint·evidence는 `oppb-runtime-tool`이 소유한다.
 
-설계 SSOT는 `docs/proposals/opal-oppb-project-build-pilot.md`다. 이 스킬은 그 문서의 §5(P0~P5)·§7(문서)·
+설계 SSOT는 `docs/proposals/260913_OPPB_프로젝트_빌드_Pilot.md`다. 이 스킬은 그 문서의 §5(P0~P5)·§7(문서)·
 §11(사용자 게이트)을 진입점 절차로 옮긴 것이며, 충돌하면 제안서가 이긴다.
 
 ## 사용 기준

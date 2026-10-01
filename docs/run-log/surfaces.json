@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "note": "OPAL은 HTTP API가 아니므로 OpenAPI 파생 경로를 쓰지 않고 표면 목록을 직접 작성한다. origins는 웹 클라이언트가 없으므로 선언하지 않는다. 표면 id는 백로그 태스크가 --covers로 가리키는 유일한 키이며 명명 규칙은 {component}.{command}다. 근거: docs/proposals/opal-task-run-log.md §9.1",
+  "note": "OPAL은 HTTP API가 아니므로 OpenAPI 파생 경로를 쓰지 않고 표면 목록을 직접 작성한다. origins는 웹 클라이언트가 없으므로 선언하지 않는다. 표면 id는 백로그 태스크가 --covers로 가리키는 유일한 키이며 명명 규칙은 {component}.{command}다. 근거: docs/proposals/260910_태스크_실행_로그.md §9.1",
   "surfaces": [
     {
       "id": "run-log-tool.init",

@@ -32,7 +32,7 @@ OPAL Console을 로컬 프로젝트를 조회하는 웹 대시보드에서 **Tas
 - Console 구성: `docs/PROJECT.md §주요 컴포넌트 (OPAL Console)`
 - 읽기 중심 아키텍처: `docs/ARCHITECTURE.md §OPAL Console`
 - 현재 프런트엔드 스택: `dashboard/frontend/package.json`
-- 기존 ACP Agent Hub 기능안: `docs/proposals/opal-console-acp-agent-hub.md`
+- 기존 ACP Agent Hub 기능안: `docs/proposals/260910_Console_ACP_에이전트_허브_구현_스펙.md`
 
 기존 ACP Agent Hub 안은 Console에서 PM과 전문 에이전트를 호출하는 기능을 정의했지만 다음 제품 요구를 상위 개념으로 다루지 못한다.
 
@@ -697,7 +697,7 @@ L2 소스 추출 시 다음 파일과 기록을 필수로 관리한다.
 - 보존 기간과 soft delete
 - 원본 ACP payload는 기본 미저장, 진단 opt-in
 
-세부 계약은 `docs/proposals/opal-console-acp-agent-hub.md §대화 영속 모델`과 `docs/proposals/opal-task-run-log.md`를 하위 참고안으로 사용하되, Task·Run·Environment 식별자를 추가해 정합화한다.
+세부 계약은 `docs/proposals/260910_Console_ACP_에이전트_허브_구현_스펙.md §대화 영속 모델`과 `docs/proposals/260910_태스크_실행_로그.md`를 하위 참고안으로 사용하되, Task·Run·Environment 식별자를 추가해 정합화한다.
 
 ---
 
@@ -922,7 +922,7 @@ Decision
 
 ### 18.3 기존 제안과의 관계
 
-`docs/proposals/opal-console-acp-agent-hub.md`에서 다음 요구는 유지한다.
+`docs/proposals/260910_Console_ACP_에이전트_허브_구현_스펙.md`에서 다음 요구는 유지한다.
 
 - `.opal/AGENT.md` PM 자동 발견
 - 전문·사용자 Agent Catalog

@@ -625,7 +625,7 @@ Console 운영 데이터는 프로젝트 brain이나 task 파일에 섞지 않�
 
 Conversation Log는 Task Run Log를 대체하지 않는다. 대화가 태스크와 연결되면 Task Run Log에는 필요한 실행 사건만 투영하고, 대화 전문은 복제하지 않는다. 투영 이벤트는 Console의 `run_id`·`event_id`를 `source_ref`로 가져 중복과 출처를 판별할 수 있게 한다.
 
-`docs/proposals/opal-task-run-log.md`의 append-only 이벤트 계약을 Task Run Log의 상세 설계로 사용한다. Console은 ACP 이벤트를 그 계약으로 변환하는 하나의 수집 채널이며 `state.json`의 현재 상태 소유권을 가져오지 않는다.
+`docs/proposals/260910_태스크_실행_로그.md`의 append-only 이벤트 계약을 Task Run Log의 상세 설계로 사용한다. Console은 ACP 이벤트를 그 계약으로 변환하는 하나의 수집 채널이며 `state.json`의 현재 상태 소유권을 가져오지 않는다.
 
 ### 11.4 Conversation Log 계약
 
