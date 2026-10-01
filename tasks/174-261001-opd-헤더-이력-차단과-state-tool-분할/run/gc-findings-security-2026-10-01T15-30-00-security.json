@@ -1,0 +1,118 @@
+{
+ "check": "security",
+ "status": "pass",
+ "checked_files": [
+  "docs/CONVENTIONS.md",
+  "opal/core/references/harness/header-rules.md",
+  "opal/core/references/harness/pm-review-gate.md",
+  "opal/core/references/header-standard.md",
+  "opal/skills/opal-skill-tester/scripts/skill_tester.py",
+  "opal/tools/code-scan/README.md",
+  "opal/tools/code-scan/code-scan.js",
+  "opal/tools/code-scan/tests/test-header-history.js",
+  "opal/tools/code-scan/tests/test-validate.js",
+  "opal/tools/git-sync-tool/tests/conftest.py",
+  "opal/tools/git-sync-tool/tests/test_git_sync_tool.py",
+  "opal/tools/oppb-runtime-tool/tests/test_pilot_isolation.py",
+  "opal/tools/oppb-runtime-tool/tests/test_product_flow.py",
+  "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+  "opal/tools/run-log-tool/tests/test_run_log_tool.py",
+  "opal/tools/state-tool/README.md",
+  "opal/tools/state-tool/state_tool.py",
+  "opal/tools/state-tool/state_tool_parts/__init__.py",
+  "opal/tools/state-tool/state_tool_parts/base.py",
+  "opal/tools/state-tool/state_tool_parts/cli.py",
+  "opal/tools/state-tool/state_tool_parts/codes.py",
+  "opal/tools/state-tool/state_tool_parts/commands_core.py",
+  "opal/tools/state-tool/state_tool_parts/commands_run.py",
+  "opal/tools/state-tool/state_tool_parts/gates.py",
+  "opal/tools/state-tool/state_tool_parts/guards.py",
+  "opal/tools/state-tool/state_tool_parts/journal.py",
+  "opal/tools/state-tool/state_tool_parts/run_log.py",
+  "opal/tools/state-tool/tests/fixtures/state_tool_surface.json",
+  "opal/tools/state-tool/tests/state_tool_test_support.py",
+  "opal/tools/state-tool/tests/test_pilot_shared_contract.py",
+  "opal/tools/state-tool/tests/test_split_surface.py",
+  "opal/tools/state-tool/tests/test_state_tool_core_cli.py",
+  "opal/tools/state-tool/tests/test_state_tool_extended_contracts.py",
+  "opal/tools/state-tool/tests/test_state_tool_mode_contracts.py",
+  "opal/tools/state-tool/tests/test_state_tool_ownership.py",
+  "opal/tools/state-tool/tests/test_state_tool_verification_gates.py",
+  "opal/tools/test-tool/tests/test_e2e_action_value_redaction.py",
+  "opal/tools/tool-scan/tests/test_tool_scan.py",
+  "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+  "opal/tools/worktree-tool/worktree_tool.py"
+ ],
+ "findings": [
+  {
+   "id": "GC-001",
+   "fingerprint": "d5e4eb9c0fc51822",
+   "category": "Integrity (CWE-345 계열)",
+   "severity": "low",
+   "confidence": "medium",
+   "disposition": "advisory",
+   "rule_id": "CWE-345",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/skills/opal-skill-tester/scripts/skill_tester.py",
+    "line": null,
+    "symbol": "_framework_fingerprint"
+   },
+   "evidence": "파일 11개 내용을 구분자 없이 연속 해시",
+   "impact": "경계 이동이 같은 지문을 낳을 수 있으나 변경 감지 용도",
+   "remediation": {
+    "guidance": "상대경로·길이를 해시에 포함",
+    "auto_fixable": false
+   },
+   "verification": "수정 후 재검사",
+   "suppression": null,
+   "delta": "new",
+   "pre_existing": false
+  },
+  {
+   "id": "GC-002",
+   "fingerprint": "1060ef70ead3ad82",
+   "category": "OS command (CWE-426)",
+   "severity": "low",
+   "confidence": "medium",
+   "disposition": "advisory",
+   "rule_id": "CWE-426",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/state-tool/state_tool_parts/base.py",
+    "line": null,
+    "symbol": "_run_date_js"
+   },
+   "evidence": "subprocess로 node를 PATH 탐색 실행(원문 이동)",
+   "impact": "기존 이슈, 이번 변경 영향 없음",
+   "remediation": {
+    "guidance": "절대경로 resolve 고려",
+    "auto_fixable": false
+   },
+   "verification": "수정 후 재검사",
+   "suppression": null,
+   "delta": "new",
+   "pre_existing": true
+  }
+ ],
+ "evidence": [
+  "경로 파생·sys.path·subprocess·importlib·해시 입력 수동 검토",
+  "grep: shell=True/eval/exec/secret 패턴 없음",
+  "비활성 영역: 웹/DB/인증(대상 없음), install·MCP·skill fetch(SECURITY.md §2-4, 대상 파일 없음)"
+ ],
+ "references": [
+  "docs/SECURITY.md",
+  "docs/CONVENTIONS.md",
+  "opal/core/references/harness/gc-finding-schema.md"
+ ],
+ "missing_capabilities": [],
+ "baseline": "none",
+ "verdict": "PASS",
+ "counts": {
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "low": 2
+ },
+ "report_path": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_174/tasks/174-261001-opd-헤더-이력-차단과-state-tool-분할/run/GC-SECURITY-2026-10-01T15-30-00-security.md"
+}

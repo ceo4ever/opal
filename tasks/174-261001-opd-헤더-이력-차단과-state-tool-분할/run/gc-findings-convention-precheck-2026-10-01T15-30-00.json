@@ -1,0 +1,291 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/harness/header-rules.md",
+    "opal/core/references/harness/pm-review-gate.md",
+    "opal/core/references/header-standard.md",
+    "opal/skills/opal-skill-tester/scripts/skill_tester.py",
+    "opal/tools/code-scan/code-scan.js",
+    "opal/tools/code-scan/README.md",
+    "opal/tools/code-scan/tests/test-header-history.js",
+    "opal/tools/code-scan/tests/test-validate.js",
+    "opal/tools/git-sync-tool/tests/conftest.py",
+    "opal/tools/git-sync-tool/tests/test_git_sync_tool.py",
+    "opal/tools/oppb-runtime-tool/tests/test_pilot_isolation.py",
+    "opal/tools/oppb-runtime-tool/tests/test_product_flow.py",
+    "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+    "opal/tools/run-log-tool/tests/test_run_log_tool.py",
+    "opal/tools/state-tool/README.md",
+    "opal/tools/state-tool/state_tool_parts/__init__.py",
+    "opal/tools/state-tool/state_tool_parts/base.py",
+    "opal/tools/state-tool/state_tool_parts/cli.py",
+    "opal/tools/state-tool/state_tool_parts/codes.py",
+    "opal/tools/state-tool/state_tool_parts/commands_core.py",
+    "opal/tools/state-tool/state_tool_parts/commands_run.py",
+    "opal/tools/state-tool/state_tool_parts/gates.py",
+    "opal/tools/state-tool/state_tool_parts/guards.py",
+    "opal/tools/state-tool/state_tool_parts/journal.py",
+    "opal/tools/state-tool/state_tool_parts/run_log.py",
+    "opal/tools/state-tool/state_tool.py",
+    "opal/tools/state-tool/tests/fixtures/state_tool_surface.json",
+    "opal/tools/state-tool/tests/state_tool_test_support.py",
+    "opal/tools/state-tool/tests/test_pilot_shared_contract.py",
+    "opal/tools/state-tool/tests/test_split_surface.py",
+    "opal/tools/state-tool/tests/test_state_tool_core_cli.py",
+    "opal/tools/state-tool/tests/test_state_tool_extended_contracts.py",
+    "opal/tools/state-tool/tests/test_state_tool_mode_contracts.py",
+    "opal/tools/state-tool/tests/test_state_tool_ownership.py",
+    "opal/tools/state-tool/tests/test_state_tool_verification_gates.py",
+    "opal/tools/test-tool/tests/test_e2e_action_value_redaction.py",
+    "opal/tools/tool-scan/tests/test_tool_scan.py",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/__init__.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/base.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/cli.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/codes.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    },
+    {
+      "id": "GC-005",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/commands_core.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    },
+    {
+      "id": "GC-006",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/commands_run.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    },
+    {
+      "id": "GC-007",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/gates.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    },
+    {
+      "id": "GC-008",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/guards.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    },
+    {
+      "id": "GC-009",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/journal.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    },
+    {
+      "id": "GC-010",
+      "fingerprint": "8f6ffeba91b9c65e",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/state-tool/state_tool_parts/run_log.py",
+        "line": 1
+      },
+      "evidence": "새 디렉터리 `state_tool_parts`가 kebab-case(`^[a-z0-9]+(-[a-z0-9]+)*$`)가 아니다",
+      "impact": "폴더 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "디렉터리명을 kebab-case로 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "디렉터리명이 kebab-case 정규식에 맞는다",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base dee405ca HEAD -> dee405ca6c072e47c78f7a967adb70469a420a2d",
+    "git diff --name-status --diff-filter=ACMR dee405ca6c07 HEAD -> 40 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

@@ -23,16 +23,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "node --test test-header-history.js exit0 29/29 pass; direct code-scan validate in temp inline project (/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/s123.py -> /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/s123.txt): two-task-number file and undeclared 'track' file: --changed and full validate exit 2 ok:false, violations header_history sub description/undeclared_field, counts.header_history 1 / 2; one-number file exit 0 ok:true",
+      "marked_at": "2026-10-01T15:26:16+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-2",
@@ -52,16 +52,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "node --test test-validate.js exit0 46/46 pass; direct: header closing at byte 24584 (just past 24576) and 59994 (size 60000): full and --changed exit 2 ok:false, header_overflow x2 (counts.header_overflow=2), no uncovered for those files, pre_existing=0. evidence /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/s123.txt",
+      "marked_at": "2026-10-01T15:26:16+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-3",
@@ -81,16 +81,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "test-validate.js 46/46 pass; direct: close at byte 24566 -> no violation (covered, not overflow); no-@header 30KB md and prose-citing 30KB md -> uncovered pre_existing only, header_overflow=0, exit 0; temp git repo: HEAD closes outside window -> uncovered:pre_existing, control (HEAD closes inside) -> uncovered:newly_uncovered exit 2. evidence /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/s123.txt",
+      "marked_at": "2026-10-01T15:26:16+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-4",
@@ -110,16 +110,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "node opal/tools/code-scan/code-scan.js validate --json at repo root exit 0 ok:true counts header_history=0 header_overflow=0 newly_uncovered=0 pre_existing=387; violations with code uncovered sub incomplete = 0. output /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/s4.json",
+      "marked_at": "2026-10-01T15:26:16+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-5",
@@ -139,16 +139,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "~/.opal/.venv/bin/python -m pytest opal/tools/state-tool/tests/test_split_surface.py exit 0, 9 passed. output /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/s5.txt",
+      "marked_at": "2026-10-01T15:50:57+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-6",
@@ -168,16 +168,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "Baseline = full clone of dee405ca (/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/basefull; bare 'git archive opal' tree is unfaithful: needs repo files, gave spurious failures/skips). run-tests.sh WITHOUT session env (env -u CLAUDE_CODE_SESSION_ID -u OPAL_SESSION_ID): split exit 0, 20/20 files, 640 passed 3 skipped 0 failed; baseline exit 0, 19/19 files, 631 passed 3 skipped 0 failed; delta 9 = test_split_surface. WITH session env: split 638 passed/2 failed, baseline 629 passed/2 failed, identical fail set (TestT138W9ActorSessionId::test_session_id_stays_none_without_env, TestT138W9OwnershipClaimBoundary::test_session_env_absent_skips_claim_without_blocking). test_pilot_isolation.py: split 2 failed 11 passed; baseline 2 failed 11 passed; same 2 names (test_evaluator_agent_existing_four_phases_survive, test_scenario_gate_skill_existing_oppd_branch_survives), pre-existing independent of split, env-independent. git diff dee405ca..HEAD on tests: only source-reader helpers/patch-target(ST_BASE)/copytree state_tool_parts/line-citation edits, no assertion semantics change. outputs /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/*rt*.txt *pi*.txt. CAVEAT: literal 'all PASS' not met for test_pilot_isolation because of 2 baseline-identical failures",
+      "marked_at": "2026-10-01T15:53:58+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-7",
@@ -197,16 +197,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "Independent script /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/s7new.py (output /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/s7.txt): base tree=git archive dee405ca opal, split tree=rsync of worktree opal/ (no __pycache__), session env vars removed, same fixture each (TASK/PLAN/TEST-SCENARIO + pipeline-pm init). 19 invocations: resolve-start, resolve-mode, init, show json/md, advance, mark, verify --plan-contract-check, verify, design-gate start (exit1 stage_transition error, identical), event-verify, validate, show, status --help, errors (missing path exit1, bad arg exit2, no cmd exit2, mark transition design_bundle_mismatch exit1, re-advance row_not_found exit1), --help. Normalized stdout/stderr and exit codes identical in all; state.json and STATE.md equal. total_diffs 0",
+      "marked_at": "2026-10-01T15:54:33+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-8",
@@ -226,16 +226,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "ast static check: state_tool_parts has all 9 modules (codes, base, run_log, journal, guards, gates, commands_core, commands_run, cli) + __init__.py; each has inline @header in first 3000 chars; ast import walk (ImportFrom module+names, Import) finds 0 upward imports and 0 commands_core<->commands_run imports; state_tool.py = 37 lines (was 8256). line counts: codes479 base619 run_log1452 journal500 guards541 gates2502 commands_core1482 commands_run507 cli525",
+      "marked_at": "2026-10-01T15:54:42+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-9",
@@ -255,16 +255,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "(1) scripts/install-mac.sh:1421 install_dir \"$opal_dir/tools\" \"$opal_home/tools\" -> install_dir (:245) does cp -r / cp -Rf src/. dst/ (whole-directory copy); clean_dirs includes tools (:1343); scripts/install/windows.ps1:621 Copy-Item -Recurse -Force opal/tools; install.sh and install/macos.sh/linux.sh have no per-file state-tool lists (grep). No per-file list anywhere. (2) cp -R opal/tools/state-tool to /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/s9/state-tool (without __pycache__), ran python <copy>/state_tool.py show <fixture> exit 0, ok:true JSON (/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/s9.txt). (3) sha of ~/.opal/tools/state-tool tree before/after identical 81c544c22606e309ab1828c561c830bc2d86e26a. Note: the existing deployed ~/.opal state-tool is still the pre-split single file (no state_tool_parts) - expected until install runs.",
+      "marked_at": "2026-10-01T15:55:05+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-10",
@@ -284,16 +284,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "rg checks: header_history+비차단 same line in opal/ & docs/CONVENTIONS.md: only header-rules.md:193 (## 변경 이력 table row, excluded by spec) and code-scan.js:3625 comment which says only uncovered:pre_existing/manifest_oversize are non-blocking and header_history/header_overflow are BLOCKING (not a nonblocking description); test-header-history.js 0; docs/CONVENTIONS.md 비차단 only line 245 about progress_report (unrelated). pm-review-gate.md:75 keeps validate --changed ok:true(exit 0) requirement, :77 header_history·header_overflow must be 0. header-standard.md (opal/core/references/) code-scan.js:<line> citations = 0. header-rules.md:124 states header_overflow handling (blocking, shrink header). code-scan/README.md:142 and :290 describe header_history blocking + header_overflow. state-tool/README.md:42-58 describes state_tool_parts 9-module table, import direction, tools whole-dir deploy.",
+      "marked_at": "2026-10-01T15:55:22+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-11",
@@ -313,16 +313,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "ast.dump (docstrings stripped) of git show dee405ca:<file> vs working file for all changed .py (script /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/s11.py, output /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/s11.txt): SAME_AST for the 9 header-cleanup files (git-sync-tool conftest + test_git_sync_tool, oppb test_product_flow, ownership session_start_hook, run-log test_run_log_tool, state-tool test_state_tool_ownership, test-tool test_e2e_action_value_redaction, tool-scan test_tool_scan, worktree test_worktree_tool) plus worktree_tool.py (diff = header description/ownership_contract text and one comment citation 'state_tool.py:1813' -> resolve_owner_placeholder only). DIFF_AST only in files whose code changes are intended by split: state-tool tests (source-reader/patch target/copytree), test_pilot_isolation, and skill_tester.py (fingerprint/_install_drift state_tool_parts handling, subject of S-12).",
+      "marked_at": "2026-10-01T15:55:48+09:00",
+      "fidelity": "real-usage"
     },
     {
       "id": "S-12",
@@ -342,16 +342,16 @@
       "assertions": [],
       "required_evidence": [],
       "handoff": null,
-      "result": null,
+      "result": "pass",
       "operational_status": null,
       "observed_executors": [],
       "assertion_results": [],
       "observed_evidence": [],
       "handoff_state": null,
       "run_id": null,
-      "evidence": null,
-      "marked_at": null,
-      "fidelity": "mock"
+      "evidence": "importlib-loaded skill_tester.py from temp source tree, OPAL=temp install root, SKILL_DIR=temp src opal/skills/opal-skill-tester (/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/s12.py -> /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-174/f53523b7-838d-49b7-a064-7a07e81a5df3/scratchpad/o/s12.txt; ~/.opal untouched). _framework_fingerprint('opd'): repeat calls equal (?+0829d8); +1 byte in inst state_tool_parts/gates.py -> ?+8ba10c (differs); restored -> original. _install_drift(): identical trees -> []; modified module -> '설치본이 소스와 다름: .../gates.py'; deleted -> '설치본에 없는 하위 모듈: .../gates.py'; extra file -> '설치본에만 있는 하위 모듈: .../zz_extra.py'; after restore -> [].",
+      "marked_at": "2026-10-01T15:55:56+09:00",
+      "fidelity": "real-usage"
     }
   ]
 }

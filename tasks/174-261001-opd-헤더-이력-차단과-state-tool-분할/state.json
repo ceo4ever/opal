@@ -4,8 +4,8 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-10-01 13:59:03",
-  "updated_at": "2026-10-01 15:23:42",
-  "current_status": "in_progress",
+  "updated_at": "2026-10-01 16:00:58",
+  "current_status": "completed_unmerged",
   "rows": [
     {
       "row_id": 1,
@@ -36,9 +36,10 @@
       "key": "plan.plan_md",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-10-01 14:05:29",
+      "timestamp": "2026-10-01 15:58:43",
       "owner": "PM",
-      "note": "PLAN.md 작성(PM 경로, Findings 포함)"
+      "note": "PLAN.md 작성(PM 경로, Findings 포함)",
+      "worker_duration_unknown": true
     },
     {
       "row_id": 4,
@@ -91,31 +92,33 @@
       "key": "execute.implement",
       "status": "done",
       "status_label": "✅",
-      "timestamp": "2026-10-01 15:23:42",
+      "timestamp": "2026-10-01 15:58:43",
       "owner": "PM",
-      "note": "W-1~W-4 완료. S-4 전체 validate exit 0, header_history·header_overflow 0, state_tool.py 37줄 + 9개 모듈"
+      "note": "W-1~W-4 완료. S-4 전체 validate exit 0, header_history·header_overflow 0, state_tool.py 37줄 + 9개 모듈",
+      "worker_duration_minutes": 24
     },
     {
       "row_id": 8,
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 15:57:07",
       "owner": "PM",
-      "note": null
+      "note": "S-1~S-12 pass(12/12), 최종 게이트 회귀·보안·컨벤션 통과",
+      "worker_duration_minutes": 31
     },
     {
       "row_id": 9,
       "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 15:57:49",
       "owner": "PM",
-      "note": null,
+      "note": "PM Gate Pass: S-1~S-12 12/12, validate --changed ok, state validate 0, citation pass, 보안 C0/H0·컨벤션 C0/H0",
       "gate": {
         "artifacts": [
           "TEST-SCENARIO.md",
@@ -134,20 +137,20 @@
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
-      "owner": "PM",
-      "note": null
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 15:58:02",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
     },
     {
       "row_id": 11,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 15:58:47",
       "owner": "PM",
       "note": null
     },
@@ -156,11 +159,11 @@
       "stage": "CLOSE",
       "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
       "key": "close.docs_sync",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 15:58:47",
       "owner": "PM",
-      "note": null,
+      "note": "lifecycle.md 줄 번호 인용을 함수·모듈 인용으로 교체",
       "conditional": true
     },
     {
@@ -168,34 +171,35 @@
       "stage": "CLOSE",
       "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
       "key": "close.brain_ingest",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 16:00:28",
       "owner": "PM",
-      "note": null,
-      "conditional": true
+      "note": "brain 4페이지(entity 3 갱신, concept 1 신규)",
+      "conditional": true,
+      "worker_duration_minutes": 4
     },
     {
       "row_id": 14,
       "stage": "CLOSE",
       "item": "회고/개선 후보 기록",
       "key": "close.retrospective",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 16:00:49",
       "owner": "PM",
-      "note": null
+      "note": "FW 개선 후보 3건 fw-inbox 기록"
     },
     {
       "row_id": 15,
       "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
       "key": "close.worktree_finalize",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 16:00:58",
       "owner": "PM",
-      "note": null,
+      "note": "worktree-tool finalize ok (state=closed, S⊆D 위반 0)",
       "conditional": true
     },
     {
@@ -203,14 +207,14 @@
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 16:00:58",
       "owner": "PM",
-      "note": null
+      "note": "CLOSE 최종 확정(머지 대기)"
     }
   ],
-  "next_action": "TEST 작업 진입",
+  "next_action": "태스크 완료",
   "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_174",
   "actor": "coordinator",
   "run_log": {
@@ -365,5 +369,15 @@
       }
     ],
     "refinement_pending": false
+  },
+  "test_timing": {
+    "intervals": [
+      {
+        "kind": "auto",
+        "id": "batch-1",
+        "started_at": "2026-10-01T06:25:17.103993+00:00",
+        "ended_at": "2026-10-01T06:56:36.612249+00:00"
+      }
+    ]
   }
 }
