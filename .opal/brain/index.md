@@ -1,6 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-10-02 07:05
-> 갱신: 2026-10-02 07:35
+> 갱신: 2026-10-02 10:24
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -123,6 +122,7 @@
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[decision-vs-fact-claim-separation]] — 결정과 사실 주장의 분리 — 결정은 근거 판정 대상이 아니다 #evidence #citation #decision #opds
 - [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
+- [[default-manifest-gate-flag]] — 워커 게이트의 설치본 정본 매니페스트 강제 #event-loader #dispatch #security
 - [[degeneracy-rule-preserves-past-values-on-axis-split]] — 집계 축을 쪼갤 때 축퇴 규칙이 과거 확정값을 보존한다 #aggregation #statistics #backward-compat #opal-console #design-decision
 - [[degraded-execution-with-explicit-gap]] — 자산 부재에도 중단하지 않는다 — 축소 실행 + 결측 명시 불변 규칙 #fallback #workflow #reporting #task-084
 - [[delegation-only-file-gate-bypass]] — 위임 전용 파일에 게이트를 두면 우회된다 — 진입경로 역추적 #gate #architecture #lesson #call-graph
@@ -186,6 +186,8 @@
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[knowledge-assets-as-flow-entrypoint]] — 지식 자산은 흐름의 끝이 아니라 시작점이다 — 참조 순서 기준 계층 배치 + 도구·자산 범주 분리 #architecture #knowledge-asset #layering #diagram #decision
+- [[lazy-loading-scope-framework-docs-only]] — 절 단위 로딩 대상은 프레임워크 문서 4종만 #event-loader #decision
+- [[lazy-receipt-full-field-recompute]] — 지연 로딩 receipt는 선별 결과 전 필드를 재계산해 대조 #event-loader #security #verification
 - [[lean-core-relocation-benefit-precondition]] — lean core 이관 이익의 전제 조건 — PM 전용 + Phase B 기 로드 #lean-core #agent-md #relocation #pm-tier #assistant-tier
 - [[lease-handoff-before-terminal-launch]] — 실행 주체 인계는 수신자 id가 아니라 대상 루트를 키로 한다 #lease #ownership #worktree #handoff #task-150 #pattern
 - [[legacy-dispatch-compat-sunset-observation]] — 구형 호출 원장과 관측 구간 기반 호환 종료 판정 #event-loader #dispatch #compat
@@ -347,6 +349,7 @@
 - [[sdd-internal-stage-skill-ownership]] — SDD 내부 단계 스킬 소유권 #sdd #skill #pilot #ownership
 - [[sdlc-v2-development-artifact-contract]] — sdlc-v2 개발 산출물 계약 #sdlc #development #artifact #ssot #pipeline
 - [[section-append-at-tail-preserves-backrefs]] — 절 번호가 주소인 문서는 말미에 추가한다 — 외부 역참조 보존 #documentation #reference-integrity #task-084
+- [[section-lazy-loading-experiment-hold]] — 절 단위 로딩 실험 — 규범 문서는 기본값 전환 보류 #event-loader #token-economy #measurement
 - [[self-confirming-validation-timing-argument]] — 자기확인 검증의 시점 논거 판별 — 개정 대상 무변경 확인으로 순환 논증을 잡는다 #self-confirming #verification #evaluator #scenario-gate #opd
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
 - [[self-modifying-tool-deploy-unit-coupling]] — 자기 자신을 고치는 도구의 배포 단위 결합 원칙 #deploy #gate-design #pattern #task-093
@@ -400,6 +403,7 @@
 - [[tag-removal-is-not-history-removal]] — 태그 제거는 이력 제거가 아니다 — 문장이 무엇을 말하는가 #header-standard #test-design
 - [[template-precedence-over-prose-norms]] — 템플릿 우위 법칙 — 규범은 산문보다 템플릿이 이긴다 #template-precedence #prose-norms #framework-norm #governance #harness-design
 - [[terminal-host-detection-from-own-process-lineage]] — 터미널 호스트는 자기 프로세스 계보로 판별한다 #bootstrap #terminal #task
+- [[test-mode-bound-override-integrity-record]] — 원장 재정의의 시험 모드 한정과 별도 무결성 기록 #event-loader #security #compat
 - [[test-parallel-group-single-agent-only]] — TEST 병렬 그룹은 단일 에이전트 안에서만 #test #parallel
 - [[test-path-layer-gap-masks-deployment-defect]] — 테스트 소스 경로와 배포본 경로의 계층 차이가 실사용 불가를 덮는다 #testing #deployment #layered-verification #task-105
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data

@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "event": "stage.design",
+  "section_context": {"track": "dev"},
+  "note": "채점 기준은 실행 전 고정. 필수 항목(required)은 모두 매칭돼야 정답. abstain_regex 매칭 시 abstain 표시. wrong_signals 매칭이면 정답이어도 needs_review.",
+  "abstain_regex": "문서에\\s*(는\\s*)?(없|나와\\s*있지|명시되어\\s*있지)|알\\s*수\\s*없|모른다|확인(할|되지)\\s*수\\s*없",
+  "probes": [
+    {
+      "id": "p01-bundle-hash",
+      "class": "omitted",
+      "must_rule": false,
+      "answer_units": ["dg-bundle-hash"],
+      "doc": "design-gate",
+      "question": "설계 게이트에서 '문서 묶음 해시(묶음 hash)'는 어떤 문서들로 어떤 계산식을 써서 구하는가? 계산식을 정확히 적어라.",
+      "required": [
+        {"name": "세 문서 순서", "regex": "TASK\\.md.*PLAN\\.md.*TEST-SCENARIO\\.md"},
+        {"name": "sha256", "regex": "sha256"},
+        {"name": "각 파일 hash(h1~h3)", "regex": "h1|h2|h3|각\\s*파일의\\s*sha256|파일\\s*(별|각)?.{0,10}sha256"}
+      ],
+      "wrong_signals": []
+    },
+    {
+      "id": "p02-partial-invalid",
+      "class": "omitted",
+      "must_rule": false,
+      "answer_units": ["dg-error-codes"],
+      "doc": "design-gate",
+      "question": "design-gate combine이 `design_gate_partial_invalid`로 거부하는 조건을 문서에 적힌 대로 모두 열거하라(부분 결과의 어떤 항목이 어떻게 어긋나면 되는가).",
+      "required": [
+        {"name": "scope/축/점수 형식 위반", "regex": "scope.*(축|점수)|(축|점수).*scope"},
+        {"name": "resolved_gaps", "regex": "resolved_gaps"},
+        {"name": "이전 지적 불일치", "regex": "previous_gaps|이전\\s*지적"}
+      ],
+      "wrong_signals": []
+    },
+    {
+      "id": "p03-runlog-enum",
+      "class": "omitted",
+      "must_rule": false,
+      "answer_units": ["dg-runlog"],
+      "doc": "design-gate",
+      "question": "설계 게이트 record가 남기는 gate.resolved run-log의 `data.verdict`는 어떤 폐쇄 enum 값들을 쓰며, 설계 게이트 verdict 별로 어떻게 매핑되는가? 그리고 verdict 원문(pass/rewrite/input_error 등)은 어디에 남기는가?",
+      "required": [
+        {"name": "approved", "regex": "approved"},
+        {"name": "rejected", "regex": "rejected"},
+        {"name": "auto", "regex": "\\bauto\\b"},
+        {"name": "원문 기록 위치(summary/history)", "regex": "summary.*history|history.*summary"}
+      ],
+      "wrong_signals": []
+    },
+    {
+      "id": "p04-exec-guard",
+      "class": "omitted",
+      "must_rule": false,
+      "answer_units": ["dg-exec-guard"],
+      "doc": "design-gate",
+      "question": "`execute.implement` 진입 가드는 정확히 언제 적용되고, 어떤 경우에는 다시 적용되지 않는가?",
+      "required": [
+        {"name": "pending 진입 전이 시점", "regex": "pending"},
+        {"name": "in_progress/done 재적용 안 함", "regex": "in_progress"},
+        {"name": "재적용하지 않음", "regex": "재적용|적용하지\\s*않|적용되지\\s*않"}
+      ],
+      "wrong_signals": []
+    },
+    {
+      "id": "p05-reset",
+      "class": "delivered",
+      "must_rule": false,
+      "answer_units": ["dg-limit-reset"],
+      "doc": "design-gate",
+      "question": "설계 게이트가 retry_limit 상태에 빠졌을 때 어떻게 해제하는가? `--owner user` 없이 reset을 호출하면 무슨 일이 일어나고, status가 retry_limit이 아닐 때 reset을 호출하면 어떻게 되는가?",
+      "required": [
+        {"name": "--owner user", "regex": "--owner\\s+user"},
+        {"name": "user_confirmation_required", "regex": "user_confirmation_required"},
+        {"name": "no-op / reset false", "regex": "reset:\\s*`?false|no-op|상태를\\s*바꾸지\\s*않"}
+      ],
+      "wrong_signals": []
+    },
+    {
+      "id": "p06-rewrite-both",
+      "class": "delivered",
+      "must_rule": false,
+      "answer_units": ["dg-rewrite"],
+      "doc": "design-gate",
+      "question": "직전 시도의 verdict가 rewrite이고 rewrite-target이 both였다. PM이 PLAN.md만 고치고 TEST-SCENARIO.md는 그대로 둔 채 다음 start를 호출하면 어떻게 되는가? 어떤 오류 코드인가?",
+      "required": [
+        {"name": "rewrite_target_unchanged", "regex": "rewrite_target_unchanged"},
+        {"name": "거부", "regex": "거부|reject|막"}
+      ],
+      "wrong_signals": ["거부되지\\s*않", "통과(한다|된다|합니다)"]
+    },
+    {
+      "id": "p07-advisory-pass",
+      "class": "delivered",
+      "must_rule": false,
+      "answer_units": ["dg-flow", "dg-advisory"],
+      "doc": "design-gate",
+      "question": "evaluator 결과가 pass이고 refinement 회차가 아니며 advisories가 2건이다. `record --verdict pass` 때 무엇을 함께 제출해야 하고, 응답 규칙을 어기면 어떻게 되는가? (응답 ID 집합과 retain 규칙 포함)",
+      "required": [
+        {"name": "--advisory-responses", "regex": "advisory-responses"},
+        {"name": "advisory_response_invalid", "regex": "advisory_response_invalid"},
+        {"name": "retain 사유 필요", "regex": "retain.{0,40}(reason|사유)"},
+        {"name": "ID 집합 일치", "regex": "ID\\s*집합|id\\s*집합|정확히\\s*같"}
+      ],
+      "wrong_signals": []
+    },
+    {
+      "id": "p08-must-code-block",
+      "class": "delivered",
+      "must_rule": true,
+      "answer_units": ["cr-formats"],
+      "doc": "citation-rules",
+      "question": "ANALYSIS 산출물에 함수 구현 30줄을 코드 블록으로 그대로 붙여 넣어도 되는가? 허용되는 범위와 그 이유는?",
+      "required": [
+        {"name": "원문 블록 금지", "regex": "금지|않는다|안\\s*된다|불가|허용되지"},
+        {"name": "경로:줄번호 인용", "regex": "줄번호"},
+        {"name": "1~3줄 약식 발췌", "regex": "1\\s*[~\\-–]\\s*3\\s*줄|3줄"}
+      ],
+      "wrong_signals": ["(30줄|전체).{0,15}(허용|가능)(한다|합니다|하다)"]
+    },
+    {
+      "id": "p09-must-e1",
+      "class": "delivered",
+      "must_rule": true,
+      "answer_units": ["cr-evidence-grades"],
+      "doc": "citation-rules",
+      "question": "근거 등급 E1(실행 관측)을 인용할 때 반드시 함께 적어야 하는 것은 무엇이고, 그것이 빠지면 어떻게 취급되는가?",
+      "required": [
+        {"name": "관측 스코프", "regex": "스코프|범위"},
+        {"name": "실행 명령", "regex": "실행\\s*명령|명령"},
+        {"name": "누락 시 E1 불인정", "regex": "인정(하지|되지|않)|불인정|E1로\\s*인정"}
+      ],
+      "wrong_signals": []
+    },
+    {
+      "id": "p10-must-terminology",
+      "class": "delivered",
+      "must_rule": true,
+      "answer_units": ["cr-terminology"],
+      "doc": "citation-rules",
+      "question": "영역 간 용어 일관성 검토에서 `type: \"terminology_mismatch\"` 같은 결정성 이슈가 나왔다. agentic 모드에서 PM은 이를 자율 결정해도 되는가?",
+      "required": [
+        {"name": "사용자 에스컬레이션", "regex": "에스컬레이션|escalat"},
+        {"name": "자율 결정 금지", "regex": "자율.{0,20}(않|금지|아니)|(않|금지).{0,20}자율|PM이.{0,15}(결정하지|결정할\\s*수\\s*없)"}
+      ],
+      "wrong_signals": ["자율(적으로)?\\s*결정(해도|할\\s*수\\s*있)"]
+    }
+  ]
+}

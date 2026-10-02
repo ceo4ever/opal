@@ -1,0 +1,116 @@
+{
+ "probe": "p06-rewrite-both",
+ "arm": "off",
+ "run": 2,
+ "tag": "p06-rewrite-both-off-2",
+ "prompt_bytes": 53919,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 7.5,
+   "json": {
+    "duration_api_ms": 4084,
+    "stop_reason": "end_turn",
+    "session_id": "47d94fb6-a483-4172-862b-bf621ce18b1b",
+    "total_cost_usd": 0.1836252,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 44689,
+     "cache_read_input_tokens": 12376,
+     "output_tokens": 239,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 44689,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 239,
+       "cache_read_input_tokens": 12376,
+       "cache_creation_input_tokens": 44689,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 44689
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 239,
+      "cacheReadInputTokens": 12376,
+      "cacheCreationInputTokens": 44689,
+      "webSearchRequests": 0,
+      "costUSD": 0.1836252,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "`both`일 때는 PLAN.md와 TEST-SCENARIO.md 둘 다 바뀌어야 통과합니다. 둘 중 하나라도 hash가 직전 시도와 같으면 거부됩니다. 그래서 PLAN.md만 고치고 TEST-SCENARIO.md를 그대로 두면 `start`가 거부됩니다.\n\n- **오류 코드:** `rewrite_target_unchanged`\n- **상태:** 거부되어도 상태는 바뀌지 않습니다(상태 불변).\n- **해소 방법:** TEST-SCENARIO.md도 수정한 뒤 `start`를 다시 호출해야 합니다.",
+    "ttft_ms": 4134,
+    "type": "result",
+    "duration_ms": 4190,
+    "uuid": "17b9e776-410c-4aa6-98ea-9d80ad00ee8f",
+    "ttft_stream_ms": 2028,
+    "time_to_request_ms": 70,
+    "first_content_frame_ms": 2028,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}

@@ -1,0 +1,228 @@
+{
+  "goal": "- 보안 권고 4건이 해소된다. 원장 조작·쓰기 실패가 호환 종료 집계에 드러나고, 심볼릭 링크 설치에서도 정상 receipt가 통과하며, `--role-doc`은 허용된 루트 안의 일반 파일만 받고, 게이트는 설치본 기본 매니페스트가 아닌 매니페스트로 만든 검증 결과를 통과시키지 않는다. - 절 단위 로딩을 명시적으로 켠 호출에서만 동작하는 실험 모드로 쓸 수 있다. 켜면 대상 문서는 필수 절과 목차만 오고 필요한 절은 따로 가져오며, 필수 절(항상 필수·조건부 필수)과 그 의존 절은 항상 함께 온다. 끄면(기본) 지금과 똑같이 동작한다. - 실험 모드 켬/끔을 같은 조건에서 비교한 측정 결과(품질·로드량·비용·시간)와 채택 권고가 남는다.",
+  "requirements": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4",
+    "AC-5",
+    "AC-6",
+    "C-1",
+    "C-2",
+    "C-3"
+  ],
+  "features": [],
+  "hypotheses": [
+    "H-1",
+    "H-2",
+    "H-3"
+  ],
+  "scenarios": [
+    {
+      "id": "S-1",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-1",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-2",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-3",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-2",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-4",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-5",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-4",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-6",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-4",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-7",
+      "type": "regression",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-5",
+        "C-1"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-8",
+      "type": "unit",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-5",
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-9",
+      "type": "contract",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-5",
+        "C-2",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-10",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-5",
+        "C-1",
+        "C-2",
+        "C-3"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-11",
+      "type": "contract",
+      "red_required": true,
+      "covers_requirements": [
+        "AC-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-12",
+      "type": "integration",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-2"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-13",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-6",
+        "C-1",
+        "C-2"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    },
+    {
+      "id": "S-14",
+      "type": "check",
+      "red_required": false,
+      "covers_requirements": [
+        "AC-6"
+      ],
+      "covers_features": [],
+      "covers_hypotheses": [
+        "H-1",
+        "H-3"
+      ],
+      "is_goal_scenario": false,
+      "is_adoption_scenario": false,
+      "is_boundary_scenario": false
+    }
+  ]
+}

@@ -7,7 +7,8 @@ tags:
 - compat
 sources:
 - task:175
-related: [worker-dispatch-contract-v2-binding]
+- task:177
+related: [worker-dispatch-contract-v2-binding, test-mode-bound-override-integrity-record]
 created: '2026-10-02'
 updated: '2026-10-02'
 status: draft
@@ -22,7 +23,7 @@ status: draft
 
 ## 결정 내용
 
-- 구형 호출마다 시각·작업 종류·이벤트·프로젝트 루트를 한 줄씩 원장에 추가한다. 쓰기 실패는 호출을 막지 않고 경고로 알린다. 시험이 시각·경로를 고정할 수 있도록 환경변수 재정의를 허용하는데, 이 때문에 판정이 과소 집계될 수 있다는 한계가 알려져 있다.
+- 구형 호출마다 시각·작업 종류·이벤트·프로젝트 루트를 한 줄씩 원장에 추가한다. 쓰기 실패는 호출을 막지 않고 경고로 알린다. 시험이 시각·경로를 고정할 수 있도록 환경변수 재정의를 허용하는데, 이 재정의는 이후 시험 모드로 한정되고 사용·쓰기 실패가 별도 무결성 기록에 남는다. 상세는 [[test-mode-bound-override-integrity-record]]를 따른다.
 - 구간 조회 서브명령이 건수·첫/마지막 시각·작업별 건수를 낸다(`opal/tools/event-loader/event_loader.py:927`).
 - 종료 조건은 세 가지다: 소비자 문서에 구형 호출 0건(정적 검사), 직접·하위 검증 시나리오 통과, 기준 시점 이후 구형 호출 0건이 연속 168시간 이상 지속.
 - 세 조건을 확인한 뒤 매니페스트의 구형 허용 값을 끄는 한 줄로 종료한다(`opal/core/references/events.json:446`).
@@ -35,3 +36,4 @@ status: draft
 ## 관련 페이지
 
 - [[worker-dispatch-contract-v2-binding]]
+- [[test-mode-bound-override-integrity-record]]

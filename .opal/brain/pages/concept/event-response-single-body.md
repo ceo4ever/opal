@@ -7,7 +7,8 @@ tags:
 - token-economy
 sources:
 - task:175
-related: [worker-dispatch-contract-v2-binding, worker-dispatch-target-section-selection]
+- task:177
+related: [worker-dispatch-contract-v2-binding, worker-dispatch-target-section-selection, section-lazy-loading-experiment-hold]
 created: '2026-10-02'
 updated: '2026-10-02'
 status: draft
@@ -35,3 +36,5 @@ status: draft
 
 - [[worker-dispatch-contract-v2-binding]]
 - [[worker-dispatch-target-section-selection]]
+- [[section-lazy-loading-experiment-hold]]
+

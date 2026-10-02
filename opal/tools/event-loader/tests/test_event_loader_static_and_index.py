@@ -23,6 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 LOADER = REPO_ROOT / "opal" / "tools" / "event-loader" / "event_loader.py"
 MANIFEST = REPO_ROOT / "opal" / "core" / "references" / "events.json"
 FULL = "--contract-version 2 --agent opal-be-agent --role builder --dispatch-id disp-00000001"
+FLAG = "--require-default-manifest"
 
 
 def run(*args: str) -> tuple[int, dict]:
@@ -58,11 +59,33 @@ class StaticCheckDispatchTest(unittest.TestCase):
         self.assertEqual(hit[0]["missing"], ["--contract-version", "--role", "--dispatch-id"])
 
     def test_full_args_pass(self):
-        found = self.check("doc.md", f"worker.dispatch event-loader\nrun.sh verify --receipt r --event worker.dispatch {FULL}\n")
+        found = self.check("doc.md", f"worker.dispatch event-loader\nrun.sh verify --receipt r --event worker.dispatch {FULL} {FLAG}\n")
         self.assertEqual([v for v in found if v["code"].startswith("dispatch_")], [])
 
+    def test_verify_line_without_default_manifest_flag_flagged(self):
+        found = self.check("doc.md", f"worker.dispatch event-loader\nrun.sh verify --receipt r --event worker.dispatch {FULL}\n")
+        hit = [v for v in found if v["code"] == "dispatch_gate_default_manifest_missing"]
+        self.assertEqual(len(hit), 1, found)
+        self.assertEqual(hit[0]["line"], 2)
+
+    def test_load_line_is_not_subject_to_default_manifest_flag(self):
+        found = self.check("doc.md", f"worker.dispatch event-loader\nrun.sh load --event worker.dispatch {FULL}\n")
+        self.assertEqual([v for v in found if v["code"].startswith("dispatch_gate_")], [])
+
+    def test_load_and_verify_on_one_line_passes_when_flag_present(self):
+        text = f"worker.dispatch event-loader\n`load --event worker.dispatch {FULL}` 후 `verify --event worker.dispatch {FULL} {FLAG}`\n"
+        found = self.check("doc.md", text)
+        self.assertEqual([v for v in found if v["code"].startswith("dispatch_gate_")], [])
+
+    def test_manifest_override_args_flagged(self):
+        for override in ("--manifest m.json", "--deployed-root /x", "--source-root /y"):
+            found = self.check("doc.md", f"worker.dispatch event-loader\nrun.sh verify --receipt r --event worker.dispatch {FULL} {FLAG} {override}\n")
+            codes = [v["code"] for v in found]
+            self.assertIn("dispatch_gate_manifest_override", codes, (override, found))
+            self.assertNotIn("dispatch_gate_default_manifest_missing", codes)
+
     def test_gate_agent_name_must_match_folder(self):
-        text = f"worker.dispatch event-loader\nrun.sh verify --receipt r --event worker.dispatch {FULL}\n"
+        text = f"worker.dispatch event-loader\nrun.sh verify --receipt r --event worker.dispatch {FULL} {FLAG}\n"
         mismatch = self.check("agents/opal-fe-agent/AGENT.md", text)
         self.assertIn("dispatch_gate_agent_mismatch", [v["code"] for v in mismatch])
         placeholder = self.check("agents/opal-fe-agent/AGENT.md", text.replace("opal-be-agent", "<agent>"))

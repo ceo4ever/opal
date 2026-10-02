@@ -1,0 +1,133 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/event-loader/event_loader.py",
+    "opal/tools/event-loader/lazy_sections.py",
+    "opal/tools/event-loader/tests/conftest.py",
+    "opal/tools/event-loader/tests/test_event_loader_security.py",
+    "opal/tools/event-loader/tests/test_lazy_sections.py",
+    "opal/tools/event-loader/tests/test_event_loader_lazy_mode.py",
+    "opal/tools/event-loader/tests/test_event_loader_section_declarations.py",
+    "opal/tools/event-loader/tests/test_event_loader_static_and_index.py",
+    "opal/tools/event-loader/tests/test_event_loader_dispatch_contract.py",
+    "opal/tools/event-loader/tests/test_event_loader_extended.py",
+    "opal/tools/state-tool/state_tool_parts/gates.py",
+    "opal/tools/state-tool/state_tool_parts/cli.py",
+    "opal/tools/state-tool/tests/test_event_verify.py",
+    "opal/tools/event-loader/README.md",
+    "opal/core/references/pm/dispatch-process.md",
+    "opal/core/references/events.json",
+    "opal/core/references/sections/citation-rules.json",
+    "opal/core/references/sections/design-gate.json",
+    "opal/core/references/sections/pm-review-gate.json",
+    "opal/core/references/sections/pm-process.json"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "8e5c4fb0fd0133df",
+      "category": "@header:exports",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/event-loader/tests/test_event_loader_lazy_mode.py",
+        "line": 1
+      },
+      "evidence": "@header 블록에 `exports` 필드가 없다",
+      "impact": "필수 필드가 비어 코드 지도 검색·검증이 불완전해진다",
+      "remediation": {
+        "guidance": "@header 블록에 `exports` 필드를 채운다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/event-loader/tests/test_event_loader_lazy_mode.py --json 결과에 `exports`가 있다",
+      "suppression": null
+    },
+    {
+      "id": "GC-002",
+      "fingerprint": "8e5c4fb0fd0133df",
+      "category": "@header:exports",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/event-loader/tests/test_event_loader_section_declarations.py",
+        "line": 1
+      },
+      "evidence": "@header 블록에 `exports` 필드가 없다",
+      "impact": "필수 필드가 비어 코드 지도 검색·검증이 불완전해진다",
+      "remediation": {
+        "guidance": "@header 블록에 `exports` 필드를 채운다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/event-loader/tests/test_event_loader_section_declarations.py --json 결과에 `exports`가 있다",
+      "suppression": null
+    },
+    {
+      "id": "GC-003",
+      "fingerprint": "8e5c4fb0fd0133df",
+      "category": "@header:exports",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/event-loader/tests/test_event_loader_security.py",
+        "line": 1
+      },
+      "evidence": "@header 블록에 `exports` 필드가 없다",
+      "impact": "필수 필드가 비어 코드 지도 검색·검증이 불완전해진다",
+      "remediation": {
+        "guidance": "@header 블록에 `exports` 필드를 채운다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/event-loader/tests/test_event_loader_security.py --json 결과에 `exports`가 있다",
+      "suppression": null
+    },
+    {
+      "id": "GC-004",
+      "fingerprint": "8e5c4fb0fd0133df",
+      "category": "@header:exports",
+      "severity": "high",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/event-loader/tests/test_lazy_sections.py",
+        "line": 1
+      },
+      "evidence": "@header 블록에 `exports` 필드가 없다",
+      "impact": "필수 필드가 비어 코드 지도 검색·검증이 불완전해진다",
+      "remediation": {
+        "guidance": "@header 블록에 `exports` 필드를 채운다",
+        "reference": "CONVENTIONS.md §구현 규칙 §@header 규칙",
+        "auto_fixable": false
+      },
+      "verification": "code-scan scan opal/tools/event-loader/tests/test_lazy_sections.py --json 결과에 `exports`가 있다",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base main HEAD -> ea1e1c98a3d6cc5f515af72f3d9bbbb97d6c231e",
+    "git diff --name-status --diff-filter=ACMR ea1e1c98a3d6 HEAD -> 20 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

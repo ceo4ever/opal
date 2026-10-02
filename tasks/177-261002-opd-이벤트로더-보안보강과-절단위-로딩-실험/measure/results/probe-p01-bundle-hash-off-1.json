@@ -1,0 +1,116 @@
+{
+ "probe": "p01-bundle-hash",
+ "arm": "off",
+ "run": 1,
+ "tag": "p01-bundle-hash-off-1",
+ "prompt_bytes": 53861,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 7.1,
+   "json": {
+    "duration_api_ms": 3290,
+    "stop_reason": "end_turn",
+    "session_id": "19600226-e396-4c53-a801-1f1fbb48624f",
+    "total_cost_usd": 0.1833632,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 44656,
+     "cache_read_input_tokens": 12376,
+     "output_tokens": 226,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 44656,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 226,
+       "cache_read_input_tokens": 12376,
+       "cache_creation_input_tokens": 44656,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 44656
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 226,
+      "cacheReadInputTokens": 12376,
+      "cacheCreationInputTokens": 44656,
+      "webSearchRequests": 0,
+      "costUSD": 0.1833632,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "**대상 문서**: 태스크 폴더의 `TASK.md`, `PLAN.md`, `TEST-SCENARIO.md` 3개입니다.\n\n**계산식**:\n\n```\n묶음 hash = sha256(\"TASK.md\\n\" + h1 + \"\\nPLAN.md\\n\" + h2 + \"\\nTEST-SCENARIO.md\\n\" + h3)\n```\n\n- h1, h2, h3은 각각 `TASK.md`, `PLAN.md`, `TEST-SCENARIO.md` 파일의 sha256입니다.\n- 대상 파일이 없으면 `design_gate_input_missing`으로 거부됩니다.",
+    "ttft_ms": 3345,
+    "type": "result",
+    "duration_ms": 3406,
+    "uuid": "3027d5e2-19cf-4894-8e3e-28d8be496f5a",
+    "ttft_stream_ms": 2066,
+    "time_to_request_ms": 73,
+    "first_content_frame_ms": 2066,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}

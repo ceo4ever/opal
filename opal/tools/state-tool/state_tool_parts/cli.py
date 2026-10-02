@@ -360,6 +360,9 @@ def build_parser():
                        help="디스패치 식별자 (loader로 전달)")
     p_evt.add_argument("--contract-version", dest="contract_version",
                        help="worker.dispatch 계약 버전 (loader로 전달)")
+    p_evt.add_argument("--require-default-manifest", dest="require_default_manifest",
+                       action="store_true",
+                       help="배포 기본 events.json만 허용 (loader로 전달, 판정은 loader 소유)")
     p_evt.set_defaults(func=cmd_event_verify)
 
     # ── verify ──
