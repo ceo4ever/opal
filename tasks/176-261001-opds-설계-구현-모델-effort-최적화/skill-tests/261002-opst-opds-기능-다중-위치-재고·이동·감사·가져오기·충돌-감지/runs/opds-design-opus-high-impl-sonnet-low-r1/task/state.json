@@ -1,0 +1,309 @@
+{
+  "task_id": "001-261001-opds-다중위치-재고관리",
+  "skill": "opds",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-10-01 23:49:55",
+  "updated_at": "2026-10-02 00:06:21",
+  "current_status": "completed_unmerged",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:50:18",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:52:40",
+      "owner": "auto",
+      "note": "auto-approved on PLAN entry"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:05:40",
+      "owner": "PM",
+      "note": "PM 직접 작성(PM 경로) — 워커 없음",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "TEST-SCENARIO 작성",
+      "key": "plan.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:54:21",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "설계 게이트",
+      "key": "plan.design_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:56:39",
+      "owner": "PM",
+      "note": "design gate i1 pass",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "`state-tool design-gate record`가 pass를 기록했고 현재 문서 묶음 hash가 통과 hash와 같다",
+          "evaluator design-rubric 설계 4축 PASS·시나리오 3축 기준 충족"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 23:57:23",
+      "owner": "auto",
+      "note": "auto-approved on EXECUTE entry"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:05:40",
+      "owner": "PM",
+      "note": "W-1 87s + W-2 31s + W-3 42s (duration_ms 합 160s)",
+      "step": "3/3",
+      "worker_duration_minutes": 3
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:05:40",
+      "owner": "PM",
+      "note": "opal-test-agent 93s + opal-convention-checker 23s (duration_ms 합 116s)",
+      "worker_duration_minutes": 2
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:04:35",
+      "owner": "PM",
+      "note": null,
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:05:03",
+      "owner": "auto",
+      "note": "auto-approved on CLOSE entry"
+    },
+    {
+      "row_id": 11,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:05:40",
+      "owner": "PM",
+      "note": null
+    },
+    {
+      "row_id": 12,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:05:47",
+      "owner": "PM",
+      "note": "no-op: docs/CLI.md는 W-2에서 갱신, docs/PROJECT.md 레지스트리 사실 불변",
+      "conditional": true
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:05:48",
+      "owner": "PM",
+      "note": "skip: .opal/brain 부재",
+      "conditional": true
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:06:01",
+      "owner": "PM",
+      "note": "FW 개선 후보 3건 기록, local 0건"
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:06:21",
+      "owner": "PM",
+      "note": "worktree-tool finalize ok, violations 0",
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:06:21",
+      "owner": "PM",
+      "note": null
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-176/39b1b7a5-a283-4de9-b1e6-120a0bdcb558/scratchpad/measure-function-stockctl-multiloc/opds-design-opus-high-impl-sonnet-low-r1/repo/.opal-worktrees/task_001",
+  "actor": "coordinator",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_de2ac212-4d1a-494b-8cb2-fa9c05cf7b66",
+    "status": "active",
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_2368ab7e-860b-44ec-b3fd-e3ab12ad1ef9",
+      "report_type": "progress_report",
+      "transition_action": "complete",
+      "user_input_required": false,
+      "at": "2026-10-01T15:06:21.759Z"
+    }
+  },
+  "design_gate": {
+    "status": "pass",
+    "iteration": 1,
+    "limit": 3,
+    "limit_from": 0,
+    "task_confirm_req_hash": "be979653c674a883db031c3f9f32baed068047683c4c3b1ecac850bcd2637a6f",
+    "current_attempt": {
+      "iteration": 1,
+      "bundle_hash": "2122534b1aa0c491f3be78fc5fd5f5e809d1969d88b9a66c9f1feb1421f0c342",
+      "files": {
+        "TASK.md": "b653598f355170b1a324a9db7caf4eb0d18d68503aab155a7e2b9786bd074c41",
+        "PLAN.md": "f34f6c24920dd82a95a53bfbffe49d0157bd59889be1ce2a06e68285acda57c5",
+        "TEST-SCENARIO.md": "7fcbb60c54bb9cfbb6fa705ccb93a20af8cc36d738c5a8abcdfcc18810c75c7d"
+      },
+      "started_at": "2026-10-01 23:54:30",
+      "refinement": false
+    },
+    "passed_bundle_hash": "2122534b1aa0c491f3be78fc5fd5f5e809d1969d88b9a66c9f1feb1421f0c342",
+    "approved_bundle_hash": "2122534b1aa0c491f3be78fc5fd5f5e809d1969d88b9a66c9f1feb1421f0c342",
+    "last_rewrite_target": null,
+    "history": [
+      {
+        "iteration": 1,
+        "verdict": "pass",
+        "rewrite_target": null,
+        "bundle_hash": "2122534b1aa0c491f3be78fc5fd5f5e809d1969d88b9a66c9f1feb1421f0c342",
+        "reason": null,
+        "at": "2026-10-01 23:56:39",
+        "advisories": [
+          {
+            "id": "A-1",
+            "kind": "mergeable",
+            "targets": [
+              "S-12",
+              "S-13"
+            ],
+            "basis": "S-13의 `python -m pytest tests/ -q`가 S-12의 `tests/test_basic.py` 실행을 포함한다. 같은 C-2 계약(기존 테스트가 수정 없이 통과)을 두 시나리오로 나눠 같은 검증 신호를 중복 실행하고, S-12만의 고유 신호는 `git diff main -- tests/test_basic.py`가 빈 출력인지뿐이다.",
+            "recommendation": "S-13에 diff 빈 출력 확인을 합쳐 시나리오 하나로 만들고, 검증 대상을 AC-2, AC-3, C-2로 묶는다."
+          }
+        ],
+        "advisory_responses": [
+          {
+            "id": "A-1",
+            "response": "retain",
+            "reason": "S-12는 기존 공개 계약(add/list 출력, remove 부족 exit 2)의 회귀를 신규 테스트와 분리해 실패 격리하고, git diff로 기존 테스트 무수정이라는 S-13이 판정할 수 없는 고유 결함 신호를 가진다. 유형도 regression(행동)과 check(전체 스위트)로 달라 가이드의 '실패 격리가 다름' 별도 유지 조건에 해당한다."
+          }
+        ],
+        "refinement": false
+      }
+    ]
+  },
+  "test_timing": {
+    "intervals": [
+      {
+        "kind": "auto",
+        "id": "batch-1",
+        "started_at": "2026-10-01T15:02:59.411060+00:00",
+        "ended_at": "2026-10-01T15:03:00.413789+00:00"
+      },
+      {
+        "kind": "auto",
+        "id": "batch-1-rerun",
+        "started_at": "2026-10-01T15:03:07.208380+00:00",
+        "ended_at": "2026-10-01T15:03:08.435595+00:00"
+      },
+      {
+        "kind": "auto",
+        "id": "full-1",
+        "started_at": "2026-10-01T15:03:14.865236+00:00",
+        "ended_at": "2026-10-01T15:03:40.957003+00:00"
+      }
+    ]
+  }
+}

@@ -22,13 +22,16 @@ description: |
 |---|---|
 | `list [--mode smoke\|function\|judgment]` | 시나리오 목록과 모드·예상 비용 |
 | `validate [<id> \| --all]` | 시나리오 규격 검사(`references/scenario-spec.md`) |
-| `run <id> [--variant V ...] [--repeat N] [--out DIR]` | 실행 → 수집 → 판정 → 보고서 |
+| `run <id> [--variant V ...] [--repeat N] [--max-parallel N] [--out DIR]` | 실행 → 수집 → 판정 → 보고서 |
 | `report <out-dir>` | 이미 끝난 실행 폴더로 REPORT.md 재생성 |
 | `record <out-dir> [--task-dir D]` | 실행 결과를 `tasks/`에 기록(`run`은 끝나면 자동 기록, `--no-record`로 끔) |
 | `refresh [--project-root R]` | 모든 기록의 `report.html`을 다시 만든다. `record`(run 자동 기록 포함)도 끝에 같은 갱신을 하므로, 아카이브 직후 바로 링크를 고칠 때만 쓴다 |
 
 - `--variant`를 주지 않으면 시나리오의 `default_variant` 하나로 **단일 실행**한다. 기본값이다.
 - `--variant`를 두 번 이상 주면 같은 조건에서 나란히 돌리는 **비교 실행**이 된다. 예: `--variant "//opd --no-pm" --variant "//opd"`.
+- 변형 끝에 `design=<model>[/<effort>]`·`impl=<model>[/<effort>]` 토큰을 붙여 model·effort를 변형마다 지정한다(예: `--variant "//opds design=opus/high impl=sonnet/low"`). `design`은 세션(설계 주체)의 `claude -p --model/--effort`로, `impl`은 모의 저장소 `.claude/agents/`의 구현 에이전트 3종(`opal-task-agent`·`opal-be-agent`·`opal-fe-agent`) 사본 frontmatter로 적용한다. 토큰이 없으면 배포 설정 그대로다. 판정 에이전트는 어떤 경우에도 바꾸지 않으며, 세션에는 `CLAUDE_CODE_SUBAGENT_MODEL`을 넘기지 않는다. 지정값(`declared`)과 실제 적용(`applied`: 세션 `modelUsage` 모델, 덮어쓴 정의 sha256)은 실행마다 `run.json`의 `settings`에 남는다.
+- 첫 `--variant`가 기준(현행)이고 나머지는 후보다. 한 묶음의 `framework` 지문이 하나가 아니면 보고서가 `비교 무효 — FW 버전 상이`를 표시하고 품질 하한 판정을 내지 않는다. 같으면 후보마다 `하한 충족`·`하한 미충족(결정 대상 아님)`을 판정한다.
+- `--max-parallel N`은 동시 세션 수를 제한한다(기본: 전부 동시). 많은 세션을 비교할 때 호출 한도·부하가 시간 지표에 섞이지 않게 쓴다.
 - `--repeat N`은 변형마다 N회 반복한다. 한 번의 결과로는 우연과 차이를 구분할 수 없으므로, 판단을 내릴 비교는 2회 이상을 권한다.
 - 실행 결과 폴더(모의 저장소 포함) 기본값은 `/tmp/opal-skill-tester/<id>-<시각>/`이다.
 - `run`이 끝나면 보고서·지표·실행별 세션 결과·모의 태스크 핵심 산출물을 프로젝트 `tasks/` 아래 `YYMMDD-opst-{대상 스킬}-{모드}-{시나리오 제목}` 폴더에 기록한다. 번호는 채번하지 않는다. 기록 폴더에는 `record.json`과 대시보드 `report.html`이 생긴다. 단일 실행은 `요약`+`이력: <변형>` 탭, 비교 실행은 `비교`+`상세: <변형>`+`이력: <변형>` 탭이다. 이력 탭은 `tasks/`와 `tasks/backup/` 아래 같은 스킬의 과거 기록을 모아 추세 차트와 표로 보여주고, 각 행에서 과거 실행 상세를 페이지 안에 펼치거나(모든 뷰어) 과거 대시보드를 새 탭으로 연다. 오래된 태스크가 `tasks/backup/`으로 옮겨져 경로가 바뀌어도, 기록할 때마다 모든 대시보드를 다시 만들어 링크를 현재 위치로 고친다. 현재 세션이 작업 중인 태스크가 있으면 `--task-dir <그 태스크 폴더>`를 넘겨 `skill-tests/` 아래에 기록한다. 넘기지 않으면 진행 중 태스크가 정확히 하나일 때만 그 아래에, 아니면 `tasks/` 바로 아래에 기록한다.

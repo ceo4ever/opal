@@ -82,6 +82,14 @@ frontmatter 레벨을 그대로 따르므로 이 주입과 무관하다.
 - 설정 파일(`argv_template`)이 아니라 코드가 주입하므로, 기존 설치도 install로 도구만 갱신되면
   별도 설정 이관 없이 적용된다.
 
+### builder 모델 레벨
+
+기본 builder 레벨은 `standard`다. `launcher.builderModelLevel.<에이전트|provider>`에 `light`·`standard`·`advanced`를 쓰면 그 레벨의 `models.<provider>.<레벨>` 셀을 builder 모델로 주입한다. 에이전트 이름 키가 provider 키를 이기고, 미설정이거나 알 수 없는 값이면 `standard`다. 셀이 `inherit`면 주입하지 않고, 셀이 없으면 `builder_model_unresolved`로 멈춘다. 전역 `~/.opal/setting.json` 위에 프로젝트 `setting.local.json`이 에이전트 키 단위로 덮어쓴다.
+
+```json
+{ "launcher": { "builderModelLevel": { "claude": "advanced" }, "builderEffort": { "claude": "high" } } }
+```
+
 ### 같은 CLI의 다른 계정 — 엔트리 `provider`·`env`
 
 `agents.<name>` 엔트리는 `argv_template` 외에 선택 필드 2개를 받는다.

@@ -1,0 +1,38 @@
+{
+ "scenario": "function-stockctl-multiloc",
+ "mode": "function",
+ "variant": "//opds design=opus/medium impl=haiku/medium",
+ "rep": 2,
+ "vidx": 3,
+ "utterance": "//opds 요구서 /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-176/39b1b7a5-a283-4de9-b1e6-120a0bdcb558/scratchpad/measure-function-stockctl-multiloc/opds-design-opus-medium-impl-haiku-medium-r2/REQUEST.md 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다.",
+ "start": 1790865975.0235121,
+ "framework": "main+19da06",
+ "settings": {
+  "declared": {
+   "design": {
+    "model": "opus",
+    "effort": "medium"
+   },
+   "impl": {
+    "model": "haiku",
+    "effort": "medium"
+   }
+  },
+  "applied": {
+   "models": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5",
+    "claude-sonnet-5-5"
+   ],
+   "agent_overrides": {
+    "opal-task-agent": "a3943d40d564236f96258cbfb34321e709ca1a3a55cdd9bf80fe9034e7144275",
+    "opal-be-agent": "3ee3d5e43ffe5987bc7ce7fce706bf668c50d42da9003897776fd257f513dbfe",
+    "opal-fe-agent": "f39f19ccf5c5c8223563782af1ecdd93c8e9b2abafbfeee6a989630c3366f75c"
+   },
+   "agents_missing": []
+  }
+ },
+ "exit": 0,
+ "timeout": false,
+ "end": 1790868200.668712
+}
