@@ -1,0 +1,344 @@
+{
+ "n_trials": 18,
+ "cands": {
+  "E1": {
+   "n_trials": 9,
+   "n_calls": 18,
+   "format_errors": {
+    "design": [],
+    "scenario": []
+   },
+   "format_error_count": {
+    "design": 0,
+    "scenario": 0,
+    "total": 0
+   },
+   "format_error_types": {},
+   "combined_ok": 9,
+   "combined_fail": 0,
+   "defect": {
+    "trials": 0,
+    "with_result": 0,
+    "no_result": 0,
+    "missed": 0,
+    "missed_worst_case": 0
+   },
+   "clean": {
+    "trials": 9,
+    "with_result": 9,
+    "no_result": 0,
+    "fail": 9,
+    "fail_worst_case": 9
+   },
+   "borderline": {
+    "trials": 0,
+    "with_result": 0,
+    "no_result": 0,
+    "fail": 0
+   },
+   "rule1": true,
+   "rule2": false,
+   "rule3": true,
+   "rule4": true,
+   "adoptable": false,
+   "time_combined": {
+    "n": 9,
+    "mean": 89.4,
+    "median": 91.8,
+    "p90": 102.1,
+    "max": 102.1
+   },
+   "time_call": {
+    "n": 18,
+    "mean": 74.0,
+    "median": 76.7,
+    "p90": 96.6,
+    "max": 102.1
+   },
+   "time_call_design": {
+    "n": 9,
+    "mean": 89.4,
+    "median": 91.8,
+    "p90": 102.1,
+    "max": 102.1
+   },
+   "time_call_scenario": {
+    "n": 9,
+    "mean": 58.5,
+    "median": 54.4,
+    "p90": 88.1,
+    "max": 88.1
+   },
+   "time_pair_wall": {
+    "n": 9,
+    "mean": 89.4,
+    "median": 91.8,
+    "p90": 102.1,
+    "max": 102.1
+   }
+  },
+  "E3": {
+   "n_trials": 9,
+   "n_calls": 18,
+   "format_errors": {
+    "design": [],
+    "scenario": []
+   },
+   "format_error_count": {
+    "design": 0,
+    "scenario": 0,
+    "total": 0
+   },
+   "format_error_types": {},
+   "combined_ok": 9,
+   "combined_fail": 0,
+   "defect": {
+    "trials": 0,
+    "with_result": 0,
+    "no_result": 0,
+    "missed": 0,
+    "missed_worst_case": 0
+   },
+   "clean": {
+    "trials": 9,
+    "with_result": 9,
+    "no_result": 0,
+    "fail": 2,
+    "fail_worst_case": 2
+   },
+   "borderline": {
+    "trials": 0,
+    "with_result": 0,
+    "no_result": 0,
+    "fail": 0
+   },
+   "rule1": true,
+   "rule2": true,
+   "rule3": true,
+   "rule4": true,
+   "adoptable": true,
+   "time_combined": {
+    "n": 9,
+    "mean": 38.9,
+    "median": 34.3,
+    "p90": 66.0,
+    "max": 66.0
+   },
+   "time_call": {
+    "n": 18,
+    "mean": 32.9,
+    "median": 30.3,
+    "p90": 53.9,
+    "max": 66.0
+   },
+   "time_call_design": {
+    "n": 9,
+    "mean": 36.4,
+    "median": 31.2,
+    "p90": 66.0,
+    "max": 66.0
+   },
+   "time_call_scenario": {
+    "n": 9,
+    "mean": 29.4,
+    "median": 29.8,
+    "p90": 34.3,
+    "max": 34.3
+   },
+   "time_pair_wall": {
+    "n": 9,
+    "mean": 38.9,
+    "median": 34.3,
+    "p90": 66.0,
+    "max": 66.0
+   }
+  }
+ },
+ "cases": {
+  "e01": {
+   "label": "clean-pass-163",
+   "kind": "clean",
+   "cands": {
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity",
+       "executability",
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness",
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "e02": {
+   "label": "clean-pass-161",
+   "kind": "clean",
+   "cands": {
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "decision_clarity"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  },
+  "e03": {
+   "label": "clean-pass-169",
+   "kind": "clean",
+   "cands": {
+    "E1": [
+     {
+      "rep": 1,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "fail",
+      "fail_axes": [
+       "completeness"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "fail",
+      "fail_axes": [
+       "recoverability"
+      ],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ],
+    "E3": [
+     {
+      "rep": 1,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 2,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     },
+     {
+      "rep": 3,
+      "verdict": "pass",
+      "fail_axes": [],
+      "missed": 0,
+      "design_gaps_axes": null
+     }
+    ]
+   }
+  }
+ }
+}

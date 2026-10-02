@@ -1,0 +1,152 @@
+{
+ "token": "td4979c",
+ "case": "d04",
+ "cand": "E1",
+ "rep": 2,
+ "kind": "defect",
+ "source": "defect-162-i1",
+ "expected_verdict": "fail",
+ "expected_axes": [
+  "decision_clarity",
+  "executability"
+ ],
+ "rows": [
+  {
+   "kind": "evaluator",
+   "case": "d04__r2__td4979c",
+   "cand": "E1",
+   "scope": "design",
+   "expected": "design 4축 중 decision_clarity·executability FAIL",
+   "elapsed_s": 67.6,
+   "result": true,
+   "reason": null,
+   "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 45711,
+    "cache_read_input_tokens": 273981,
+    "output_tokens": 4390,
+    "output_tokens_details": {
+     "thinking_tokens": 731
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 45711,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 2505,
+      "cache_read_input_tokens": 56527,
+      "cache_creation_input_tokens": 1566,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 1566
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "num_turns": 6,
+   "cost_usd": 0.5083322,
+   "actual": "FAIL 축: completeness,decision_clarity,executability,recoverability",
+   "fail_axes": [
+    "completeness",
+    "decision_clarity",
+    "executability",
+    "recoverability"
+   ]
+  },
+  {
+   "kind": "evaluator",
+   "case": "d04__r2__td4979c",
+   "cand": "E1",
+   "scope": "scenario",
+   "expected": "시나리오 3축 ≥1(평균 ≥1.5)",
+   "elapsed_s": 41.9,
+   "result": true,
+   "reason": null,
+   "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 41948,
+    "cache_read_input_tokens": 111193,
+    "output_tokens": 3208,
+    "output_tokens_details": {
+     "thinking_tokens": 746
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 41948,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 2647,
+      "cache_read_input_tokens": 50804,
+      "cache_creation_input_tokens": 3526,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 3526
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "num_turns": 3,
+   "cost_usd": 0.4220066,
+   "actual": "점수 1/2/0 평균 1.0, advisory 0건"
+  }
+ ],
+ "comb": {
+  "kind": "combined",
+  "case": "d04__r2__td4979c",
+  "cand": "E1",
+  "expected_verdict": "fail",
+  "expected_axes": [
+   "decision_clarity",
+   "executability"
+  ],
+  "d_elapsed_s": 67.6,
+  "s_elapsed_s": 41.9,
+  "pair_wall_s": 67.6,
+  "elapsed_s": 67.6,
+  "result": true,
+  "verdict": "fail",
+  "rewrite_target": "both",
+  "fail_axes": [
+   "completeness",
+   "decision_clarity",
+   "executability",
+   "recoverability"
+  ],
+  "average": 1.0,
+  "match": true,
+  "missed": 0,
+  "missed_axes": [],
+  "flip": 0
+ },
+ "fmt": {
+  "design": null,
+  "scenario": null
+ },
+ "pair_wall_s": 67.6,
+ "elapsed": {
+  "design": 67.6,
+  "scenario": 41.9
+ }
+}

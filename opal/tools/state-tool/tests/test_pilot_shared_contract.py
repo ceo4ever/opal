@@ -81,6 +81,12 @@ SKILLS_DIR = REPO_ROOT / "opal" / "skills"
 STATE_TOOL_PATH = REPO_ROOT / "opal" / "tools" / "state-tool" / "state_tool.py"
 REGISTRY_PATH = REPO_ROOT / "opal" / "core" / "references" / "opal-skills-registry.json"
 
+
+def _read_state_tool_source() -> str:
+    """state_tool.py 뒤에 state_tool_parts/*.py를 파일명 오름차순으로 이은 현재 소스 텍스트."""
+    paths = [STATE_TOOL_PATH, *sorted((STATE_TOOL_PATH.parent / "state_tool_parts").glob("*.py"))]
+    return "\n".join(p.read_text(encoding="utf-8") for p in paths)
+
 # state_tool.py를 직접 import — 기존 관례(test_state_tool.py)와 동일하게
 # PYTHONPATH를 조정해 sibling 모듈로 적재한다. STAGE_ENUM(top-level 상수)과
 # build_parser()/validate_pipeline_spec()(공개 함수) 접근에 사용한다.
@@ -419,7 +425,7 @@ def _local_skill_enum_in_validate_pipeline_spec() -> set[str]:
     물리적으로 분리된 두 번째 SSOT-아닌 목록임을 그대로 드러내기 위해 소스 리터럴을
     직접 읽는다(과거 실제로 이 두 목록 중 하나만 갱신돼 파이프라인이 막힌 사고가 있었다).
     """
-    source = STATE_TOOL_PATH.read_text(encoding="utf-8")
+    source = _read_state_tool_source()
     match = _LOCAL_SKILL_ENUM_RE.search(source)
     if not match:
         raise AssertionError(

@@ -1,0 +1,30 @@
+{
+  "input_bundle_hash": "96944daaa30a59a0389908d9bb8e3d78964623bae569758cc0f7d29117e9ed6f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:22 (## Findings > ### 회귀 확인) — The PLAN says W-1 will check whether the new state `recovery_required` reaches the allowed-value sets of the adjacent consumers (canonical task path resolution, status·remove guards, hub briefing·Console). No Work item owns the change if one is affected. W-1's deliverable is only to 'record consumer list and impact verdict'. The implementer must decide alone whether to change those consumers, and which files that would touch.",
+      "completeness-2: PLAN.md:42 (## Work items > W-4) — The listed changes include `scripts/install/windows.ps1`, and TEST-SCENARIO S-7 says it runs 'installer bash/PowerShell tests'. W-4's change targets list no PowerShell test file, only `scripts/tests/test_agent_adapter_fields.sh`. The implementer must decide alone how to verify the Windows migration under AC-5 (which test file, or whether to test it at all).",
+      "completeness-3: PLAN.md:45 (## Work items > W-6) — AC-6 requires recording the real results of task 162's restart and first checkpoint. W-6 only covers 'preparing install verification commands', and Release and recovery says to stop and report before the permission boundary. No Work item owns the run after approval, or where and in what format the results are recorded. The implementer must decide alone who closes AC-6 and how."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

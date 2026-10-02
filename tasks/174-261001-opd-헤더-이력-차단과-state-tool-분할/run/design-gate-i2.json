@@ -1,0 +1,54 @@
+{
+ "input_bundle_hash": "a64e53cd1187bb0eaf55ee7970c99fc4b6285acb8a2fb580639b2deb5d002b50",
+ "iteration": 2,
+ "design": {
+  "axes": {
+   "completeness": "FAIL",
+   "decision_clarity": "PASS",
+   "executability": "PASS",
+   "recoverability": "PASS"
+  },
+  "gaps": [
+   "completeness-1: PLAN.md > Findings 직접 변경·Work items W-2·Risks H-2 — state_tool.py 소스 텍스트를 읽는 세 번째 소비자 opal/tools/state-tool/tests/test_state_tool_mode_contracts.py가 누락됐다(:60, :773 S-25, :1176 S-40 git show HEAD:./state_tool.py의 ERROR_CODES 파싱)."
+  ]
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "resolved_gaps": [
+  {
+   "id": "completeness-1",
+   "status": "resolved",
+   "reason": "반영 확인"
+  },
+  {
+   "id": "completeness-2",
+   "status": "resolved",
+   "reason": "반영 확인"
+  },
+  {
+   "id": "decision_clarity-1",
+   "status": "resolved",
+   "reason": "반영 확인"
+  },
+  {
+   "id": "decision_clarity-2",
+   "status": "resolved",
+   "reason": "반영 확인"
+  },
+  {
+   "id": "executability-1",
+   "status": "resolved",
+   "reason": "반영 확인"
+  }
+ ],
+ "verdict": "fail",
+ "rewrite_target": "plan",
+ "advisories": []
+}

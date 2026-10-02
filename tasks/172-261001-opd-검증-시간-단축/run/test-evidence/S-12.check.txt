@@ -1,0 +1,1 @@
+{'top_keys_ok': True, 'scope_scenario': True, 'cheaper_layer_S1': True, 'no_cheaper_layer_S2': True, 'basis_names_contract': True} elapsed_ms 34574 is_error False

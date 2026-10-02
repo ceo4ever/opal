@@ -57,7 +57,7 @@ class TestT093AutoNaRemoval(_T093Base):
     def test_auto_na_marker_absent_in_source_T093_L1_F1a(self):
         """[T093/L1-F1a] S-2 — state_tool.py에 'agentic auto-na at init' 잔존 0건.
         3개 빌더의 mode 파라미터 시그니처는 존치(PLAN §3.1.2 [MUST])."""
-        src = _SRC_093.read_text(encoding="utf-8")
+        src = _read_state_tool_source()
         hits = [i + 1 for i, line in enumerate(src.splitlines())
                 if "agentic auto-na at init" in line]
         self.assertEqual(hits, [],
@@ -770,7 +770,7 @@ class TestT093SingleDecisionSource(unittest.TestCase):
         """[T093/L1-F3s] S-25 — MODE_BOUNDARY_STAGES 참조가 판정 함수 내부 1곳으로 수렴
         (정의부 제외). cmd_mark·cmd_validate가 상수를 직접 참조하지 않아야 한다.
         [MUST] 행동 불변(S-14)만 검증하면 판정 로직을 3곳에 복붙해도 PASS한다."""
-        lines = _SRC_093.read_text(encoding="utf-8").splitlines()
+        lines = _read_state_tool_source().splitlines()
         hits = [(i + 1, ln) for i, ln in enumerate(lines) if "MODE_BOUNDARY_STAGES" in ln]
         refs = [(n, ln) for n, ln in hits if not ln.lstrip().startswith("MODE_BOUNDARY_STAGES =")]
         self.assertEqual(len(refs), 1,
@@ -1172,10 +1172,7 @@ class TestR11Invariants(_T093Base):
                 "actor_pm_retired",
                 "worktree_path_required",
             }
-            head_src = subprocess.run(
-                ["git", "show", "HEAD:./state_tool.py"],
-                cwd=str(_TOOL_DIR), capture_output=True, text=True,
-            ).stdout
+            head_src = _read_head_state_tool_source()
             self.assertTrue(head_src, "S-40 git show HEAD:state_tool.py 결과가 비어 있음")
             head_keys = _error_codes_key_set_from_source(head_src)
             self.assertIsNotNone(head_keys,

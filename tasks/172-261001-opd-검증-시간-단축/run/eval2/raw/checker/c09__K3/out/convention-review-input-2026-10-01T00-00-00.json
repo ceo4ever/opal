@@ -1,0 +1,23 @@
+{
+  "base_sha": "ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+  "head_sha": "9d42630305ee6d06385fae8cbfd7ec9338ef887b",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "opal/skills/op-demo-check/SKILL.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          3,
+          13
+        ]
+      ]
+    }
+  ]
+}

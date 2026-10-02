@@ -1,0 +1,46 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/core/references/demo-guide.md"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "19f4d75abe8c0fec",
+      "category": "언어 규칙",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "blocking",
+      "rule_id": "CONVENTIONS.md §언어 규칙",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/core/references/demo-guide.md",
+        "line": 15
+      },
+      "evidence": "'## 사용 예시' 본문(15~19행)이 영어 문장으로만 작성됨. 문서 본문은 한국어(기술 용어는 영어 병기) 규칙.",
+      "impact": "문서 본문 언어 규칙 위반으로 문서 내 언어가 혼재되고 다른 절(한국어)과 일관성이 깨진다.",
+      "remediation": {
+        "guidance": "15~19행을 한국어로 번역하고 average, TypeError 등 기술 용어만 영어로 병기한다.",
+        "reference": "docs/CONVENTIONS.md §언어 규칙",
+        "auto_fixable": false
+      },
+      "verification": "해당 절 본문이 한국어 문장이고 기술 용어만 영어인지 확인한다.",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615 HEAD -> ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+    "git diff --name-status --diff-filter=ACMR ad289c5a14d5 HEAD -> 1 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4",
+    "model findings dropped: out_of_range=0, mechanical_rule=0"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

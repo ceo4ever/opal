@@ -1,0 +1,509 @@
+{
+ "rate_limited_trials": [
+  {
+   "token": "t0bb782",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t0d4114",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t0f31a5",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t150734",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t1554fb",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t195874",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t25d18c",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t27785a",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t2924b9",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t2e0633",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t2f08f4",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t32694a",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t36e220",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t38977e",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t39f26a",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t3a90fc",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t3af61b",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t3c9b88",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t4694c3",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t483ff1",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t5661d2",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t582df7",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t5a8722",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t60351c",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t61c8b3",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t644526",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t6a5713",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t6dae6e",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t824786",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t83a7bc",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t867055",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t888690",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t92224c",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t950ddf",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t9c5c45",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "t9e7b64",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "ta3d18a",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "ta4e560",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "ta4ecae",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "taa2f89",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tac845c",
+   "failed_scopes": [
+    "design"
+   ]
+  },
+  {
+   "token": "tacbd06",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tacefbc",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tafb61d",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tb359bd",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tb9748b",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tc77c8a",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tcafaff",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "td39df9",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "td6a9ec",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "td8aeaa",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "td969e9",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "td98d12",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tebe324",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tee12f9",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tf23cfe",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tf82ec6",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tf89e18",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tf9dc5d",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tf9eac9",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tfc573c",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tfef97d",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  },
+  {
+   "token": "tff59d8",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ]
+  }
+ ],
+ "round2_this_account": [
+  {
+   "token": "t644526",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ],
+   "round": 2
+  },
+  {
+   "token": "t824786",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ],
+   "round": 2
+  },
+  {
+   "token": "t867055",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ],
+   "round": 2
+  },
+  {
+   "token": "t9c5c45",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ],
+   "round": 2
+  },
+  {
+   "token": "tee12f9",
+   "failed_scopes": [
+    "design"
+   ],
+   "round": 2
+  },
+  {
+   "token": "tf9dc5d",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ],
+   "round": 2
+  },
+  {
+   "token": "tfc573c",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ],
+   "round": 2
+  },
+  {
+   "token": "tff59d8",
+   "failed_scopes": [
+    "design",
+    "scenario"
+   ],
+   "round": 2
+  }
+ ]
+}

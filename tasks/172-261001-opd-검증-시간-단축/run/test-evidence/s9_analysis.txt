@@ -1,0 +1,4 @@
+== scan1 @48f25a5a gc-findings-convention-precheck-2026-01-01T00-00-00.json status pass n= 2
+{"id": "GC-001", "severity": "high", "disposition": "blocking", "source_tier": "T0", "location": {"file": "opal/tools/event-loader/tests/test_event_loader_test_event.py", "line": 1}}
+{"id": "GC-002", "severity": "high", "disposition": "blocking", "source_tier": "T0", "location": {"file": "opal/tools/state-tool/tests/test_state_tool_test_cycle.py", "line": 1}}
+== scan2 HEAD vs main gc-findings-convention-precheck-2026-01-01T00-00-01.json status pass n= 0

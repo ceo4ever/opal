@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "medium",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 44.2,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 39139,
+  "stop_reason": "end_turn",
+  "session_id": "1f987d4e-71df-4a82-87ae-85df18f4be23",
+  "total_cost_usd": 0.1930884,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 12104,
+   "cache_read_input_tokens": 122882,
+   "output_tokens": 3582,
+   "output_tokens_details": {
+    "thinking_tokens": 824
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 12104,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1921,
+     "cache_read_input_tokens": 28918,
+     "cache_creation_input_tokens": 1654,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1654
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 3582,
+    "cacheReadInputTokens": 122882,
+    "cacheCreationInputTokens": 12104,
+    "webSearchRequests": 0,
+    "costUSD": 0.1930884,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 824,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "receipt 검증 결과는 `ok: true`이고 문서 4건이 확인됐습니다. scenario 범위 판정 결과 시나리오 축이 기준에 못 미칩니다. 경계/부정 축이 0점이고 평균이 1.0이라 통과 기준(세 축 각 1점 이상, 평균 1.5 이상)을 채우지 못했습니다. 부분 호출이라 `verdict`와 `rewrite_target`은 쓰지 않았고, 파일도 만들지 않았습니다.\n\n```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope=scenario) 채점 완료: scores={goal:1, adoption:2, boundary:0}, average=1.0 — boundary 0점 및 평균<1.5로 시나리오 축 미달\",\n  \"input_bundle_hash\": \"7595abbdfdb7b8a6af749fff40e3de0bd85e098527879771fc6403ab5c9b5a58\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 1, \"adoption\": 2, \"boundary\": 0},\n    \"average\": 1.0,\n    \"gaps\": [\n      \"goal-1: `TEST-SCENARIO.md` §Scenarios S-1 — 기대 결과가 \\\"소요시간(분)이 산출된다\\\"로 끝나, `TASK.md` §Proposed outcome: \\\"소요시간을 state.json에 반영한다\\\"는 목표의 저장·반영 결과(어디에 어떤 값이 기록되는지)를 무엇으로 확인할지 구현자에게 남아 있다\",\n      \"goal-2: `TEST-SCENARIO.md` §Scenarios — `TASK.md` §Acceptance criteria AC-3(측정 상한 초과 시 상태 전이·재개)을 검증하는 시나리오가 없어, 상한 초과를 어떻게 검증할지(또는 검증할지 여부)가 구현자에게 남아 있다\",\n      \"boundary-1: `TEST-SCENARIO.md` §Scenarios S-2: \\\"중복 호출이 안전하게 처리된다(구체적 동작 미정)\\\" — 기대 결과가 판정 불가라 거부, 덮어쓰기, 무시 중 어떤 동작을 통과로 볼지가 구현자에게 남아 있다\",\n      \"boundary-2: `TEST-SCENARIO.md` §Scenarios — AC-2의 나머지 경로(`start` 없이 `stop`)와 AC-3 상한 초과 경로를 검증하는 시나리오가 없어, 이 경로들의 실패·경계 동작을 어떻게 검증할지가 구현자에게 남아 있다\",\n      \"boundary-3: `TEST-SCENARIO.md` §Scenarios — `TASK.md` §Constraints C-2(측정 실패 시 TEST 단계 진행을 막지 않음)와 C-1(state.json 스키마 키 집합 불변)을 확인하는 시나리오가 없어, fail-safe와 스키마 보존을 무엇으로 증명할지가 구현자에게 남아 있다\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"axis_records\": [\n    {\"axis\": \"goal\", \"score\": 1, \"reason\": \"S-1은 CLI 계층에서 `duration_cli start` 다음 `stop`을 실행하고 소요시간 산출을 확인하므로 AC-1을 직접 검증한다(0점 아님). 다만 `TASK.md` §Proposed outcome이 요구하는 state.json 반영은 기대 결과에 없고, AC-3을 다루는 시나리오도 없어 목표를 온전히 검증하지 못한다. 그래서 2점이 아니다.\", \"gap\": null},\n    {\"axis\": \"adoption\", \"score\": 2, \"reason\": \"`TASK.md` §Problem은 수작업 기록을 자동 CLI로 바꾸는 일이다. 대체되는 기존 코드 경로나 호출자가 없고 `PLAN.md` §Findings도 신규 파일(`duration_cli.py`, \\\"소비자 없음(신규)\\\")뿐이다. 잔존 여부를 검증할 기존 구현이 없으므로 교체형 목표가 아니라고 보고 앵커 2점을 줬다.\", \"gap\": null},\n    {\"axis\": \"boundary\", \"score\": 0, \"reason\": \"적용할 실패·경계가 TASK에 명시돼 있다(AC-2의 중복·누락 호출, AC-3의 상한 초과, C-2의 fail-safe). 하지만 S-2의 기대 결과가 \\\"구체적 동작 미정\\\"이라 통과/실패를 가를 수 없어 경계를 실제로 확인하지 못한다. 나머지 경계 경로는 시나리오가 없다. 판정 가능한 시나리오는 사실상 정상 경로(S-1)뿐이다.\", \"gap\": \"boundary-1~3 참조\"}\n  ],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n- 이번 호출에 이전 회차 gaps가 넘어오지 않아 `resolved_gaps`는 빈 배열입니다.\n- 지적할 advisory가 없습니다. S-1과 S-2는 겹치지 않고 계층·분류 오류도 없습니다.",
+  "ttft_ms": 5081,
+  "type": "result",
+  "duration_ms": 40807,
+  "uuid": "e530aea1-cfcb-420e-bace-367106103bf2",
+  "ttft_stream_ms": 2529,
+  "time_to_request_ms": 52,
+  "first_content_frame_ms": 2529,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

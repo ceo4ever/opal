@@ -1,0 +1,64 @@
+사용자 127.0.0.1:7823 health (시작): 200
+
+== (가) 정적 계약 (S-1, S-2, S-9, S-10, S-13) ==
+
+[PASS] S-1: console.sh·install-mac.sh 양쪽 pkill -f "dashboard.backend.main:app" 0건, pkill/pgrep/killall 0건, bash -n exit 0 (MV-21)
+[PASS] S-2: grep -rc 'console\.pid' opal/tools/test-tool/ (tests·문서 제외) == 0 (MV-22 경계 회귀 감시) (RED 시점에도 PASS — 회귀 감시용, 통과시키려 조작하지 않음)
+[PASS] S-9: install-mac.sh console_autostart 종료 블록이 D-13 3분기(FRAMEWORK_ROOT/opal/tools/opal-cli/run.sh 위임, || true) + bash -n
+[PASS] S-10: start 블록 — nohup 직후 local pid=$!, writer 5인자 호출, 이후 $! 미사용, nohup 이전 값 제약(D-12) 사전 검증
+[PASS] S-13: start 3분기 — ①이미실행중 return0 ②레코드없이 health응답시 writer미호출+lsof토큰+return0 ③그외만 기동
+
+== (나) 레코드-only (S-3, S-11, S-12, S-14) ==
+
+[PASS] S-3: console_write_pid_record 호출 → $OPAL_HOME/run/console.pid 6필드 JSON 생성 (MV-23)
+[PASS] S-3b: 값 제약 위반(D-2·D-12) — "·개행 포함 경로 인자 호출 시 return 1 + 파일 미생성
+[PASS] S-3b(역슬래시): 값 제약 위반(D-2) — 역슬래시 포함 경로 인자 호출 시 return 1 + 파일 미생성
+[PASS] S-3b(개행): 값 제약 위반(D-2) — 개행 포함 경로 인자 호출 시 return 1 + 파일 미생성
+[PASS] S-11: 판정표 #2 unreadable_record — pid 비정수 오염 레코드 → stopped=false pid=- reason=unreadable_record, 레코드 잔존, kill 0회
+[PASS] S-12: 판정표 #4 stale_record — 확실히 죽은 pid로 identity 일치 레코드 → stopped=false pid=<N> reason=stale_record + 레코드 삭제
+[PASS] S-14: 판정표 #6 terminate_timeout — SIGTERM 무시 프로세스 → 5초 후 stopped=false pid=<N> reason=terminate_timeout, 프로세스 생존
+
+== (다) real-usage (S-8 → S-4, S-5, S-6, S-7) ==
+
+scripts/tests/test_console_ownership.sh: line 635: 36624 Killed: 9               bash -c 'trap "" TERM; while :; do sleep 1; done'
+[PASS] S-8: console status — pid=/app_dir=/opal_home=/host=/port=/started_at= 값 일치 + health 원문이 레코드 줄보다 앞 + health 성패 양분기 레코드 출력
+scripts/tests/test_console_ownership.sh: line 635: 37106 Terminated: 15          OPAL_HOME="$opal_home" "$VENV_UVICORN" --app-dir "$app_dir" dashboard.backend.main:app --host 127.0.0.1 --port "$port" > "$log_path" 2>&1
+[FAIL] S-4(a): pgrep 집합 중첩 미확인
+       detail: pgrep_set='37506
+37508
+38780' p1=37506 p2=37508 user=2329
+[PASS] S-4: 레코드 부재 — no_record + D-9 lsof 토큰 + 두 서버 생존
+scripts/tests/test_console_ownership.sh: line 244: 37506 Terminated: 15          OPAL_HOME="$opal_home" "$VENV_UVICORN" --app-dir "$app_dir" dashboard.backend.main:app --host 127.0.0.1 --port "$port" > "$log_path" 2>&1
+scripts/tests/test_console_ownership.sh: line 244: 37508 Terminated: 15          OPAL_HOME="$opal_home" "$VENV_UVICORN" --app-dir "$app_dir" dashboard.backend.main:app --host 127.0.0.1 --port "$port" > "$log_path" 2>&1
+[PASS] S-5: identity 불일치 — 레코드 app_dir 타 홈 → 두 서버 생존 + reason=identity_mismatch + 레코드 잔존
+scripts/tests/test_console_ownership.sh: line 244: 37850 Terminated: 15          OPAL_HOME="$opal_home" "$VENV_UVICORN" --app-dir "$app_dir" dashboard.backend.main:app --host 127.0.0.1 --port "$port" > "$log_path" 2>&1
+scripts/tests/test_console_ownership.sh: line 244: 37853 Terminated: 15          OPAL_HOME="$opal_home" "$VENV_UVICORN" --app-dir "$app_dir" dashboard.backend.main:app --host 127.0.0.1 --port "$port" > "$log_path" 2>&1
+[FAIL] S-6(a): pgrep 집합 중첩 미확인
+       detail: pgrep_set='38407
+38409
+38780' p1=38407 p2=38409 user=2329
+scripts/tests/test_console_ownership.sh: line 775: 38407 Terminated: 15          OPAL_HOME="$opal_home" "$VENV_UVICORN" --app-dir "$app_dir" dashboard.backend.main:app --host 127.0.0.1 --port "$port" > "$log_path" 2>&1
+[PASS] S-6(functional): P1 종료 + P2 생존 + 레코드 삭제 + stopped=true pid=<P1> + 사용자 7823 불변
+scripts/tests/test_console_ownership.sh: line 244: 38409 Terminated: 15          OPAL_HOME="$opal_home" "$VENV_UVICORN" --app-dir "$app_dir" dashboard.backend.main:app --host 127.0.0.1 --port "$port" > "$log_path" 2>&1
+scripts/tests/test_console_ownership.sh: line 863: 40684 Terminated: 15          OPAL_HOME="$S7_E2E_HOME" "$VENV_UVICORN" --app-dir "$REPO_ROOT" dashboard.backend.main:app --host 127.0.0.1 --port "$S7_P2_PORT" > "$SCRATCH/s7-p2.log" 2>&1
+[PASS] S-7①②③: kill -- -40684 그룹 종료 → P2(그룹) 종료 + P1 생존/health200 + 레코드 잔존 + 사용자7823 생존 단언
+scripts/tests/test_console_ownership.sh: line 863: 40682 Terminated: 15          OPAL_HOME="$opal_home" "$VENV_UVICORN" --app-dir "$app_dir" dashboard.backend.main:app --host 127.0.0.1 --port "$port" > "$log_path" 2>&1
+[PASS] S-7④: 그룹 회수가 레코드·identity를 훼손하지 않음 — stop 성공(stopped=true pid=<P1>)
+
+== [B-신규] AC-15/AC-16 (test-scenario.json S-13, S-14, S-16) ==
+
+[PASS] [B-신규] S-13(AC-15): 부팅-이전 started_at + 생존 센티넬 → console stop 실행 시 센티넬 생존 유지 + stopped=false pid=<pid> reason=stale_record 기대
+scripts/tests/test_console_ownership.sh: line 924: 41597 Killed: 9               bash -c 'while :; do sleep 1; done'
+scripts/tests/test_console_ownership.sh: line 951: 41637 Terminated: 15          bash -c 'while :; do sleep 1; done'
+[PASS] [B-신규] S-14(a): writer가 기록한 부팅-이후 started_at 레코드 + 생존 센티넬 → stopped=true + 센티넬 종료 (기록 포맷 왕복, 부팅-이후 오판정 없음)
+scripts/tests/test_console_ownership.sh: line 959: 41898 Terminated: 15          bash -c 'while :; do sleep 1; done'
+scripts/tests/test_console_ownership.sh: line 959: 42135 Terminated: 15          bash -c 'while :; do sleep 1; done'
+[PASS] [B-신규] S-14(b): started_at 손상·공백 레코드 + 생존 센티넬 → 파싱 실패 fail-open으로 기존 판정 유지 → stopped=true (stale 오판정 없음)
+[BLOCKED-전제불일치] [B-신규] S-16(AC-16, 전제불일치): .oppl-run/ 산출물이 git status --porcelain에 나타나지 않음 — 이미 충족, RED 관측 불가 — git status --porcelain 매치 수: 0 (0이면 이미 충족)
+
+사용자 127.0.0.1:7823 health (종료): 200 (시작 대비 동일)
+
+========================================================
+PASS: 21 | FAIL: 2 | SKIP: 0
+========================================================
+verdict: FAIL (2 failures)

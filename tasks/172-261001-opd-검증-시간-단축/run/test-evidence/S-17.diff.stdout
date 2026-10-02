@@ -1,0 +1,37 @@
+## deployed vs repo diff (changed files)
+same opal-convention-checker
+same opal-evaluator-agent
+same opal-test-agent
+same agents.md
+same harness/design-gate.md
+same harness/pm-review-gate.md
+same harness/test-cycle.md
+Files opal/core/references/tools.md and /Users/lucas/.opal/references/tools.md differ
+same skill op-gc-convention
+Files opal/skills/op-scenario-gate/SKILL.md and /Users/lucas/.opal/skills/op-scenario-gate/SKILL.md differ
+Files opal/skills/op-scenario-gate/references/legacy-adapters.md and /Users/lucas/.opal/skills/op-scenario-gate/references/legacy-adapters.md differ
+same skill opal-pilot-dev
+Files opal/skills/op-dev-test-scenario/SKILL.md and /Users/lucas/.opal/skills/op-dev-test-scenario/SKILL.md differ
+Files opal/skills/op-dev-test-scenario/references/test-scenario-guide.md and /Users/lucas/.opal/skills/op-dev-test-scenario/references/test-scenario-guide.md differ
+## mtime of deployed files vs install window
+Oct  1 14:19:49 2026 /Users/lucas/.opal/agents/opal-evaluator-agent/AGENT.md
+Oct  1 14:19:49 2026 /Users/lucas/.opal/tools/convention-precheck/convention_precheck.py
+Oct  1 14:19:51 2026 /Users/lucas/.opal/references/harness/test-cycle.md
+## install log head
+
+[0;36m╔══════════════════════════════════════════════════════╗[0m
+[0;36m║[0m  [1mOPAL AI Framework Installer[0m  (macOS)               [0;36m║[0m
+[0;36m║[0m  통합 배포: ~/.opal/ (skills + agents)                [0;36m║[0m
+[0;36m╚══════════════════════════════════════════════════════╝[0m
+
+
+
+
+[0;34m▸[0m OPAL 자산 배포 중...
+
+info: Codex 워크트리 런처는 `codex --help`에 `--no-daemon`과 `--add-dir`이 모두 표시되는 Codex CLI가 필요합니다.
+tools.md identical after stripping 변경이력 from repo: True | exact: False
+SKILL.md identical after stripping 변경이력 from repo: True | exact: False
+legacy-adapters.md identical after stripping 변경이력 from repo: True | exact: False
+SKILL.md identical after stripping 변경이력 from repo: True | exact: False
+test-scenario-guide.md identical after stripping 변경이력 from repo: True | exact: False

@@ -1,0 +1,29 @@
+{
+  "input_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md §Decisions and contracts D-1·D-3 (PLAN.md:70, :72) — D-1 and D-3 do not say how the `{files}` placeholder in `run_files` gets its value. They leave open whether paths are relative to the project root or absolute, how multiple files are joined, and how paths with spaces or shell special characters are quoted or escaped (shell string substitution vs. argv list). This decides what command actually runs, so the implementer should not have to choose it.",
+      "decision_clarity-2: PLAN.md §Decisions and contracts D-3·D-10 (PLAN.md:72, :79) — The plan does not say how `file_globs` (e.g. `[\"*.py\"]`) is matched. It could match the basename or the path relative to the project root, and with fnmatch or pathlib glob semantics. This changes whether a nested file such as `src/pkg/a.py` counts as `pattern_mismatch`, so the actual check scope (AC-3, C-5) depends on the implementer. TEST-SCENARIO S-5 only uses a root-level `a.py`, so it does not settle this either."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

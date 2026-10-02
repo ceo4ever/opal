@@ -1,0 +1,1 @@
+{"ok": true, "command": "scenario-status", "locked": true, "total": 18, "red_confirmed": 0, "red_required": 0, "red_confirmed_required": 0, "passed": 17, "failed": 1, "blocked": 0, "awaiting_human": 0, "status_counts": {"pass": 17, "fail": 1, "executor_unavailable": 0, "infra_error": 0, "blocked": 0, "awaiting_human": 0}}

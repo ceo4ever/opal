@@ -69,7 +69,7 @@
 | 워커 디스패치 | `worker.dispatch` |
 | 비프로젝트 `//` 커맨드 | `harness/skill-commands.md` |
 | MCP 또는 MCP 의존 스킬의 첫 사용 | `references/mcps.md` |
-| 파일·데이터 변환 도구의 첫 사용 | `references/tools.md` |
+| 파일·데이터 변환 또는 외부 CLI·에이전트 호출 도구의 첫 사용 | `references/tools.md` |
 | 메모리 쓰기 요청 | `harness/memory-learning.md` |
 | PM 상태에서 AS-IS 분석 요청 | `pm/asis-analysis.md` |
 
@@ -112,6 +112,7 @@ PM 상태의 행동 프로세스와 검토 기준은 `opal-pm.md`가 소유한�
 | 복잡한 구조적 추론 | `sequential-thinking` MCP | `references/mcps.md` |
 | 최신 외부 사실 | 웹 검색 도구 | 없음 |
 | 파일·데이터 변환 | OPAL Tools | `references/tools.md` |
+| 다른 LLM·에이전트 헤드리스 호출(claude·codex·gemini 등) | `opal-agent` (`~/.opal/tools/opal-agent/run.sh`) | `references/tools.md` |
 | capability 검색·정확한 사용법 | `tool-scan` | `references/tools.md` |
 
 - 읽기·검색·분석처럼 부수효과 없는 도구는 필요한 시점에 선제 사용한다.

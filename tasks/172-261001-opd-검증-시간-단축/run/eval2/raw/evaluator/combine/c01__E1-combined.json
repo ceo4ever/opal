@@ -1,0 +1,29 @@
+{
+  "input_bundle_hash": "96944daaa30a59a0389908d9bb8e3d78964623bae569758cc0f7d29117e9ed6f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md §Findings/회귀 확인 및 §Work items W-1 — 새 상태 `recovery_required`가 canonical task path 해석, status·remove 가드, 허브 브리핑·Console의 허용 상태 집합에 닿았을 때의 동작(remove를 차단할지 허용할지, status에 어떻게 표현할지, Console에 어떻게 표시할지)이 정해져 있지 않습니다. W-1은 '목록과 영향 판정 기록'만 요구하고 해당 소비자 파일은 어느 Work item의 변경 대상에도 없습니다. 그래서 영향이 확인되면 수정할지, 범위를 늘릴지, 그대로 둘지를 구현자가 정하게 됩니다.",
+      "decision_clarity-2: PLAN.md §Decisions and contracts '실패 안전 분류' 행 및 §Release and recovery '실측 경계' — 'bounded lease polling'과 '설정 상한'을 정하는 설정 키 이름, 기본값, 위치(`setting.default.json`의 `launcher` 블록인지 여부)가 없습니다. S-8의 bounded timeout을 판정하는 기준값을 구현자가 고르게 됩니다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

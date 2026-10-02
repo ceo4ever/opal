@@ -1,0 +1,39 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+    "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+    "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+    "opal/tools/ownership-tool/tests/test_codex_identity.py",
+    "opal/tools/ownership-tool/tests/test_session_start.py",
+    "opal/tools/worktree-launcher/tests/test_adapter_orca.py",
+    "opal/tools/worktree-launcher/tests/test_cli.py",
+    "opal/tools/worktree-launcher/tests/test_codex_handoff.py",
+    "opal/tools/worktree-launcher/tests/test_integration.py",
+    "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+    "opal/tools/worktree-launcher/tests/test_settings.py",
+    "opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py",
+    "opal/tools/worktree-launcher/worktree_launcher/cli.py",
+    "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+    "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+    "opal/tools/worktree-tool/schema/worktree.schema.json",
+    "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+    "opal/tools/worktree-tool/worktree_tool.py",
+    "scripts/install-mac.sh",
+    "scripts/install/windows.ps1",
+    "scripts/tests/test_agent_adapter_fields.sh"
+  ],
+  "findings": [],
+  "evidence": [
+    "모델 기반 변경 구간 검사 — 기계 규칙 제외",
+    "21 files examined in designated ranges",
+    "CONVENTIONS.md §파일 구조, §언어 규칙, §네이밍 규칙 적용"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

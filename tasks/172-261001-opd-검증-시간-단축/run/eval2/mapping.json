@@ -1,0 +1,25 @@
+{
+ "note": "불투명 ID<->사례 라벨 (호출 중에는 작업 경로 밖에 둔다). ID는 checker·evaluator 공통 풀에서 무작위 배정",
+ "checker": {
+  "162-defect": "c10",
+  "161-pass": "c07",
+  "163-pass": "c06",
+  "169-pass": "c11",
+  "syn-m1-skill-no-description": "c09",
+  "syn-m2-changelog-section": "c02",
+  "syn-m3-camelcase-py": "c18",
+  "syn-j1-korean-identifier": "c04",
+  "syn-j2-english-doc-section": "c17",
+  "syn-ok-clean": "c12"
+ },
+ "evaluator": {
+  "pass-161": "c03",
+  "pass-163": "c01",
+  "pass-169": "c14",
+  "defect-162-i1": "c08",
+  "defect-163-i1": "c16",
+  "defect-167-i2": "c13",
+  "defect-168-i2": "c05",
+  "defect-169-i2": "c15"
+ }
+}

@@ -1,0 +1,13 @@
+{
+  "artifact_path": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c02__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md",
+  "findings_path": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c02__K3/out/gc-findings-convention-2026-10-01T00-00-00",
+  "summary": "opal/core/references/demo-guide.md 검사 완료 — 강제 위반 없음. Advisory finding 1개: 문서 이력 절 누적 (라인 13 '## 변경이력'). git 로그 및 DONE.md로 위임 권고.",
+  "status": "completed",
+  "check_status": "pass",
+  "missing_capabilities": [],
+  "blockers": [],
+  "changed_files": [
+    "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c02__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md",
+    "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c02__K3/out/gc-findings-convention-2026-10-01T00-00-00"
+  ]
+}

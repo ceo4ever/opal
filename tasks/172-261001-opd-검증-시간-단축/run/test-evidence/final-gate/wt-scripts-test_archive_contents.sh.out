@@ -1,0 +1,18 @@
+[PASS] TC-A1: dashboard/frontend/src/pages/tasks/ 포함 (Console FE 빌드 전제)
+[PASS] TC-A2: opal/tools/cmux-tool/docs/ 포함
+[PASS] TC-A3: code-scan 테스트 픽스처의 중첩 .opal/ 포함 (242건)
+[PASS] TC-B: 루트 tasks/ 제외 유지
+[PASS] TC-B: 루트 docs/ 제외 유지
+[PASS] TC-B: 루트 .opal/ 제외 유지
+[PASS] TC-B: 루트 .github/ 제외 유지
+[PASS] TC-B: 루트 .gitignore 제외 유지
+[PASS] TC-B: 루트 .gitattributes 제외 유지
+[PASS] TC-C: 의도된 제외 외 누락 0건 (추적 4450건 대조)
+[PASS] TC-D: VERSION export-subst 치환 확인 (값: v0.7.3-45-g03dde089)
+[FAIL] TC-E: Claude hooks source는 있으나 Stop guard 계약 문자열 누락
+       detail: transition_action=continue / next_action / stop_hook_active 확인 필요
+
+========================================================
+PASS: 11 | FAIL: 1
+========================================================
+verdict: FAIL (1 failures)

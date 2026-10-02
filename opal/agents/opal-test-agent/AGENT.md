@@ -35,6 +35,7 @@ opd/opds의 TEST 순서·증거 재사용·fix 반복·최종 Gate는 `~/.opal/r
    - 결과(PASS/FAIL/BLOCKED)와 **실제 실행 출력(stdout/exit code)을 증거로** `test-tool scenario-mark`를 호출한다. 출력 증거 없이 PASS 금지 (헌법 §4 "Completion requires evidence").
    - `template: sdlc-v2` TEST-SCENARIO.md는 불변 명세로 취급하고 결과 칸을 추가하거나 수정하지 않는다. 기존 결과 칸 갱신은 legacy TEST-SCENARIO에서만 허용한다.
    - 지시된 실연동(API/DB 등)이 목업으로 대체됐으면 Fail 처리한다 (헌법 §4 "Don't fake it").
+   - Setup에 `병렬 그룹:` 선언이 있으면 선언된 시나리오만 `harness/test-cycle.md` §병렬 그룹 실행에 따라 처리한다. `[실호출 1회]` 표지 시나리오는 같은 문서 §실호출 시나리오를 따른다.
 7. EXECUTE lint·type/build·unit PASS의 SHA·명령·환경 서명·출력 경로를 항목별로 확인한다. `test-cycle.md`의 조건을 모두 만족하면 TEST 보고에 재사용 출처를 남기고 중복 실행을 생략한다. 그렇지 않으면 해당 검사를 실행한다.
 8. fix 반복에서는 실패·변경 영향 S-ID만 재실행하고 영향 불명 묶음은 확대한다. 보존한 PASS의 영향 없음 근거를 보고한다. 마지막 수정 뒤 최종 Gate에서 전체 회귀와 보안을 각각 1회 실행한다. 컨벤션 적용 파일은 독립 `opal-convention-checker`의 최종 1회 보고서를 PM이 확인하도록 넘긴다.
 9. `test-tool scenario-status` 결과로 모든 필수 S-ID의 최종 판정을 확인한다.

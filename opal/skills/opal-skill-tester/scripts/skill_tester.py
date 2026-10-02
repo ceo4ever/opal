@@ -142,6 +142,20 @@ def _install_drift():
         a, b = src_root / s, OPAL / d
         if a.exists() and b.exists() and a.read_bytes() != b.read_bytes():
             warns.append(f"설치본이 소스와 다름: {d} — install 후 실행 권장")
+    # state-tool 하위 모듈(state_tool_parts/*.py) — 설치본에 state_tool.py가 있을 때 파일명 합집합을 쌍으로 비교
+    if (OPAL / "tools/state-tool/state_tool.py").exists():
+        src_parts = src_root / "opal/tools/state-tool/state_tool_parts"
+        dst_parts = OPAL / "tools/state-tool/state_tool_parts"
+        names = sorted({p.name for p in src_parts.glob("*.py")} | {p.name for p in dst_parts.glob("*.py")})
+        for name in names:
+            a, b = src_parts / name, dst_parts / name
+            d = f"tools/state-tool/state_tool_parts/{name}"
+            if not a.is_file():
+                warns.append(f"설치본에만 있는 하위 모듈: {d} — install 후 실행 권장")
+            elif not b.is_file():
+                warns.append(f"설치본에 없는 하위 모듈: {d} — install 후 실행 권장")
+            elif a.read_bytes() != b.read_bytes():
+                warns.append(f"설치본이 소스와 다름: {d} — install 후 실행 권장")
     return warns
 
 
@@ -415,8 +429,10 @@ def _stage_minutes(evs, stage_order):
 def _framework_fingerprint(skill):
     import hashlib
     h = hashlib.sha256()
-    for rel in ("tools/state-tool/state_tool.py", f"skills/{PILOT_SKILL_DIRS.get(skill, '')}/SKILL.md"):
-        p = OPAL / rel
+    parts = sorted((OPAL / "tools/state-tool/state_tool_parts").glob("*.py"), key=lambda p: p.name)
+    paths = [OPAL / "tools/state-tool/state_tool.py", *parts,
+             OPAL / f"skills/{PILOT_SKILL_DIRS.get(skill, '')}/SKILL.md"]
+    for p in paths:
         if p.is_file():
             h.update(p.read_bytes())
     ver = (OPAL / "VERSION").read_text(encoding="utf-8").strip() if (OPAL / "VERSION").exists() else "?"

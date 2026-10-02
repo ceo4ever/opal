@@ -1,0 +1,306 @@
+TAP version 13
+# Subtest: [T080/L2-F12a] TS-044 (S-14): 이 저장소 .opal/code-scan.json에 전역 headerSource "inline"이 명시된다
+ok 1 - [T080/L2-F12a] TS-044 (S-14): 이 저장소 .opal/code-scan.json에 전역 headerSource "inline"이 명시된다
+  ---
+  duration_ms: 0.764542
+  ...
+# Subtest: [T080/L2-F12a] TS-044 (S-14): 이 저장소 루트에서 8커맨드가 전부 exit 0 (게이트가 자기 저장소를 막지 않는다)
+ok 2 - [T080/L2-F12a] TS-044 (S-14): 이 저장소 루트에서 8커맨드가 전부 exit 0 (게이트가 자기 저장소를 막지 않는다)
+  ---
+  duration_ms: 685.193875
+  ...
+# Subtest: [T080/L2-F12a] TS-046 (S-15): git check-ignore .opal/code-scan.json → exit 1 (비무시) — 077 TS-055 반전
+ok 3 - [T080/L2-F12a] TS-046 (S-15): git check-ignore .opal/code-scan.json → exit 1 (비무시) — 077 TS-055 반전
+  ---
+  duration_ms: 10.875916
+  ...
+# Subtest: [T080/L2-F12a] TS-047 (S-15): git check-ignore .opal/code-map/index.json → exit 1 유지 (077 단언 불변)
+ok 4 - [T080/L2-F12a] TS-047 (S-15): git check-ignore .opal/code-map/index.json → exit 1 유지 (077 단언 불변)
+  ---
+  duration_ms: 13.4675
+  ...
+# Subtest: [T080/L2-F12c] TS-045 (S-14): 미설정 트리에서 brain-tool sync-header 실패 detail에 header_source_unset이 실린다
+ok 5 - [T080/L2-F12c] TS-045 (S-14): 미설정 트리에서 brain-tool sync-header 실패 detail에 header_source_unset이 실린다
+  ---
+  duration_ms: 72.366125
+  ...
+# Subtest: [T080/L2-F12c] TS-045 (S-14): brain_tool.py는 @header JSON 블록을 제외한 기능 코드가 HEAD와 바이트 동일 — stderr 병기 설계로 무수정 성립 (PLAN §3.5.4)
+ok 6 - [T080/L2-F12c] TS-045 (S-14): brain_tool.py는 @header JSON 블록을 제외한 기능 코드가 HEAD와 바이트 동일 — stderr 병기 설계로 무수정 성립 (PLAN §3.5.4)
+  ---
+  duration_ms: 9.273125
+  ...
+# Subtest: [T080/L2-F13] TS-060 (S-17): legacy-repo 픽스처가 headerSource "inline"을 명시한다 (캡처 조건)
+ok 7 - [T080/L2-F13] TS-060 (S-17): legacy-repo 픽스처가 headerSource "inline"을 명시한다 (캡처 조건)
+  ---
+  duration_ms: 0.1305
+  ...
+# Subtest: [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "scan --json" 출력이 골든과 바이트 동일
+ok 8 - [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "scan --json" 출력이 골든과 바이트 동일
+  ---
+  duration_ms: 26.534542
+  ...
+# Subtest: [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "domain" 출력이 골든과 바이트 동일
+ok 9 - [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "domain" 출력이 골든과 바이트 동일
+  ---
+  duration_ms: 26.8275
+  ...
+# Subtest: [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "layer" 출력이 골든과 바이트 동일
+ok 10 - [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "layer" 출력이 골든과 바이트 동일
+  ---
+  duration_ms: 26.587416
+  ...
+# Subtest: [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "search auth --json" 출력이 골든과 바이트 동일
+ok 11 - [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "search auth --json" 출력이 골든과 바이트 동일
+  ---
+  duration_ms: 26.315459
+  ...
+# Subtest: [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "exports token --json" 출력이 골든과 바이트 동일
+ok 12 - [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "exports token --json" 출력이 골든과 바이트 동일
+  ---
+  duration_ms: 25.472042
+  ...
+# Subtest: [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "summary" 출력이 골든과 바이트 동일
+ok 13 - [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "summary" 출력이 골든과 바이트 동일
+  ---
+  duration_ms: 27.1625
+  ...
+# Subtest: [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "depends auth_service" 출력이 골든과 바이트 동일
+ok 14 - [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "depends auth_service" 출력이 골든과 바이트 동일
+  ---
+  duration_ms: 29.203209
+  ...
+# Subtest: [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "missing" 출력이 골든과 바이트 동일
+ok 15 - [T080/L2-F13] TS-060 (S-17): headerSource inline 명시 하 "missing" 출력이 골든과 바이트 동일
+  ---
+  duration_ms: 26.83875
+  ...
+# Subtest: [T080/L2-F13] TS-064 (S-17): inline 모드 scan --json 결과에 _source 키 0건
+ok 16 - [T080/L2-F13] TS-064 (S-17): inline 모드 scan --json 결과에 _source 키 0건
+  ---
+  duration_ms: 25.8025
+  ...
+# Subtest: [T080/L2-F13] TS-061 (S-17): fixtures/golden/README.md에 캡처 조건 + 077 대비 diff 근거가 기록된다
+ok 17 - [T080/L2-F13] TS-061 (S-17): fixtures/golden/README.md에 캡처 조건 + 077 대비 diff 근거가 기록된다
+  ---
+  duration_ms: 0.495125
+  ...
+# Subtest: [T080/L2-완료기준] TS-063 (S-16): 픽스처 전량(20종 이상)이 headerSource를 2택 값으로 명시한다
+ok 18 - [T080/L2-완료기준] TS-063 (S-16): 픽스처 전량(20종 이상)이 headerSource를 2택 값으로 명시한다
+  ---
+  duration_ms: 11.087291
+  ...
+# Subtest: [T080/L2-완료기준] TS-062 (S-16): 전체 테스트 스위트가 전량 pass하고 exit 0
+not ok 19 - [T080/L2-완료기준] TS-062 (S-16): 전체 테스트 스위트가 전량 pass하고 exit 0
+  ---
+  duration_ms: 8399.523041
+  location: '/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:628:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    [RED expect] 게이트 도입으로 기존 케이스가 붕괴하지 않고 전량 pass해야 한다 (완료 기준). exit 1 | 
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:647:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: [T080/L2-F11] TS-050 (S-18): 규칙 문서 5종 변경이력 표에 신규 행(버전 · YYYY-MM-DD HH:mm KST · (080))
+not ok 20 - [T080/L2-F11] TS-050 (S-18): 규칙 문서 5종 변경이력 표에 신규 행(버전 · YYYY-MM-DD HH:mm KST · (080))
+  ---
+  duration_ms: 1.089541
+  location: '/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:655:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    [RED expect] 5문서 변경이력에 버전·일시(KST)·태스크 번호 (080)을 갖춘 신규 행이 있어야 함
+    + actual - expected
+    
+    + [
+    +   'pmReviewGate(0행 중 형식 충족 0)',
+    +   'toolsMd(0행 중 형식 충족 0)'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'pmReviewGate(0행 중 형식 충족 0)'
+    1: 'toolsMd(0행 중 형식 충족 0)'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:663:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: [T080/L2-F11] TS-051 (S-18): 규칙 문서 5종에 readonly를 판정 근거로 서술하는 문장 0건 (폐기 표기는 허용)
+ok 21 - [T080/L2-F11] TS-051 (S-18): 규칙 문서 5종에 readonly를 판정 근거로 서술하는 문장 0건 (폐기 표기는 허용)
+  ---
+  duration_ms: 0.736833
+  ...
+# Subtest: [T080/L2-F12d] TS-052 (S-18): 규칙 문서 5종에 개인 식별자 신규 기재 0건 (역할명 PM/소유자만)
+ok 22 - [T080/L2-F12d] TS-052 (S-18): 규칙 문서 5종에 개인 식별자 신규 기재 0건 (역할명 PM/소유자만)
+  ---
+  duration_ms: 8.570667
+  ...
+# Subtest: [T080/L2-F11] TS-053 (S-18): header-rules.md 기록 위치 판정표의 reason이 3값 폐쇄 도메인
+ok 23 - [T080/L2-F11] TS-053 (S-18): header-rules.md 기록 위치 판정표의 reason이 3값 폐쇄 도메인
+  ---
+  duration_ms: 0.461375
+  ...
+# Subtest: [T080/L2-F11] TS-054 (S-18): code-scan-management.md 최소 구조 예시에 headerSource 포함
+ok 24 - [T080/L2-F11] TS-054 (S-18): code-scan-management.md 최소 구조 예시에 headerSource 포함
+  ---
+  duration_ms: 0.137667
+  ...
+# Subtest: [T080/L2-F11] TS-055 (S-18): docs/ 3종에 Task 080 변경이력 행 + CONVENTIONS 판정 근거 교체
+not ok 25 - [T080/L2-F11] TS-055 (S-18): docs/ 3종에 Task 080 변경이력 행 + CONVENTIONS 판정 근거 교체
+  ---
+  duration_ms: 0.79625
+  location: '/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:749:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    [RED expect] docs/ 3종에 Task 080 변경 기록이 있어야 함
+    + actual - expected
+    
+    + [
+    +   'architecture',
+    +   'project'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'architecture'
+    1: 'project'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:756:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: [T080/L2-F11b] TS-066 (S-18): code-scan.js DEFAULT_CONFIG·USAGE·loadConfig에 auto 리터럴 0건
+ok 26 - [T080/L2-F11b] TS-066 (S-18): code-scan.js DEFAULT_CONFIG·USAGE·loadConfig에 auto 리터럴 0건
+  ---
+  duration_ms: 14.490167
+  ...
+# Subtest: [T080/L2-F11b] TS-067 (S-18): 3문서에 auto를 유효값으로 서술하는 문장 0건 (폐기 표기는 허용)
+ok 27 - [T080/L2-F11b] TS-067 (S-18): 3문서에 auto를 유효값으로 서술하는 문장 0건 (폐기 표기는 허용)
+  ---
+  duration_ms: 1.000709
+  ...
+# Subtest: [T080/L2-F11c] TS-068 (S-18): header-rules.md·tools.md에 write_to 3값 반영 + reason과 한 목록에 섞이지 않음
+ok 28 - [T080/L2-F11c] TS-068 (S-18): header-rules.md·tools.md에 write_to 3값 반영 + reason과 한 목록에 섞이지 않음
+  ---
+  duration_ms: 1.737833
+  ...
+# Subtest: [T080/L2-F11d] TS-070 (S-18): headerSource 판정·재계산 지점이 resolveHeaderSource 외 0곳
+ok 29 - [T080/L2-F11d] TS-070 (S-18): headerSource 판정·재계산 지점이 resolveHeaderSource 외 0곳
+  ---
+  duration_ms: 11.072958
+  ...
+# Subtest: [T080/L2-F11d] TS-071 (S-18): discover 산출물 scopes[]에 headerSource 키 0건
+ok 30 - [T080/L2-F11d] TS-071 (S-18): discover 산출물 scopes[]에 headerSource 키 0건
+  ---
+  duration_ms: 31.308709
+  ...
+# Subtest: 077 TS-052 (S-19): 저장소 루트 scan --json 결과에 fixtures/ 경로 0건 (픽스처 이중 격리)
+ok 31 - 077 TS-052 (S-19): 저장소 루트 scan --json 결과에 fixtures/ 경로 0건 (픽스처 이중 격리)
+  ---
+  duration_ms: 80.876959
+  ...
+# Subtest: 077 TS-053 (S-19): 픽스처 루트 cwd 실행 결과에 저장소 파일 0건
+ok 32 - 077 TS-053 (S-19): 픽스처 루트 cwd 실행 결과에 저장소 파일 0건
+  ---
+  duration_ms: 29.079667
+  ...
+# Subtest: 077 TS-057: tests/ 전 테스트 파일이 @header를 보유하고 code-scan에 discoverable함
+not ok 33 - 077 TS-057: tests/ 전 테스트 파일이 @header를 보유하고 code-scan에 discoverable함
+  ---
+  duration_ms: 76.614291
+  location: '/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:953:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    테스트 파일도 @header 자산이다 (header-standard.md §3)
+    + actual - expected
+    
+    + [
+    +   'test-hub-root.js: task=118',
+    +   'test-scan-root-landing.js: task=118'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'test-hub-root.js: task=118'
+    1: 'test-scan-root-landing.js: task=118'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:969:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: 077 TS-048 (S-21): header-rules.md에 "별도 도구 없음" 문구 잔존 0건
+ok 34 - 077 TS-048 (S-21): header-rules.md에 "별도 도구 없음" 문구 잔존 0건
+  ---
+  duration_ms: 0.234625
+  ...
+# Subtest: 077 TS-051 (S-21): brain-tool README 2소스 문언 + opal-harness.md §9 code-scan 서브명령 정합
+not ok 35 - 077 TS-051 (S-21): brain-tool README 2소스 문언 + opal-harness.md §9 code-scan 서브명령 정합
+  ---
+  duration_ms: 0.220125
+  location: '/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:978:1'
+  failureType: 'testCodeFailure'
+  error: 'opal-harness.md §9 code-scan 행의 서브명령 열거 유지, got: undefined'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/Volumes/Data/AiStudio/workspace/opal/opal/tools/code-scan/tests/test-regression.js:984:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: 077 S-21: pm-review-gate.md에 validate --changed 게이트 절차 + 커버리지 언급 유지
+ok 36 - 077 S-21: pm-review-gate.md에 validate --changed 게이트 절차 + 커버리지 언급 유지
+  ---
+  duration_ms: 0.15525
+  ...
+1..36
+# tests 36
+# suites 0
+# pass 31
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9714.543042

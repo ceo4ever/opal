@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": "low",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 49.2,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 41745,
+  "stop_reason": "end_turn",
+  "session_id": "eac3622c-400f-4796-801e-bdfcdb51f254",
+  "total_cost_usd": 0.24574640000000003,
+  "usage": {
+   "input_tokens": 14,
+   "cache_creation_input_tokens": 41300,
+   "cache_read_input_tokens": 162392,
+   "output_tokens": 4804,
+   "output_tokens_details": {
+    "thinking_tokens": 157
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 41300,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 973,
+     "cache_read_input_tokens": 40661,
+     "cache_creation_input_tokens": 639,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 639
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 14,
+    "outputTokens": 4804,
+    "cacheReadInputTokens": 162392,
+    "cacheCreationInputTokens": 41300,
+    "webSearchRequests": 0,
+    "costUSD": 0.24574640000000003,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 157,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "컨벤션 검사는 끝났고 finding은 0건입니다. 아래 반환 JSON으로 결과를 정리합니다.\n\n```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/161-pass__K1/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/161-pass__K1/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"target 43개 파일을 base_ref 624ea8a0^ 기준 변경 구간으로 검사했다. 사전 검사와 모델 검사 모두 finding 0건이다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \".../out/convention-review-input-2026-10-01T00-00-00.json\",\n    \".../out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \".../out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \".../out/GC-CONVENTION-2026-10-01T00-00-00.md\"\n  ]\n}\n```\n\n- **진입 게이트:** `worker.dispatch` receipt 검증은 `ok: true`였습니다.\n- **사전 검사:** `convention-precheck scan`은 pass, finding 0건이었습니다. `merge` 결과도 finding 0건이고 `dropped`는 0이었습니다.\n- **모델 검사:** `review-input`의 변경 구간만 확인했습니다. 한국어 문서, 영어 식별자, 플랫폼 분기 격리에서 위반을 찾지 못했습니다.\n- **diff 범위:** 모델 검사는 test-tool 관련 파일의 `+` 라인(`git diff` 앞 300줄)을 훑는 방식이었습니다. 그 뒤쪽 변경 구간과 `unit-real` 픽스처, 테스트 파일은 diff 내용을 읽지 않았습니다.\n- **`references`:** 적용한 기준은 `docs/CONVENTIONS.md`입니다. 기준 문서가 있어 `missing_capabilities`는 비어 있습니다.\n- **산출물:** 반환 JSON의 `changed_files`는 경로 앞부분을 `...`으로 줄여 적었습니다. 전체 경로는 `output_dir` 아래입니다.",
+  "ttft_ms": 5866,
+  "type": "result",
+  "duration_ms": 44276,
+  "uuid": "90c4c2c2-3b34-4591-bbb9-4d769d8a804d",
+  "ttft_stream_ms": 5513,
+  "time_to_request_ms": 533,
+  "first_content_frame_ms": 5513,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

@@ -30,7 +30,7 @@
 
 신규 태스크 기본값(플래그 없음): **agentic · worktree · PM 조율(`actor=coordinator`)**. 기존 태스크 재개는 저장된 mode·작업본·actor를 그대로 쓴다. 판정은 `state-tool resolve-start`가 한다.
 
-신규 `coordinator`(PM 경로) 태스크는 opd·opds 모두 EXECUTE 진입 전에 TASK 작성 → TASK 확인 → PLAN 작성(`## Findings` 포함) → TEST-SCENARIO 작성 → 설계 게이트 → 설계 확인의 6행을 거친다. 설계 게이트는 결정론 검사(TASK 5절·Findings 4소절·Work item 연결 등)와 독립 `opal-evaluator-agent`(`design-rubric` phase) 1회 판정을 함께 요구하며, TASK·PLAN·TEST-SCENARIO 세 문서의 묶음 hash가 통과 hash와 일치할 때만 EXECUTE에 진입한다. 원문 SSOT는 `opal/core/references/harness/design-gate.md`.
+신규 `coordinator`(PM 경로) 태스크는 opd·opds 모두 EXECUTE 진입 전에 TASK 작성 → TASK 확인 → PLAN 작성(`## Findings` 포함) → TEST-SCENARIO 작성 → 설계 게이트 → 설계 확인의 6행을 거친다. 설계 게이트는 결정론 검사(TASK 5절·Findings 4소절·Work item 연결 등)와 독립 `opal-evaluator-agent`(`design-rubric` phase의 설계·시나리오 `scope` 병렬 두 호출을 `design-gate combine`으로 결합)의 판정을 함께 요구하며, TASK·PLAN·TEST-SCENARIO 세 문서의 묶음 hash가 통과 hash와 일치할 때만 EXECUTE에 진입한다. 원문 SSOT는 `opal/core/references/harness/design-gate.md`.
 
 | 플래그 | 효과 |
 |---|---|

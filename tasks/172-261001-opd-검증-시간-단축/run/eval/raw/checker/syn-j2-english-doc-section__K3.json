@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "haiku",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 133.8,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 127067,
+  "stop_reason": "end_turn",
+  "session_id": "dff7a0c3-0887-4d9d-8651-c7551e177b85",
+  "total_cost_usd": 0.2968812,
+  "usage": {
+   "input_tokens": 177,
+   "cache_creation_input_tokens": 61552,
+   "cache_read_input_tokens": 1039752,
+   "output_tokens": 13925,
+   "output_tokens_details": {
+    "thinking_tokens": 5571
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 61552,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 8,
+     "output_tokens": 2199,
+     "cache_read_input_tokens": 66975,
+     "cache_creation_input_tokens": 1859,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1859
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-haiku-4-5-20251001": {
+    "inputTokens": 177,
+    "outputTokens": 13925,
+    "cacheReadInputTokens": 1039752,
+    "cacheCreationInputTokens": 61552,
+    "webSearchRequests": 0,
+    "costUSD": 0.2968812,
+    "contextWindow": 200000,
+    "maxOutputTokens": 32000,
+    "thinkingTokens": 5571,
+    "canonicalModel": "claude-haiku-4-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 22,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "---\n\n## 📋 검사 완료 보고\n\n### ✅ Event 검증\n- **event**: `worker.dispatch` \n- **verification**: `ok: true`\n- **required_documents**: 4개 모두 검증 완료\n  - OPAL Agents Registry\n  - PM 디스패치 전 프로세스\n  - 에이전트 컨텍스트 주입 계약\n  - Observability (관측)\n\n### 🔍 컨벤션 검사 실행\n\n**입력**:\n- 대상 파일: `opal/core/references/demo-guide.md`\n- 기준: `docs/CONVENTIONS.md`\n- base_ref: `ecff583f4455e1581944a47c9da6a06bb176ba6f`\n- 범위: `all`\n\n**절차**:\n1. ✅ 입력 검증\n2. ✅ 기준 로드 (docs/CONVENTIONS.md §언어 규칙)\n3. ✅ 사전 검사 (convention-precheck scan)\n   - mechanical rules: 4개\n   - findings: 0개\n4. ✅ 변경 구간 모델 검사 (라인 2-19)\n   - 발견: 영문 문단 (라인 15-19)\n5. ✅ Merge (최종 findings JSON)\n6. ✅ 보고서 생성 (Markdown)\n\n### 📊 검사 결과\n\n| 항목 | 값 |\n|------|-----|\n| 총 이슈 수 | **1** |\n| Critical | 0 |\n| High | 0 |\n| **Medium** | **1** ⚠️ |\n| Low | 0 |\n| Info | 0 |\n| 자동 수정 가능 | 0 |\n| 수동 조치 필요 | 1 |\n\n### 🎯 발견된 이슈\n\n**GC-001** | `opal/core/references/demo-guide.md:15`\n\n- **카테고리**: language-consistency\n- **위반**: CONVENTIONS.md §언어 규칙\n- **설명**: \"## 사용 예시\" 섹션(15-19줄)에 영문 문단이 포함\n  > The average function accepts any list of numbers and returns their arithmetic mean...\n- **기준**: \"문서 본문은 한국어 (기술 용어는 영어 병기)\"\n- **해결**: 영문 문단을 한국어로 번역하여 교체\n- **심각도**: Medium | **신뢰도**: High | **집행 수준**: blocking (T0)\n\n### 📁 산출물\n\n```\n/out/\n├── GC-CONVENTION-2026-10-01T00-00-00.md\n├── gc-findings-convention-2026-10-01T00-00-00.json\n├── gc-findings-convention-precheck-2026-10-01T00-00-00.json\n└── convention-review-input-2026-10-01T00-00-00.json\n```\n\n---\n\n## 📤 최종 반환\n\n```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-j2-english-doc-section__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-j2-english-doc-section__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"컨벤션 검사 완료: 1개 이슈 발견 (Medium severity - 문서 본문 영문 사용 위반). docs/CONVENTIONS.md §언어 규칙에 따르면 문서 본문은 한국어로 작성되어야 하나, opal/core/references/demo-guide.md의 '사용 예시' 섹션(15-19줄)에 영문 문단이 포함되어 있습니다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-j2-english-doc-section__K3/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-j2-english-doc-section__K3/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-j2-english-doc-section__K3/out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-j2-english-doc-section__K3/out/convention-review-input-2026-10-01T00-00-00.json\"\n  ]\n}\n```\n\n✅ **검사 완료** — 모든 산출물이 output_dir에 생성되었습니다.",
+  "ttft_ms": 4784,
+  "type": "result",
+  "duration_ms": 130564,
+  "uuid": "af075f53-dfcf-4035-90d4-5550418045ac",
+  "ttft_stream_ms": 793,
+  "time_to_request_ms": 59,
+  "first_content_frame_ms": 793,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

@@ -1,0 +1,29 @@
+{
+  "input_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md §Decisions and contracts D-4·D-5 (PLAN.md:73-74) — D-5는 `required: false` 계층의 `tool_unavailable`·`not_configured`만 다룬다. 선택 계층의 `run`이 `fail`일 때의 정책이 정해지지 않았다. 구현자가 직접 골라야 하는 것: 전체 `status`가 `fail`이 되는가, 후속 계층이 stop-on-fail로 `not_run`이 되는가, `stopped_at`이 기록되는가, exit가 5인가 0인가. 이 경우를 다루는 시나리오도 없다(S-7은 선택 계층의 `not_configured`만 다룬다).",
+      "decision_clarity-2: PLAN.md §Decisions and contracts D-4 (PLAN.md:73) — `incomplete` 조건 두 개가 동시에 성립할 수 있다. 예: 필수 계층 하나가 `not_configured`이고 나머지 계층은 모두 `not_applicable`이라 `pass` 계층이 0개인 경우다. 이때 최상위 `reason`을 `required_layer_unverified`와 `no_check_executed` 중 무엇으로 낼지 우선순위가 없다. 최상위 `reason`이 단일 값인지 목록인지도 정해지지 않았다. 계층이 모두 `fail` 없이 끝났을 때 `stopped_at` 값(null인지 생략인지)과, D-9 `hint` 필드가 D-7 계층 필드 목록에 들어가는지도 구현자가 골라야 한다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

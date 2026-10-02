@@ -1,0 +1,123 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": null,
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "sonnet",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c17/repo",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 2935 chars>",
+  "<prompt 2228 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 47.3,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 42806,
+  "stop_reason": "end_turn",
+  "session_id": "7c053854-39a9-4552-99ed-5aae995f072a",
+  "total_cost_usd": 0.38131319999999996,
+  "usage": {
+   "input_tokens": 18,
+   "cache_creation_input_tokens": 59001,
+   "cache_read_input_tokens": 458116,
+   "output_tokens": 5365,
+   "output_tokens_details": {
+    "thinking_tokens": 247
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 59001,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1089,
+     "cache_read_input_tokens": 70121,
+     "cache_creation_input_tokens": 1262,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1262
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 18,
+    "outputTokens": 5365,
+    "cacheReadInputTokens": 458116,
+    "cacheCreationInputTokens": 59001,
+    "webSearchRequests": 0,
+    "costUSD": 0.38131319999999996,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 247,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 10,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "컨벤션 검사를 마쳤고, `demo-guide.md`에서 blocking 1건이 나왔습니다. 판정은 `FAIL`이고 검사 실행 자체는 정상(`check_status: pass`)입니다. 진입 게이트의 `worker.dispatch` receipt 검증은 `ok: true`였습니다.\n\n- **사전 검사:** 기계 규칙 4종(@header, frontmatter, 변경이력 제목, 파일명)에서는 0건이었습니다.\n- **GC-001 (medium, blocking):** `opal/core/references/demo-guide.md:15-19`의 `## 사용 예시` 본문이 영어 4줄입니다. `docs/CONVENTIONS.md §언어 규칙`은 문서 본문을 한국어로 쓰고 기술 용어만 영어로 병기하도록 정하는데, 같은 문서의 나머지 본문은 한국어입니다. 해결 방안은 해당 줄을 한국어로 번역하고 `average`, `TypeError` 같은 기술 용어만 영어로 두는 것입니다.\n- **기준 문서:** `docs/CONVENTIONS.md`가 있어 `missing_capabilities`는 비어 있습니다.\n- **소스 수정:** 대상 소스 파일은 수정하지 않았습니다.\n\n```json\n{\n  \"artifact_path\": \"/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c17__K0/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/raw/checker/c17__K0/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"demo-guide.md 변경 구간(2~19행) 검사. 사전 검사 0건, 모델 검사 1건(GC-001: §사용 예시 영어 본문, CONVENTIONS.md §언어 규칙 위반, medium/blocking). 판정 FAIL.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \".../out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \".../out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \".../out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \".../out/convention-review-input-2026-10-01T00-00-00.json\"\n  ]\n}\n```\n\n`changed_files`의 경로는 모두 `output_dir` 아래이고, 줄여 쓴 `...`는 위 `artifact_path`의 `output_dir` 경로입니다.",
+  "ttft_ms": 1959,
+  "type": "result",
+  "duration_ms": 44105,
+  "uuid": "0a9321a4-4e88-431d-baf3-5c5f72798a6e",
+  "ttft_stream_ms": 1575,
+  "time_to_request_ms": 49,
+  "first_content_frame_ms": 1576,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

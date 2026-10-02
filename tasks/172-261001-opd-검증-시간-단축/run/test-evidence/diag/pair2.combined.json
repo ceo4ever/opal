@@ -1,0 +1,30 @@
+{
+  "input_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:72 (D-3), PLAN.md:76 (D-7) — 계층 응답 `scope`가 `kind:\"project\"`일 때 `requested`·`checked`·`excluded`·`reason` 값이 정의되지 않았다. 특히 `--changed-files`가 없거나 빈 경우의 `scope.reason` 코드가 없다(`file_scope_unsupported`를 쓸지, null일지, 새 코드를 둘지). `kind:\"project\"`일 때 `checked`를 `[]`, `null`, 프로젝트 루트 중 무엇으로 할지도 구현자가 고르게 된다.",
+      "decision_clarity-2: PLAN.md:73 (D-4), PLAN.md:76 (D-7) — 최상위 `reason`(비통과 시)의 값이 `incomplete`에 대해서만 나열돼 있고 `fail`일 때는 정의되지 않았다. `incomplete` 사유 여러 개가 동시에 성립하면(예: 필수 계층 `not_configured`이면서 `pass` 0개) `required_layer_unverified`와 `no_check_executed` 중 무엇이 우선인지도 정해지지 않았다. 계층 `check.status`가 가질 수 있는 값의 목록도 없다.",
+      "decision_clarity-3: PLAN.md:70 (D-1), PLAN.md:72 (D-3) — `run_files`의 `{files}` 자리표시자 치환 규칙이 없다. 파일을 구분하는 방식, 공백·특수문자가 든 경로의 셸 인용(shlex.quote 적용 여부), 넘기는 경로를 요청에 적힌 그대로 쓸지, 프로젝트 기준 상대 경로로 정규화할지, 절대 경로로 쓸지를 구현자가 고르게 된다. 이 선택에 따라 S-9·S-10이 단언하는 `cmd` 문자열이 달라진다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

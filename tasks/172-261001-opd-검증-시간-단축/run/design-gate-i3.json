@@ -1,0 +1,32 @@
+{
+ "input_bundle_hash": "4500c8369c0520cfb2b4b1ccf0048128ab160bea319c2773ae1b1ac9034ad38c",
+ "iteration": 3,
+ "design": {
+  "axes": {
+   "completeness": "PASS",
+   "decision_clarity": "PASS",
+   "executability": "PASS",
+   "recoverability": "PASS"
+  },
+  "gaps": []
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "resolved_gaps": [
+  {
+   "id": "completeness-1",
+   "status": "resolved",
+   "reason": "W-7이 docs/PROJECT.md 82행 갱신을 포함"
+  }
+ ],
+ "verdict": "pass",
+ "rewrite_target": null,
+ "advisories": []
+}

@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "haiku",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 108.6,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 101347,
+  "stop_reason": "end_turn",
+  "session_id": "a9650e17-1251-4a35-ba66-4c396bf937b4",
+  "total_cost_usd": 0.21651669999999998,
+  "usage": {
+   "input_tokens": 89,
+   "cache_creation_input_tokens": 59008,
+   "cache_read_input_tokens": 514267,
+   "output_tokens": 9397,
+   "output_tokens_details": {
+    "thinking_tokens": 2669
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 59008,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 8,
+     "output_tokens": 865,
+     "cache_read_input_tokens": 65226,
+     "cache_creation_input_tokens": 1064,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1064
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-haiku-4-5-20251001": {
+    "inputTokens": 89,
+    "outputTokens": 9397,
+    "cacheReadInputTokens": 514267,
+    "cacheCreationInputTokens": 59008,
+    "webSearchRequests": 0,
+    "costUSD": 0.21651669999999998,
+    "contextWindow": 200000,
+    "maxOutputTokens": 32000,
+    "thinkingTokens": 2669,
+    "canonicalModel": "claude-haiku-4-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 15,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "---\n\n## 검사 완료 요약\n\n✅ **op-gc-convention 스킬 검사 완료**\n\n### 실행 프로세스\n\n| 단계 | 결과 |\n|------|------|\n| **1. 입력 검증** | ✅ 43개 파일 확인 |\n| **2. 기준 로드** | ✅ docs/CONVENTIONS.md 적용 |\n| **3. 사전 검사** | ✅ convention-precheck scan: pass (findings 0) |\n| **4. 변경 구간 모델 검사** | ✅ 43개 파일 검사 (mechanical rules 4개 제외) |\n| **5. 결합** | ✅ merge: pass (dropped 0) |\n| **6. 보고서 생성** | ✅ GC-CONVENTION-2026-10-01T00-00-00.md |\n\n### 검사 결과\n\n| 항목 | 수치 |\n|------|------|\n| **검사된 파일** | 43개 |\n| **컨벤션 위반** | 0개 ✅ |\n| **기준 문서** | docs/CONVENTIONS.md (enforce) |\n| **기계 규칙 위반** | 0개 ✅ |\n\n### 생성된 산출물\n\n- **보고서**: `GC-CONVENTION-2026-10-01T00-00-00.md`\n- **Findings JSON**: `gc-findings-convention-2026-10-01T00-00-00.json`\n\n### 판정\n\n**✅ PASS** — 모든 변경이 프로젝트 컨벤션을 준수합니다.",
+  "ttft_ms": 3171,
+  "type": "result",
+  "duration_ms": 104980,
+  "uuid": "4a3916d9-14e1-4551-8014-cac8c7146322",
+  "ttft_stream_ms": 1955,
+  "time_to_request_ms": 108,
+  "first_content_frame_ms": 1956,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

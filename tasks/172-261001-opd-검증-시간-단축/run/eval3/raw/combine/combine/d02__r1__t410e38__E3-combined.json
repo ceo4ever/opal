@@ -1,0 +1,29 @@
+{
+  "input_bundle_hash": "0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "PASS",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md §Work items W-6, §Release and recovery '실패 시' — AC-6은 '태스크 162의 재기동 및 첫 checkpoint 경로의 실제 결과가 기록된다'를 요구하지만, W-6은 '설치본 검증 명령 준비'까지만 다룬다. Release 절은 install 배포와 162 재기동을 '실행 전 중단·보고'로 둔다. 그래서 실제 설치·162 재기동·checkpoint 결과를 누가, 어느 Work item에서, 어떤 승인 후에 기록하는지가 구현자의 선택으로 남아 있다.",
+      "executability-1: PLAN.md §Approach·§Decisions and contracts 전 행 — 구현 범위와 검증 조건을 'REQUEST.md §변경 내용 1~8·§테스트·§162 복구 순서'에 위임하고 있으나, task_folder에 REQUEST.md가 없다(ls 결과: PLAN.md, run, state.json, STATE.md, TASK.md, TEST-SCENARIO.md). 구현자는 위임된 상세 계약(예: §변경 내용 2-1·2-2의 분류 세부, §162 복구 순서의 확인 항목)을 볼 수 없어 추가 설계 없이 구현할 수 없다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

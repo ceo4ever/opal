@@ -1,0 +1,41 @@
+{
+  "input_bundle_hash": "0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:51 (W-6) · PLAN.md:66 (Release and recovery) — AC-6 requires that '태스크 162의 재기동 및 첫 checkpoint 경로의 실제 결과가 기록된다', but W-6 only does '설치본 검증 명령 준비'. No Work item has an owner, order or completion criterion for running the formal install (REQUEST.md:193), the failure-path measurement (REQUEST.md:194), restarting 162 (REQUEST.md:195-199) or recording the first checkpoint (REQUEST.md:200) after approval. The implementer has to decide who runs the post-approval measurements, when, and where the results are recorded.",
+      "completeness-2: PLAN.md:66 — 'REQUEST.md §162 복구 순서' (REQUEST.md:38-43: close by exact handle → triple confirmation of show stale + list absent + PID 51444 gone → re-query lease/registry → hub_owned with generation+1) is only cited as a precondition. It is not tied to a Work item or a scenario (S-9 starts from '162 기존 자식 종료 3중 확인' as a given). The implementer has to decide who runs this manual recovery of the existing session, with what commands, and where the confirmation evidence goes.",
+      "decision_clarity-1: PLAN.md:49 (W-3 'bounded lease polling') · PLAN.md:65 — REQUEST.md:55 requires '대기 상한은 launcher 설정 키로 두되 코드 기본값을 갖는다', but the PLAN does not fix the setting key name, the default timeout or the polling interval. The implementer has to choose the launcher setting key name and the default wait/poll values, and these become part of the public setting.default.json contract.",
+      "decision_clarity-2: PLAN.md:46 (W-1) · PLAN.md:35 — The PLAN decides to preserve terminal_creation and observed_lease_owner on the recovery_required transition and to allow only the recover path for recovery_required→hub_owned. It does not fix the ownership-set CLI interface: the argument names/form for passing terminal_creation and observed_lease_owner, and how worktree-tool tells a recover-path call apart from other callers. It also leaves open the response field names for recover's '미확인 항목'. And W-3 changes only orca.py while the adapters/ directory has no common base (cmux.py, generic.py, opal_agent_fallback.py are separate), so how the other adapters return 'unknown(status_unsupported)' (launcher_core hasattr fallback vs. stubs in each adapter) is also open. W-1 and W-3 are split across P1/P2, so the implementer has to choose these CLI arguments, response fields and unsupported-adapter mechanism."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "cheaper_layer",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "S-6 runs both pytest and a real Codex sandbox (`pytest / 두 도구 및 실제 Codex sandbox`). The test itself is a 구현 전 RED test. Its contract has three parts: lock `os.open` EPERM/EACCES/EROFS becomes `registry_write_denied` with no 30-second wait; codex-start returns ok with the `registry_owner_deferred_to_hub` diagnostic only when the lease claim succeeded but the registry write was denied; a foreign owner fails. pytest with an injected errno and a fake lease proves all three from the recorded results. The real-sandbox boot that triggers this path is already covered by S-9 (covers AC-4 and C-1, runs on the installed copy with real Orca/Codex, and expects codex-start ok). S-6 has no `[실호출 1회]` marker, and its AC (AC-4) does not judge model output quality.",
+      "recommendation": "Limit S-6's method and environment column to `pytest / worktree-tool·ownership-tool` and drop the real Codex sandbox part. If the real sandbox errno needs observing, record the observed errno and the `registry_owner_deferred_to_hub` diagnostic as an extra expected result in S-9."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

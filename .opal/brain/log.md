@@ -516,3 +516,18 @@
 - 신규: [[console-auth-default-deny-gate]], [[console-entry-token-channel]], [[legacy-brain-spawn-policy-gate]]
 - 출처: task:172
 
+## [2026-10-01] ingest | CLOSE ingest — 태스크 172 검증 시간 단축
+- 신규: [[entity/convention-precheck]], [[concept/design-gate-scope-parallel-judgement-combine]], [[concept/agent-effort-policy-inherit-by-default]], [[concept/test-parallel-group-single-agent-only]], [[concept/real-invocation-scenario-limit]]
+- 출처: task:172
+
+## [2026-10-01] ingest | task:172 ADD-3·4·5 반영 — 평가자 effort low 결정, 측정 왜곡 교훈 페이지 신설, evaluator entity·effort 정책 갱신
+- 신규: [[evaluator-eval-set-label-fixture-measurement-lesson]]
+- 갱신: [[agent-effort-policy-inherit-by-default]], [[opal-evaluator-agent]]
+- 출처: task:172
+## [2026-10-01] ingest | CLOSE ingest — 태스크 173 opds-opd2-사전심사-재시도상한과-지적추적
+- 신규: [[opd2-plan-review-reverify-doc-over-tool-relaxation]], [[opd2-plan-review-fail-limit-and-findings-tracking]]
+- 출처: task:173
+## [2026-10-01] ingest | CLOSE ingest — 태스크 174 header 이력 차단·state-tool 분할
+- 신규: [[behavior-preserving-split-and-block-conversion-lessons]]
+- 출처: task:174
+

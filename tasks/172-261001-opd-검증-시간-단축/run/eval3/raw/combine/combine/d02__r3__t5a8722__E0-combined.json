@@ -1,0 +1,40 @@
+{
+  "input_bundle_hash": "0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "recoverability-1: PLAN.md:66 (## Release and recovery) — Recovery of task 162's existing session is delegated entirely to 'REQUEST.md §162 복구 순서', but REQUEST.md does not exist in the task folder (TASK.md says it is 'in the same folder', PLAN.md:6 links it, and `test -e REQUEST.md` → absent). The implementer has to decide which checks to run before restarting 162, in what order, and what to do if any check fails. The PLAN should state the restore steps itself or copy REQUEST.md into the folder.",
+      "recoverability-2: PLAN.md:63-66 (## Release and recovery) — The plan only says 'stop and report' before install. It gives no recovery path for when the installed version fails S-8/S-9/S-10 after deploy, for example Codex boot failing for users because of the `--no-daemon` default, or a wrong settings migration. The implementer has to decide how to restore the previous installed version, how to undo a migrated `--no-daemon` default (and whether the old default argv is backed up), and whether a slot left in `recovery_required` is handled by `recover` alone or by a manual procedure."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": [
+        "S-6",
+        "S-9"
+      ],
+      "basis": "Both S-6's 방법·환경 '실제 Codex sandbox' and S-9's '설치본·실제 Orca/Codex' run codex-start for real inside the Codex sandbox, and both cover AC-4 and C-1. S-6 also has a pytest leg that already proves the lock/registry EPERM·EACCES·EROFS → `registry_write_denied` classification, the immediate response with no 30-second wait, and the foreign-owner failure. That makes S-6's real-call leg a second real boot that repeats S-9. The only signal S-9 does not yet assert is the `registry_owner_deferred_to_hub` diagnostic.",
+      "recommendation": "Limit S-6 to pytest (fault injection in both tools). Merge the real-sandbox part into S-9 by adding this to S-9's 기대 결과: 'if the hub registry write is denied, codex-start returns ok with the `registry_owner_deferred_to_hub` diagnostic, and the hub then confirms the same child ID as owner'."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

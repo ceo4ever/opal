@@ -1,0 +1,36 @@
+{
+  "input_bundle_hash": "6af7a3f22658edfbb4d04b8ba7aaabd4defe044f54abf95e5410731cfe32a9e4",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "PASS",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": []
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "misclassified",
+      "targets": [
+        "S-6"
+      ],
+      "basis": "TEST-SCENARIO.md:24 S-6은 유형이 `check`이고 조건이 '없음(정적 검사)'이다. 그런데 행동에 '재배포 1회 실행 후 `~/.opal/tools/brain-tool/brain_tool.py`를 diff'가 들어 있다. 이는 `scripts/install-mac.sh`를 실제로 실행해 배포본(`~/.opal/`)을 바꾸는 행동 검증이므로, 6개 파일 grep 같은 정적 검사와 같은 Check 시나리오에 둘 수 없다. 이 시나리오는 배포본 상태라는 부수효과를 만들고, 실행 성공이 기대 결과의 조건이다(D-12).",
+      "recommendation": "S-6에서는 문서와 docstring grep, `git diff --name-only` 경로 확인만 정적 check로 남긴다. 'install-mac.sh 재배포 → brain_tool.py diff 동일'은 별도 행동 시나리오로 분리한다. 그 시나리오에는 조건(재배포 가능한 로컬 설치 환경)과 시점(구현 후)을 함께 적는다."
+    }
+  ],
+  "verdict": "pass",
+  "rewrite_target": null
+}

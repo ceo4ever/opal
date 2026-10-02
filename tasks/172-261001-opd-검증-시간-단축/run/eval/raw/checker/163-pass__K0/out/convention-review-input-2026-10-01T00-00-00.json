@@ -1,0 +1,403 @@
+{
+  "base_sha": "c6e295d467aace71d994ca139819061f64143d02",
+  "head_sha": "7a6b3017b1dc30a97e36c196a35869c44ba78b6a",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          34,
+          74
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          27,
+          47
+        ],
+        [
+          142,
+          204
+        ],
+        [
+          207,
+          231
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          105,
+          138
+        ],
+        [
+          173,
+          199
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/ownership-tool/tests/test_codex_identity.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          89,
+          112
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/ownership-tool/tests/test_session_start.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          646,
+          689
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/tests/test_adapter_orca.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          119,
+          211
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/tests/test_cli.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          168,
+          202
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/tests/test_codex_handoff.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          26,
+          104
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/tests/test_integration.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          4,
+          45
+        ],
+        [
+          61,
+          125
+        ],
+        [
+          127,
+          179
+        ],
+        [
+          181,
+          305
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          19,
+          148
+        ],
+        [
+          156,
+          176
+        ],
+        [
+          186,
+          206
+        ],
+        [
+          219,
+          239
+        ],
+        [
+          300,
+          324
+        ],
+        [
+          372,
+          408
+        ],
+        [
+          481,
+          503
+        ],
+        [
+          518,
+          549
+        ],
+        [
+          610,
+          631
+        ],
+        [
+          637,
+          662
+        ],
+        [
+          667,
+          687
+        ],
+        [
+          696,
+          716
+        ],
+        [
+          787,
+          817
+        ],
+        [
+          915,
+          984
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/tests/test_settings.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          332,
+          361
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          42,
+          62
+        ],
+        [
+          113,
+          140
+        ],
+        [
+          351,
+          455
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/worktree_launcher/cli.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          104,
+          129
+        ],
+        [
+          205,
+          233
+        ],
+        [
+          261,
+          308
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          27,
+          77
+        ],
+        [
+          145,
+          168
+        ],
+        [
+          287,
+          450
+        ],
+        [
+          501,
+          680
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          28,
+          53
+        ],
+        [
+          96,
+          119
+        ],
+        [
+          121,
+          141
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-tool/schema/worktree.schema.json",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          14
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          3159,
+          3180
+        ],
+        [
+          3279,
+          3300
+        ],
+        [
+          3352,
+          3509
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-tool/worktree_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          17
+        ],
+        [
+          30,
+          50
+        ],
+        [
+          92,
+          114
+        ],
+        [
+          154,
+          187
+        ],
+        [
+          939,
+          978
+        ],
+        [
+          987,
+          1009
+        ],
+        [
+          1902,
+          1930
+        ],
+        [
+          1933,
+          1976
+        ],
+        [
+          1983,
+          2077
+        ],
+        [
+          2981,
+          3017
+        ]
+      ]
+    },
+    {
+      "path": "scripts/install-mac.sh",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1157,
+          1177
+        ],
+        [
+          1196,
+          1248
+        ]
+      ]
+    },
+    {
+      "path": "scripts/install/windows.ps1",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          469,
+          556
+        ]
+      ]
+    },
+    {
+      "path": "scripts/tests/test_agent_adapter_fields.sh",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          722,
+          808
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "input_bundle_hash": "27522876917ef63792862d076b7e3a5b9c51cfe3f699079408d6fcf4ccf38387",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: `PLAN.md` §Findings 미확인 가정 — \"semi-agentic·agentic 모드별 user_confirm 담당자 차이를 아직 조사하지 않았다\"가 조사 Work item, 결정 또는 Risk 대응으로 이어지지 않는다. `PLAN.md` §Risks H-1의 설계 대응도 \"없음(아직 미해결)\"이다. 그래서 AC-2(`TASK.md` §Acceptance criteria)를 어떻게 충족할지가 구현자에게 남는다",
+      "completeness-2: `PLAN.md` §Work items W-1 — AC-1·AC-2에 연결은 되어 있지만 전이별로 마크할 행 목록이 없다. 연결된 `TEST-SCENARIO.md` §Scenarios S-1·S-2의 기대 결과도 \"정확한 대응 미정\"·\"미정\"이라, AC가 충족됐는지 판정하는 기준을 무엇으로 삼을지가 구현자에게 남는다",
+      "decision_clarity-1: `PLAN.md` §Decisions and contracts D-1 — \"각 전이가 어떤 행을 마크하는지는 구현 중 lifecycle.py 코드를 보면서 정한다\"라서 lifecycle.py 각 전이가 마크할 state.json 행을 고르는 일이 구현자에게 남는다",
+      "decision_clarity-2: `PLAN.md` §Decisions and contracts D-1 — \"semi-agentic은 사용자가, agentic은 PM이 마크하거나 혹은 자동 승인될 수도 있다 — 모드별 정확한 담당자는 아직 정하지 않았다\"라서 모드별 user_confirm 행 마크 주체(사용자/PM/자동 승인)를 고르는 일이 구현자에게 남는다",
+      "executability-1: `PLAN.md` §Work items W-1 — 구체적 변경이 \"어떤 행을 마크할지, user_confirm 행을 누가 마크할지는 구현하면서 정한다\"라서 추가 설계 없이는 구현할 수 없다. 담당(opal-task-agent)·실행 그룹(P1)·파일 소유권은 명확하지만, 호출 인자(마크 대상 행)를 정하는 설계가 구현자에게 남는다",
+      "recoverability-1: `PLAN.md` §Release and recovery — \"별도 배포 절차 없음(축소판)\"만 있고 검증 순서와 실패 시 복구 경로가 없다. H-1이 경고한 \"모드별 동작 어긋남\"이나 잘못된 행 마크가 일어났을 때 state.json 행 상태를 어떻게 확인하고 되돌릴지(C-1 스키마 불변 유지 포함)가 구현자에게 남는다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 0
+    },
+    "average": 0.667,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md:22` (S-1) — 기대 결과가 \"state.json의 어떤 행이 마크되는지 확인(정확한 대응 미정)\"이라 lifecycle.py 각 전이마다 어떤 state.json 행이 마크되어야 통과인지를 구현·테스트 작성자가 정해야 한다. AC-1을 판정할 기준이 없다.",
+      "goal-2: `TEST-SCENARIO.md:23` (S-2) — 기대 결과가 \"담당자(사용자/PM/자동)가 누구인지 확인(미정)\"이라 user_confirm 행을 누가 마크해야 통과인지를 작성자가 정해야 한다. AC-2가 요구하는 agentic 모드를 다루는 시나리오도 없어, 그 모드를 검증할지 말지도 작성자에게 남는다.",
+      "boundary-1: `TEST-SCENARIO.md` §Scenarios — 정상 전이 경로만 있다. state-tool mark 실패, 잘못된 행 마크·중복 마크, agentic 자동 승인 경로, C-1(state.json 스키마 불변) 위반 같은 실패·경계 경로를 검증할지와 기대 동작(실패로 볼지, 재시도할지)을 작성자가 정해야 한다."
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

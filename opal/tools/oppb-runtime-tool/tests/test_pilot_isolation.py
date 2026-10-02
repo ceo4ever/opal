@@ -62,6 +62,12 @@ EVALUATOR_AGENT_MD_PATH = REPO_ROOT / "opal" / "agents" / "opal-evaluator-agent"
 SCENARIO_GATE_SKILL_MD_PATH = REPO_ROOT / "opal" / "skills" / "op-scenario-gate" / "SKILL.md"
 OPPB_TOOL_DIR = REPO_ROOT / "opal" / "tools" / "oppb-runtime-tool"
 
+
+def _read_state_tool_source() -> str:
+    """state_tool.py 뒤에 state_tool_parts/*.py를 파일명 오름차순으로 이은 현재 소스 텍스트."""
+    paths = [STATE_TOOL_PATH, *sorted((STATE_TOOL_PATH.parent / "state_tool_parts").glob("*.py"))]
+    return "\n".join(p.read_text(encoding="utf-8") for p in paths)
+
 # git-relative(POSIX, 슬래시) 경로 — git show/log는 OS 경로 구분자가 아니라 이 형식을 요구한다.
 REGISTRY_REL = "opal/core/references/opal-skills-registry.json"
 AGENTS_MD_REL = "opal/core/references/agents.md"
@@ -382,7 +388,7 @@ class SharedInfraAdditiveTest(unittest.TestCase):
         회귀를 그 자리에서 잡는다. 기대 추가값은 PM 재측정과 이 파일 작성 중 실측이
         일치한 최소 하한이며, 이후 132가 값을 더 추가해도(하한의 상위집합이면) 통과한다."""
         base_source = _git_show(BASELINE_COMMIT, "opal/tools/state-tool/state_tool.py")
-        current_source = STATE_TOOL_PATH.read_text(encoding="utf-8")
+        current_source = _read_state_tool_source()
         checks = (
             ("STAGE_ENUM", _STAGE_ENUM_RE, {"P0", "P1", "P2", "P3", "P4", "P5"}),
             ("validate_pipeline_spec() 지역 skill_enum", _LOCAL_SKILL_ENUM_RE, {"oppb"}),

@@ -1,0 +1,44 @@
+{
+ "input_bundle_hash": "748b9c0b1342f5583b8b37b5f2c2bfa91d2cbb1d533d66398d3a80e8c3e8a69b",
+ "iteration": 2,
+ "design": {
+  "axes": {
+   "completeness": "FAIL",
+   "decision_clarity": "PASS",
+   "executability": "PASS",
+   "recoverability": "PASS"
+  },
+  "gaps": [
+   "completeness-1: PLAN.md:93 (W-7 구체적 변경) — docs/PROJECT.md:82 '1회 판정' 갱신을 W-8이 W-7에 넘기지만 W-7 지시에는 도구 표 행 추가만 있음"
+  ]
+ },
+ "scenario": {
+  "scores": {
+   "goal": 2,
+   "adoption": 2,
+   "boundary": 2
+  },
+  "average": 2.0,
+  "gaps": []
+ },
+ "resolved_gaps": [
+  {
+   "id": "completeness-1",
+   "status": "unresolved",
+   "reason": "docs/PROJECT.md:82가 W-7 지시에 없음"
+  },
+  {
+   "id": "decision_clarity-1",
+   "status": "resolved",
+   "reason": "D-1 정의됨"
+  },
+  {
+   "id": "executability-1",
+   "status": "resolved",
+   "reason": "D-13 호출 경로 확정"
+  }
+ ],
+ "verdict": "fail",
+ "rewrite_target": "plan",
+ "advisories": []
+}

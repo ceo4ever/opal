@@ -1,0 +1,45 @@
+{
+  "check": "convention",
+  "status": "pass",
+  "checked_files": [
+    "opal/tools/demo-tool/demoHelper.py"
+  ],
+  "findings": [
+    {
+      "id": "GC-001",
+      "fingerprint": "58a658a4a2122a68",
+      "category": "naming",
+      "severity": "medium",
+      "confidence": "high",
+      "disposition": "advisory",
+      "rule_id": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+      "source_tier": "T0",
+      "location": {
+        "file": "opal/tools/demo-tool/demoHelper.py",
+        "line": 1
+      },
+      "evidence": "새 파일명 `demoHelper.py`가 규칙(snake_case `.py`)에 맞지 않는다",
+      "impact": "파일 이름 규칙이 어긋나 탐색·자동화 규칙이 흔들린다",
+      "remediation": {
+        "guidance": "파일명을 규칙에 맞게 바꾼다",
+        "reference": "CONVENTIONS.md §네이밍 규칙 §파일/폴더",
+        "auto_fixable": false
+      },
+      "verification": "파일명이 규칙 정규식에 맞는다",
+      "suppression": null
+    }
+  ],
+  "evidence": [
+    "git merge-base 39b9b231c9f096dfff0f3be1c71f18173375aa76 HEAD -> 39b9b231c9f096dfff0f3be1c71f18173375aa76",
+    "git diff --name-status --diff-filter=ACMR 39b9b231c9f0 HEAD -> 1 files",
+    "git diff -U0 per changed file (context-lines=10)",
+    "mechanical rules: 4"
+  ],
+  "references": [
+    "docs/CONVENTIONS.md",
+    "opal/core/references/opal-doc-standard.md",
+    "opal/core/references/harness/gc-finding-schema.md"
+  ],
+  "missing_capabilities": [],
+  "report_path": null
+}

@@ -1,0 +1,77 @@
+{
+  "base_sha": "0dedee8d8040a34013c29a335e487e4980a00a18",
+  "head_sha": "502115decef225334db6bc64a2b17a9122a6efbf",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "opal/tools/brain-tool/brain_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ],
+        [
+          147,
+          167
+        ],
+        [
+          216,
+          237
+        ],
+        [
+          303,
+          328
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/brain-tool/tests/test_brain_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ],
+        [
+          2541,
+          2575
+        ],
+        [
+          2635,
+          2695
+        ],
+        [
+          2732,
+          2771
+        ],
+        [
+          2834,
+          2872
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-tool/worktree_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ],
+        [
+          2869,
+          2889
+        ]
+      ]
+    }
+  ]
+}

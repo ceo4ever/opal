@@ -28,6 +28,7 @@ from unittest.mock import patch, MagicMock
 _TOOL_DIR = pathlib.Path(__file__).parent.parent
 sys.path.insert(0, str(_TOOL_DIR))
 import state_tool as ST
+import state_tool_parts.base as ST_BASE  # 시각·모듈 로더 주입점(patch 대상)
 
 # 056: TestOpplSkillInit용 — run.sh 공개 인터페이스 subprocess 실호출 (mock 금지, red-first.md §4)
 _RUN_SH = _TOOL_DIR / "run.sh"
@@ -144,7 +145,7 @@ SIMPLE_ROWS_SPEC = json.dumps([
 
 def _mock_now():
     """date.js 호출을 모킹하는 패치 컨텍스트."""
-    return patch.object(ST, "get_kst_datetime", return_value="2026-05-01 23:00")
+    return patch.object(ST_BASE, "get_kst_datetime", return_value="2026-05-01 23:00")
 
 
 def make_args(**kwargs):
@@ -937,6 +938,23 @@ def _extract_current_status_region(md):
 
 _REPO_ROOT_093 = _TOOL_DIR.parent.parent.parent
 _SRC_093 = _TOOL_DIR / "state_tool.py"
+
+
+def _read_state_tool_source():
+    """현재 state-tool 소스 텍스트 — state_tool.py 뒤에 state_tool_parts/*.py를 파일명 오름차순으로 잇는다."""
+    paths = [_SRC_093, *sorted((_TOOL_DIR / "state_tool_parts").glob("*.py"))]
+    return "\n".join(p.read_text(encoding="utf-8") for p in paths)
+
+
+def _read_head_state_tool_source():
+    """HEAD 시점 state-tool 소스 텍스트 — HEAD의 state_tool.py 뒤에 HEAD의 state_tool_parts/*.py를 잇는다."""
+    def _show(rel):
+        return subprocess.run(["git", "show", f"HEAD:./{rel}"], cwd=str(_TOOL_DIR),
+                              capture_output=True, text=True).stdout
+    listed = subprocess.run(["git", "ls-tree", "--name-only", "HEAD", "state_tool_parts/"],
+                            cwd=str(_TOOL_DIR), capture_output=True, text=True).stdout.split()
+    parts = sorted(n for n in listed if n.endswith(".py"))
+    return "\n".join([_show("state_tool.py"), *(_show(n) for n in parts)])
 _OPD_PIPELINE_093 = (_REPO_ROOT_093 / "opal" / "skills" / "opal-pilot-dev"
                      / "references" / "pipeline.json")
 
@@ -1477,7 +1495,7 @@ _EXISTING_SKILL_REGRESSION_CONFIRM_ROW_ID = 5  # "사용자 확인" 행 — mark
 
 # ═════════════════════════════════════════════════════════════════════════════
 # T132 W-3 보강 — validate_pipeline_spec() 로컬 skill_enum 누락 RED
-# (PM 실측 결함 — state_tool.py:1247 skill_enum에 "oppb" 미등록)
+# (PM 실측 결함 — state_tool_parts/guards.py:424 skill_enum에 "oppb" 미등록)
 # ═════════════════════════════════════════════════════════════════════════════
 #
 # state_tool.py에는 skill 허용 목록이 두 곳에 있다: ① init --skill argparse

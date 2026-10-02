@@ -1,5 +1,5 @@
 # Project Brain Index
-> 갱신: 2026-10-01 18:00
+> 갱신: 2026-10-02 17:41
 
 ## 도메인
 (아직 등록된 페이지 없음)
@@ -7,6 +7,7 @@
 ## 엔티티
 - [[brain-tool]] — brain-tool #tool #knowledge
 - [[code-scan-tool]] — code-scan #tool #util #code-scan
+- [[convention-precheck]] — convention-precheck (컨벤션 결정론 사전 검사 도구) #tool #convention #verification
 - [[fw-inbox-collection]] — fw-inbox (프레임워크 개선 수집소) #runtime-directory #improvement #collection #deployment
 - [[git-sync-tool]] — git-sync-tool #tool #git #workspace #safety
 - [[header-standard-doc]] — header-standard.md — @header 작성 표준 #header-standard #reference #code-scan
@@ -45,6 +46,7 @@
 - [[actor-axis-orthogonal-to-mode]] — 실행 주체(actor) 축은 모드 축과 직교한다 #actor #mode #orthogonal-axis #task-122 #task-156 #pattern
 - [[adapter-body-model-level-substitution]] — 어댑터 본문 model 레벨 치환 — frontmatter 비대칭 해소 (032) #adapter #install #model #platform #sub-dispatch #constitution
 - [[additive-field-extension-over-schema-replacement]] — 레지스트리 확장은 스키마 교체보다 additive 필드 추가가 기능 후퇴를 막는다 #registry #schema-evolution #skill-registry #task-105
+- [[agent-effort-policy-inherit-by-default]] — 에이전트 effort 정책 (미선언은 세션 상속) #agent #effort #policy
 - [[agent-md-digest-pattern]] — AGENT.md 다이제스트 패턴 — 비서 코어 lean 분리 #bootstrap #digest #lean-core #assistant-tier #pm-tier #architecture
 - [[agentic-output-direct-verification-lesson]] — agentic 산출물 직접 검증 의무 — PM 직접 실행이 self-confirming을 포착 #lesson #verification #self-confirming #pm-discipline #red-first
 - [[analysis-drift-pm-cross-verify-lesson]] — ANALYSIS 드리프트 분석 환각 → PM 강화검토 패턴 (학습) #analysis #hallucination #pm-gate #lesson-learned #drift
@@ -55,6 +57,7 @@
 - [[auto-approve-user-confirmation-axis-separation]] — 자동 승인 판정의 두 독립 축 — CLOSE 축과 모드 경계 축은 분리된다 #state-tool #gate-design #pattern #task-093
 - [[b7-action-completion-loop]] — B7 액션 완성도 루프 — triage 기반 경계 재설계 순환 구조 #oppd #action-loop #triage #verification #b7
 - [[backward-compat-default-value-discipline]] — 하위호환 확장의 기본값 규율 — 분기 인자 기본값을 기존 동작으로 #backward-compat #api-design #cli #pattern
+- [[behavior-preserving-split-and-block-conversion-lessons]] — 동작 보존 분할과 차단 전환의 교훈 #lesson #refactor #code-scan #state-tool
 - [[blanket-prohibition-blocks-required-artifacts]] — 워커 프롬프트의 포괄 금지가 규정 산출물을 막는다 — 금지 대신 반환 경로를 지정한다 #dispatch #prompt #worker #pm-discipline #lesson-learned
 - [[blind-reproduction-verification-test]] — 블라인드 재현 테스트 — 작성자 자기검증 배제 검증법 #verification #testing #scenario #ssot #evaluator
 - [[bootstrap-marker-skip-ladder]] — 부트스트랩 첫 줄 마커 3단 스킵 사다리 ([WORKER]/[ASSISTANT]/무마커) #bootstrap #2tier #assistant-tier #headless #pm-gate #architecture
@@ -126,6 +129,7 @@
 - [[deploy-artifact-verification-lesson]] — 동작검증은 배포 산출물+실 브라우저 기준으로 수행해야 한다 #verification #qa #deployment #lesson
 - [[design-gate-deterministic-pretier-separation]] — 설계 게이트 결정론/evaluator 2-tier 분리 — 회차 비소비 사전검사 #design-gate #state-tool #opd #opds #pm-path
 - [[design-gate-gaps-resolution-roundtrip]] — 설계 게이트 gaps 해소 보고 왕복 계약 (previous_gaps/resolved_gaps) #design-gate #evaluator #op-scenario-gate #gaps-contract
+- [[design-gate-scope-parallel-judgement-combine]] — 설계 게이트 scope 병렬 판정과 combine 결합 #design-gate #evaluator #state-tool
 - [[dev-pilot-profile-unification]] — 개발 Pilot Full/Short profile 통합 계약 #pilot #dev #opd #opds #compatibility
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
@@ -141,6 +145,7 @@
 - [[enforcement-basis-must-be-structural-not-voluntary]] — 강제의 판정 근거는 자발적 표시가 아니라 구조여야 한다 — 3회 우회 후 행 기반 판정 + CLOSE 차단 #enforcement #governance #state-tool #worker #measurement #lesson-learned
 - [[environment-probe-baseline-isolation]] — Environment Probe 준비 baseline 격리 #environment-probe #git #isolation #bootstrap #oppb
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
+- [[evaluator-eval-set-label-fixture-measurement-lesson]] — 평가자 model·effort 측정의 세 가지 왜곡 경로 (라벨 노출·fixture 결손·한도 장애) #lesson #evaluator #measurement #eval-set
 - [[evaluator-self-weakness-disclosure-pattern]] — 평가자에 PM 자기약점 명시 전달 + 신고사실 감점면제 금지 명문화 #lesson #evaluator #governance #opds
 - [[evidence-tier-asis-tobe-jurisdiction]] — 근거 등급 5단계 + AS-IS/TO-BE 관할 2축 #evidence #citation #architecture #opds
 - [[execution-observation-scope-citation-requirement]] — 실행 관측 인용은 스코프 병기 필수 — 단일파일 vs 디렉토리 수치 상이 #lesson #measurement #citation #opds
@@ -257,6 +262,8 @@
 - [[opal-security-model]] — OPAL 보안 모델 #security #install #mcp #supply-chain #owasp
 - [[opal-skill-classification-system]] — OPAL 스킬 분류 체계 — opal-pilot / op-* / opal-* 의미 계층 #skill-registry #classification #pilot #operator #architecture
 - [[opal-skill-tester]] — opal-skill-tester (opst) — 스킬 모의 실행 테스트 #opst #testing #skill
+- [[opd2-plan-review-fail-limit-and-findings-tracking]] — opd2 사전심사 fail 3회 상한과 지적 해소 추적 #opd2 #plan-review #findings
+- [[opd2-plan-review-reverify-doc-over-tool-relaxation]] — opd2 사전심사 재검증 정합은 도구 완화가 아니라 문서 수정으로 푼다 #opd2 #plan-review #fingerprint
 - [[opd2-state-tool-integration]] — opd2 state-tool 통합 #opd2 #state-tool #gate-guard #ssot #task-168
 - [[opdd-design-artifacts-path-pattern]] — opdd 설계 산출물 경로 패턴 — opwt 차용 + {설계} 변수 #architecture-decision #data-design #path #ssot #opwt
 - [[opdd-reverse-track-physical-first-order]] — 역공학 트랙 MODEL 순서는 물리가 먼저다 #architecture-decision #data-design #pipeline #reverse-engineering #task-104
@@ -302,6 +309,7 @@
 - [[pytest-subtests-parent-passed-masks-failure]] — pytest-subtests는 subtest 실패를 부모 PASSED로 표시한다 — 판정 단위를 서브케이스로 내린다 #testing #pytest #verification #lesson #task-096
 - [[read-based-gate-pattern]] — Read 기반 설정파일 게이트 패턴 #bootstrap #permission #gate #read-pattern #session-toggle
 - [[readme-ssot-principle]] — README는 SSOT를 따른다 — 문서·코드 불일치 시 SKILL.md가 정본 #readme #ssot #doc-code-mismatch #documentation
+- [[real-invocation-scenario-limit]] — 실호출 시나리오 한정 기준 #test #scenario #opal-agent
 - [[red-corpus-precedes-contract-fabricates-layout]] — RED 코퍼스를 구현 계약보다 먼저 쓰면 실재하지 않는 레이아웃을 전제한다 #red-first #fixture #test-design #lesson #task-138
 - [[red-first-hybrid-verification-track]] — RED-first 하이브리드 검증 트랙 — 도구 계약 변경 한정 적용 #verification #red-first #opal-agent #testing
 - [[red-test-commit-coercion-guard-lesson]] — RED 테스트가 실저장소 git archive 검증 시 커밋을 구조적으로 강요하는 결함 #red-first #test #git #lesson #guard
@@ -385,6 +393,7 @@
 - [[tag-removal-is-not-history-removal]] — 태그 제거는 이력 제거가 아니다 — 문장이 무엇을 말하는가 #header-standard #test-design
 - [[template-precedence-over-prose-norms]] — 템플릿 우위 법칙 — 규범은 산문보다 템플릿이 이긴다 #template-precedence #prose-norms #framework-norm #governance #harness-design
 - [[terminal-host-detection-from-own-process-lineage]] — 터미널 호스트는 자기 프로세스 계보로 판별한다 #bootstrap #terminal #task
+- [[test-parallel-group-single-agent-only]] — TEST 병렬 그룹은 단일 에이전트 안에서만 #test #parallel
 - [[test-path-layer-gap-masks-deployment-defect]] — 테스트 소스 경로와 배포본 경로의 계층 차이가 실사용 불가를 덮는다 #testing #deployment #layered-verification #task-105
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
 - [[test-scenario-pipeline-redesign]] — 테스트 시나리오 파이프라인 재설계 (2차원 매트릭스 + self-confirming 4분리) #testing #pipeline #framework #flow #task

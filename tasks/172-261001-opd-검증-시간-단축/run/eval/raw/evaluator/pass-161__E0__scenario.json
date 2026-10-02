@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": null,
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 57.4,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 51017,
+  "stop_reason": "end_turn",
+  "session_id": "164b7116-d30e-4324-ad31-691f85f1a341",
+  "total_cost_usd": 0.381244,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 34914,
+   "cache_read_input_tokens": 137160,
+   "output_tokens": 3723,
+   "output_tokens_details": {
+    "thinking_tokens": 680
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 34914,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 2293,
+     "cache_read_input_tokens": 41849,
+     "cache_creation_input_tokens": 11533,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 11533
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 3723,
+    "cacheReadInputTokens": 137160,
+    "cacheCreationInputTokens": 34914,
+    "webSearchRequests": 0,
+    "costUSD": 0.381244,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 680,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 7,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "S-1~S-13 기준 시나리오 3축은 모두 2점입니다. 진입 게이트 검증은 `ok: true`로 확인했고, receipt의 필수 문서 4건을 적용했습니다. 파일은 만들지 않았습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 2, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 2.0,\n    \"gaps\": []\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\n## 채점 근거\n\n- **① 목표 달성 = 2**: 목표는 \"설치 확인과 실제 검사를 구분하고, 실제로 실행한 검사의 명령·범위·결과·설정 출처를 관측하는 것, 그리고 미실행을 통과로 보지 않는 것\"입니다.\n  - 고정 사례 실측: S-9와 S-10은 고정 사례 4종(정상·lint 위반·타입 위반·테스트 실패)에 실제 도구를 실행합니다. Python은 ruff·mypy·pytest, TS는 eslint·tsc·vitest입니다. 성공(exit 0)과 실패(exit 5) 양쪽, 그리고 버전과 출력 보존까지 직접 검증합니다(`TEST-SCENARIO.md:31-32`).\n  - 배포본 E2E: S-13은 배포본 E2E입니다. 새 로그인 셸에서 `~/.opal/tools/test-tool/run.sh unit`이 실제 `ruff check .`·`mypy .`·`pytest`를 실행해 `status:\"pass\"`가 되는지 확인합니다(`TEST-SCENARIO.md:35`).\n  - 따라서 사용자·운영 계층에서 목표를 직접 검증합니다.\n- **⑤ 채택/잔존 = 2**: 이번 변경은 교체형 목표입니다. check를 검사로 실행하던 방식을 run으로 바꾸고, `ruff .`를 `ruff check .`로 바꿉니다.\n  - 채택: 새 계약이 쓰이는지 여러 시나리오가 확인합니다.\n    - S-8: 템플릿·추론 출력의 모든 필수 도구에 `run`이 있는지 봅니다.\n    - S-11(1): execute-guide와 test-agent 문서가 새 계약을 쓰는지 봅니다.\n    - S-13(1)(3): 배포본의 sha256 일치와 resolve `run:\"ruff check .\"`을 봅니다.\n  - 잔존: 옛 경로가 남지 않았는지도 확인합니다.\n    - S-8: \"어느 출력에도 `ruff .` 문자열이 없다\"와 \"`check` 값은 `run` 값과 다르다\"를 봅니다.\n    - S-1: 구형 설정에서 check가 실행되지도, run 대신 쓰이지도 않는다는 것을 표식 파일이 생기지 않는 것으로 확인합니다.\n    - S-11(2): 상태값 정의가 README 한 곳에만 있는지 봅니다.\n  - 채택과 잔존 양쪽을 검증합니다.\n- **⑥ 경계/부정 = 2**: 실패·경계 경로를 직접 검증합니다.\n  - S-1: run 누락\n  - S-2(b): 설치 확인 실패와 검사 실패의 구별\n  - S-3: 선행 계층 실패 뒤 `not_run`\n  - S-4: 빈 계층, glob이 하나도 맞지 않음\n  - S-5: 범위 경계 — `missing`·`outside_project`·`pattern_mismatch`, 그리고 파일 단위 미지원 도구\n  - S-7: required가 false일 때와 true일 때의 차이\n  - S-10: 오프라인 npx에서 check 실패로 잘못 분류된 계층이 0개인지(H-2)\n  - S-12: 회귀 실패 집합이 기준선의 부분집합인지\n\n## advisory 검토\n\n해당하는 advisory는 없습니다.\n- **중복 여부**: S-2(a)와 S-6은 둘 다 정상 통과 경로입니다. 하지만 S-2(a)는 check→run 실행 순서와 `cmd` 값을, S-6은 cwd·설정 출처·`source_path` 증거 필드를 검증합니다. 신호가 서로 달라 포함·병합 관계로 보지 않았습니다.\n- **`cheaper_layer`**: 서브에이전트나 외부 서비스를 실제로 호출하는 시나리오가 없어 적용 대상이 아닙니다.\n- **분류 오류**: 발견하지 못했습니다.\n\n`previous_gaps`가 입력되지 않아 `resolved_gaps`는 빈 배열입니다. scope가 `scenario`인 부분 호출이라 `verdict`와 `rewrite_target`은 넣지 않았습니다. 두 값은 `design-gate combine`이 계산합니다.",
+  "ttft_ms": 5509,
+  "type": "result",
+  "duration_ms": 52907,
+  "uuid": "26aaec39-f30a-415f-983c-9e35cfab2756",
+  "ttft_stream_ms": 4834,
+  "time_to_request_ms": 199,
+  "first_content_frame_ms": 4834,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

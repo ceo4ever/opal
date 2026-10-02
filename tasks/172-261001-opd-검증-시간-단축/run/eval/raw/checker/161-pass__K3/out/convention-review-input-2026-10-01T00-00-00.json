@@ -1,0 +1,537 @@
+{
+  "base_sha": "c6e295d467aace71d994ca139819061f64143d02",
+  "head_sha": "47414d6a64aa42ddcfcf0c57c1f929c9bdf3a09a",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "opal/agents/opal-test-agent/AGENT.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          97,
+          117
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/test-tools-schema.yaml",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          148,
+          218
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/op-dev-execute/references/execute-guide.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          55,
+          81
+        ]
+      ]
+    },
+    {
+      "path": "opal/templates/test-tools.yaml",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          44,
+          150
+        ],
+        [
+          172,
+          210
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/README.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          41,
+          61
+        ],
+        [
+          77,
+          206
+        ],
+        [
+          597,
+          617
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/lib/resolver.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ],
+        [
+          69,
+          106
+        ],
+        [
+          139,
+          168
+        ],
+        [
+          171,
+          197
+        ],
+        [
+          235,
+          255
+        ],
+        [
+          267,
+          311
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/lib/runner.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          77
+        ],
+        [
+          88,
+          108
+        ],
+        [
+          158,
+          420
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/test_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ],
+        [
+          47,
+          67
+        ],
+        [
+          154,
+          210
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/conftest.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/calc.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/pyproject.toml",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/test_calc.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/calc.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/pyproject.toml",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/test_calc.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-test/calc.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-test/pyproject.toml",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-test/test_calc.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-type/calc.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-type/pyproject.toml",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/python-type/test_calc.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/eslint.config.js",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/package.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.test.ts",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.ts",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/tsconfig.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/eslint.config.js",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/package.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.test.ts",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.ts",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/tsconfig.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/eslint.config.js",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/package.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.test.ts",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.ts",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/tsconfig.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/eslint.config.js",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/package.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          11
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.test.ts",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.ts",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/tsconfig.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          12
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          622
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/test_test_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          289,
+          317
+        ],
+        [
+          321,
+          349
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "input_bundle_hash": "481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: `PLAN.md:38` §Decisions and contracts D-1 — coverage가 exit 16/17을 반환한 회차에서 record를 '생략'할지 '빈 결과로 기록'할지, 그리고 어떤 기준으로 고를지 구현자에게 맡겨져 있다(원문: \"PM이 상황에 맞게 record를 생략하거나 빈 결과로 기록할 수 있다 — 구체적 분기 기준은 아직 정하지 않았다\").",
+      "decision_clarity-2: `PLAN.md:32` §Findings 미확인 가정 + `PLAN.md:38` D-1 — exit 16(완전 미디스패치)과 exit 17(부분 디스패치)을 같은 record 처리로 묶을지 서로 다르게 처리할지가 정해지지 않았다.",
+      "decision_clarity-3: `PLAN.md:50` §Risks H-1 — 설계 대응이 '없음(아직 미해결)'이다. 미디스패치 회차를 설계 게이트 반복 상한의 iteration으로 셀지, 그리고 C-1(record 필수 필드 불변)을 지키면서 '빈 결과'를 어떤 형태로 만들지 구현자에게 맡겨져 있다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 1,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.333,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

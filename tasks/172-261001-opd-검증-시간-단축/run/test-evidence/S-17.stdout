@@ -1,0 +1,45 @@
+## claude agents model/effort
+-- opal-convention-checker
+model: sonnet
+effort: low
+-- opal-evaluator-agent
+model: opus
+effort: medium
+## codex
+opal-convention-checker.toml
+opal-evaluator-agent.toml
+-- opal-convention-checker
+model = "gpt-5.6-terra"
+model_reasoning_effort = "low"
+-- opal-evaluator-agent
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+## effort: default anywhere (claude / codex / ~/.opal agents)
+       0
+## agents with effort declared (claude deployed)
+opal-convention-checker.md
+opal-evaluator-agent.md
+total claude agents: 17
+## codex effort declared
+opal-evaluator-agent.toml
+opal-convention-checker.toml
+## run.sh
+-rwxr-xr-x@ 1 lucas  staff  415 Oct  1 14:19 /Users/lucas/.opal/tools/convention-precheck/run.sh
+scan --help rc=0
+## install log
+-rw-r--r--@ 1 lucas  admin  3548 Oct  1 14:20 tasks/172-261001-opd-검증-시간-단축/run/install.log
+  [0;36m접속:[0m http://127.0.0.1:7823
+  [0;36m/health:[0m {"status":"ok","version":"0.1.0"}
+
+[0;34m▸[0m MCP 서버 설정 중...
+
+[0;32m✓[0m OPAL 설치 완료 (main)
+
+  • ~/.opal/                  스킬·에이전트·도구
+  • ~/.opal/bin/opal-cli      CLI 진입점 (PATH 등록됨)
+
+다음 단계:
+  새 터미널 열기 또는  source ~/.zshrc
+  opal-cli doctor      # 환경 진단
+
+EXIT=0

@@ -1,0 +1,7 @@
+[PASS] console.sh Bash 구문 검사
+[PASS] 준비 대기는 health 성공까지 재시도한다
+[PASS] 준비 대기는 제한 횟수 뒤 실패를 반환한다
+[PASS] 준비된 Console만 브라우저 열기 명령을 받는다
+[PASS] open은 준비 확인·기동·재확인 뒤 브라우저를 연다
+
+결과: PASS=5 FAIL=0

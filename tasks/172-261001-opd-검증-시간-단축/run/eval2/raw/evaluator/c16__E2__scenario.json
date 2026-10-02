@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "high",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "high",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/fx/c16",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 2089 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 71.6,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 66862,
+  "stop_reason": "end_turn",
+  "session_id": "7bdb8568-1428-48de-9158-79e2a52edc03",
+  "total_cost_usd": 0.3684058,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 26171,
+   "cache_read_input_tokens": 232189,
+   "output_tokens": 5628,
+   "output_tokens_details": {
+    "thinking_tokens": 2790
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 26171,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 4315,
+     "cache_read_input_tokens": 52831,
+     "cache_creation_input_tokens": 2172,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 2172
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 5628,
+    "cacheReadInputTokens": 232189,
+    "cacheCreationInputTokens": 26171,
+    "webSearchRequests": 0,
+    "costUSD": 0.3684058,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 2790,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 5,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"input_bundle_hash\": \"3a9f4f63d8de726b9dc2584772f5629b5adf4d2bebf6bbf3826d6fc4e6574215\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"status\": \"completed\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 1, \"adoption\": 2, \"boundary\": 2},\n    \"average\": 1.67,\n    \"gaps\": []\n  },\n  \"axis_reasons\": {\n    \"goal\": \"TEST-SCENARIO.md §Scenarios S-1(AC-1)·S-2(AC-2)가 목표 AC를 대상으로 하므로 0점(목표 검증 시나리오 없음)은 아니다. 그러나 둘 다 '방법·환경: unit'이고 기대 결과가 'S-1: 오류 코드와 복구 안내가 반환된다(구체적 방식 미정)', 'S-2: 안전하게 동작하거나 명확히 실패한다(지원 여부 미정)'이다. TASK Proposed outcome의 '명확한 복구 경로'를 사용자·운영 계층에서 직접 확정 검증하지 못하므로 1점이다. 특히 S-2는 어떤 결과든 통과하는 기대 결과다. 근본 원인은 PLAN D-1·W-1의 미결정(권한 상승 재시도 또는 로컬 확정, cmux status 지원 여부 미정)이다.\",\n    \"adoption\": \"TASK Problem·Proposed outcome은 기존 경로에 실패 분기를 추가하는 것이고 구 방식을 신 방식으로 교체하는 목표가 아니다(PLAN Approach '부팅 스크립트에 checkpoint 실패 처리 분기를 추가한다'). 교체형 목표가 아니므로 2점이다.\",\n    \"boundary\": \"S-1은 Setup '허브 쓰기 권한을 의도적으로 제거한 변형'을 조건으로 실패 경로(허브 쓰기 권한 없음)를 직접 실행하고, 오류 코드와 복구 안내가 반환되는지 관찰 가능한 기대 결과를 둔다. S-2도 cmux 미설치라는 경계 조건을 직접 실행한다. 실패·경계 경로를 직접 검증하므로 2점이다. 참고로 S-2는 기대 결과가 반증 불가능해서 S-1만으로 이 축을 충족한다.\"\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope=scenario) 채점 완료: scores={goal:1, adoption:2, boundary:2}, average=1.67. 세 축 모두 1점 이상이라 gaps는 비어 있다. goal 축의 약점(기대 결과 '구체적 방식 미정', unit 계층)은 PLAN D-1·W-1이 결정되지 않은 데서 이어진 것이다. verdict·rewrite_target은 부분 호출 계약에 따라 design-gate combine이 정한다.\",\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\nworker.dispatch receipt를 직접 verify해서 `ok: true`(문서 4건 검증)를 확인한 뒤 판정했습니다.\n\n- **판정**: 시나리오 3축 점수는 goal 1, adoption 2, boundary 2로 평균 1.67입니다. 0점 축이 없고 평균도 1.5 이상이라 시나리오 통과 조건을 충족합니다. 단, verdict와 rewrite_target은 부분 호출 계약에 따라 넣지 않았습니다.\n- **추가 필드**: `axis_reasons`, `summary`, `blockers`, `changed_files`, `artifact_path`는 부분 결과 계약에 없는 필드입니다. 축별 근거 인용이 필수인데 계약에 그 자리가 없어서 넣었습니다.\n- **gaps가 빈 이유**: 규칙상 gap은 1점 미만인 축에만 적습니다. goal은 1점이라 gap이 없지만, 기대 결과가 아직 정해지지 않은 근본 원인은 PLAN의 D-1·W-1 미결정입니다. 이 문제는 설계 축(scope=design) 판정에서 다뤄질 몫입니다.\n- 수정할 근거가 있는 advisory가 없었고, `previous_gaps` 입력도 없어 `resolved_gaps`는 빈 배열입니다. 만든 파일은 없습니다.",
+  "ttft_ms": 4978,
+  "type": "result",
+  "duration_ms": 68207,
+  "uuid": "c30d9252-ddbf-4351-9243-ef8bd0930063",
+  "ttft_stream_ms": 2239,
+  "time_to_request_ms": 64,
+  "first_content_frame_ms": 2239,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

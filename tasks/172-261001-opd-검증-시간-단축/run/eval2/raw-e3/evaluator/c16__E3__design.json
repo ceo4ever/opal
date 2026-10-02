@@ -1,0 +1,125 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "low",
+ "cmd": [
+  "/Users/lucas/.opal/tools/opal-agent/run.sh",
+  "--json",
+  "--model",
+  "opus",
+  "--effort",
+  "low",
+  "--allowed-tools",
+  "Read,Grep,Glob,Bash",
+  "--cwd",
+  "/private/var/folders/0k/n9rvmztx6xs3xvjsvf0qqzdw0000gn/T/e3work/fx/c16",
+  "--opal-bootstrap",
+  "off",
+  "--timeout",
+  "300",
+  "--system-prompt",
+  "<system-prompt 21146 chars>",
+  "<prompt 1643 chars>"
+ ],
+ "returncode": 0,
+ "elapsed_s": 34.4,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 30159,
+  "stop_reason": "end_turn",
+  "session_id": "53ee5d2e-5c9c-431b-b644-8153ffd98b2a",
+  "total_cost_usd": 0.36813019999999996,
+  "usage": {
+   "input_tokens": 4,
+   "cache_creation_input_tokens": 39540,
+   "cache_read_input_tokens": 60071,
+   "output_tokens": 1989,
+   "output_tokens_details": {
+    "thinking_tokens": 305
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 39540,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1684,
+     "cache_read_input_tokens": 47689,
+     "cache_creation_input_tokens": 4233,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 4233
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 4,
+    "outputTokens": 1989,
+    "cacheReadInputTokens": 60071,
+    "cacheCreationInputTokens": 39540,
+    "webSearchRequests": 0,
+    "costUSD": 0.36813019999999996,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 305,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 2,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "진입 게이트 검증 결과 `ok: true`(문서 4건 검증)를 확인했습니다. 이번 호출 범위는 `scope: design`이라 설계 4축만 채점했고, 시나리오 3축·verdict·`rewrite_target`은 채점하지 않았습니다. 파일은 만들지 않았습니다.\n\n```json\n{\n  \"input_bundle_hash\": \"3a9f4f63d8de726b9dc2584772f5629b5adf4d2bebf6bbf3826d6fc4e6574215\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"PASS\",\n      \"decision_clarity\": \"FAIL\",\n      \"executability\": \"FAIL\",\n      \"recoverability\": \"PASS\"\n    },\n    \"gaps\": [\n      \"decision_clarity-1: PLAN.md ## Decisions and contracts D-1 — checkpoint 허브 쓰기 실패 시 '권한 상승 재시도'와 '허브 쓰기 포기 후 로컬 확정' 중 무엇을 할지 구현자가 정해야 한다('어느 쪽인지는 구현 중 상황을 보고 정한다'). 둘 중 하나로 정하고, AC-1이 요구하는 오류 코드와 복구 안내 문구도 함께 정해야 한다.\",\n      \"decision_clarity-2: PLAN.md ## Work items W-1 — cmux가 없는 환경에서 status 조회를 지원할지, 지원하지 않을 때 계약(오류 코드인지 안전한 생략인지)을 어떻게 할지 구현자가 정해야 한다('구체적 지원 여부는 미정'). AC-2의 '안전하게 동작하거나 명확히 실패한다' 중 어느 쪽인지 정해야 한다.\",\n      \"executability-1: PLAN.md ## Work items W-1 — 구체적 변경이 '적절한 쪽을 적용한다', '그에 맞게 안내한다'처럼 추가 설계가 있어야 구현할 수 있다. 분기 조건, 반환 오류 코드, 출력 형식을 정해야 하고, ## Risks H-1의 설계 대응도 '없음(아직 미해결)'인 채로 남아 있다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": []\n}\n```\n\n**축별 판정 근거**\n- **completeness (PASS):** AC-1과 AC-2가 둘 다 W-1에 연결되어 있습니다. `## Findings`의 직접 변경(boot.py)도 W-1이 다루고, 미확인 가정인 'cmux 미설치 환경의 실제 동작'도 W-1의 cmux 분기가 맡습니다. 빠진 범위는 없습니다.\n- **decision_clarity (FAIL):** D-1이 처리 방식을 둘 중 하나로 정하지 않고 구현 중으로 미뤘습니다. cmux 미지원 시 계약도 정해지지 않았습니다.\n- **executability (FAIL):** W-1만 보고는 추가 설계 없이 구현할 수 없습니다. 담당자와 파일은 정해져 있지만, 어떤 동작을 할지가 정해지지 않았습니다.\n- **recoverability (PASS):** 기존 경로에 분기만 더하는 변경이고, 기존 정상 부팅 경로는 영향이 없다고 명시되어 있습니다(`## Findings` 회귀 확인). 그래서 되돌리는 경로가 단순합니다. 다만 운영 중 복구 방식은 D-1이 정해져야 확정되므로 decision_clarity 결함에 함께 들어 있습니다.\n\n`previous_gaps`가 주어지지 않아 `resolved_gaps`는 빈 배열입니다. `scope: design` 호출이므로 `advisories`도 계약대로 `[]`입니다.",
+  "ttft_ms": 8688,
+  "type": "result",
+  "duration_ms": 31134,
+  "uuid": "bfff2037-602f-489b-854b-38ce404b526a",
+  "ttft_stream_ms": 5178,
+  "time_to_request_ms": 66,
+  "first_content_frame_ms": 5179,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

@@ -4,9 +4,8 @@
   "task": "044",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "tool-scan 5서브명령(list/which/usage/resolve/check) + federation(mcps/skills-registry) + 산출물 grep 행위 계약 RED-first 테스트. RED 상태(미구현) — 전부 FAIL 예상. GREEN 전환은 opal-be-agent(Step 3~5) 담당(작성자≠구현자).",
+  "description": "tool-scan 5서브명령(list/which/usage/resolve/check) + federation(mcps/skills-registry) + 산출물 grep 행위 계약 RED-first(red-first.md §1~§4) 테스트.",
   "scenarios": "TS-001~003, TS-010~012, TS-020~023, TS-030~035, TS-040~041, TS-050~051, TS-060",
-  "track": "RED-first (red-first.md §1~§4)",
   "exports": [
     "TestSubcommandsJson",
     "TestManifest",

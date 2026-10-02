@@ -1,0 +1,33 @@
+{
+  "input_bundle_hash": "481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md §Decisions and contracts D-1 (L38) — coverage exit 16/17 회차에서 record를 생략할지, 빈 결과로 기록할지를 'PM이 상황에 맞게' 고르도록 남겨 두었다. 분기 기준을 정하지 않았다('구체적 분기 기준은 아직 정하지 않았다').",
+      "decision_clarity-2: PLAN.md §Findings 미확인 가정 (L32) — exit 16(완전 미디스패치)과 exit 17(부분 디스패치)을 record에서 다르게 처리할지 정하지 않아, 두 코드를 같게 처리할지 다르게 처리할지가 구현자의 선택으로 남았다.",
+      "executability-1: PLAN.md §Work items W-1 (L44) — '정확한 기준은 구현 중 정리'라고 적혀 있어 추가 설계 없이는 design-gate.md 서술을 확정할 수 없다. 반복 상한 집계에 미디스패치 회차를 넣을지도 구현자가 정해야 한다(H-1, L50 대응 '없음')."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 0
+    },
+    "average": 0.667,
+    "gaps": [
+      "goal-1: TEST-SCENARIO.md §Scenarios S-1 '기대 결과' — 'record를 생략하거나 빈 결과로 기록한다(정확한 분기 기준 미정)'라서 두 결과 중 어느 쪽을 합격으로 볼지 구현자가 정해야 한다. 그래서 AC-1('어떻게 처리해야 하는지 명확하다')을 직접 검증하는 판정 기준이 없다",
+      "boundary-1: TEST-SCENARIO.md §Scenarios — exit 16만 있고 exit 17 회차, exit 16과 17을 다르게 처리해야 하는지(PLAN §미확인 가정), 정상 경로 exit 0의 회귀(PLAN §회귀 확인)를 검증하는 시나리오가 없다. 어떤 경계·실패 경로를 검증할지 구현자에게 남는다"
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

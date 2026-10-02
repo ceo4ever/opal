@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": null,
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 24.2,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 19265,
+  "stop_reason": "end_turn",
+  "session_id": "b2031592-9727-445b-9939-d1efbcc25a36",
+  "total_cost_usd": 0.1409936,
+  "usage": {
+   "input_tokens": 10,
+   "cache_creation_input_tokens": 24202,
+   "cache_read_input_tokens": 87178,
+   "output_tokens": 2673,
+   "output_tokens_details": {
+    "thinking_tokens": 68
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 24202,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 920,
+     "cache_read_input_tokens": 28781,
+     "cache_creation_input_tokens": 1211,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1211
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 10,
+    "outputTokens": 2673,
+    "cacheReadInputTokens": 87178,
+    "cacheCreationInputTokens": 24202,
+    "webSearchRequests": 0,
+    "costUSD": 0.1409936,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 68,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 6,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K0/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K0/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"blocking finding 1건(GC-001, high). SKILL.md frontmatter에 description 키가 없습니다. 이는 docs/CONVENTIONS.md §YAML Frontmatter 위반입니다. 변경 구간(3~13행)의 모델 검사에서는 추가 위반이 없었습니다. 참고로 references의 opal/core/references/harness/gc-finding-schema.md는 project_root에 없어서 읽지 못했습니다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K0/out/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K0/out/convention-review-input-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K0/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K0/out/GC-CONVENTION-2026-10-01T00-00-00.md\"\n  ]\n}\n```",
+  "ttft_ms": 1424,
+  "type": "result",
+  "duration_ms": 20850,
+  "uuid": "a0daaee4-85ac-4a39-9575-4a7cedf31ef4",
+  "ttft_stream_ms": 1090,
+  "time_to_request_ms": 60,
+  "first_content_frame_ms": 1090,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

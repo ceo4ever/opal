@@ -1,0 +1,98 @@
+{
+  "duration_api_ms": 44994,
+  "stop_reason": "end_turn",
+  "session_id": "623b45f8-e7e2-4a6a-9bb2-ada47bf1c9b7",
+  "total_cost_usd": 0.5988822,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 61672,
+    "cache_read_input_tokens": 166371,
+    "output_tokens": 3610,
+    "output_tokens_details": {
+      "thinking_tokens": 603
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 61672,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 2916,
+        "cache_read_input_tokens": 53769,
+        "cache_creation_input_tokens": 20285,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 20285
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 8,
+      "outputTokens": 3610,
+      "cacheReadInputTokens": 166371,
+      "cacheCreationInputTokens": 61672,
+      "webSearchRequests": 0,
+      "costUSD": 0.5988822,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 603,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+    },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+    },
+    "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+    },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 4,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope: design) 판정 완료: 설계 4축 completeness=PASS, decision_clarity=PASS, executability=PASS, recoverability=PASS, gaps 0건\",\n  \"input_bundle_hash\": \"8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b\",\n  \"iteration\": 1,\n  \"scope\": \"design\",\n  \"status\": \"completed\",\n  \"design\": {\n    \"axes\": {\n      \"completeness\": \"PASS\",\n      \"decision_clarity\": \"PASS\",\n      \"executability\": \"PASS\",\n      \"recoverability\": \"PASS\"\n    },\n    \"gaps\": [],\n    \"evidence\": {\n      \"completeness\": \"TASK.md:30-37의 AC-1~AC-8은 모두 Work item에 연결되어 있다. AC-1은 W-2, AC-2·3·5·6·7은 W-3, AC-4는 W-1·W-2·W-3, AC-8은 W-1·W-3과 Release(PLAN.md:100-101)에 걸린다. C-1~C-7도 PLAN.md:86-88의 '완료 기준 연결' 열에 빠짐없이 들어 있다. Findings의 직접 변경 7개 경로(PLAN.md:31-37)는 W-1(템플릿·스키마)과 W-3(runner·resolver·test_tool·tests·fixtures/unit-real)의 변경 대상과 일치한다. 문서 갱신 3건(PLAN.md:58-60)도 같다. README는 W-3, execute-guide와 opal-test-agent AGENT.md는 W-2에 들어 있다. 미확인 가정 H-1~H-3(PLAN.md:64)은 Risks 표(PLAN.md:94-96)에 대응 방안과 함께 있다. 회귀 확인 소비자는 영향 없음 근거가 행마다 있다(PLAN.md:43-54).\",\n      \"decision_clarity\": \"D-1~D-11(PLAN.md:70-80)이 구현자에게 남길 수 있는 선택을 닫는다. 필드 의미는 check/install/run/run_files/file_globs로 정했다(D-1). 실행 순서는 run 누락→check→run 3분기다(D-2). 범위는 kind/requested/checked/excluded 사유의 폐쇄 목록이다(D-3). 계층 상태 6종과 전체 상태 3종은 사유 코드와 함께 폐쇄 목록으로 정했다(D-4). required 기본값은 '키 없음=필수'다(D-5). exit 코드는 0/5/21/1이고 오류 코드 unit_incomplete를 새로 둔다(D-6). 응답 필드 목록은 D-7이 정했다. 계약 원문 위치는 README `unit` 절 하나다(D-8). 구형 설정은 자동 복사하지 않고 hint로 안내한다(D-9). 템플릿·추론 명령은 도구별 문자열 값으로 정했다(D-10). 배포 승인 경계는 D-11이다. 외부 동작, 인터페이스, 실패 정책, 구조 중 구현자 재량으로 남는 핵심 항목은 없다.\",\n      \"executability\": \"Work item 3개는 담당(opal-task-agent), 선행(W-3←W-1), 실행 그룹(P1: W-1·W-2 병렬, P2: W-3), 파일 소유권을 모두 명시한다. W-1·W-2의 변경 파일은 겹치지 않는다고 PLAN.md:100에 적혀 있다. W-3은 함수 시그니처(`run_unit_layers(tiers_data, scope, project_root, env, changed_files)`), 상수 위치, 픽스처 이관 대상 라인(`test_test_tool.py:295-307`, `:327-339`), fixtures 사례 구성(Python·TS 각 4종)까지 정해 추가 설계 없이 구현할 수 있다(PLAN.md:88). RED 파일의 소유권도 분리되어 있다. opal-test-agent가 먼저 작성하고 W-3은 그 파일을 수정하지 않는다(PLAN.md:88, :100). 외부 에이전트나 서비스를 raw CLI로 호출하는 Work item·시나리오는 없다. 호출은 OPAL 도구 test-tool(`run.sh`)과 로컬 검사 도구(ruff·mypy·pytest·eslint·tsc·vitest)에 한정된다.\",\n      \"recoverability\": \"PLAN.md:100-102의 Release and recovery에 적용 순서가 있다. RED와 scenario-lock을 먼저 하고, P1, P2, TEST, 사용자 승인 후 정식 설치, 배포본 검증 순이다. 검증 범위는 결정론 회귀, 실제 도구 실측과 evidence 보존, 배포본의 resolve·unit·템플릿·스키마·로그인 셸 확인이다. 복구 경로는 설치 전 단계와 설치 후 단계로 나뉜다. 설치 전에는 작업본 보정 커밋으로 되돌리고, 설치 후에는 허브 main에서 install-mac.sh 메뉴 1을 다시 실행한다. 이 복구 경로는 D-11(PLAN.md:80)과 H-3(PLAN.md:96)에도 같은 내용으로 적혀 있다. H-1 공급 실패는 BLOCKED로 처리하고 통과로 보고하지 않는다는 실패 정책도 있다(PLAN.md:94).\"\n    }\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```\n\n설계 4축이 모두 PASS로 나왔고 gaps는 없습니다.\n\n- **진입 게이트:** `event-loader verify --event worker.dispatch` 결과는 `ok: true`이고 검증 문서는 4건입니다.\n- **입력 문서:** TASK.md, PLAN.md, TEST-SCENARIO.md를 읽었습니다. TEST-SCENARIO.md는 완전성 판정의 참고로만 썼고 시나리오 축은 채점하지 않았습니다.\n- **생략한 필드:** `previous_gaps`가 입력에 없어 `resolved_gaps`는 빈 배열입니다. `scope: design`이라 `advisories`는 `[]`이고, 부분 결과 계약에 따라 `verdict`와 `rewrite_target`은 넣지 않았습니다. 두 결과의 결합은 `design-gate combine`이 맡습니다.\n- **파일 변경:** 만들거나 고친 파일은 없습니다.",
+  "ttft_ms": 6973,
+  "type": "result",
+  "duration_ms": 46731,
+  "uuid": "cec2c3f2-9ac8-4fbb-a40a-68770c3aa288",
+  "ttft_stream_ms": 4534,
+  "time_to_request_ms": 119,
+  "first_content_frame_ms": 4534,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

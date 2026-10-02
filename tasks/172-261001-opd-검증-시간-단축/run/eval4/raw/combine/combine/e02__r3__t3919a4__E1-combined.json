@@ -1,0 +1,41 @@
+{
+  "input_bundle_hash": "2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:70, PLAN.md:72 (D-1 `run_files`의 `{files}` 자리표시자, D-3 파일 전달) — 구현자가 직접 정해야 하는 것이 있다. `{files}`를 무엇으로 치환할지, 즉 파일 경로를 프로젝트 기준 상대 경로로 넣을지 절대 경로로 넣을지, 어떤 구분자로 이을지, 공백·셸 메타문자가 든 경로를 어떻게 인용·이스케이프할지 정해지지 않았다. 이 값은 공개 출력인 계층 `cmd`(D-7, S-9 `ruff check <파일>`, S-10)와 실제 셸 실행 결과를 결정한다.",
+      "decision_clarity-2: PLAN.md:72, PLAN.md:76 (D-3 계층 `scope` 형태, D-7 계층 필드) — 다음 경우의 값이 정해지지 않았다. `kind:\"project\"`일 때 `checked`·`excluded`·`requested`(빈 배열인지 null인지 생략인지), `--changed-files`가 없는데 `run_files`를 가진 도구가 프로젝트 전체로 실행될 때의 `scope.reason`(null인지, 따로 사유 코드를 두는지). S-6이 모든 계층에 `scope`가 있다고 단언하므로 공개 출력 형태를 구현자가 고르게 된다.",
+      "decision_clarity-3: PLAN.md:95 (Risks H-2 설계 대응) vs PLAN.md:76 (D-7 `check: {cmd, exit, status}`) — H-2는 'check 소요를 계층 응답으로 관측한다'고 적었지만 D-7 계층 계약에는 소요 시간 필드가 없다. 필드를 둘지 말지, 이름과 단위(ms·s)는 무엇으로 할지, `check`·`run` 중 어디에 붙일지를 구현자가 정하게 된다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": [
+        "S-6",
+        "S-8"
+      ],
+      "basis": "S-6 runs `resolve` against three sources (project, global, infer) and checks each `source_path`. Two of its setups are the same as S-8's: (a) the global template injected through `OPAL_TEST_TOOLS_GLOBAL`, and (b) a project with only pyproject.toml. S-8 runs `resolve` again on those same two setups and checks only that the commands are `run`. The command and the input settings are duplicated; only the assertions differ.",
+      "recommendation": "Fold S-6's `source_path` checks for global and infer into rows (a) and (b) of S-8, so each `resolve` run is checked once for both where the config came from and its `run` value. S-6 then keeps only the project-source `unit` check: `cwd`, `config.*`, and the per-layer fields."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

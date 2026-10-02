@@ -1,0 +1,22 @@
+
+== (가) 저장소 계약 검증 (TC-A*) — RED 시점 FAIL 예상 ==
+
+[PASS] TC-A1 (S-2): git check-attr export-subst VERSION = set
+[PASS] TC-A2 (S-2): git check-attr export-ignore VERSION = unspecified
+[PASS] TC-A3 (S-1): 루트 VERSION 파일 존재 및 placeholder 내용 확인
+[PASS] TC-A4 (S-1): VERSION이 git index에 tracked 되어 있음 (커밋 비강요)
+[PASS] TC-A5 (S-5/S-7): install.sh adopt_stamped_version 함수 및 Format: 판별 분기 존재
+[PASS] TC-A6 (S-6): install-mac.sh VERSION 기록 우선순위 재배치 (각인값 최우선)
+[PASS] TC-A7 (S-9): install.ps1 추출 후 VERSION 읽기 및 -notlike Format: 판별 분기 존재
+[PASS] TC-A8 (S-10): 변경 대상 파일에 시크릿 패턴 없음
+
+== (나) 메커니즘 검증 (TC-B*, scratch repo) — RED 시점에도 PASS 예상 ==
+
+[PASS] TC-B1 (S-1): scratch repo 태그 archive에서 VERSION = v9.9.9
+[PASS] TC-B2 (S-3): 태그 후 커밋 추가 시 HEAD archive VERSION = v9.9.9-N-g<sha>
+[PASS] TC-B3 (S-4): scratch 작업트리 cat VERSION = placeholder 미치환
+
+========================================================
+PASS: 11 | FAIL: 0 | SKIP: 0
+========================================================
+verdict: ALL PASS

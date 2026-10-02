@@ -1,0 +1,31 @@
+{
+  "input_bundle_hash": "8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:71-72 (D-2 ①, D-3) — `run` 없이 `run_files`만 선언한 도구의 판정 순서가 정해지지 않았다. D-2 ①은 `run` 누락 시 즉시 `not_configured`(run_missing)인데, TEST-SCENARIO S-4(b)는 `run_files`만 쓰는 도구에 `not_applicable`(no_matching_files)을 기대한다. 이 조합이 유효한 설정인지, D-2 ①과 D-3 중 무엇을 먼저 적용하는지, `--changed-files`가 비었을 때 run_files 단독 도구를 어떤 상태로 둘지를 구현자가 선택해야 한다",
+      "decision_clarity-2: PLAN.md:72 (D-3) — 파일 범위 해석 규칙이 정해지지 않았다. ① 상대 경로 `--changed-files`를 프로젝트 루트와 프로세스 cwd 중 어디 기준으로 해석하는지 ② `file_globs`(`*.py`)를 basename과 프로젝트 상대 경로 중 무엇에 매칭하는지(하위 디렉터리 파일 포함 여부) ③ 한 파일이 여러 제외 사유에 해당할 때 `outside_project`·`missing`·`pattern_mismatch` 중 무엇을 먼저 판정하는지 ④ `{files}` 치환 시 인용(shlex quoting)·구분자 방식과 `scope.checked`·cmd에 넣는 경로 형식(입력 원문, 정규화 상대 경로, 절대 경로 중 무엇인지)이 구현자 선택으로 남아 있다",
+      "decision_clarity-3: PLAN.md:73 (D-4) — 전체 `incomplete`의 단일 `reason` 우선순위가 정해지지 않았다. 예컨대 필수 계층이 전부 `not_configured`면 `required_layer_unverified`와 `no_check_executed`가 동시에 성립하고, 전 계층이 `not_applicable`이면서 필수 `tool_unavailable` 계층이 섞인 경우도 마찬가지다. 이때 어느 사유를 방출할지(또는 reason을 목록으로 둘지)를 구현자가 선택해야 한다",
+      "decision_clarity-4: PLAN.md:76 (D-7) — 계층 `check: {cmd, exit, status}`의 `status` 값 집합이 정의되지 않았다. D-4의 계층 상태 폐쇄 목록과 같은 값을 쓰는지, 별도 값(예: ok/failed)을 쓰는지가 구현자 선택이며, D-8이 README 원문에 고정하라고 한 '상태값' 범위에 포함되는지도 불명확하다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

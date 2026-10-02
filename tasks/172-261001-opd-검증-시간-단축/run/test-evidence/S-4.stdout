@@ -1,0 +1,13 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /Users/lucas/.opal/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172
+plugins: asyncio-1.3.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 33 items / 30 deselected / 3 selected
+
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineRecordTest::test_combine_record_matches_single_call_format PASSED [ 33%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineRecordTest::test_combine_record_pass_accepted PASSED [ 66%]
+opal/tools/state-tool/tests/test_design_gate_parallel.py::CombineRecordTest::test_combine_record_rewrite_target_matches_combine PASSED [100%]
+
+====================== 3 passed, 30 deselected in 10.61s =======================

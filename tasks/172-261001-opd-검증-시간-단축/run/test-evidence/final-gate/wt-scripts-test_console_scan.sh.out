@@ -1,0 +1,30 @@
+
+== (가) 기능 계약 (TC-S1~S5,S7,S9,S10) — RED 시점 FAIL 예상 ==
+
+[PASS] TC-S1 (S-1, TS-001/004): config 부재 상태 scan → 파일 생성 + created:true
+[PASS] TC-S2 (S-2, TS-002): 마커 프로젝트 부모 디렉토리가 scan_roots(added_roots)에 포함
+[PASS] TC-S3a (S-3, TS-006): --prune 미지정 시 수기 root 보존 + 신규 root 추가
+[PASS] TC-S3b (S-3, TS-008): --prune 지정 시 미발견 수기 root 제거
+[PASS] TC-S4 (S-4, TS-004/007): stdout JSON이 ok/created/added_roots/projects_found 4키 준수 + added_roots 중복 없음
+[PASS] TC-S5 (S-5, TS-003): base=$SCRATCH scan 시 OPAL 홈($OPAL_HOME) 마커가 scan_root로 추가되지 않음
+[PASS] TC-S7 (S-7, TS-010): 손상된 기존 config에 scan 시 ok:false + 원본 바이트 불변
+[PASS] TC-S9 (S-9, TS-009): 사용자 추가 키·scan_depth·exclude가 실제 머지 실행 후에도 보존
+[PASS] TC-S10 (S-10, TS-007): 이미 존재하는 root 재발견 시 dedup — added_roots에 기존 root 미포함
+
+== (나) 정적/구조 (TC-S6,S8,S11,S12,S13) — RED 시점 FAIL 예상 ==
+
+[PASS] TC-S6 (S-6, TS-005): console.sh scan 브랜치에 -maxdepth·exclude -prune 존재
+[PASS] TC-S8 (S-8, TS-011): install-mac.sh install_dashboard에 console scan 호출 + 실패 격리(||) 존재
+[PASS] TC-S11 (S-11, TS-012): console.sh start 브랜치에 config 부재 안내 + scan 안내 문구 존재
+[PASS] TC-S12 (S-12, TS-013): config.py load_config 독스트링이 'console scan' 서술 + 'install 단계에서 수행' 문구 제거
+[PASS] TC-S12b (S-12, TS-013): config.py load_config 로직(핵심 라인) 불변 확인
+[PASS] TC-S13 (S-13, TS-014): windows.ps1 Install-Dashboard에 마커 탐색+config 머지+실패 격리 등가 로직 존재
+
+== (다) 회귀 (TC-S14) — RED 시점에도 PASS 예상 ==
+
+[PASS] TC-S14 (S-14): 회귀 — test_version_stamp.sh PASS
+
+========================================================
+PASS: 16 | FAIL: 0 | SKIP: 0
+========================================================
+verdict: ALL PASS

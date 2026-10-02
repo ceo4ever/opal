@@ -1,0 +1,29 @@
+{
+  "input_bundle_hash": "c0ba0a7a3c50b36ce6a8ec725e23d47ff8f120f71185c5f0a357db7afa5ba5a8",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "decision_clarity-1: PLAN.md:69 (W-5 '구체적 변경', `brain-tool log --op ingest ... --new \"<페이지1>,...,<페이지6>\"`) — 같은 Work item이 신규 2건(add-page)과 갱신 4건(update-page)을 구분하는데 log 명령은 6건 모두를 `--new`로만 넘긴다. 그런데 log 서브커맨드에는 `--updated` 인자가 있다. 구현자가 갱신 4건을 신규로 잘못 기록할지, `--new`(2건)와 `--updated`(4건)로 나눌지 직접 골라야 한다. 정확한 인자 배분을 PLAN에서 확정해야 한다.",
+      "recoverability-1: PLAN.md:88 (Release and recovery '실패 시', W-5 되돌리기 문장) — D-14(PLAN.md:58)는 허브 .gitattributes 4줄을 백필과 한 묶음으로 허브 작업트리에 쓰게 하지만, 실패·롤백 경로는 `git checkout -- .opal/brain/`·`git clean`만 적어 허브 .gitattributes 원복을 다루지 않는다. 묶음을 되돌릴 때 .gitattributes도 함께 되돌릴지(예: `git checkout -- .gitattributes`), 남겨 둘지 PLAN에서 정해야 한다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

@@ -74,6 +74,7 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - **모드별 단일 소스 커버리지**: 커버리지 판정은 `code-scan validate --json` 결과의 `coverage.covered`(설정된 `headerSource` 소스 기준) / `coverage.total`을 쓴다. `inline` 모드는 인라인 작성분만, `manifest` 모드는 매니페스트 작성분만 계상한다 — 두 소스를 더하던 합산 커버리지는 폐기되었다(Task 080). `coverage.percent`가 목표치에 미달하면 Fail.
    - **CLOSE 진입 전 게이트**: CLOSE 단계 진입 전 `code-scan validate --changed <EXECUTE changed_files 목록> --json`을 실행해 `ok: true`(exit 0)를 확인한다. `ok: false`(exit 2, violations 존재) 시 CLOSE 진입을 보류하고 워커에게 위반 목록을 전달해 재지시한다.
      - **게이트 기준 = `newly_uncovered` 0건**: `counts.newly_uncovered`(git 기준 신규 파일 또는 HEAD 대비 헤더 회귀)가 1건이라도 있으면 `ok:false`(exit 2)로 차단한다.
+     - **`header_history`·`header_overflow`도 0건이어야 한다**: 둘 중 하나라도 있으면 `ok:false`(exit 2)로 차단한다.
      - **`pre_existing`은 비차단 보고 항목**: `counts.pre_existing`(HEAD 버전에도 애초에 헤더가 없던 기존 파일)은 `ok:true`(exit 0)에 포함되며 CLOSE 진입을 막지 않는다. 다만 `violations[]`에 `code:'uncovered', sub:'pre_existing'`으로 노출되므로 PM은 그 수·목록을 소유자 보고에 참고 정보로 남길 수 있다.
      - **근거**: 레거시 파일 소급 헤더 부여는 이 게이트의 책임 범위가 아니다 — `discover`/`scaffold`가 담당하는 별도 작업이다(본 게이트는 "이번 변경이 새 결손을 만들었는가"만 판정).
    - **헤더 소스 미설정 대응**: `code-scan` 호출이 `header_source_unset`(exit 1)으로 거부되면 이는 **프로젝트 설정 결손**이지 워커 결함이 아니다 — 워커에게 재지시하지 않고 Fail로도 판정하지 않는다.
@@ -101,7 +102,7 @@ PM Gate는 별도 QA Gate 단계를 두지 않고, 문서 QA(요구사항→설�
    - **기타 경로 트리거 조건**: 단계 = EXECUTE이고 워커 반환 `changed_files` 중 docs/, .opal/, *.md, tasks/ 외 파일이 ≥1건 (legacy R-6 스킵 조건의 역)
    - **영역 분할 절차**: `docs/PROJECT.md` "## 프로젝트 구성" 섹션 prefix 매칭으로 영역별 분할 — 의사코드는 `opal/core/references/pm/context-injection.md` §PROJECT.md 프로젝트 구성 기반 라우팅을 그대로 적용 (→ D-3). 매칭 실패 시 단일 호출(`scope=all`)로 폴백 (→ D-4 예시 B)
    - **호출**: 영역별로 opal-convention-checker 워커 디스패치 — 파라미터 매핑은 `opal/agents/opal-convention-checker/AGENT.md` §입력 명세 §PM Gate 호출 시나리오 표 참조 (→ D-2)
-   - **호출 입력 명세**: `target_files = changed_files ∩ 영역 prefix`, `scope = 영역명` (단일 호출 시 `scope=all`), `task_folder = 현재 태스크 폴더`, `timestamp` = 영역별 분리 (병렬 호출별 고유 ts)
+   - **호출 입력 명세**: `target_files = changed_files ∩ 영역 prefix`, `scope = 영역명` (단일 호출 시 `scope=all`), `task_folder = 현재 태스크 폴더`, `timestamp` = 영역별 분리 (병렬 호출별 고유 ts), `base_ref` = 태스크 worktree 기준 브랜치(없으면 기본 브랜치)
    - **판정 기준**:
      | 발견 이슈 심각도 | 결과 |
      |---------------|------|

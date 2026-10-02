@@ -1,0 +1,107 @@
+{
+ "agent": "opal-convention-checker",
+ "model": "sonnet",
+ "effort": "medium",
+ "max_turns": 80,
+ "returncode": 0,
+ "elapsed_s": 30.2,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 25319,
+  "stop_reason": "end_turn",
+  "session_id": "692129e1-b74d-4ea0-a7a1-0e7a2d57580a",
+  "total_cost_usd": 0.17542200000000002,
+  "usage": {
+   "input_tokens": 14,
+   "cache_creation_input_tokens": 27994,
+   "cache_read_input_tokens": 152140,
+   "output_tokens": 3299,
+   "output_tokens_details": {
+    "thinking_tokens": 124
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 27994,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 808,
+     "cache_read_input_tokens": 32745,
+     "cache_creation_input_tokens": 1039,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 1039
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-sonnet-5-5": {
+    "inputTokens": 14,
+    "outputTokens": 3299,
+    "cacheReadInputTokens": 152140,
+    "cacheCreationInputTokens": 27994,
+    "webSearchRequests": 0,
+    "costUSD": 0.17542200000000002,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 124,
+    "canonicalModel": "claude-sonnet-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "컨벤션 검사를 마쳤습니다. 차단(blocking) 이슈 1건이 나왔습니다.\n\n```json\n{\n  \"artifact_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K2/out/GC-CONVENTION-2026-10-01T00-00-00.md\",\n  \"findings_path\": \"/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172/tasks/172-261001-opd-검증-시간-단축/run/eval/raw/checker/syn-m1-skill-no-description__K2/out/gc-findings-convention-2026-10-01T00-00-00.json\",\n  \"summary\": \"opal/skills/op-demo-check/SKILL.md 1개 파일을 검사해 High 1건(GC-001, disposition blocking)을 찾았다. frontmatter에 `description` 키가 없다(CONVENTIONS.md §파일 구조 §YAML Frontmatter). 변경 구간(3~13행)의 모델 검사에서는 추가 finding이 없었다. 이슈는 사전 검사가 낸 것이고, 자동 수정은 불가하다.\",\n  \"status\": \"completed\",\n  \"check_status\": \"pass\",\n  \"missing_capabilities\": [],\n  \"blockers\": [],\n  \"changed_files\": [\n    \"<out>/GC-CONVENTION-2026-10-01T00-00-00.md\",\n    \"<out>/gc-findings-convention-2026-10-01T00-00-00.json\",\n    \"<out>/gc-findings-convention-precheck-2026-10-01T00-00-00.json\",\n    \"<out>/convention-review-input-2026-10-01T00-00-00.json\"\n  ]\n}\n```\n\n`<out>`은 위 `artifact_path`의 `out` 디렉토리입니다. `check_status`는 사전 검사와 `merge`가 낸 `pass` 값을 그대로 옮겼습니다.\n\n`worker.dispatch` receipt는 `verify`로 `ok: true`를 확인했습니다. 사전 검사와 `merge`는 저장소 소스 `opal/tools/convention-precheck/run.sh`로 실행했습니다.",
+  "ttft_ms": 1812,
+  "type": "result",
+  "duration_ms": 26872,
+  "uuid": "95a14d67-95e6-426b-a3c4-31de7ecac062",
+  "ttft_stream_ms": 1290,
+  "time_to_request_ms": 87,
+  "first_content_frame_ms": 1290,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

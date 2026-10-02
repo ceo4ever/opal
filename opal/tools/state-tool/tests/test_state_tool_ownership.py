@@ -3,7 +3,7 @@
   "module": "test_state_tool_ownership",
   "layer": "test",
   "domain": "opal-pipeline",
-  "description": "Codex-only 공개 advance의 lease owner와 run-log actor 신원 연결을 검증한다. 태스크 138 S-11 — state-tool init→첫 advance에서 OPAL_SESSION_ID(또는 CLAUDE_CODE_SESSION_ID 매핑) 존재 시 lease 원자 생성 1회 + run-log actor.session_id 채움을 검증한다. env 미설정 시 종전과 동일 전이여야 한다(회귀). 기존 test_state_tool.py는 수정하지 않고 별도 파일로 신설했다. 태스크 150 S-11(W-5, AC-1·AC-10·C-6) — `TestT150W5ClaimantRoot`가 `_claim_task_lease_if_needed()`의 `claimant_root=os.getcwd()` 전달을 고정한다: 이관 대기(handoff_pending) 태스크에서 허브 cwd의 advance/mark는 lease를 되찾지 못하지만(레코드 불변) 전이는 exit 0으로 통과하고, 워크트리 루트 cwd의 전이는 이관을 소비해 claim에 성공하며(SessionStart 실패 시 자가 치유), 이관 필드가 없는 기존 형식 lease의 claim·foreign_owner 동작과 비 `--wt` 태스크의 응답 키 집합·state.json 산출물은 변경 전과 동일하다. lease 레코드는 손으로 조립하지 않고 `ownership_tool.lease`의 claim/handoff 함수만 거친다.",
+  "description": "state-tool 공개 advance·mark 전이의 task lease claim과 run-log actor.session_id 연결을 검증한다 — 세션 신원이 있으면 lease를 원자 생성하고 actor.session_id를 채우며, 없으면 종전 전이를 유지하고, claimant_root=cwd 전달로 이관 대기 태스크의 허브 재-claim은 실패·워크트리 루트 전이는 이관을 소비해 claim에 성공하는지 확인한다. lease 레코드는 ownership_tool.lease의 claim/handoff 함수로만 만든다",
   "exports": [],
   "depends": ["state_tool.py (CLI subprocess)", "ownership_tool.lease", "ownership_tool.claude_adapter (SESSION_ID_ENV 상수)"]
 }

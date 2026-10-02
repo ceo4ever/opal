@@ -33,6 +33,30 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 병렬 runner에 pytest 옵션을 추가하려면 `--` 뒤에 둔다. 예를 들어
 `run-tests.sh --jobs 2 -- -x`처럼 실행할 수 있다. 외부 병렬 플러그인은 필요하지 않다.
 
+## 모듈 구조
+
+`state_tool.py`는 진입점이다. 자기 디렉토리를 `sys.path`에 한 번 추가하고
+`state_tool_parts` 패키지의 하위 모듈을 `PART_MODULES` 순서로 적재한 뒤, 각 모듈의
+최상위 이름(밑줄 시작 포함)을 모두 `state_tool` 모듈에 재노출하고 `main()`을 실행한다.
+그래서 `run.sh`·`python state_tool.py ...` 실행 경로와 `import state_tool` 후
+`state_tool.<이름>` 접근은 분할 전과 같다. 코드는 `state_tool_parts/` 아래 9개 모듈에 있다.
+
+| 모듈 | 책임 |
+|------|------|
+| `codes.py` | 단계·모드 enum, 오류 코드 테이블(`ERROR_CODES` 등), 자동 승인 판정 |
+| `base.py` | 전이 출력 필드 보조, `ok`/`err` 출력, 시각(`get_kst_datetime`)·외부 모듈 로더, 상태 파일 I/O |
+| `run_log.py` | run-log outbox admission·원자 커밋·drain·사건 조립·완전성 진단 |
+| `journal.py` | STATE.md 생성·동기화, 행 탐색, 모드 판정, todo 미러, 히스토리·메모리 연동 |
+| `guards.py` | 전이 검사, 게이트 산출물 검사, 행 빌드, pipeline 스펙 검증 |
+| `gates.py` | plan 계약·명확화·근거·RED·설계 게이트, `verify`·`event-verify` |
+| `commands_core.py` | `init`·`show`·`resolve-*`·`advance`·`mark`·`block`·`validate`·`add-row`·`status` |
+| `commands_run.py` | `test-clock`·`run-start`·`finalize-attribution`·부트 브리핑·`gate-pass` |
+| `cli.py` | `build_parser`와 `main` |
+
+- import 방향은 `codes` < `base` < `run_log` < `journal` < `guards` < `gates` < (`commands_core`·`commands_run`) < `cli`만 허용한다. 상위 모듈 import와 `commands_core`↔`commands_run` 상호 import는 하지 않는다.
+- 시각·모듈 로더 주입점(`get_kst_datetime`·`_import_ownership_lease`·`_import_run_log_core`)은 `base.<이름>(...)`으로 호출한다. 테스트는 `state_tool_parts.base` 모듈 속성을 patch한다.
+- 형제 도구 경로(`date`·`run-log-tool`·`ownership-tool`·`memory-tool`·`test-tool`·`event-loader`, `skills/`)는 `state-tool` 디렉토리 기준으로 계산한다. 배포는 `tools` 디렉토리를 통째로 복사하므로 `state_tool_parts/`도 함께 설치된다.
+
 ## 호출 형식
 
 ```bash
@@ -420,6 +444,8 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 ~/.opal/tools/state-tool/run.sh design-gate start  <task-path> --iteration N
 ~/.opal/tools/state-tool/run.sh design-gate record <task-path> --iteration N \
   --verdict pass|rewrite|input_error --evaluator-result <json> [--rewrite-target plan|scenario|both]
+~/.opal/tools/state-tool/run.sh design-gate combine <task-path> --iteration N \
+  --design-result <json> --scenario-result <json> --output <json>
 ~/.opal/tools/state-tool/run.sh design-gate reset  <task-path> --owner user --note <사유>
 ```
 
@@ -428,6 +454,8 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 - 문서 묶음 hash = sha256(`"TASK.md\n"+h1+"\nPLAN.md\n"+h2+"\nTEST-SCENARIO.md\n"+h3`). TASK 요구 hash = TASK.md `## Constraints`·`## Acceptance criteria` 본문 sha256.
 - `start` 검사 순서: PM 경로 → `execute.implement` pending(`design_gate_locked`) → `retry_limit`(`design_gate_retry_limit`) → 열린 시도(`design_gate_attempt_open`, 단 열린 시도의 묶음 hash가 현재와 다르면 그 시도를 `superseded`로 닫고 진행) → `plan.design_gate` 앞 행 완료(`stage_transition_violation`) → 대상 문서 존재(`design_gate_input_missing`) → TASK 요구 hash(`task_reconfirm_required`) → `N = iteration+1`(`design_gate_iteration_invalid`) → 직전 verdict가 rewrite면 대상 문서 중 하나라도 불변이면 `rewrite_target_unchanged` → 결정론 검사. 결정론 검사 전 거부는 상태를 바꾸지 않는다.
 - 결정론 검사: sdlc-v2 TASK 5절, 기존 PLAN 계약 검사 전 항목, 모든 AC/C의 Work item `완료 기준 연결`(`uncovered requirement AC-N`), `## Findings` H3 4소절(`직접 변경`·`회귀 확인`·`문서 갱신`·`미확인 가정`) 존재·비공백, `회귀 확인` 경로가 Work item `변경 대상` 또는 `직접 변경`·`문서 갱신`에도 있으면 `regression target listed as change`, `직접 변경`·`문서 갱신` 경로가 Work item `변경 대상`에 없으면 `finding not in work items`, `미확인 가정` 항목은 `없음` 또는 Risks의 `H-N` 참조, 형제 test-tool(`sys.executable test-tool/test_tool.py`) `scenario-coverage-build --template sdlc-v2` + `scenario-coverage-check`의 exit 0(16은 missing 병합, 17은 input_error). 실패는 `design_gate_deterministic_fail`(exit 1, `missing` 동봉)이며 시도 1회로 history에 `deterministic_fail`로 남고 상한 계산에 포함된다. `verify --plan-contract-check`는 이 strict 검사를 쓰지 않는다.
+- `start` 성공 응답의 이전 지적 필드: `previous_gaps`(설계 gaps 다음 시나리오 gaps 순서의 문자열 배열), `previous_gaps_by_scope`(`{"design": [...], "scenario": [...]}`), `previous_gaps_iteration`(gaps를 읽은 마지막 회차 정수, 읽은 파일이 없으면 `null`). `design_gate.history`를 최신부터 역순으로 `verdict`가 `deterministic_fail`·`input_error`·`superseded`가 아닌 첫 회차 k를 골라 `<task>/run/design-gate-i{k}.json`의 `design.gaps`·`scenario.gaps`(문자열 항목만)를 읽는다. 파일이 없거나 읽을 수 없으면 더 이전 회차로 가고, 읽었는데 gaps가 모두 비어 있으면 거기서 멈춰 빈 배열과 그 회차 k를 반환한다. gaps id는 문자열의 첫 `: ` 앞부분 전체(`: `가 없으면 전체)이며 `_gap_id()`가 정의한다. 같은 상태·같은 파일이면 항상 같은 값이다. 거부 경로와 `deterministic_fail` 응답에는 이 필드가 없다.
+- `combine`: evaluator의 `scope: design`·`scope: scenario` 부분 결과 두 파일을 단일 `design-rubric` 결과 형식 파일 하나(`input_bundle_hash`·`iteration`·`design{axes,gaps}`·`scenario{scores,average,gaps}`·`resolved_gaps`·`advisories`·`verdict`·`rewrite_target`)로 결합해 `--output`에 쓴다. `verdict`는 설계 4축이 모두 `PASS`(대소문자 무시)이고 점수 셋이 모두 ≥1이며 평균 ≥1.5일 때만 `pass`, 그 외는 `fail`이고 `rewrite_target`은 설계 축만 미달이면 `plan`, 시나리오만 미달이면 `scenario`, 둘 다면 `both`(`pass`면 `null`)다. `average`는 세 점수 평균의 소수 셋째 자리 반올림, `resolved_gaps`는 설계 쪽 다음 시나리오 쪽 순서로 잇고, `advisories`는 시나리오 부분 결과의 것만 쓰되 열린 시도가 refinement면 빈 배열이다. 검사 순서: ① 열린 시도 없음·`--iteration` 불일치 `design_gate_iteration_invalid` → ② 부분 결과 `input_bundle_hash`·`iteration`이 열린 시도와 다르거나 없음 `design_gate_result_stale` → ③ `scope` 불일치·필수 축·점수 누락·점수 비숫자·`resolved_gaps.status`가 `resolved|unresolved`가 아님·`resolved_gaps` id 집합이 해당 scope의 `previous_gaps_by_scope` id 집합과 다름 `design_gate_partial_invalid`(`detail`에 사유). `state.json`을 쓰지 않고 락·run-log 사건을 만들지 않으며 출력은 임시 파일에 쓴 뒤 `os.replace`한다. 성공 응답은 `{ok, output_path, verdict, rewrite_target, resolved_gaps_count}`이고 출력 파일은 `record --evaluator-result`로 그대로 쓸 수 있다(`fail`은 `record --verdict rewrite --rewrite-target <값>`).
 - `start` 통과: `status=evaluating`, `current_attempt` 기록, 통과·승인 hash 삭제, `plan.design_gate`→in_progress, done이던 `plan.user_confirm`→pending, run-log `gate.requested`(`gate_id=design-gate-i{N}`)를 같은 커밋으로 기록.
 - `record` 거부(상태 불변·시도 유지, 검사 순서): 열린 시도 없음·회차 불일치 `design_gate_iteration_invalid` → 묶음 변경 `design_gate_input_changed` → (`--verdict pass|rewrite`에 한해) `--evaluator-result` JSON 최상위 `input_bundle_hash`가 현재 열린 시도의 `bundle_hash`와 같고 `iteration`이 `--iteration` N과 같아야 하며, 없거나 다르면 `design_gate_result_stale`(ADD-1, 157) → pass·rewrite에서 `design.axes` 4키(`completeness`·`decision_clarity`·`executability`·`recoverability`)·`scenario.scores` 3키(`goal`·`adoption`·`boundary`) 누락이나 rewrite의 `--rewrite-target` 누락 `design_gate_result_invalid` → pass인데 4축 전부 PASS·시나리오 각 ≥1·평균 ≥1.5가 아니면 `design_gate_verdict_mismatch`. `input_error`는 `design_gate_result_stale`·축 검사 모두 대상이 아니다(파일 부재·파싱 실패·`input_bundle_hash` 부재 허용). evaluator에게 넘기는 판정 입력에는 `input_bundle_hash`(=`design-gate start` 응답의 `bundle_hash`)를 반드시 포함해야 하며, evaluator는 결과 JSON 최상위에 그 값과 `iteration`을 그대로 반환해야 한다.
 - `record` 성공: pass→`status=pass`, `passed_bundle_hash`, `plan.design_gate` done. 그 외→`status=fail`, `iteration - limit_from ≥ limit`이면 `status=retry_limit`과 `transition_action=await_user`·`report_type=decision_request`. 모두 history에 추가하고 run-log `gate.resolved`(`data.verdict` pass→`approved`, 그 외→`rejected`, 원문 verdict는 summary)를 같은 커밋으로 남긴다.
@@ -507,7 +535,7 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
   "ok": true, "command": "verify", "evidence_check": "routed",
   "items": [
     {"element": "목표", "verdict": "확정", "reasons": [],
-     "citations": [{"raw": "`opal/tools/state-tool/state_tool.py:100`", "grade": "E2", "exists": true}],
+     "citations": [{"raw": "`opal/tools/state-tool/state_tool_parts/codes.py:100`", "grade": "E2", "exists": true}],
      "source": "clarification"},
     {"element": "제약", "verdict": "미확정", "reasons": ["citation_missing"], "citations": [],
      "source": "clarification"},
@@ -675,7 +703,7 @@ bash opal/tools/state-tool/run-tests.sh --jobs 4
 
 ## 에러 코드 카탈로그 (59종)
 
-코드는 `state_tool.py`의 세 물리 분리 테이블이 소유한다. 기본 상태 오류는 `ERROR_CODES` 59종,
+코드는 `state_tool_parts/codes.py`의 세 물리 분리 테이블이 소유한다. 기본 상태 오류는 `ERROR_CODES` 59종,
 run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종, 설계 게이트 오류는 `DESIGN_GATE_ERROR_CODES`
 14종이다. `err()`가 조회 시에만 `ERROR_CODES` → `RUN_LOG_STATE_ERROR_CODES` → `DESIGN_GATE_ERROR_CODES`
 순으로 합성하며, 종수는 문서가 아니라 코드의 키 집합을 실측한다. 이 절 헤딩의 종수는 `ERROR_CODES` 기준이다.
@@ -696,6 +724,7 @@ run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종, 설계 게이트 오
 | `design_gate_input_changed` | `record` 시점 묶음 hash가 시도 시작 시점과 다름 |
 | `design_gate_result_stale` | evaluator 결과의 `input_bundle_hash`·`iteration`이 현재 열린 시도와 불일치(pass·rewrite만, ADD-1) |
 | `design_gate_result_invalid` | evaluator 결과 필수 축 누락 또는 rewrite의 `--rewrite-target` 누락(pass·rewrite만) |
+| `design_gate_partial_invalid` | `combine` 부분 결과의 `scope`·축·점수·`resolved_gaps` 형식 위반 또는 `resolved_gaps` id 집합이 이전 지적과 불일치(`combine` 전용, `detail` 동봉) |
 | `design_gate_verdict_mismatch` | `--verdict pass`인데 설계 4축·시나리오 기준 미충족 |
 | `design_gate_not_passed` | `status≠pass`에서 `plan.design_gate` 완료·EXECUTE 진입 시도 |
 | `design_bundle_mismatch` | 현재 묶음 hash가 통과·승인 hash와 불일치 |
@@ -722,7 +751,7 @@ run-log 연동 오류는 `RUN_LOG_STATE_ERROR_CODES` 15종, 설계 게이트 오
 
 ### 기본 상태 오류 (59종 실측 SSOT — PLAN §2.18 E-1 + 070 R-1/R-4/R-9 + 091 F-004 R-10/R-11 + 093 F-004 R-4 + 094 R-3/R-4/R-9 + 098 F-003 R-4 + 106 F-004 R-4 + 111 W-1 + 118 W-4 + 122 W-2 + 134 W-2 + 156 W-1)
 
-> 종수는 `len(ERROR_CODES)`(`state_tool.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
+> 종수는 `len(ERROR_CODES)`(`state_tool_parts/codes.py`) 실측값이 기준이다 — 이 헤더 숫자를 리터럴로 신뢰하지 말고 코드 실측으로 재검증할 것(094 R-9 ①, S-7/S-15).
 
 | # | 에러 코드 | 발생 명령 | 종료 코드 | 의미 |
 |---|---------|---------|---------|------|

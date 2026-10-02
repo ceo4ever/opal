@@ -1,0 +1,29 @@
+{
+  "input_bundle_hash": "2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:58 (## Findings > 문서 갱신) ↔ PLAN.md:88 (W-3 구체적 변경) — Findings는 `opal/tools/test-tool/README.md`의 `resolve` 출력 예시(`:41-53`)에 `source_path`를 더한다고 적었습니다. 하지만 W-3에는 'README `unit` 절을 D-8 원문으로 다시 쓰고 구형 설정 이관 절차(D-9)를 더한다'만 있어 이 문서 갱신을 맡은 Work item이 없습니다. 구현자는 resolve 예시를 고칠지 스스로 정해야 합니다.",
+      "decision_clarity-1: PLAN.md:72 (D-3 검사 범위) — `--changed-files` 상대 경로의 해석 기준을 정하지 않았습니다. 기준 후보는 `--project-root`와 프로세스 cwd입니다. `run_files`의 `{files}` 자리에 넣는 경로 형식(프로젝트 루트 기준 상대 경로 또는 절대 경로)과 셸 인용 방식도 정하지 않았습니다. 그래서 공개 CLI 인자 해석과 실제 실행 명령 형태를 구현자가 고르게 됩니다. `scope.checked`·`requested`에 원문 경로와 정규화 경로 중 무엇을 담을지도 함께 정해야 합니다. S-5는 `../outside.py`를 `outside_project`로, `checked`를 `[\"a.py\"]`로 기대하는데, 이는 시나리오가 암묵적으로 가정한 것이고 PLAN에서 결정한 계약은 아닙니다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

@@ -1,0 +1,32 @@
+{
+  "input_bundle_hash": "481a730af58424990f1ab27b201ca19bed9511dca379de87ec87c8b5c1f8cbdb",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "PASS",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "decision_clarity-1: `PLAN.md` §Decisions and contracts D-1: \"PM이 상황에 맞게 record를 생략하거나 빈 결과로 기록할 수 있다 — 구체적 분기 기준은 아직 정하지 않았다\" — coverage exit 16/17 회차에서 record를 생략할지, 빈 결과로 기록할지는 구현자가 정해야 하는 상태다. 계약이 하나로 정해지지 않았다(state-tool 호출 여부, 남길 verdict 값, 반복 상한 집계에 넣을지).",
+      "decision_clarity-2: `PLAN.md` §Findings 미확인 가정: \"exit 16과 17의 차이(완전 미디스패치 vs 부분 디스패치)가 record 처리에 어떤 영향을 주는지 아직 확인하지 않았다\" — exit 16과 exit 17을 같은 방식으로 처리할지 따로 처리할지가 정해지지 않았다.",
+      "executability-1: `PLAN.md` §Work items W-1: \"(정확한 기준은 구현 중 정리)\" — W-1만 보고는 추가 설계 없이 구현할 수 없다. design-gate.md에 넣을 분기 서술의 내용과 기준을 opal-task-agent가 구현 중에 직접 정해야 한다."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 0,
+      "adoption": 2,
+      "boundary": 1
+    },
+    "average": 1.0,
+    "gaps": [
+      "goal-1: `TEST-SCENARIO.md:20` S-1 기대 결과 — \"PM이 record를 생략하거나 빈 결과로 기록한다(정확한 분기 기준 미정)\"가 두 처리를 모두 허용하므로, exit 16 회차에서 record를 생략할지 빈 결과로 기록할지 구현자가 선택해야 한다. 이 시나리오로는 AC-1(`TASK.md` §Acceptance criteria: \"PM이 record를 어떻게 처리해야 하는지 명확하다\")을 검증할 수 없다. 처리 하나와 확인할 기록 필드·exit 값을 정하는 기대 결과가 필요하다"
+    ]
+  },
+  "resolved_gaps": [],
+  "advisories": [],
+  "verdict": "fail",
+  "rewrite_target": "both"
+}

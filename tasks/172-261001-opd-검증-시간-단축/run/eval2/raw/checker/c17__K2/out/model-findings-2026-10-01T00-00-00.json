@@ -1,0 +1,28 @@
+{
+ "check": "convention",
+ "status": "pass",
+ "findings": [
+  {
+   "id": "GC-001",
+   "fingerprint": "7ff4bf4fc2edee8d",
+   "category": "언어 규칙",
+   "severity": "medium",
+   "confidence": "high",
+   "disposition": "blocking",
+   "rule_id": "CONVENTIONS.md §언어 규칙",
+   "source_tier": "T0",
+   "location": {
+    "file": "opal/core/references/demo-guide.md",
+    "line": 15
+   },
+   "evidence": "신규 '## 사용 예시' 절(15~19행) 본문이 영어 문장으로만 작성됨. 파일의 나머지 본문은 한국어이며 기술 용어/코드 식별자(average, TypeError)만 영어여야 함.",
+   "impact": "문서 본문 한국어 규칙(기술 용어는 영어 병기)을 위반하고 같은 문서 내 언어가 혼재한다.",
+   "remediation": {
+    "guidance": "15~19행 본문을 한국어로 번역하고 average, TypeError 등 기술 용어는 영어로 병기한다.",
+    "auto_fixable": false
+   },
+   "verification": "해당 절 본문이 한국어 문장이며 식별자만 영어인지 재검사로 확인한다.",
+   "suppression": null
+  }
+ ]
+}

@@ -1534,6 +1534,13 @@ install_opal() {
             success "code-scan run.sh 실행 권한 설정"
         fi
 
+        # ── convention-precheck 실행 권한 (172) ──
+        local convention_precheck_run="$opal_home/tools/convention-precheck/run.sh"
+        if [[ -f "$convention_precheck_run" ]]; then
+            chmod +x "$convention_precheck_run"
+            success "convention-precheck run.sh 실행 권한 설정"
+        fi
+
         # ── worktree-tool 실행 권한 (092) ──
         local worktree_run="$opal_home/tools/worktree-tool/run.sh"
         if [[ -f "$worktree_run" ]]; then

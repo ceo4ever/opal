@@ -1,0 +1,41 @@
+{
+  "input_bundle_hash": "0a3efc118c5e4569e413f50abd7ec076807b71b2a6687af3fbae3e111fdd750f",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "FAIL",
+      "recoverability": "FAIL"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:6,10 / TASK.md:10 — PLAN은 '구현 범위와 검증 조건은 REQUEST.md §변경 내용·§테스트를 따른다'고 위임하지만, REQUEST.md가 태스크 폴더에 없다(ls 결과: No such file). 그래서 §변경 내용 1~8·2-1·2-2·§162 복구 순서에 담긴 요구가 Work item·Risks·시나리오에 빠짐없이 옮겨졌는지 확인할 수 없다. 원문 내용을 PLAN에 옮길지, 파일을 복원할지 정해야 한다",
+      "completeness-2: PLAN.md:51 (W-6) / TASK.md:27 (AC-6) — AC-6은 태스크 162 재기동과 첫 checkpoint의 실제 결과 기록을 요구한다. 그러나 W-6은 '설치본 검증 명령 준비'만 다루고, install 실행·162 재기동·checkpoint 실측(S-9, S-10)을 수행하고 기록할 Work item이 없다. 승인 뒤 누가 어떤 순서로 실행할지를 구현자가 정해야 한다",
+      "completeness-3: PLAN.md:20 (Findings §회귀 확인) — test_adapter_cmux.py·test_adapter_generic.py·test_lease.py를 재실행한다고 적었지만, 어느 Work item의 완료 기준에도 들어 있지 않다. 어느 단계에서 누가 재실행할지가 정해지지 않았다"
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": [
+        "S-6",
+        "S-9"
+      ],
+      "basis": "S-6의 방법·환경은 'pytest / 두 도구 및 실제 Codex sandbox'다. 실제 Codex sandbox에서 lease를 얻은 뒤 허브 registry 쓰기가 거부되는 경로는 S-9(설치본·실제 Orca/Codex, 'codex-start ok', 검증 대상 AC-4)를 실행할 때도 그대로 지나간다. 그래서 같은 AC-4 실환경 신호를 Codex 실기동 두 번으로 따로 확인한다. 반면 S-9 기대 결과에는 `registry_owner_deferred_to_hub` 진단이 없어, 실환경에서 확인해야 할 신호가 한 시나리오에 모여 있지 않다.",
+      "recommendation": "S-6은 pytest 단위 검증(EPERM/EACCES/EROFS는 30초 대기 없이 `registry_write_denied`로 분류, foreign owner는 실패)으로 한정하세요. 실제 Codex sandbox의 권한 거부 관측은 S-9 기대 결과에 'registry 권한 거부가 발생했다면 codex-start가 ok와 `registry_owner_deferred_to_hub` 진단을 반환'이라는 조건으로 합치세요."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}

@@ -1,0 +1,24 @@
+[WORKER]
+
+## 이벤트 검증
+- event: `worker.dispatch`
+- receipt: /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/add1-fx/c2-2/receipts/s13-receipt-design.json
+- verification: 하네스가 호출 직전 `event-loader load`로 receipt를 새로 만들고 `event-loader verify --receipt <위> --event worker.dispatch --project-root /Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172`로 `ok: true`를 확인했다. 너도 진입 게이트대로 직접 verify하고 receipt의 `required_documents[].content` 전문을 적용하라. verify는 현재 작업 디렉터리와 무관하게 다음 절대경로 명령 그대로 실행한다(다른 --project-root를 쓰지 않는다): `/Users/lucas/.opal/tools/event-loader/run.sh verify --receipt /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/add1-fx/c2-2/receipts/s13-receipt-design.json --event worker.dispatch --project-root /Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172`
+
+## 작업
+opal-evaluator-agent를 `phase: design-rubric`으로 수행하라. 이번 호출의 `scope`는 `design`다. 판정 JSON만 반환하고 파일을 만들지 않는다(부분 결과 계약 `scope: design`/`scope: scenario`를 따른다).
+
+```yaml
+phase: design-rubric
+scope: design
+task_folder: /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/add1-fx/c2-2/s13fx
+task_md: /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/add1-fx/c2-2/s13fx/TASK.md
+plan_md: /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/add1-fx/c2-2/s13fx/PLAN.md
+scenario_source: /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/add1-fx/c2-2/s13fx/TEST-SCENARIO.md
+iteration: 1
+input_bundle_hash: 8b6ec3238c5c22d4f2bc4ab8eca13ed4f413c42145ca04e8f9cccccf4605ff7b
+refinement: false
+contract_path: (사용 안 함 — design-rubric)
+timestamp: 2026-10-01T00-00-00
+project_root: /Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_172
+```

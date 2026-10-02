@@ -1,0 +1,580 @@
+{
+  "base_sha": "dee405ca6c072e47c78f7a967adb70469a420a2d",
+  "head_sha": "3c77f33ff6db7846344c7a4d779d9e125c06040a",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "docs/CONVENTIONS.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          218,
+          238
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/harness/header-rules.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          114,
+          134
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/harness/pm-review-gate.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          67,
+          87
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/header-standard.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          172,
+          192
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-skill-tester/scripts/skill_tester.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          135,
+          168
+        ],
+        [
+          422,
+          445
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/code-scan/README.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          132,
+          153
+        ],
+        [
+          280,
+          300
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/code-scan/code-scan.js",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          34,
+          55
+        ],
+        [
+          1044,
+          1107
+        ],
+        [
+          3338,
+          3362
+        ],
+        [
+          3611,
+          3638
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/code-scan/tests/test-header-history.js",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          35
+        ],
+        [
+          145,
+          224
+        ],
+        [
+          282,
+          302
+        ],
+        [
+          304,
+          324
+        ],
+        [
+          355,
+          375
+        ],
+        [
+          454,
+          484
+        ],
+        [
+          507,
+          548
+        ],
+        [
+          573,
+          593
+        ],
+        [
+          598,
+          685
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/code-scan/tests/test-validate.js",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          711,
+          1058
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/git-sync-tool/tests/conftest.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/git-sync-tool/tests/test_git_sync_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/oppb-runtime-tool/tests/test_pilot_isolation.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          55,
+          80
+        ],
+        [
+          381,
+          401
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/oppb-runtime-tool/tests/test_product_flow.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/run-log-tool/tests/test_run_log_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/README.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          26,
+          69
+        ],
+        [
+          524,
+          544
+        ],
+        [
+          692,
+          712
+        ],
+        [
+          739,
+          759
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          37
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/__init__.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/base.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          619
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/cli.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          525
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/codes.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          479
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/commands_core.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          1482
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/commands_run.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          507
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/gates.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          2502
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/guards.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          541
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/journal.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          500
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/run_log.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          1452
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/fixtures/state_tool_surface.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          387
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/state_tool_test_support.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          21,
+          41
+        ],
+        [
+          138,
+          158
+        ],
+        [
+          931,
+          967
+        ],
+        [
+          1488,
+          1508
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_pilot_shared_contract.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          74,
+          99
+        ],
+        [
+          418,
+          438
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_split_surface.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          138
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_state_tool_core_cli.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          926,
+          946
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_state_tool_extended_contracts.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          4,
+          24
+        ],
+        [
+          42,
+          63
+        ],
+        [
+          116,
+          150
+        ],
+        [
+          223,
+          243
+        ],
+        [
+          543,
+          563
+        ],
+        [
+          1782,
+          1802
+        ],
+        [
+          2051,
+          2071
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_state_tool_mode_contracts.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          50,
+          70
+        ],
+        [
+          763,
+          783
+        ],
+        [
+          1165,
+          1185
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_state_tool_ownership.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_state_tool_verification_gates.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          361,
+          381
+        ],
+        [
+          1639,
+          1659
+        ],
+        [
+          1847,
+          1867
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/test-tool/tests/test_e2e_action_value_redaction.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/tool-scan/tests/test_tool_scan.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          17
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-tool/worktree_tool.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ],
+        [
+          177,
+          197
+        ]
+      ]
+    }
+  ]
+}

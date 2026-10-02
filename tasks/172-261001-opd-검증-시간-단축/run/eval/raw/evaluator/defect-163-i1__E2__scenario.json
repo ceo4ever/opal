@@ -1,0 +1,107 @@
+{
+ "agent": "opal-evaluator-agent",
+ "model": "opus",
+ "effort": "high",
+ "max_turns": 50,
+ "returncode": 0,
+ "elapsed_s": 85.3,
+ "stderr": "",
+ "response": {
+  "duration_api_ms": 79635,
+  "stop_reason": "end_turn",
+  "session_id": "5b4c8700-ec73-4d7b-bfc6-e072dccb5605",
+  "total_cost_usd": 0.452869,
+  "usage": {
+   "input_tokens": 14,
+   "cache_creation_input_tokens": 37855,
+   "cache_read_input_tokens": 250265,
+   "output_tokens": 4996,
+   "output_tokens_details": {
+    "thinking_tokens": 1599
+   },
+   "server_tool_use": {
+    "web_search_requests": 0,
+    "web_fetch_requests": 0
+   },
+   "service_tier": "standard",
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 37855,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "inference_geo": "not_available",
+   "iterations": [
+    {
+     "input_tokens": 2,
+     "output_tokens": 1954,
+     "cache_read_input_tokens": 54283,
+     "cache_creation_input_tokens": 2040,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 2040
+     },
+     "type": "message"
+    }
+   ],
+   "speed": "standard",
+   "fallback_credit": null
+  },
+  "modelUsage": {
+   "claude-opus-5-5": {
+    "inputTokens": 14,
+    "outputTokens": 4996,
+    "cacheReadInputTokens": 250265,
+    "cacheCreationInputTokens": 37855,
+    "webSearchRequests": 0,
+    "costUSD": 0.452869,
+    "contextWindow": 1000000,
+    "maxOutputTokens": 128000,
+    "thinkingTokens": 1599,
+    "canonicalModel": "claude-opus-5-5",
+    "provider": "firstParty",
+    "costBasis": "list"
+   }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+   "spawned": 0,
+   "requested": {
+    "background": 0,
+    "foreground": 0,
+    "unset": 0
+   },
+   "started_in_background": 0,
+   "max_depth": 0,
+   "spawned_by_subagents": 0,
+   "completed": 0,
+   "failed": 0,
+   "killed": {
+    "parent": 0,
+    "user": 0,
+    "system": 0
+   },
+   "refused": {
+    "depth_limit": 0,
+    "concurrency_limit": 0,
+    "budget": 0
+   },
+   "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "진입 게이트 verify가 `ok: true`로 통과했고(`verified_document_count: 4`), receipt의 필수 문서 4종 전문을 적용한 뒤 시나리오를 채점했습니다. 이번 호출은 `scope: scenario`라서 시나리오 3축과 `advisories[]`만 채점했고, `verdict`·`rewrite_target`은 정하지 않았습니다. 그 결합은 `design-gate combine`이 맡습니다. 만든 파일은 없습니다.\n\n**채점 요약**\n- **① goal = 1**: 목표를 겨냥한 시나리오는 S-1 하나뿐입니다. 그런데 단위 테스트(unit) 계층에서만 확인하고, 기대 결과에 \"구체적 방식 미정\"이 그대로 남아 있습니다. 사용자·운영 계층에서 목표를 직접 확인하지 못하므로 2점이 아닙니다.\n- **⑤ adoption = 2**: 기존 동작을 교체하는 목표가 아니라 실패 처리 분기를 추가하는 목표라서 2점입니다.\n- **⑥ boundary = 1**: 실패 조건 두 가지(허브 쓰기 권한 없음, cmux 미설치)는 마련돼 있습니다. 하지만 두 기대 결과 모두 미정이거나 \"동작하거나 실패한다\"는 양자택일이라, 어떤 결과가 나와도 통과로 판정할 수 있습니다. 실패 경로를 실제로 확인하지 못하므로 2점이 아닙니다.\n- **평균 1.33**: 통과선 1.5에 못 미치므로, 결합 단계에서는 시나리오가 미달로 처리됩니다.\n\n**gaps를 1점 축에도 적은 이유**: 축별 판정 레코드 규칙은 gap을 \"0점 축일 때만\" 쓰라고 합니다. 반면 fail일 때는 \"미달 축별 gaps[]를 반환한다\"는 규칙도 있습니다. 이번에는 0점 축이 없는데 평균 미달로 fail이 되므로, 첫 규칙만 따르면 다시 쓸 근거가 하나도 남지 않습니다. 그래서 평균을 끌어내린 1점 축 두 개(goal, boundary)의 gaps를 함께 넣었습니다.\n\n이전 회차 gaps(`previous_gaps`)가 입력에 없어서 `resolved_gaps`는 빈 배열입니다. 중복·계층 과잉·분류 오류에 해당하는 근거가 없어 `advisories`도 비어 있습니다.\n\n```json\n{\n  \"artifact_path\": null,\n  \"summary\": \"design-rubric(scope=scenario) 채점 완료: scores={goal:1, adoption:2, boundary:1}, average=1.33 — 0점 축은 없으나 평균이 통과선 1.5에 못 미침(verdict 계산은 design-gate combine 소관)\",\n  \"status\": \"completed\",\n  \"input_bundle_hash\": \"3a9f4f63d8de726b9dc2584772f5629b5adf4d2bebf6bbf3826d6fc4e6574215\",\n  \"iteration\": 1,\n  \"scope\": \"scenario\",\n  \"scenario\": {\n    \"scores\": {\"goal\": 1, \"adoption\": 2, \"boundary\": 1},\n    \"average\": 1.33,\n    \"gaps\": [\n      \"goal-1: `TEST-SCENARIO.md` §Scenarios S-1 — 기대 결과가 '오류 코드와 복구 안내가 반환된다(구체적 방식 미정)'로 남아 있다. 반환할 오류 코드 값, 복구 안내 내용, 복구 경로(권한 상승 재시도인지 로컬 확정인지)를 구현자가 고르게 된다. 이 상태로는 AC-1의 '명확한 복구 경로'를 판정할 수 없다. 또 unit 계층에서만 확인하므로 실제 부팅 경로(worktree-tool이 코덱스 어댑터로 부팅하는 운영 계층)에서 목표 달성을 직접 확인하는 시나리오가 없다.\",\n      \"boundary-1: `TEST-SCENARIO.md` §Scenarios S-2 — 기대 결과 '안전하게 동작하거나 명확히 실패한다(지원 여부 미정)'는 어느 결과든 통과가 되는 양자택일이다. cmux가 없을 때 status를 지원할지, 정해진 오류로 실패시킬지를 구현자가 고르게 된다. 실패·경계 경로를 실제로 판정하지 못한다.\",\n      \"boundary-2: `TEST-SCENARIO.md` §Scenarios — D-1에서 권한 상승 재시도를 택했을 때 재시도까지 실패하는 경로, C-1(checkpoint 커밋 포맷 불변)과 정상 부팅 경로가 그대로인지 확인하는 경계·제약 시나리오가 없다. 이런 경계를 검증할지 말지를 구현자가 정하게 된다.\"\n    ]\n  },\n  \"resolved_gaps\": [],\n  \"advisories\": [],\n  \"blockers\": [],\n  \"changed_files\": []\n}\n```",
+  "ttft_ms": 4127,
+  "type": "result",
+  "duration_ms": 81779,
+  "uuid": "90ed68a3-6986-417f-a0f0-9cc1af41ba7a",
+  "ttft_stream_ms": 3448,
+  "time_to_request_ms": 129,
+  "first_content_frame_ms": 3448,
+  "queued_turn_count": 0,
+  "result_index": 0
+ }
+}

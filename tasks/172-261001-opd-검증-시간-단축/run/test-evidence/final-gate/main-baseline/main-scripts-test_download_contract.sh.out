@@ -1,0 +1,40 @@
+
+== (가) 헬퍼 함수 계약 (TC-A*, S-1·S-2·S-6) — RED 시점 FAIL 예상 ==
+
+[PASS] TC-A1 (S-1/S-2/S-6): DL-CONTRACT 헬퍼 정의 존재 (update.sh 4종 / install.sh 2종+계획함수)
+[PASS] TC-A2 (S-1): update.sh _dl_detect_strip 3형식 판정 = 0 / 1 / 1
+[PASS] TC-A3 (S-1): install.sh _dl_detect_strip 3형식 판정 = 0 / 1 / 1
+[PASS] TC-A4 (S-1/D-A): install.sh·update.sh의 _dl_detect_strip 본문 동일
+[PASS] TC-A5 (S-2): update.sh _dl_asset_name(정상 sha256sums.txt) = opal-v0.6.11.tar.gz
+[PASS] TC-A6 (S-2): update.sh _dl_asset_name(binary mode '*' 접두) = opal-v0.6.11.tar.gz
+[PASS] TC-A7 (S-2): update.sh _dl_asset_name(.tar.gz 항목 없음) = 공백
+[PASS] TC-A8 (S-2): install.sh _dl_asset_name 3입력 판정 (정상/binmode/항목없음)
+[PASS] TC-A9 (S-2/D-A): install.sh·update.sh의 _dl_asset_name 본문 동일
+[PASS] TC-A10 (S-6): _dl_sha256 — sha256sum만 있는 PATH에서 기준 해시 반환
+[PASS] TC-A11 (S-6): _dl_sha256 — shasum만 있는 PATH에서 동일 해시 반환
+[PASS] TC-A12 (S-6): _dl_sha256 — 해시 도구 둘 다 없는 PATH에서 실패 반환(exit≠0, stdout 공백)
+
+== (나) 추출·체크섬 행위 (TC-B*, S-13·S-5) — RED 시점 FAIL 예상 ==
+
+[PASS] TC-B1 (S-13): extract_to_tmp(prefix 없는 아카이브) → 루트에 VERSION·opal/ 존재
+[PASS] TC-B2 (S-13): extract_to_tmp(prefix 있는 자동 아카이브) → 루트에 VERSION·opal/ 존재
+[PASS] TC-B3 (S-13): extract_to_tmp(구조 위반 아카이브) → 하드 실패(exit≠0), 조용한 진행 금지
+[PASS] TC-B4 (S-5, 양성대조): verify_checksum(정상 sha256sums.txt 주입) → exit 0 + 검증 완료 출력
+[PASS] TC-B5 (S-5): verify_checksum(항목 부재 sha256sums.txt) → 하드 실패(exit≠0)
+[PASS] TC-B6 (S-5): verify_checksum(빈 해시 sha256sums.txt) → 하드 실패(exit≠0)
+[PASS] TC-B7 (S-5): install.sh verify_checksum 본문에 네트워크 호출·경고후통과 경로 부재
+[PASS] TC-B8 (S-5): update.sh 체크섬 분기 — 빈 기대값 무음 통과 패턴 0건 + 고정문자열 매칭
+
+== (다) 구형 잔존 정적 검사 (TC-C*, S-3) ==
+
+[PASS] TC-C1 (S-3①): install.sh에 'opal.tar.gz' 리터럴 0건
+[PASS] TC-C2 (S-3②): 2개 bash 파일에 비고정문자열 grep 매칭(변수 보간 + -F 부재) 0건
+[PASS] TC-C3 (S-3③): 3파일 각각 코드 라인의 'archive/refs/tags' 정확히 1회(폴백 분기 전용)
+[PASS] TC-C4 (S-3, 신형 채택): 3파일 각각 릴리즈 자산 tarball URL(releases/download, sha256sums.txt 아님) 구성 라인 ≥1
+[PASS] TC-C5 (S-3④): 3파일에 무조건 고정 '--strip-components' 0건 (판정값 참조가 12줄 이내 선행해야 함)
+[PASS] TC-C6 (S-3⑤): 3파일 헤더(첫 70줄)에 'DL-CONTRACT (085)' 각인 존재
+
+========================================================
+PASS: 26 | FAIL: 0 | SKIP: 0
+========================================================
+verdict: ALL PASS

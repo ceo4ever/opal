@@ -1,0 +1,266 @@
+{
+  "work_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2",
+  "cases": [
+    {
+      "id": "c02",
+      "kind": "synthetic",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c02/repo",
+      "base_ref": "ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+      "target_files": [
+        "opal/core/references/demo-guide.md"
+      ],
+      "expected": [
+        {
+          "rule_key": "opal-doc-standard",
+          "file": "opal/core/references/demo-guide.md",
+          "min_severity": "medium"
+        }
+      ],
+      "expect_clean": false,
+      "max_allowed_severity": "low"
+    },
+    {
+      "id": "c04",
+      "kind": "synthetic",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c04/repo",
+      "base_ref": "ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+      "target_files": [
+        "opal/tools/demo-tool/demo_tool.py"
+      ],
+      "expected": [
+        {
+          "rule_key": "언어 규칙",
+          "file": "opal/tools/demo-tool/demo_tool.py",
+          "min_severity": "info",
+          "max_severity": "medium"
+        }
+      ],
+      "expect_clean": false,
+      "max_allowed_severity": "low"
+    },
+    {
+      "id": "c06",
+      "kind": "past",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c06/repo",
+      "base_ref": "7a6b3017^",
+      "head_commit": "7a6b3017",
+      "target_files": [
+        "opal/tools/ownership-tool/ownership_tool/codex_adapter.py",
+        "opal/tools/ownership-tool/ownership_tool/ownership_core.py",
+        "opal/tools/ownership-tool/ownership_tool/session_start_hook.py",
+        "opal/tools/ownership-tool/tests/test_codex_identity.py",
+        "opal/tools/ownership-tool/tests/test_session_start.py",
+        "opal/tools/worktree-launcher/tests/test_adapter_orca.py",
+        "opal/tools/worktree-launcher/tests/test_cli.py",
+        "opal/tools/worktree-launcher/tests/test_codex_handoff.py",
+        "opal/tools/worktree-launcher/tests/test_integration.py",
+        "opal/tools/worktree-launcher/tests/test_launcher_core.py",
+        "opal/tools/worktree-launcher/tests/test_settings.py",
+        "opal/tools/worktree-launcher/worktree_launcher/adapters/orca.py",
+        "opal/tools/worktree-launcher/worktree_launcher/cli.py",
+        "opal/tools/worktree-launcher/worktree_launcher/launcher_core.py",
+        "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+        "opal/tools/worktree-tool/schema/worktree.schema.json",
+        "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+        "opal/tools/worktree-tool/worktree_tool.py",
+        "scripts/install-mac.sh",
+        "scripts/install/windows.ps1",
+        "scripts/tests/test_agent_adapter_fields.sh"
+      ],
+      "expected": [],
+      "expect_clean": true,
+      "max_allowed_severity": "medium",
+      "note": "target_files = 과거 gc-findings-convention 기록의 checked_files(21건)"
+    },
+    {
+      "id": "c07",
+      "kind": "past",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c07/repo",
+      "base_ref": "624ea8a0^",
+      "head_commit": "47414d6a",
+      "target_files": [
+        "opal/agents/opal-test-agent/AGENT.md",
+        "opal/core/references/test-tools-schema.yaml",
+        "opal/skills/op-dev-execute/references/execute-guide.md",
+        "opal/templates/test-tools.yaml",
+        "opal/tools/test-tool/README.md",
+        "opal/tools/test-tool/lib/resolver.py",
+        "opal/tools/test-tool/lib/runner.py",
+        "opal/tools/test-tool/test_tool.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/conftest.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/calc.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/pyproject.toml",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-clean/test_calc.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/calc.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/pyproject.toml",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-lint/test_calc.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-test/calc.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-test/pyproject.toml",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-test/test_calc.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-type/calc.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-type/pyproject.toml",
+        "opal/tools/test-tool/tests/fixtures/unit-real/python-type/test_calc.py",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/eslint.config.js",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/package.json",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.test.ts",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/src/calc.ts",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-clean/tsconfig.json",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/eslint.config.js",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/package.json",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.test.ts",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/src/calc.ts",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-lint/tsconfig.json",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/eslint.config.js",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/package.json",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.test.ts",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/src/calc.ts",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-test/tsconfig.json",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/eslint.config.js",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/package.json",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.test.ts",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/src/calc.ts",
+        "opal/tools/test-tool/tests/fixtures/unit-real/ts-type/tsconfig.json",
+        "opal/tools/test-tool/tests/test_red_s161_unit_contract.py",
+        "opal/tools/test-tool/tests/test_test_tool.py"
+      ],
+      "expected": [],
+      "expect_clean": true,
+      "max_allowed_severity": "medium",
+      "note": "target_files = 과거 gc-findings-convention 기록의 checked_files(43건)"
+    },
+    {
+      "id": "c09",
+      "kind": "synthetic",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c09/repo",
+      "base_ref": "ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+      "target_files": [
+        "opal/skills/op-demo-check/SKILL.md"
+      ],
+      "expected": [
+        {
+          "rule_key": "YAML Frontmatter",
+          "file": "opal/skills/op-demo-check/SKILL.md",
+          "min_severity": "high"
+        }
+      ],
+      "expect_clean": false,
+      "max_allowed_severity": "low"
+    },
+    {
+      "id": "c10",
+      "kind": "past",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c10/repo",
+      "base_ref": "48f25a5a^",
+      "head_commit": "48f25a5a",
+      "target_files": [
+        "docs/CONVENTIONS.md",
+        "docs/PROJECT.md",
+        "opal/agents/opal-test-agent/AGENT.md",
+        "opal/core/references/events.json",
+        "opal/core/references/harness/guards.md",
+        "opal/core/references/harness/pm-review-gate.md",
+        "opal/core/references/harness/test-cycle.md",
+        "opal/skills/op-dev-execute/references/execute-guide.md",
+        "opal/skills/op-dev-test-scenario/references/test-scenario-guide.md",
+        "opal/skills/opal-pilot-dev/SKILL.md",
+        "opal/tools/event-loader/tests/test_event_loader_test_event.py",
+        "opal/tools/state-tool/schema/state.schema.json",
+        "opal/tools/state-tool/state_tool.py",
+        "opal/tools/state-tool/tests/test_state_tool_test_cycle.py",
+        "opal/tools/worktree-tool/tests/test_worktree_tool.py",
+        "opal/tools/worktree-tool/worktree_tool.py"
+      ],
+      "expected": [
+        {
+          "rule_key": "@header",
+          "file": "opal/tools/event-loader/tests/test_event_loader_test_event.py",
+          "min_severity": "high"
+        },
+        {
+          "rule_key": "@header",
+          "file": "opal/tools/state-tool/tests/test_state_tool_test_cycle.py",
+          "min_severity": "high"
+        }
+      ],
+      "expect_clean": false,
+      "max_allowed_severity": "medium",
+      "note": "target_files = 구간 변경 파일 중 tasks/ 아래 태스크 산출물 제외(EXECUTE 워커 changed_files에 해당)"
+    },
+    {
+      "id": "c11",
+      "kind": "past",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c11/repo",
+      "base_ref": "502115de^",
+      "head_commit": "502115de",
+      "target_files": [
+        "opal/tools/brain-tool/brain_tool.py",
+        "opal/tools/brain-tool/tests/test_brain_tool.py",
+        "opal/tools/worktree-tool/worktree_tool.py"
+      ],
+      "expected": [],
+      "expect_clean": true,
+      "max_allowed_severity": "medium",
+      "note": "target_files = 과거 gc-findings-convention 기록의 checked_files(3건)"
+    },
+    {
+      "id": "c12",
+      "kind": "synthetic",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c12/repo",
+      "base_ref": "ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+      "target_files": [
+        "opal/tools/demo-tool/demo_tool.py",
+        "opal/core/references/demo-guide.md"
+      ],
+      "expected": [],
+      "expect_clean": true,
+      "max_allowed_severity": "low"
+    },
+    {
+      "id": "c17",
+      "kind": "synthetic",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c17/repo",
+      "base_ref": "ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+      "target_files": [
+        "opal/core/references/demo-guide.md"
+      ],
+      "expected": [
+        {
+          "rule_key": "언어 규칙",
+          "file": "opal/core/references/demo-guide.md",
+          "min_severity": "info",
+          "max_severity": "medium"
+        }
+      ],
+      "expect_clean": false,
+      "max_allowed_severity": "low"
+    },
+    {
+      "id": "c18",
+      "kind": "synthetic",
+      "desc": "",
+      "project_root": "/private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-172/6330081f-4a64-4923-a348-e60a3fcd9d0e/scratchpad/w2/n/c18/repo",
+      "base_ref": "ad289c5a14d51b4ea3a6af1b3f0aa60a0b78a615",
+      "target_files": [
+        "opal/tools/demo-tool/demoHelper.py"
+      ],
+      "expected": [
+        {
+          "rule_key": "파일/폴더",
+          "file": "opal/tools/demo-tool/demoHelper.py",
+          "min_severity": "medium"
+        }
+      ],
+      "expect_clean": false,
+      "max_allowed_severity": "low"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"input_bundle_hash":"c5cad7a9b442a9ca36b6f2c6de03242a689b5ebcb1d5a36979f0b63f6b19e06d","iteration":1,"artifact_path":null,"summary":"design-rubric 판정 완료: verdict=fail, rewrite_target=plan","status":"completed","verdict":"fail",
+"design":{"axes":{"completeness":"PASS","decision_clarity":"FAIL","executability":"PASS","recoverability":"PASS"},
+"gaps":["decision_clarity-1: PLAN.md:47, :50 (Decisions 집계 단위·해제 행) — rewind가 plan_reviews를 []로 비우는데 plan_review_floor를 rewind 때 0으로 되돌릴지 정하지 않았다. reset 뒤 rewind하면 floor가 비워진 목록 길이보다 커서 새 fail이 최대 floor건까지 집계되지 않아 AC-2 상한이 우회된다 — 구현자는 rewind 시 floor 초기화 여부와 집계식을 직접 골라야 한다",
+"decision_clarity-2: PLAN.md:48-49, :66 (Decisions 상한 대기 거부·3번째 fail blocked 표시, W-3 검사 위치) — advance()는 _check_artifact_stage보다 먼저 require(not state['blocked'])를 실행하므로 transition 오류가 'blocked: await_user: ...'로 시작하고 다른 사유의 blocked가 있으면 그 문구가 나온다. TEST-SCENARIO S-3(c)는 'await_user: PLAN pre-review fail limit (3) reached'로 시작한다고 기대한다 — 구현자는 검사를 advance()의 blocked 검사 앞에 둘지 오류 문구 계약을 바꿀지 골라야 한다"]},
+"scenario":{"scores":{"goal":2,"adoption":2,"boundary":2},"average":2.0,"gaps":[]},"rewrite_target":"plan","advisories":[],"blockers":[],"changed_files":[]}

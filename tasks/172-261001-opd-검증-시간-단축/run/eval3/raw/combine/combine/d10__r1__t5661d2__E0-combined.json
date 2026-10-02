@@ -1,0 +1,41 @@
+{
+  "input_bundle_hash": "2daa2e80948b210658533ddc9c8b99fc8d40b9fdc6bfa1d42059355c1def6702",
+  "iteration": 1,
+  "design": {
+    "axes": {
+      "completeness": "FAIL",
+      "decision_clarity": "FAIL",
+      "executability": "PASS",
+      "recoverability": "PASS"
+    },
+    "gaps": [
+      "completeness-1: PLAN.md:95 (Risks H-2 design response) ↔ PLAN.md:76 (D-7 evidence fields) ↔ PLAN.md:88 (W-3) — H-2 says check duration is observed in the layer response, but D-7's layer field list (`check: {cmd, exit, status}`) and W-3 define no duration field. The implementer must decide whether the field exists, its name, and its unit (e.g. `check.duration_ms`). Either add it to D-7 or drop H-2's observation method and replace it with something else (e.g. a separate time measurement in the S-10 evidence).",
+      "decision_clarity-1: PLAN.md:72 (D-3 scope) — The base for resolving relative paths in `--changed-files` (the user's invocation cwd vs `--project-root`) is undefined, which leaves the outcome open for cases like `../outside.py` (S-5). The `requested`, `checked`, and `excluded[].path` notation (original input vs project-relative vs absolute) is also unspecified.",
+      "decision_clarity-2: PLAN.md:72 (D-3 exclusion reasons) — When one file meets more than one of `missing`, `outside_project`, and `pattern_mismatch` (e.g. a missing `gone.md` that also fails the glob, or an outside path that does not exist), it is unclear which reason is recorded. Specify the check order (e.g. outside_project → missing → pattern_mismatch) or a single-reason priority rule."
+    ]
+  },
+  "scenario": {
+    "scores": {
+      "goal": 2,
+      "adoption": 2,
+      "boundary": 2
+    },
+    "average": 2.0,
+    "gaps": []
+  },
+  "resolved_gaps": [],
+  "advisories": [
+    {
+      "id": "A-1",
+      "kind": "mergeable",
+      "targets": [
+        "S-6",
+        "S-8"
+      ],
+      "basis": "Both rows run the same resolve command on the same setup. In the S-6 infer variant (TEST-SCENARIO.md:28, 'pyproject.toml만 있는 변형' + resolve with the infer source), the setup and command are identical to S-8 (b) (TEST-SCENARIO.md:30, 'pyproject.toml만 있는 프로젝트' + `resolve --project-root <tmp>`). The only difference is what each row asserts: S-6 checks `source_path` and S-8 (b) checks the `run`/`run_files` values. Running one execution against two separate expectation rows duplicates the verification signal.",
+      "recommendation": "Fold the `source_path`=`pyproject.toml` absolute-path assertion into S-8 (b)'s expected result and drop the infer variant from S-6, so S-6 keeps only the project and global sources. S-8 (a) uses the real template and S-6's global variant uses a stub config, so those two stay separate."
+    }
+  ],
+  "verdict": "fail",
+  "rewrite_target": "plan"
+}
