@@ -40,3 +40,4 @@
 | 20 | 2026-10-02 11:05 | TEST | ERROR | 최종 보안 검사 FAIL: 신규 blocking GC-001(lazy receipt unit_sha256·delivered 미결속 → 위조 통과 재현)과 advisory GC-002(--require-default-manifest가 문서 루트 미결속). 컨벤션 High 4(테스트 4파일 @header exports 비어 있음) | 수정 필요 |
 | 21 | 2026-10-02 11:15 | TEST | FIX | #20 반영(TEST fix 행 test.item_1): per_doc 전 필드 대조·추가 절 본문을 현재 문서 재계산과 비교·이미 전달된 id 거부, 문서 루트 결속, 테스트 헤더 exports 보완. 회귀 테스트 9건 추가(기존 테스트 불변). 미수정 advisory: test-mode override 흔적·role-doc 허용 루트 확장·임시 폴백 읽기 소유자 검사 | 반영 |
 | 22 | 2026-10-02 11:40 | TEST | GATE | 최종 게이트 재수행: 보안 PASS_WITH_ADVISORIES(blocking 0, GC-001·002 재현 해소 확인), 컨벤션 Critical/High/Medium/Low 0, 전체 pytest 913 passed·기존 실패 4건(시작 커밋 동일) | Pass |
+| 23 | 2026-10-02 12:00 | CLOSE | GATE | CLOSE 완료: DONE.md·brain ingest(5 신설·3 갱신)·회고 4건(fw-inbox)·worktree finalize(state=closed). 실제 ~/.opal 설치와 main merge는 캡틴 결정으로 남김(guards §커밋 규칙) | Pass |
