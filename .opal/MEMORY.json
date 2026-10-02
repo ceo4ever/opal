@@ -173,6 +173,13 @@
   ],
   "history": [
     {
+      "title": "177 이벤트로더 보안보강과 절단위 로딩 실험",
+      "date": "2026-10-02",
+      "stage": "완료",
+      "path": "tasks/177-261002-opd-이벤트로더-보안보강과-절단위-로딩-실험/",
+      "result": "이벤트 로더 보안 권고 4건 해소, 절 단위 로딩을 명시 호출 전용 실험 모드로 구현·측정(기본값 전환 보류). 시나리오 14건 통과, main 머지 완료."
+    },
+    {
       "title": "176 설계 구현 모델 effort 최적화",
       "date": "2026-10-02",
       "stage": "완료",
@@ -199,13 +206,6 @@
       "stage": "완료",
       "path": "tasks/174-261001-opd-헤더-이력-차단과-state-tool-분할/",
       "result": "code-scan validate가 @header 이력(header_history)·머리말 초과(header_overflow)를 차단으로 판정, state_tool.py를 9개 모듈로 분할(동작 보존), 저장소 위반 정리. state-tool 640 passed, main 머지 완료."
-    },
-    {
-      "title": "173 opd2 사전심사 재시도상한과 지적추적",
-      "date": "2026-10-01",
-      "stage": "완료",
-      "path": "tasks/173-261001-opds-opd2-사전심사-재시도상한과-지적추적/",
-      "result": "opd2 PLAN 사전심사: 재검증은 A·B 모두 재디스패치로 문서 정합, fail 3회 상한과 plan-review-reset(사용자 전용) 도입, 지적 해소 추적. opd2 테스트 46 passed, main 머지 완료."
     }
   ]
 }
