@@ -3,7 +3,7 @@
   "module": "tests.test_brain",
   "layer": "test",
   "domain": "console",
-  "description": "대화별 session_id 격리 단위·통합 테스트. opbr_adapter(query --read-only 플래그·allowedTools·extract_json_fence·shell=False·cwd=project_path·cold 플래그 명시·session_id 호출자 제공), BrainSessionRegistry(session_id 키잉·대화별 독립 세션·세션A prime→A만 ready B idle·A ask B 미오염·reset(A) B 불변·같은 프로젝트 a/b 두 세션 공존), TestSessionIdHandleSeparation(conversation_id↔claude핸들 분리·콜드마다 새 uuid4·already-in-use 폴백·재시도 1회 한정·실 claude 0회), 라우터(prime 즉시반환·session_id 필수·query session_id 필수·GET /api/brain/status?project=&session_id= 미등록→idle). project·session_id 모두 필수: 빈값/무효→400. [MUST] 서브프로세스 전부 mock — 실 claude/brain-tool 호출 0회(H-8). 기존 backend 전체 회귀 0. TestBrainPrimePool(프라임 풀 적재·체크아웃+리필·동시 프라임 상한·락 무중첩)·TestBrainWarmInjection(새 대화 웜 핸들 주입→ready+resume·stale resume 투명 재프라임·빈 풀 콜드 폴백)·TestBrainLifespanPrewarm(main.py lifespan 기동 선프라임 트리거·비블로킹)·TestBrainPoolFixtureRegression(reset_brain_registry 픽스처의 풀 상태 클리어 회귀) — PLAN.md §3.2.2 설계 시그니처(prewarm/checkout_warm_handle/adopt_warm_handle) 대상, GREEN(구현 완료). 플레이키 동기화: 체크아웃 직후 풀 비움 확인·동시 체크아웃 무중복 판정은 백그라운드 리필 완료를 threading.Event로 게이트해 결정론화, 신규 세션 웜 주입 시 콜드 프라임 미호출·투명 재프라임 호출 순서 검증은 registry.prewarm을 인스턴스 no-op으로 대체해 리필 부수효과와 분리(리필 자체는 S-3이 별도 담보). 172: 어댑터 단언은 subprocess.Popen 대체(communicate()가 (stdout, stderr)를 돌려주고 returncode 보유) 기반이며 구형 Brain 정책 켜짐을 전제로 하고, 인증이 필요한 라우터 호출은 authed_client(Origin·X-CSRF-Token 자동 부착), 모든 TestClient는 base_url=http://127.0.0.1:7823이다. 실제 subprocess.run·Popen 호출은 autouse 가드가 AssertionError로 막는다.",
+  "description": "대화별 session_id 격리 단위·통합 테스트. opbr_adapter(query --read-only 플래그·allowedTools·extract_json_fence·shell=False·cwd=project_path·cold 플래그 명시·session_id 호출자 제공), BrainSessionRegistry(session_id 키잉·대화별 독립 세션·세션A prime→A만 ready B idle·A ask B 미오염·reset(A) B 불변·같은 프로젝트 a/b 두 세션 공존), TestSessionIdHandleSeparation(conversation_id↔claude핸들 분리·콜드마다 새 uuid4·already-in-use 폴백·재시도 1회 한정·실 claude 0회), 라우터(prime 즉시반환·session_id 필수·query session_id 필수·GET /api/brain/status?project=&session_id= 미등록→idle). project·session_id 모두 필수: 빈값/무효→400. [MUST] 서브프로세스 전부 mock — 실 claude/brain-tool 호출 0회(H-8). 기존 backend 전체 회귀 0. TestBrainPrimePool(프라임 풀 적재·체크아웃+리필·동시 프라임 상한·락 무중첩)·TestBrainWarmInjection(새 대화 웜 핸들 주입→ready+resume·stale resume 투명 재프라임·빈 풀 콜드 폴백)·TestBrainLifespanPrewarm(main.py lifespan 기동 선프라임 트리거·비블로킹)·TestBrainPoolFixtureRegression(reset_brain_registry 픽스처의 풀 상태 클리어 회귀) — PLAN.md §3.2.2 설계 시그니처(prewarm/checkout_warm_handle/adopt_warm_handle) 대상, GREEN(구현 완료). 플레이키 동기화: 체크아웃 직후 풀 비움 확인·동시 체크아웃 무중복 판정은 백그라운드 리필 완료를 threading.Event로 게이트해 결정론화, 신규 세션 웜 주입 시 콜드 프라임 미호출·투명 재프라임 호출 순서 검증은 registry.prewarm을 인스턴스 no-op으로 대체해 리필 부수효과와 분리(리필 자체는 S-3이 별도 담보). 175: 어댑터 단언은 subprocess.Popen 대체(communicate()가 (stdout, stderr)를 돌려주고 returncode 보유) 기반이며 구형 Brain 정책 켜짐을 전제로 하고, 인증이 필요한 라우터 호출은 authed_client(Origin·X-CSRF-Token 자동 부착), 모든 TestClient는 base_url=http://127.0.0.1:7823이다. 실제 subprocess.run·Popen 호출은 autouse 가드가 AssertionError로 막는다.",
   "exports": [
     "TestExtractJsonFence",
     "TestOpbrAdapterCmd",
@@ -59,7 +59,7 @@ from dashboard.backend.tests.auth_helpers import (  # noqa: F401  (fixture 등�
 )
 
 
-# ── 구형 Brain 정책 켜짐 전제 (172 D-15·D-16) ──────────────────────────────────────
+# ── 구형 Brain 정책 켜짐 전제 (175 D-15·D-16) ──────────────────────────────────────
 # 어댑터 spawn 게이트와 Registry 게이트는 정책이 켜져 있을 때만 통과한다. 이 파일의 기존 계약
 # (어댑터 인자·Registry 상태기계·라우터·기동 선프라임)은 구형 Brain 켜짐을 전제로 검증하며,
 # 임시 console.config.json의 legacy_brain_enabled=true로 켠다. 실제 claude는 호출하지 않는다.
@@ -102,7 +102,7 @@ def _mock_scan_projects_with(*paths):
 @pytest.fixture(scope="module")
 def client():
     from dashboard.backend.main import app
-    return authed_client(app)  # 상태 변경 요청에 Origin·CSRF 자동 부착(172 D-22)
+    return authed_client(app)  # 상태 변경 요청에 Origin·CSRF 자동 부착(175 D-22)
 
 
 @pytest.fixture(autouse=True)

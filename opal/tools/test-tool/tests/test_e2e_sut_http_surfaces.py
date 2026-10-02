@@ -4,7 +4,7 @@
   "task": "127-260912-oppl-E2E-하네스-구현",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "W-12 (T12) SUT HTTP 표면 전수 E2E 시나리오 스위트 — surfaces.json이 선언한 kind=\"http\" 표면 16건(sut-health는 S-10 소유)을 실제 임대 SUT 위에서 `e2e run`으로 관통한다. task 172(S-15) 이후 모든 run은 `.opal/e2e/environment.json`의 `session_bootstrap`으로 인증된 세션을 전제하고(쿠키·CSRF·Origin 헤더 자동 병합), 구형 Brain prime·query는 403 `legacy_brain_disabled`, 무세션 401·Origin 없는 POST 403 `origin_required`·/health `auth` 필드·증적 내 세션 평문 부재를 추가로 단언한다. 각 표면은 자기 fixture 시나리오를 임시 폴더에 쓰고 api profile로 실행해 status·응답 필드·후속 observable state를 검증하며, 공통 필수 증적 5종과 assertion expected/actual을 남긴다. surfaces.json·test-scenario.json은 읽기 전용으로만 소비한다(C-8).",
+  "description": "W-12 (T12) SUT HTTP 표면 전수 E2E 시나리오 스위트 — surfaces.json이 선언한 kind=\"http\" 표면 16건(sut-health는 S-10 소유)을 실제 임대 SUT 위에서 `e2e run`으로 관통한다. task 175(S-15) 이후 모든 run은 `.opal/e2e/environment.json`의 `session_bootstrap`으로 인증된 세션을 전제하고(쿠키·CSRF·Origin 헤더 자동 병합), 구형 Brain prime·query는 403 `legacy_brain_disabled`, 무세션 401·Origin 없는 POST 403 `origin_required`·/health `auth` 필드·증적 내 세션 평문 부재를 추가로 단언한다. 각 표면은 자기 fixture 시나리오를 임시 폴더에 쓰고 api profile로 실행해 status·응답 필드·후속 observable state를 검증하며, 공통 필수 증적 5종과 assertion expected/actual을 남긴다. surfaces.json·test-scenario.json은 읽기 전용으로만 소비한다(C-8).",
   "scenarios": ["S-45", "S-46", "S-47", "S-48", "S-49", "S-50", "S-51", "S-52", "S-53", "S-54", "S-55", "S-56", "S-57", "S-58", "S-59", "S-60", "S-15"],
   "exports": ["TestSutHttpSurfaces", "TestUserEnvironmentUntouched", "SURFACE_LEDGER"]
 }
@@ -39,7 +39,7 @@
 
 6. [MUST] H-2 — 외부 의존이 없는 표면을 대역으로 채워 `pass`로 승격하지 않는다.
    brain 계열의 LLM 의존 경로(claude CLI 인증 세션)는 격리 `HOME` 아래에 존재하지
-   않는다. task 172(S-15)부터 구형 Brain은 기본 꺼짐이므로 `sut-brain-prime`·
+   않는다. task 175(S-15)부터 구형 Brain은 기본 꺼짐이므로 `sut-brain-prime`·
    `sut-brain-query`는 결정적 403 `legacy_brain_disabled`(envelope)를 단언한다 —
    정책 꺼짐 경로는 외부 의존 없이 실측되고 `claude` 프로세스가 생기지 않음을 SUT
    로그로 함께 확인한다. 켜진 경로(LLM 의존)는 이 스위트의 대상이 아니다.

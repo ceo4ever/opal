@@ -6,7 +6,7 @@
  *   "description": "S-10 RED — 잠금 화면(D-14) 계약 테스트. 미인증 시 App이 라우터를 마운트하지 않고 LockScreen만 보이며, 이 동안 /api/auth/session 외 API 호출 0회·프로젝트/설정/계정 정보 없음·opal-cli console open 안내 존재, 인증 시 라우터 마운트·교환 0회를 검증한다.",
  *   "exports": [],
  *   "depends": ["lock-screen", "app", "auth"],
- *   "task": "172",
+ *   "task": "175",
  *   "scenarios": ["S-10"]
  * }
  */

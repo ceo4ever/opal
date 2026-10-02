@@ -3,7 +3,7 @@
   "module": "tests.test_brain_spike",
   "layer": "test",
   "domain": "console",
-  "description": "Phase 1 스파이크 L1 단위 테스트 (Phase 2 + B2 대화별 session_id 계약 반영). S-1(출력 파싱 정상), S-2(is_error/비JSON → RuntimeError → 잡 status=error 흡수, 비동기 계약), S-3(커맨드 배열 금지 플래그 부재 + shell=False). Phase 2: //opbr query --read-only(DECISION#23), B2: prime_and_ask 시그니처 session_id+cold 필수. [MUST] 실 claude 서브프로세스 호출 0회 — subprocess.Popen 전부 unittest.mock.patch 격리(H-8). 구독 토큰 소모 없음. 172: subprocess.run 대신 subprocess.Popen 대체(communicate()가 (stdout, stderr)를 돌려주고 returncode 보유)로 같은 계약을 검증하며 타임아웃 시 RuntimeError(prime_and_ask timeout after ...)와 자식 프로세스 종료를 포함한다. 구형 Brain 정책 켜짐 전제, 인증 필요한 호출은 authed_client, 실제 spawn은 autouse 가드가 막는다.",
+  "description": "Phase 1 스파이크 L1 단위 테스트 (Phase 2 + B2 대화별 session_id 계약 반영). S-1(출력 파싱 정상), S-2(is_error/비JSON → RuntimeError → 잡 status=error 흡수, 비동기 계약), S-3(커맨드 배열 금지 플래그 부재 + shell=False). Phase 2: //opbr query --read-only(DECISION#23), B2: prime_and_ask 시그니처 session_id+cold 필수. [MUST] 실 claude 서브프로세스 호출 0회 — subprocess.Popen 전부 unittest.mock.patch 격리(H-8). 구독 토큰 소모 없음. 175: subprocess.run 대신 subprocess.Popen 대체(communicate()가 (stdout, stderr)를 돌려주고 returncode 보유)로 같은 계약을 검증하며 타임아웃 시 RuntimeError(prime_and_ask timeout after ...)와 자식 프로세스 종료를 포함한다. 구형 Brain 정책 켜짐 전제, 인증 필요한 호출은 authed_client, 실제 spawn은 autouse 가드가 막는다.",
   "exports": [
     "test_parse_success",
     "test_parse_error_is_error",
@@ -32,7 +32,7 @@ from dashboard.backend.tests.auth_helpers import (  # noqa: F401  (fixture 등�
 )
 
 
-# ── 구형 Brain 정책 켜짐 전제 (172 D-15·D-16) ──────────────────────────────────────
+# ── 구형 Brain 정책 켜짐 전제 (175 D-15·D-16) ──────────────────────────────────────
 # 어댑터 spawn 게이트와 Registry 게이트는 정책이 켜져 있을 때만 통과한다. 이 파일의 기존 계약
 # (어댑터 인자·Registry 상태기계·라우터·기동 선프라임)은 구형 Brain 켜짐을 전제로 검증하며,
 # 임시 console.config.json의 legacy_brain_enabled=true로 켠다. 실제 claude는 호출하지 않는다.
@@ -49,7 +49,7 @@ def legacy_brain_on(isolated_console_home):
 @pytest.fixture(scope="module")
 def client():
     from dashboard.backend.main import app
-    return authed_client(app)  # 상태 변경 요청에 Origin·CSRF 자동 부착(172 D-22)
+    return authed_client(app)  # 상태 변경 요청에 Origin·CSRF 자동 부착(175 D-22)
 
 
 def _mock_proc(stdout: str, returncode: int = 0) -> MagicMock:
@@ -351,7 +351,7 @@ class TestCmdFlags:
 
 
 class TestAdapterProcessLifecycle:
-    """Popen+communicate 전환 후에도 유지되는 어댑터 오류 계약 — 타임아웃·result 부재 (172 D-16, H-1)."""
+    """Popen+communicate 전환 후에도 유지되는 어댑터 오류 계약 — 타임아웃·result 부재 (175 D-16, H-1)."""
 
     def test_timeout_raises_runtime_error_and_terminates_child(self):
         import subprocess

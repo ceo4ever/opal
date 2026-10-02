@@ -6,7 +6,7 @@
   "description": "Console 1회성 진입 token 채널. <OPAL_HOME>/run/console-entry/(OPAL_HOME 환경 변수는 호출 시점에 읽고 없으면 ~/.opal)를 0700으로 만들고, 소유자 uid·권한(그룹/타인 비트 없음)·symlink 여부를 확인하지 못하면 발급·소비를 거부한다. issue(ttl)는 secrets.token_urlsafe(32) token을 만들어 token 전체 SHA-256 16진 64자를 이름으로 하는 0600 파일(O_CREAT|O_EXCL)에 {\"expires_at\": epoch초}만 쓰고(기본 TTL 60초, 상한 300초) 발급 때 만료 파일을 청소하며 token 원문은 디스크·로그에 남기지 않는다. consume(token)은 파일을 고유 이름으로 os.rename해 원자적으로 1회만 성공시키고 만료·TTL 상한 초과·부재·위조·디렉터리 위조를 구별하지 않는 False로 돌려준다. CLI: python -m dashboard.backend.entry_token issue [--ttl N]은 stdout에 token 한 줄만 출력하고 실패 시 stdout 없이 비0 종료한다. 표준 라이브러리만 사용한다.",
   "exports": ["issue", "consume", "entry_dir", "EntryChannelError", "DEFAULT_TTL_SECONDS", "MAX_TTL_SECONDS"],
   "depends": [],
-  "task": "172-261001-opd-콘솔-POST-인증-게이트"
+  "task": "175-261001-opd-콘솔-POST-인증-게이트"
 }
 """
 from __future__ import annotations

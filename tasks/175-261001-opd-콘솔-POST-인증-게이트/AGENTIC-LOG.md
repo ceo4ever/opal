@@ -28,3 +28,4 @@
 | 8 | 2026-10-01 15:21 | EXECUTE | DECISION | 잠금된 `auth.test.ts`의 node 모듈 import 타입 오류(TS2591)에 기존 관례의 `@ts-expect-error`만 추가(단언 불변) | 적용 |
 | 9 | 2026-10-01 15:40 | EXECUTE | DECISION | 계획 밖 `test_e2e_skeleton.py` 갱신 승인: backend env가 `{service.frontend.url}`를 참조하게 되어 fixture에 자리 포트를 추가하고, 무세션 브라우저 real-usage 케이스는 격리 HOME+진입 token fragment 진입으로 전환(인증 게이트의 의도된 동작 변화, 단언 약화 없음) | 적용 |
 | 10 | 2026-10-01 18:01 | CLOSE | FIX | 허브 PM이 TASK 단계에서 이 파일을 쓸 때 도구 호출 텍스트 4줄이 표 사이에 섞여 들어간 오류를 merge 후 발견해 그 4줄만 제거(대행 일지 행은 변경 없음) | 정정 |
+| 11 | 2026-10-02 17:43 | CLOSE | DECISION | 원격 main에 같은 번호의 다른 태스크 172(검증 시간 단축)가 있어 캡틴 승인으로 이 태스크를 175로 재채번: 폴더·@header·brain·문서 참조를 바꿈. 기존 커밋 메시지, 브랜치·worktree 이름(feat/OP-TASK-172, task_172), state.json·test-scenario.json·run-log의 task_id는 실행 기록이라 그대로 둠 | 적용 |

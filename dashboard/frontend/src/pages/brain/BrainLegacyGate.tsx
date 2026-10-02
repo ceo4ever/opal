@@ -6,7 +6,7 @@
  *   "description": "구형 Brain 게이트(D-19) — GET /api/brain/legacy({enabled, running_turns})로 상태를 읽어, 꺼짐이면 children(대화 UI)을 마운트하지 않아 prime·status·query 호출이 0회인 첫 진입 화면(새 Brain 출시 전까지 사용 불가·업그레이드로 기본 꺼짐 안내·구형 경로 위험 3종·위험 확인 체크박스와 '구형 Brain 켜기' 버튼(체크 전 비활성)·'새 경로 출시를 기다린다' 선택지)을 보인다. 켜기는 POST /api/brain/legacy {enabled:true, risk_acknowledged:true}, 끄기는 {enabled:false, risk_acknowledged:false}. 켜진 뒤에는 legacy 배지와 '구형 Brain 끄기' 버튼 아래 children을 보이고, 끈 직후 응답 running_turns가 1 이상이면 '진행 중인 N개 질의는 끝까지 진행됩니다'를 표시한다.",
  *   "exports": ["BrainLegacyGate", "BRAIN_LEGACY_QUERY_KEY"],
  *   "depends": ["api-client", "button", "alert", "badge", "skeleton"],
- *   "task": "172"
+ *   "task": "175"
  * }
  */
 

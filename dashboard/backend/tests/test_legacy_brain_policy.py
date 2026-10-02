@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "console",
   "description": "구형 Brain 정책·spawn 게이트 공개 계약 RED-first 테스트(S-6 정책 측·S-7). console.config.json의 legacy_brain_enabled는 JSON true일 때만 켜짐(키 없음·문자열·1·null·prewarm_projects만 있음·파손은 꺼짐, 업그레이드 구성 포함). 꺼짐일 때 Registry(prime·ask·submit_job는 LegacyBrainDisabled, prewarm 무동작, checkout_warm_handle은 None)·풀 리필 진입점·opbr_adapter.prime_and_ask·서버 lifespan 선프라임이 모두 subprocess.Popen 대체 호출 0회임을 단언한다. 켜짐일 때 어댑터는 shell=False·cwd=project_path·--allowedTools Bash,Read,Grep,Glob로 Popen을 호출하고 turn 종료 시(정상·비JSON·타임아웃) running_turns가 0으로 돌아온다. S-7: turn 진행 중 끄기는 진행 중 turn을 보존하고 running_turns 1을 보고하며 이후 모든 경로가 거절되고 Popen 누적이 늘지 않는다. 여러 스레드가 동시에 spawn을 시도하는 동안 끄는 경합 100회에서 set_enabled(False) 반환 시점의 Popen 누적 횟수가 끝까지 변하지 않는다. 실제 claude 호출 0회(Popen 대체·실제 spawn 가드), 임시 CONFIG_PATH·OPAL_HOME.",
-  "task": "172-261001-opd-콘솔-POST-인증-게이트",
+  "task": "175-261001-opd-콘솔-POST-인증-게이트",
   "scenarios": ["S-6", "S-7"],
   "exports": [],
   "depends": ["adapters.brain_policy", "adapters.opbr_adapter", "adapters.brain_session", "config", "main", "routers.brain", "tests.auth_helpers"]

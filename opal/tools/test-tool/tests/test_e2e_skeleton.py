@@ -215,7 +215,7 @@ class TestBrowserRealUsage(_SutFixtureMixin, unittest.TestCase):
         fe_port = e2e_ports.find_free_port()          # ① frontend 포트 먼저
         be_port = e2e_ports.find_free_port()           # ② backend 포트
         fe_origin = f"http://127.0.0.1:{fe_port}"      # ③ ①의 정수로 origin 조립
-        # 인증 게이트(태스크 172): 세션 없는 브라우저는 잠금 화면만 보고 데이터를 요청하지 않는다.
+        # 인증 게이트(태스크 175): 세션 없는 브라우저는 잠금 화면만 보고 데이터를 요청하지 않는다.
         # 임시 HOME/OPAL_HOME의 backend에 1회성 진입 token을 발급해 fragment로 진입한다
         # (사용자 ~/.opal·7823은 건드리지 않는다).
         sut_home = pathlib.Path(tempfile.mkdtemp(prefix="opal-e2e-skeleton-home-"))

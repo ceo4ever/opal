@@ -28,7 +28,7 @@ const PROJECT_A = "/path/to/project-a";
 const PROJECT_B = "/path/to/project-b";
 const ANSWER_TEXT = "[T063/L1-R8] 테스트 답변";
 
-// S-172: 구형 Brain 게이트(D-19)·인증 부트스트랩(D-13) 반영 — 켜진 상태/인증 상태를 고정해 기존 4경로 단언은 그대로 유지한다.
+// S-175: 구형 Brain 게이트(D-19)·인증 부트스트랩(D-13) 반영 — 켜진 상태/인증 상태를 고정해 기존 4경로 단언은 그대로 유지한다.
 vi.mock("@/lib/auth", async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {

@@ -6,7 +6,7 @@
  *   "description": "S-10 RED — FE 인증 부트스트랩(D-13) 계약 테스트. #entry fragment 교환(replaceState 선행·StrictMode 1회)·교환 실패 잠금·세션 조회·apiClient credentials/CSRF·401 auth_required 잠금·index.html referrer meta를 검증한다. fetch는 vi.fn 대역.",
  *   "exports": [],
  *   "depends": ["auth", "api-client"],
- *   "task": "172",
+ *   "task": "175",
  *   "scenarios": ["S-10"]
  * }
  */

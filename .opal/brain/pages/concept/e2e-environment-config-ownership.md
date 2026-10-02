@@ -7,7 +7,7 @@ tags:
 - task
 sources:
 - task:159
-- task:172
+- task:175
 related: [opal-e2e, test-tool, e2e-journey-library, e2e-harness-three-responsibility-split]
 created: '2026-10-01'
 updated: '2026-10-01'
@@ -24,9 +24,9 @@ status: draft
 - 환경 설정 모드는 검토 → (후보 부족 시) 프로젝트 정의 문서 기반 추정 → 인터뷰 확정 → 검증 후 사용자 확인 → 확인 뒤에만 기록 → 준비 판정 보고 순서다(`tasks/159-260926-opds-E2E-테스트환경-설정체계/DONE.md:14-20`).
 - 실행 판정과 종료 코드의 소유자는 계속 테스트 도구다(`tasks/159-260926-opds-E2E-테스트환경-설정체계/DONE.md:21`).
 
-## 세션 부트스트랩 훅 (태스크 172)
+## 세션 부트스트랩 훅 (태스크 175)
 
-환경 파일에 선택 키(`session_bootstrap`)를 두어, 서비스가 준비된 뒤 프로젝트가 선언한 명령을 1회 실행해 인증 헤더와 브라우저 진입 fragment를 받는다. 이로써 프레임워크 도구는 특정 프로젝트의 인증 방식을 직접 알지 않는다. 실패는 기동 실패와 같은 인프라 오류로 끝나며, 인증 값은 증적에서 마스킹된다. 키가 없는 기존 환경은 동작이 변하지 않는다. (근거: task:172 PLAN§D-20, `opal/tools/test-tool/lib/e2e/environment.py`)
+환경 파일에 선택 키(`session_bootstrap`)를 두어, 서비스가 준비된 뒤 프로젝트가 선언한 명령을 1회 실행해 인증 헤더와 브라우저 진입 fragment를 받는다. 이로써 프레임워크 도구는 특정 프로젝트의 인증 방식을 직접 알지 않는다. 실패는 기동 실패와 같은 인프라 오류로 끝나며, 인증 값은 증적에서 마스킹된다. 키가 없는 기존 환경은 동작이 변하지 않는다. (근거: task:175 PLAN§D-20, `opal/tools/test-tool/lib/e2e/environment.py`)
 
 ## 관련 페이지
 

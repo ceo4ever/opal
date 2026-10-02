@@ -1,7 +1,7 @@
 """
 @header {
   "module": "test_e2e_session_bootstrap",
-  "task": "172-261001-opd-콘솔-POST-인증-게이트",
+  "task": "175-261001-opd-콘솔-POST-인증-게이트",
   "layer": "test",
   "domain": "opal-tools",
   "description": "S-14 — environment.json의 선택 키 `session_bootstrap`(D-20) 계약 검증. 선언 스키마 검증, 부트스트랩 명령 stdout 형태와 실패 코드 `e2e_session_bootstrap_failed`(stdout 비노출), API executor 요청 헤더 병합(스텝 헤더 우선·null 제거), 브라우저 entry_url fragment 부착, 증적 마스킹(x-csrf-token·`#entry=`·Cookie), backend env `OPAL_CONSOLE_CORS_ORIGINS={service.frontend.url}` 렌더(D-21)를 실제 코드로 확인한다. 외부 서비스·실제 SUT 기동 없음.",

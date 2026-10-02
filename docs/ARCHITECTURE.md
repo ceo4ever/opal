@@ -301,12 +301,12 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 │  • read-only 어댑터: state-tool/code-scan/skill-registry/doctor │
 │  • 파서: MEMORY.json(JSON)·memory/*·PROJECT/AGENT.md      │
 │  • TTL 캐시(mtime 무효화) · 읽기 중심                        │
-│  • [예외·격리] 브레인 질의 라우터만 POST + opbr CLI(태스크036) — 구형 Brain 기본 꺼짐(태스크172)│
+│  • [예외·격리] 브레인 질의 라우터만 POST + opbr CLI(태스크036) — 구형 Brain 기본 꺼짐(태스크175)│
 │  • [예외·격리] 설정 라우터만 파일 쓰기 — 화이트리스트 2종(태스크061)│
 └───────────────────────────────────────────────────────────┘
 ```
 
-### 인증 게이트 (태스크 172)
+### 인증 게이트 (태스크 175)
 
 모든 `/api/` 요청과 WebSocket handshake는 로컬 세션이 있어야 한다(근거와 위협 모델은 `docs/SECURITY.md §10`). 코드는 `dashboard/backend/auth.py`·`entry_token.py`·`routers/auth.py`가 소유한다.
 
@@ -332,7 +332,7 @@ opal/core/mcps/*    ──── install ─→  claude mcp add --scope user (Cl
 | 세션 | `BrainSession`(B1): 일회성 `claude -p` + 디스크 세션 `--session-id`(콜드 프라임)→`--resume`(웜). prime-on-intent(메뉴 진입 시 백그라운드 프라임) + 5트리거 리셋(서버재실행·컨텍스트임계·유휴·크래시·수동) + `threading.Lock` 직렬화. 실측 콜드~90s/웜~20s |
 | 프라임 연결 풀 (태스크 060·063) | `console.config.json`의 `prewarm_projects`(절대경로 배열, 기본 `[]`)에 지정한 프로젝트만 서버 기동 시(lifespan 훅) 백그라운드 선프라임하여 **프로젝트별 웜 핸들 풀**(크기 2 — 태스크 063 상향)에 적재. 새 대화 첫 진입(`BrainSessionRegistry._get_or_create`)·"새 대화" 시 풀에서 lock 하 체크아웃→세션에 이식(즉시 ready·첫 질의 `--resume` 웜)하고 `prewarm()`이 `need=pool_size-have`만큼 충전(태스크 063 — 상수만 올리면 풀이 1까지만 차던 결함 수정, 연속 새대화 즉시 웜 배정). 동시 프라임은 `Semaphore(2)` 상한, 풀 비면 기존 콜드 폴백(API 5종 계약·FE 불변). 풀은 인메모리 전용(무상태 원칙) |
 | 엔드포인트 | `GET /api/brain/auth`(claude CLI 가용·인증) · `POST /api/brain/prime`(백그라운드 프라임) · `POST /api/brain/query`(질의→`{answer, citations}`) · `GET /api/brain/legacy`(`{enabled, running_turns}`) · `POST /api/brain/legacy`(`{enabled, risk_acknowledged}`). 구형 Brain이 꺼짐이면 prime·query는 403 `legacy_brain_disabled`로 답한다 |
-| 구형 Brain 정책 (태스크 172) | 프로세스 단일 정책(`adapters/brain_policy.py`)이 `console.config.json`의 `legacy_brain_enabled`를 소유한다 — JSON `true`일 때만 켜짐이고 키 없음·비불리언·파손은 꺼짐(업그레이드·`prewarm_projects`와 무관, 서버 측 저장). 켜기는 `risk_acknowledged`가 JSON `true`일 때만 허용(아니면 400 `risk_not_acknowledged`)하며 저장 성공 후 메모리에 반영한다. 끄기는 메모리 반영 → 프라임 풀 폐기(`clear_pool`) → 저장 순이며 저장 실패(500)여도 메모리는 꺼진 채 유지된다. 게이트는 라우터가 아니라 subprocess 경계에 있다: `opbr_adapter`가 `spawn_guard()` 안에서만 `subprocess.Popen`을 시작하고(시작 구간만 락, `communicate` 대기는 락 밖), `BrainSessionRegistry`의 prime·ask·submit_job·prewarm·풀 리필도 정책을 확인한다. 끄기가 반환된 뒤에는 새 프로세스가 시작되지 않고 이미 시작된 turn은 끝까지 진행한다. 프런트는 꺼짐일 때 대화 UI·폴링 없이 위험 안내와 켜기 확인 화면을 보인다 |
+| 구형 Brain 정책 (태스크 175) | 프로세스 단일 정책(`adapters/brain_policy.py`)이 `console.config.json`의 `legacy_brain_enabled`를 소유한다 — JSON `true`일 때만 켜짐이고 키 없음·비불리언·파손은 꺼짐(업그레이드·`prewarm_projects`와 무관, 서버 측 저장). 켜기는 `risk_acknowledged`가 JSON `true`일 때만 허용(아니면 400 `risk_not_acknowledged`)하며 저장 성공 후 메모리에 반영한다. 끄기는 메모리 반영 → 프라임 풀 폐기(`clear_pool`) → 저장 순이며 저장 실패(500)여도 메모리는 꺼진 채 유지된다. 게이트는 라우터가 아니라 subprocess 경계에 있다: `opbr_adapter`가 `spawn_guard()` 안에서만 `subprocess.Popen`을 시작하고(시작 구간만 락, `communicate` 대기는 락 밖), `BrainSessionRegistry`의 prime·ask·submit_job·prewarm·풀 리필도 정책을 확인한다. 끄기가 반환된 뒤에는 새 프로세스가 시작되지 않고 이미 시작된 turn은 끝까지 진행한다. 프런트는 꺼짐일 때 대화 UI·폴링 없이 위험 안내와 켜기 확인 화면을 보인다 |
 | 세션 수명·이력 (태스크 063) | **휘발성 단일 세션(미영속)**. FE는 메뉴 mount·"새 대화"마다 새 `session_id`(UUID)를 발급하고, 단일 대화창에서 그 세션이 살아있는 동안 멀티턴(`--resume`)을 이어간다. 대화 이력은 저장하지 않는다(localStorage 이력·멀티대화 관리 제거) — 새로고침·재오픈·타 브라우저 접속 시 백지에서 시작(의도된 동작). "새 대화"는 재오픈과 동일 동작(내역 초기화 + 새 session_id + 즉시 웜). backend·brain 무상태/무변경 |
 
 ### 프로젝트별 환경 설정 화면 (태스크 061)

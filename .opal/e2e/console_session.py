@@ -3,7 +3,7 @@
   "module": "console_session",
   "layer": "util",
   "domain": "opal-tools",
-  "task": "172-261001-opd-콘솔-POST-인증-게이트",
+  "task": "175-261001-opd-콘솔-POST-인증-게이트",
   "description": "E2E 하네스 세션 부트스트랩 명령(`.opal/e2e/environment.json`의 session_bootstrap). 기동된 SUT가 상속한 OPAL_HOME에 dashboard.backend.entry_token.issue()로 진입 token 2개를 발급하고, 하나는 --base-url 백엔드의 POST /api/auth/exchange(Origin=base-url)에 직접 교환해 세션 쿠키·CSRF를 얻으며, 다른 하나는 브라우저 진입 fragment로 돌려준다. stdout에는 {headers: {Cookie, X-CSRF-Token, Origin}, browser_entry_fragment: entry=<token>} 한 줄 JSON만 쓰고, token·쿠키·CSRF 값은 stderr·로그에 쓰지 않는다. 실패는 값 없는 한 줄 사유를 stderr에 쓰고 비0으로 끝난다. 표준 라이브러리와 entry_token만 사용한다.",
   "exports": ["main"],
   "depends": ["entry_token"]

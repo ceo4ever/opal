@@ -6,7 +6,7 @@
   "description": "Console 인증 엔드포인트 2종. POST /api/auth/exchange는 본문 {\"token\"}의 진입 token을 entry_token.consume으로 1회 소비하고 성공 시 200 {\"authenticated\": true, \"csrf_token\"}와 세션 쿠키(HttpOnly; SameSite=Strict; Path=/; Max-Age=43200, Secure 없음)를 발급하며 실패(만료·재사용·위조·본문 오류 모두)는 사유를 구별하지 않는 401 entry_token_invalid다. GET /api/auth/session은 항상 200으로 {\"authenticated\": false} 또는 {\"authenticated\": true, \"csrf_token\"}만 돌려주고 프로젝트·설정·계정 정보를 싣지 않는다. 두 경로는 AuthMiddleware의 default-deny 예외 2종이며 Origin 검사는 미들웨어가 한다. token·세션·csrf 값은 로그에 남기지 않는다.",
   "exports": ["router"],
   "depends": ["auth", "entry_token"],
-  "task": "172-261001-opd-콘솔-POST-인증-게이트"
+  "task": "175-261001-opd-콘솔-POST-인증-게이트"
 }
 """
 from __future__ import annotations

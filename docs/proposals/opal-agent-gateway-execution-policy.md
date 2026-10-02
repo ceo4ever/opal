@@ -1,8 +1,8 @@
 # OPAL Agent Gateway와 계정·Profile·워커 실행 정책 제안
 
-> 상태: 제안 — Phase 0 적용 완료(태스크 172, 2026-10-01), Phase 1 이후 미적용
+> 상태: 제안 — Phase 0 적용 완료(태스크 175, 2026-10-01), Phase 1 이후 미적용
 > 작성일: 2026-09-30 · 개정: 2026-10-01
-> Phase 0 적용 결과는 §9 Phase 0 「적용 결과」에 있다. 적용된 동작의 규범 원문은 `docs/ARCHITECTURE.md` §OPAL Console·`docs/SECURITY.md`가 소유하며, §2의 코드 인용은 태스크 172 이전 상태다.
+> Phase 0 적용 결과는 §9 Phase 0 「적용 결과」에 있다. 적용된 동작의 규범 원문은 `docs/ARCHITECTURE.md` §OPAL Console·`docs/SECURITY.md`가 소유하며, §2의 코드 인용은 태스크 175 이전 상태다.
 > 범위: OPAL FW 공통 Account·Profile·Binding, `opal-agent`의 기본 CLI·선택적 ACP 실행, Console Gateway, `read_only` 정책과 Brain·대화 화면
 > 관련 제안: [OPAL Console ACP 에이전트 허브](opal-console-acp-agent-hub.md) — Console 화면과 위임 UX를 참고하되, 계정·Profile의 공통 설정과 Gateway·`opal-agent`의 실행 책임은 이 문서가 제안한다. 채택 시 두 문서를 §12에 따라 정합화한다.
 
@@ -324,8 +324,8 @@ Console의 CRUD API는 FW Gateway 저장소의 클라이언트다. FastAPI는 Ac
 | `GET` | `/api/brain/profiles?project=` | Brain에서 선택 가능한 read-only Profile만 반환 |
 | `POST` | `/api/brain/sessions` | Brain Profile·transport(기본 `cli`, `acp`는 연결 명세 포함) 검증 후 읽기·검색 중심 세션 시작 |
 | `POST` | `/api/brain/sessions/{id}/query` | 지식 질의 요청 |
-| `GET` | `/api/brain/legacy` | 구형 `claude -p` 경로 활성 상태와 진행 중 turn 수 조회 (태스크 172 적용) |
-| `POST` | `/api/brain/legacy` | 인증·CSRF·Origin 검증 및 명시적 위험 확인(`risk_acknowledged`) 후 구형 경로 활성화/비활성화. 서버측 `legacy_brain_enabled` 저장 (태스크 172 적용) |
+| `GET` | `/api/brain/legacy` | 구형 `claude -p` 경로 활성 상태와 진행 중 turn 수 조회 (태스크 175 적용) |
+| `POST` | `/api/brain/legacy` | 인증·CSRF·Origin 검증 및 명시적 위험 확인(`risk_acknowledged`) 후 구형 경로 활성화/비활성화. 서버측 `legacy_brain_enabled` 저장 (태스크 175 적용) |
 | `GET` | `/api/chat/profiles?project=` | 일반 대화에서 선택 가능한 enabled Profile 반환 |
 | `POST` | `/api/conversations` | Agent·Profile·transport(기본 `cli`, `ask`는 `acp`) 선택을 snapshot으로 고정해 대화 생성 |
 | `WS` | `/api/conversations/{id}/events?after_seq=` | 정규화 이벤트 live 전달과 선택적 replay |
@@ -425,7 +425,7 @@ ACP `session/request_permission`은 모든 도구 사용을 통과하는 중앙 
 
 **완료 기준:** 현재 열려 있는 LLM 실행·설정 쓰기 경로가 인증 없이 동작하지 않고, 구형 Brain은 위험 수락 없이 HTTP·기동 선프라임·내부 Registry 호출 어느 경로에서도 시작되지 않는다. 첫 진입 안내와 CLI 열기·유효 세션 북마크·격리 SUT E2E 흐름이 동작한다. 이후 Phase는 이 게이트가 통과해야 시작한다.
 
-**적용 결과 (태스크 172, 2026-10-01 main merge):** 완료 기준을 충족했다. 시나리오 17건 PASS(실제 uvicorn 격리 SUT·실제 Chrome 포함). 상세는 `tasks/172-261001-opd-콘솔-POST-인증-게이트/DONE.md`.
+**적용 결과 (태스크 175, 2026-10-01 main merge):** 완료 기준을 충족했다. 시나리오 17건 PASS(실제 uvicorn 격리 SUT·실제 Chrome 포함). 상세는 `tasks/175-261001-opd-콘솔-POST-인증-게이트/DONE.md`.
 
 | 항목 | 적용된 계약 |
 | --- | --- |
@@ -441,7 +441,7 @@ ACP `session/request_permission`은 모든 도구 사용을 통과하는 중앙 
 - 진입 token이 `open` 명령 인자로 전달되어 다중 사용자 호스트에서 60초 안에 다른 uid가 선점할 수 있다
 - 개발용 CORS origin `127.0.0.1:5173`이 credentials와 함께 항상 허용된다
 - FastAPI `/docs`·`/redoc`·`/openapi.json`이 세션 없이 응답한다(E2E가 `openapi.json`에 의존해 유지)
-- 로그 경로 `/tmp/opal-console.log`가 예측 가능하다(172 이전부터)
+- 로그 경로 `/tmp/opal-console.log`가 예측 가능하다(175 이전부터)
 
 설치본 재배포(`opal-cli update` → `console stop` → `console open`)는 태스크에서 실행하지 않았다.
 
@@ -509,7 +509,7 @@ Gateway 자체는 Phase 1부터 Console과 독립적으로 기동한다. PM ACP 
 - [ ] Profile의 읽기 전용 체크는 내부적으로 `policy=read_only`로 저장되고 Gateway까지 전달된다.
 - [ ] disabled Profile은 Brain과 대화의 선택 목록 및 API 실행에서 모두 거절된다.
 - [x] 기존 Brain prime/query와 config/prewarm POST가 인증·CSRF·Origin/Host 검사를 통과해야 실행된다.
-- [x] 구형 FastAPI 직접 `claude -p` Brain은 `legacy_brain_enabled=false`에서 서버가 거절하고, 인증된 사용자의 명시적 위험 수락 후에만 `legacy` 배지와 함께 동작한다. 새 `opal-agent` ACP/CLI transport 실패로 이 경로를 자동 실행하지 않는다. (172: 서버 차단·위험 수락·`legacy` 배지 충족, transport 무폴백은 새 transport 도입 시 재확인)
+- [x] 구형 FastAPI 직접 `claude -p` Brain은 `legacy_brain_enabled=false`에서 서버가 거절하고, 인증된 사용자의 명시적 위험 수락 후에만 `legacy` 배지와 함께 동작한다. 새 `opal-agent` ACP/CLI transport 실패로 이 경로를 자동 실행하지 않는다. (175: 서버 차단·위험 수락·`legacy` 배지 충족, transport 무폴백은 새 transport 도입 시 재확인)
 - [x] `prewarm_projects`가 설정돼 있어도 flag=false인 서버 기동은 선프라임 스레드·`claude -p`를 0회 실행한다. Registry 직접 prime/prewarm/submit/ask·풀 리필과 adapter 최종 호출도 flag=false를 우회하지 못한다.
 - [x] Phase 0 이후 검증된 새 Brain transport 출시 전 첫 진입 화면은 기본 사용 불가 기간과 구형 경로의 위험 수락 선택지를 설명한다. 업그레이드로 구형 경로를 자동 활성화하지 않는다.
 - [x] `opal-cli console open`은 1회성 token으로 인증 세션을 만들고, 무세션 북마크는 잠금 화면을 보여 준다. 격리 SUT E2E가 같은 교환 흐름을 사용한다.

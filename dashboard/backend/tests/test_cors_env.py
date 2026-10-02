@@ -3,8 +3,8 @@
   "module": "test_cors_env",
   "layer": "test",
   "domain": "console",
-  "description": "S-4 — OPAL_CONSOLE_CORS_ORIGINS env 주입 CORS 허용 목록 계약을 검증한다. main.py가 os.getenv(OPAL_CONSOLE_CORS_ORIGINS)를 소비해 미주입 시 기존 고정 2종을, 주입 시 유효 origin만 추가 허용하는지 확인한다. CORS 미들웨어 옵션은 allow_credentials true(쿠키 세션 전달), allow_methods GET·POST, allow_headers Content-Type·X-CSRF-Token 고정, 와일드카드·정규식 origin 금지다(172 D-8).",
-  "task": "172-261001-opd-콘솔-POST-인증-게이트",
+  "description": "S-4 — OPAL_CONSOLE_CORS_ORIGINS env 주입 CORS 허용 목록 계약을 검증한다. main.py가 os.getenv(OPAL_CONSOLE_CORS_ORIGINS)를 소비해 미주입 시 기존 고정 2종을, 주입 시 유효 origin만 추가 허용하는지 확인한다. CORS 미들웨어 옵션은 allow_credentials true(쿠키 세션 전달), allow_methods GET·POST, allow_headers Content-Type·X-CSRF-Token 고정, 와일드카드·정규식 origin 금지다(175 D-8).",
+  "task": "175-261001-opd-콘솔-POST-인증-게이트",
   "scenarios": ["S-3", "S-4"],
   "exports": ["test_env_unset_keeps_default_origins", "test_env_single_origin_appended", "test_env_multiple_origins_appended", "test_env_invalid_entries_excluded", "test_cors_middleware_options_unchanged"]
 }
