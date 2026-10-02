@@ -1,0 +1,133 @@
+{
+  "document": "opal/core/references/harness/citation-rules.md",
+  "unit_level": 2,
+  "contexts": {
+    "track": [
+      "dev",
+      "planning"
+    ]
+  },
+  "sections": [
+    {
+      "id": "cr-evidence",
+      "title": "§0. 근거 제시 원칙",
+      "load": "always"
+    },
+    {
+      "id": "cr-scope",
+      "title": "1. 적용 범위 및 목적",
+      "load": "always"
+    },
+    {
+      "id": "cr-track-matrix",
+      "title": "§1.5. 개발/비개발 트랙별 근거 매트릭스",
+      "load": "always"
+    },
+    {
+      "id": "cr-formats",
+      "title": "2. 인용 포맷",
+      "load": "always"
+    },
+    {
+      "id": "cr-application",
+      "title": "3. 적용 방식 (참조 테이블 + 인라인)",
+      "load": "always"
+    },
+    {
+      "id": "cr-stage-levels",
+      "title": "4. 단계별 의무 수준",
+      "load": "always"
+    },
+    {
+      "id": "cr-exceptions",
+      "title": "5. 예외 규칙",
+      "load": "always"
+    },
+    {
+      "id": "cr-navigation",
+      "title": "6. 사람/AI 탐색 가이드",
+      "load": "always"
+    },
+    {
+      "id": "cr-terminology",
+      "title": "7. 영역 간 용어 일관성 검토 + decision_required 계약",
+      "load": "always"
+    },
+    {
+      "id": "cr-business-terms",
+      "title": "8. 비즈니스 용어 우선 원칙 (기획 산출물)",
+      "load": "conditional",
+      "when": {
+        "track": [
+          "planning"
+        ]
+      },
+      "depends": [
+        "cr-track-matrix",
+        "cr-formats"
+      ]
+    },
+    {
+      "id": "cr-evidence-grades",
+      "title": "9. 근거 등급과 관할",
+      "load": "always"
+    }
+  ],
+  "review": [
+    {
+      "id": "cr-evidence",
+      "load": "always",
+      "reason": "[MUST] 근거 없는 기재 금지의 핵심 의무와 사실/결정 구분 정의"
+    },
+    {
+      "id": "cr-scope",
+      "load": "always",
+      "reason": "규칙이 적용되는 산출물·스킬 범위를 정의하고 인용 의무의 적용 대상을 확정 — 목적 3항은 배경이나 범위 정의와 한 단위"
+    },
+    {
+      "id": "cr-track-matrix",
+      "load": "always",
+      "reason": "트랙별 필수/선택 근거 유형과 트랙 판별 기준을 정의하며 §8이 이 트랙 정의에 의존"
+    },
+    {
+      "id": "cr-formats",
+      "load": "always",
+      "reason": "[MUST] 인용 포맷 4종·[MUST] 토큰 6종·소스코드 원문 블록 금지 규칙 포함"
+    },
+    {
+      "id": "cr-application",
+      "load": "always",
+      "reason": "§4가 필수로 요구하는 참조 문서 테이블 컬럼 규정(D-N 고유 ID 등)과 인라인 단축 참조 포맷을 정의하는 규범"
+    },
+    {
+      "id": "cr-stage-levels",
+      "load": "always",
+      "reason": "[MUST] TASK/ANALYSIS/PLAN 단계별 인용 의무 수준표와 PM 주입 [MUST] 제약 옮겨 적기 규정"
+    },
+    {
+      "id": "cr-exceptions",
+      "load": "always",
+      "reason": "인용 생략 허용·불허(사실 주장 생략 불가)와 레거시 비소급 규정 — 예외와 금지를 담은 규범"
+    },
+    {
+      "id": "cr-navigation",
+      "load": "always",
+      "reason": "탐색 방법 표는 참조성이나 AI 표에 [MUST] 재해석 금지 행이 있어 on_demand 불가(도구 가드로도 강제 전달)"
+    },
+    {
+      "id": "cr-terminology",
+      "load": "always",
+      "reason": "[MUST] 결정성 이슈 사용자 에스컬레이션 필수와 검출 의무·decision_required 스키마 포함"
+    },
+    {
+      "id": "cr-business-terms",
+      "load": "conditional",
+      "reason": "기획 산출물(track: planning)에만 적용되는 [MUST](§8.1 개발 트랙은 강제 대상 아님). 단 §8.6 다층 근거 병기는 개발 PLAN에도 언급되므로 track 미지정 시 전달"
+    },
+    {
+      "id": "cr-evidence-grades",
+      "load": "always",
+      "reason": "[MUST] E1 스코프 기재·TO-BE 코드 최하위·E5 단독 인용 금지 등 근거 서열 SSOT"
+    }
+  ]
+}

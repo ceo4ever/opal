@@ -1,7 +1,7 @@
 # OPAL Console 에이전트 채널 도입 비교안
 
 > 상태: 폐기
-> 폐기 사유: 후속 `docs/proposals/opal-console-acp-agent-hub.md`가 A안인 Console 자체 ACP 호스트를 채택하고 구체 구현 스펙으로 대체
+> 폐기 사유: 후속 `docs/proposals/260910_Console_ACP_에이전트_허브_구현_스펙.md`가 A안인 Console 자체 ACP 호스트를 채택하고 구체 구현 스펙으로 대체
 > 작성: 알투(PM)
 > 작성일: 2026-09-09
 > 발단: "Buzz처럼 설정에서 LLM CLI를 등록하고, 채널 방에서 에이전트와 대화하며 업무를 수행하고 싶다"

@@ -2667,9 +2667,16 @@ def cmd_event_verify(args):
         ("--source-root", args.source_root),
         ("--deployed-root", args.deployed_root),
         ("--project-root", args.project_root),
+        ("--agent", getattr(args, "agent", None)),
+        ("--role", getattr(args, "role", None)),
+        ("--role-doc", getattr(args, "role_doc", None)),
+        ("--dispatch-id", getattr(args, "dispatch_id", None)),
+        ("--contract-version", getattr(args, "contract_version", None)),
     ):
-        if value:
+        if value is not None:
             command.extend((option, value))
+    if getattr(args, "require_default_manifest", False):
+        command.append("--require-default-manifest")
 
     completed = subprocess.run(command, capture_output=True, text=True)
     output = completed.stdout.strip()

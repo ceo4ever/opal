@@ -79,7 +79,7 @@ class EventLoaderExtendedContractTest(unittest.TestCase):
         self.assertEqual(len(events), 15)
         for event in events:
             self.assertEqual(
-                set(event),
+                set(event) - {"contract", "selection", "sectioning"},
                 {
                     "id",
                     "required_docs",

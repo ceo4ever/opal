@@ -1,0 +1,170 @@
+{
+  "base_sha": "bb257506ef2deeb80fda10c4ceaf90006b866c83",
+  "head_sha": "5e16cbcfd37cbacc8b1dcbe5cd2b62de4e27d4cd",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "opal/core/references/harness/worktree.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          129,
+          149
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-skill-tester/README.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          19,
+          39
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-skill-tester/SKILL.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          15,
+          44
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-skill-tester/references/metrics.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          49,
+          73
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-skill-tester/scripts/report_html.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          16
+        ],
+        [
+          176,
+          239
+        ],
+        [
+          275,
+          296
+        ],
+        [
+          330,
+          365
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-skill-tester/scripts/skill_tester.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          18
+        ],
+        [
+          42,
+          64
+        ],
+        [
+          155,
+          315
+        ],
+        [
+          388,
+          425
+        ],
+        [
+          675,
+          695
+        ],
+        [
+          743,
+          881
+        ]
+      ]
+    },
+    {
+      "path": "opal/skills/opal-skill-tester/tests/test_task176_variant_settings.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          342
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/README.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          75,
+          102
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/tests/test_settings.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          573,
+          686
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/worktree-launcher/worktree_launcher/settings.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          2,
+          22
+        ],
+        [
+          55,
+          78
+        ],
+        [
+          144,
+          169
+        ],
+        [
+          173,
+          193
+        ],
+        [
+          329,
+          369
+        ]
+      ]
+    }
+  ]
+}

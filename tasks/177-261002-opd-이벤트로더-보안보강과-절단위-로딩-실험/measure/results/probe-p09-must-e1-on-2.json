@@ -1,0 +1,116 @@
+{
+ "probe": "p09-must-e1",
+ "arm": "on",
+ "run": 2,
+ "tag": "p09-must-e1-on-2",
+ "prompt_bytes": 49338,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 7.5,
+   "json": {
+    "duration_api_ms": 3833,
+    "stop_reason": "end_turn",
+    "session_id": "4bddc0cb-77f3-4e0d-bc33-2d1ddebac64c",
+    "total_cost_usd": 0.1703492,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 41220,
+     "cache_read_input_tokens": 12376,
+     "output_tokens": 299,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 41220,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 299,
+       "cache_read_input_tokens": 12376,
+       "cache_creation_input_tokens": 41220,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 41220
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 299,
+      "cacheReadInputTokens": 12376,
+      "cacheCreationInputTokens": 41220,
+      "webSearchRequests": 0,
+      "costUSD": 0.1703492,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "E1(실행 관측)을 인용할 때는 **관측 스코프와 실행 명령을 함께 기재**해야 합니다(citation-rules §9 (a), [MUST]).\n\n스코프가 없는 실행 관측 인용은 **E1로 인정되지 않습니다.** 같은 시점의 같은 대상이라도 스코프가 다르면 수치가 달라지기 때문입니다. 예를 들어 단일 파일 실행과 디렉토리 실행은 결과가 다릅니다. 이 규칙은 통과 수의 스코프 누락 오류가 워커, PM, 평가자 3개 층에서 독립적으로 재발한 일(098)에서 만들어졌습니다.\n\n문서에는 스코프 없는 인용을 구체적으로 어떤 등급으로 낮추는지는 적혀 있지 않습니다.",
+    "ttft_ms": 3876,
+    "type": "result",
+    "duration_ms": 3962,
+    "uuid": "5484e682-3fab-48e8-b44e-87e11e3c80ac",
+    "ttft_stream_ms": 2086,
+    "time_to_request_ms": 70,
+    "first_content_frame_ms": 2086,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}

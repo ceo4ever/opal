@@ -1,0 +1,116 @@
+{
+ "probe": "p03-runlog-enum",
+ "arm": "off",
+ "run": 1,
+ "tag": "p03-runlog-enum-off-1",
+ "prompt_bytes": 53962,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 8.9,
+   "json": {
+    "duration_api_ms": 5493,
+    "stop_reason": "end_turn",
+    "session_id": "fd4e7cd4-ded9-4855-8f62-1844de8f39d0",
+    "total_cost_usd": 0.1793732,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 43421,
+     "cache_read_input_tokens": 12376,
+     "output_tokens": 321,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 43421,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 321,
+       "cache_read_input_tokens": 12376,
+       "cache_creation_input_tokens": 43421,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 43421
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 321,
+      "cacheReadInputTokens": 12376,
+      "cacheCreationInputTokens": 43421,
+      "webSearchRequests": 0,
+      "costUSD": 0.1793732,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "`gate.resolved` run-log의 `data.verdict`는 폐쇄 enum `approved` / `rejected` / `auto` 중에서 씁니다. 설계 게이트에서는 둘만 씁니다.\n\n- verdict가 `pass`이면 `approved`.\n- `pass`가 아닌 나머지(`rewrite`, `input_error` 등)는 모두 `rejected`.\n\n`auto`를 설계 게이트가 어떤 경우에 쓰는지는 문서에 없습니다.\n\n설계 게이트 verdict 원문(pass/rewrite/input_error 등)은 run-log의 `data.verdict`에 담지 않습니다. run-log의 `summary`와 `design_gate.history`에 남깁니다. `design_gate.history[].verdict`에 들어가는 값은 `pass`·`rewrite`·`input_error`·`deterministic_fail`·`superseded` 5가지입니다.",
+    "ttft_ms": 5548,
+    "type": "result",
+    "duration_ms": 5608,
+    "uuid": "473556e1-233a-46ea-9647-93b191d315e0",
+    "ttft_stream_ms": 3172,
+    "time_to_request_ms": 77,
+    "first_content_frame_ms": 3173,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}

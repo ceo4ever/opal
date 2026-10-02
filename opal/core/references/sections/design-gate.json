@@ -1,0 +1,132 @@
+{
+  "document": "opal/core/references/harness/design-gate.md",
+  "unit_level": 2,
+  "sections": [
+    {
+      "id": "dg-scope",
+      "title": "적용 범위",
+      "load": "always"
+    },
+    {
+      "id": "dg-flow",
+      "title": "흐름",
+      "load": "always",
+      "depends": [
+        "dg-advisory",
+        "dg-rewrite"
+      ]
+    },
+    {
+      "id": "dg-runlog",
+      "title": "run-log 계약",
+      "load": "on_demand"
+    },
+    {
+      "id": "dg-advisory",
+      "title": "advisory 반영과 refinement",
+      "load": "always"
+    },
+    {
+      "id": "dg-determ",
+      "title": "결정론 검사 항목 (`design-gate start` ⑦)",
+      "load": "always"
+    },
+    {
+      "id": "dg-exec-guard",
+      "title": "EXECUTE 가드 적용 시점",
+      "load": "on_demand"
+    },
+    {
+      "id": "dg-bundle-hash",
+      "title": "문서 묶음 해시와 확인 해시",
+      "load": "on_demand"
+    },
+    {
+      "id": "dg-rewrite",
+      "title": "rewrite 대상과 재판정 조건",
+      "load": "always"
+    },
+    {
+      "id": "dg-limit-reset",
+      "title": "반복 상한과 reset",
+      "load": "always"
+    },
+    {
+      "id": "dg-decision",
+      "title": "설계 결정 분류 (`design-decision`)",
+      "load": "always"
+    },
+    {
+      "id": "dg-agentic",
+      "title": "agentic에서의 관계",
+      "load": "always"
+    },
+    {
+      "id": "dg-error-codes",
+      "title": "실패 코드",
+      "load": "on_demand"
+    }
+  ],
+  "review": [
+    {
+      "id": "dg-scope",
+      "load": "always",
+      "reason": "PM 경로 판정 기준(plan.design_gate 행 존재)으로 게이트 적용 여부를 정하는 규범"
+    },
+    {
+      "id": "dg-flow",
+      "load": "always",
+      "reason": "설계 게이트 start→평가→combine→record 절차와 pass/rewrite 분기 및 열린 시도 처리 — 핵심 절차"
+    },
+    {
+      "id": "dg-runlog",
+      "load": "on_demand",
+      "reason": "state-tool이 집행하는 run-log·history 기록 형식(enum 매핑) 상세 — PM 행동 규칙이 아닌 도구 내부 기록 계약 참조"
+    },
+    {
+      "id": "dg-advisory",
+      "load": "always",
+      "reason": "흐름 4·5가 따르라고 지정하는 PM 응답·refinement 회차 절차(apply 전부 한 번에 반영 등)로 의존 단위"
+    },
+    {
+      "id": "dg-determ",
+      "load": "always",
+      "reason": "PLAN Findings H3 4종·AC 커버리지 등 PLAN 작성 시 충족해야 하는 검사 요건"
+    },
+    {
+      "id": "dg-exec-guard",
+      "load": "on_demand",
+      "reason": "execute.implement 진입 가드의 도구 내부 적용 시점 상세 — 위반 시 도구가 거부하며 PM 행동 규정이 아닌 참조"
+    },
+    {
+      "id": "dg-bundle-hash",
+      "load": "on_demand",
+      "reason": "해시 계산식·기록 시점은 state-tool 내부 계산 상세 참조이며 위반은 design_bundle_mismatch 등으로 도구가 거부"
+    },
+    {
+      "id": "dg-rewrite",
+      "load": "always",
+      "reason": "rewrite-target 필수·대상 문서 hash 변경 요구·record 거부 순서 등 PM이 지켜야 할 재판정 규범"
+    },
+    {
+      "id": "dg-limit-reset",
+      "load": "always",
+      "reason": "상한 도달 시 사용자 대기와 reset은 --owner user만 가능하다는 의무·금지 규정"
+    },
+    {
+      "id": "dg-decision",
+      "load": "always",
+      "reason": "PLAN 단계 외부 영향 결정 분류와 external 시 blocked 처리 등 PM 행동 규칙"
+    },
+    {
+      "id": "dg-agentic",
+      "load": "always",
+      "reason": "agentic 대행 검토 대신 설계 게이트를 따른다는 관계 규정(302B로 분리 이득 없음)"
+    },
+    {
+      "id": "dg-error-codes",
+      "load": "on_demand",
+      "reason": "도구가 반환하는 오류 코드 18+2종의 의미 표 — 오류 발생 시 조회하는 참조"
+    }
+  ]
+}

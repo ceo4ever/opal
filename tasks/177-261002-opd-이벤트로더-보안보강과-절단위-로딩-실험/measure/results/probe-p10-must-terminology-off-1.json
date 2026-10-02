@@ -1,0 +1,116 @@
+{
+ "probe": "p10-must-terminology",
+ "arm": "off",
+ "run": 1,
+ "tag": "p10-must-terminology-off-1",
+ "prompt_bytes": 53879,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 7.5,
+   "json": {
+    "duration_api_ms": 3975,
+    "stop_reason": "end_turn",
+    "session_id": "3eddeea4-4a7c-435c-802c-adc8367d8960",
+    "total_cost_usd": 0.1790012,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 43378,
+     "cache_read_input_tokens": 12376,
+     "output_tokens": 301,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 43378,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 301,
+       "cache_read_input_tokens": 12376,
+       "cache_creation_input_tokens": 43378,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 43378
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 301,
+      "cacheReadInputTokens": 12376,
+      "cacheCreationInputTokens": 43378,
+      "webSearchRequests": 0,
+      "costUSD": 0.1790012,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "아니요. PM이 자율 결정하면 안 됩니다.\n\n- `terminology_mismatch` 같은 결정성 이슈는 **agentic 모드에서도 사용자 에스컬레이션이 필수**이고, PM이 자율 결정하지 않습니다. (`citation-rules` §7.5, [MUST])\n- 에스컬레이션은 워커가 반환 페이로드의 `decision_required` JSON(type, summary, tokens, areas, source_refs, suggested_resolution)에 담아 올리는 방식입니다. (§7.4)\n- 워커는 산출물 §리스크 섹션에도 해당 불일치를 기재해야 합니다. (§7.2, §7.3)\n\n`suggested_resolution`은 제안일 뿐이며, 하나로 통일하는 것 같은 도메인 결정은 사용자 몫입니다.",
+    "ttft_ms": 4120,
+    "type": "result",
+    "duration_ms": 4208,
+    "uuid": "b9f8f046-33cd-4e4b-94b1-59954ce3f437",
+    "ttft_stream_ms": 2222,
+    "time_to_request_ms": 175,
+    "first_content_frame_ms": 2222,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}

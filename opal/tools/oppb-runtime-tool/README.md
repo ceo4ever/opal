@@ -11,7 +11,7 @@
 - **run root** `<oppb_task_path>/.oppb-run/<run_id>/` — 태스크에 귀속된 재시작 가능한 실행 운영 자료
 - **cache root** `<allocator_root>/.opal-cache/oppb/` — run 간 재사용하는 content-addressed object
 
-run root는 project repository에, cache root는 allocator repository의 `.git/info/exclude`에 **멱등 등록**한다. 등록 문자열 존재가 아니라 `git check-ignore`의 **실제 판정**을 확인하며, 실패하면 run 시작을 거부한다(`start`도 같은 가드를 통과해야 한다). 기존 `<allocator_root>/.opal-runs/<run_id>/`는 새로 만들지 않지만 `status`·`resume` 호환은 유지한다. 계약 원문은 제안서 `docs/proposals/opal-oppb-project-build-pilot.md` §4.5가 소유한다.
+run root는 project repository에, cache root는 allocator repository의 `.git/info/exclude`에 **멱등 등록**한다. 등록 문자열 존재가 아니라 `git check-ignore`의 **실제 판정**을 확인하며, 실패하면 run 시작을 거부한다(`start`도 같은 가드를 통과해야 한다). 기존 `<allocator_root>/.opal-runs/<run_id>/`는 새로 만들지 않지만 `status`·`resume` 호환은 유지한다. 계약 원문은 제안서 `docs/proposals/260913_OPPB_프로젝트_빌드_Pilot.md` §4.5가 소유한다.
 
 공통 출력 계약(단일 라인 JSON·`error` 코드 안정성·exit code)은 `opal/core/references/harness/tool-output-contract.md`가 소유한다. 이 문서는 이 도구 고유 사항만 다룬다.
 

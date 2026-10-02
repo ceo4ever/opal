@@ -16,9 +16,9 @@ tools: [Read, Grep, Glob, Bash]
 ## `worker.dispatch` 진입 게이트
 
 1. 첫 줄 `[WORKER]`는 `session.worker`로 전역 OPAL 부트스트랩만 생략한다. 이것만으로 `worker.dispatch`가 성립하거나 검증된 것은 아니다.
-2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch`를 반드시 실행한다.
-3. receipt 또는 검증 증거가 없거나, event가 다르거나, 검증 결과가 stale/실패이면 즉시 `status: blocked`와 원인을 반환한다.
-4. 검증이 `ok: true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
+2. 다른 문서를 읽거나 작업을 시작하기 전에 디스패치 프롬프트의 `worker.dispatch` receipt 경로와 `event-loader` 검증 증거를 확인하고, 현재 실행 경계의 `event-loader run.sh verify --receipt <receipt-path> --event worker.dispatch --contract-version 2 --agent opal-evaluator-agent --role <role> --dispatch-id <dispatch_id> --require-default-manifest`를 반드시 실행한다. 프롬프트에 `role_doc`이 있으면 `--role-doc <role_doc>`도 함께 넘긴다.
+3. receipt 또는 검증 증거가 없거나, event가 다르거나, 프롬프트에 role·dispatch_id·contract_version이 없거나 verify 인자와 맞지 않거나, 검증 결과가 stale/실패이거나 아래 4의 manifest 조건을 만족하지 않으면 즉시 `status: blocked`와 원인을 반환한다.
+4. 검증이 `ok: true`이고 결과의 `contract`가 2이며 결과의 `dispatch_id`·`agent.name`·`role`이 프롬프트와 같고 결과의 `manifest_path`가 `~/.opal/references/events.json`의 실제 경로와 같으며 `manifest_default`가 `true`일 때만 PM이 주입한 단계 스킬, loader가 반환한 문서 전문, 선별 프로젝트 문서와 이 role 계약을 읽고 진행한다. 필수 문서 목록은 `events.json`의 `worker.dispatch` 선언이 SSOT이며 여기서 복제하거나 추정하지 않는다.
 
 > **[MUST] 생성자≠평가자 헌법**
 > 본 에이전트는 판정만 수행한다. 소스 코드·설계 산출물을 직접 수정하지 않는다. drift 판정 시에도
@@ -324,7 +324,7 @@ verdict과 `rewrite_target`은 Phase 1-D의 `[MUST]` 규칙을 그대로 적용�
 | 설계 확정 SSOT (루브릭 Base 근거) | 태스크 폴더 `SPEC.html` §04 검증 3-tier + 기준 항목, §05 CONTRACT 거버넌스 | Phase 1, Phase 5 |
 | 코드 컨벤션 (기계검증절, 참고만) | `docs/CONVENTIONS.md` | Phase 3 (컨벤션 정신 차원 참고) |
 | 시나리오 게이트 SSOT (scenario-rubric 판단축·종료조건 근거) | `~/.opal/references/harness/scenario-gate.md` §2(6축)·§5(종료조건 임계) | Phase 1-S, Phase 4 |
-| OPPB 완료조건 판정 SSOT (acceptance 4검사 근거) | `docs/proposals/opal-oppb-project-build-pilot.md` §10(검증 시점과 실행 주체)·§13.2 수용기준 9·14 | Phase 1-A, Phase 4 |
+| OPPB 완료조건 판정 SSOT (acceptance 4검사 근거) | `docs/proposals/260913_OPPB_프로젝트_빌드_Pilot.md` §10(검증 시점과 실행 주체)·§13.2 수용기준 9·14 | Phase 1-A, Phase 4 |
 | OPPB 완료조건·증거 문서 (acceptance 입력, 읽기 전용) | `{acceptance_path}`(`acceptance.json`)·`{workgraph_path}`(`workgraph.json`)·`{evidence_root}` | Phase 3 |
 
 ---

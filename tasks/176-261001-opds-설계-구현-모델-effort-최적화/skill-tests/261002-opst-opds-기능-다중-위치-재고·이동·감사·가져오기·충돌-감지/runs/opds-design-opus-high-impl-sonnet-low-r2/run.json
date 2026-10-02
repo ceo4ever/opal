@@ -1,0 +1,37 @@
+{
+ "scenario": "function-stockctl-multiloc",
+ "mode": "function",
+ "variant": "//opds design=opus/high impl=sonnet/low",
+ "rep": 2,
+ "vidx": 1,
+ "utterance": "//opds 요구서 /private/tmp/claude-501/-Volumes-Data-AiStudio-workspace-opal--opal-worktrees-task-176/39b1b7a5-a283-4de9-b1e6-120a0bdcb558/scratchpad/measure-function-stockctl-multiloc/opds-design-opus-high-impl-sonnet-low-r2/REQUEST.md 대로 수행한다. 요구서의 요구를 TASK 요구사항으로 그대로 사용한다.",
+ "start": 1790865974.7331939,
+ "framework": "main+19da06",
+ "settings": {
+  "declared": {
+   "design": {
+    "model": "opus",
+    "effort": "high"
+   },
+   "impl": {
+    "model": "sonnet",
+    "effort": "low"
+   }
+  },
+  "applied": {
+   "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5"
+   ],
+   "agent_overrides": {
+    "opal-task-agent": "2d0017b871bf7f646b701625a596be04bd67f39b318d1183188b9d28f7e5310a",
+    "opal-be-agent": "c00b9dbfa0361ed6af814dcc4f4dfaa70ba54cbde8fec3548e8248db7362e5c5",
+    "opal-fe-agent": "b8fa92ea9b41386a180b1e9043fe97e31068043fdeac9095f38f0f964d3f4157"
+   },
+   "agents_missing": []
+  }
+ },
+ "exit": 0,
+ "timeout": false,
+ "end": 1790867156.490589
+}

@@ -1,0 +1,116 @@
+{
+ "probe": "p03-runlog-enum",
+ "arm": "on",
+ "run": 2,
+ "tag": "p03-runlog-enum-on-2",
+ "prompt_bytes": 49449,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 12.5,
+   "json": {
+    "duration_api_ms": 8120,
+    "stop_reason": "end_turn",
+    "session_id": "a797166d-31a9-41c5-b8bb-6e5045a23ebd",
+    "total_cost_usd": 0.1962044,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 43871,
+     "cache_read_input_tokens": 67312,
+     "output_tokens": 725,
+     "output_tokens_details": {
+      "thinking_tokens": 42
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 43871,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 505,
+       "cache_read_input_tokens": 54936,
+       "cache_creation_input_tokens": 1311,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 1311
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 4,
+      "outputTokens": 725,
+      "cacheReadInputTokens": 67312,
+      "cacheCreationInputTokens": 43871,
+      "webSearchRequests": 0,
+      "costUSD": 0.1962044,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 42,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 2,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "**폐쇄 enum**: run-log `data.verdict`는 `approved` / `rejected` / `auto` 세 값만 씁니다.\n\n**설계 게이트 verdict별 매핑**\n- `pass` → `approved`\n- 그 외 모두(`rewrite`, `input_error` 등) → `rejected`\n- `auto`는 설계 게이트에서 쓰이는 매핑이 문서에 나와 있지 않습니다.\n\n**verdict 원문을 남기는 곳**: run-log `data.verdict`에는 원문(pass/rewrite/input_error 등)을 담지 않습니다. 원문은 `summary`와 `design_gate.history`에 남깁니다.\n- `design_gate.history[].verdict`가 쓰는 값은 `pass`, `rewrite`, `input_error`, `deterministic_fail`, `superseded` 5가지입니다.\n- `reason` 필드에 `advisory_apply`와 `advisory_refinement_failed`가 추가됐지만, verdict 값 자체는 늘지 않았습니다.\n\n**참고**\n- gate.resolved는 `record` 시점에 상태 변경과 같은 커밋으로 남습니다.\n- `gate_id`는 `design-gate-i{N}` 형식입니다.\n- `superseded`로 닫힌 시도는 `gate.resolved`를 남기며, `summary`에 superseded를 명시하고 `data.verdict`는 `rejected`입니다.",
+    "ttft_ms": 3272,
+    "type": "result",
+    "duration_ms": 9460,
+    "uuid": "362f42de-9f56-48a6-a259-caa17e177e57",
+    "ttft_stream_ms": 2615,
+    "time_to_request_ms": 106,
+    "first_content_frame_ms": 2615,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}

@@ -1,7 +1,7 @@
 # OPAL Agents Registry
 
-> 로드 이벤트: `worker.dispatch`. PM은 Agent 호출 직전에 event-loader의 같은 load 응답으로
-> 이 전문을 적용하고 receipt를 검증한다. 부트스트랩이나 이전 디스패치의 캐시를 사용하지 않는다.
+> 로드 이벤트: `worker.dispatch`. PM은 Agent 호출 직전에 대상·역할을 넘긴 event-loader load 응답에서
+> 대상별로 선별된 본문을 적용하고 receipt를 검증한다. 부트스트랩이나 이전 디스패치의 캐시를 사용하지 않는다.
 
 OPAL 에이전트가 호출할 수 있는 서브에이전트 목록.
 각 에이전트는 독립 컨텍스트에서 실행되며, 호출 시 해당 AGENT.md(또는 SKILL.md)를 Read로 읽어 지시를 전달한다.

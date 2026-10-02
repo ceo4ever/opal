@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 175,
+  "last_task_number": 177,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -180,32 +180,32 @@
       "result": "Console /api default-deny 인증·console open 1회성 token·구형 Brain 기본 차단(Gateway Phase 0)"
     },
     {
+      "title": "177 이벤트로더 보안보강과 절단위 로딩 실험",
+      "date": "2026-10-02",
+      "stage": "완료",
+      "path": "tasks/177-261002-opd-이벤트로더-보안보강과-절단위-로딩-실험/",
+      "result": "이벤트 로더 보안 권고 4건 해소, 절 단위 로딩을 명시 호출 전용 실험 모드로 구현·측정(기본값 전환 보류). 시나리오 14건 통과, main 머지 완료."
+    },
+    {
+      "title": "176 설계 구현 모델 effort 최적화",
+      "date": "2026-10-02",
+      "stage": "완료",
+      "path": "tasks/176-261001-opds-설계-구현-모델-effort-최적화/",
+      "result": "opst에 설계 주체·구현 에이전트 model·effort 변형 측정 기능과 launcher builderModelLevel 추가. 16세션 측정(비용 $198.5) 결과 캡틴 결정으로 현행(sonnet 설계·구현) 유지. main 머지 완료."
+    },
+    {
+      "title": "175 이벤트 로딩 경량화",
+      "date": "2026-10-02",
+      "stage": "완료",
+      "path": "tasks/175-261001-opd-이벤트-로딩-경량화/",
+      "result": "응답 본문 단일화(v2)·worker.dispatch 대상별 선별(본문 약 29%↓)·계약 v2 load/verify·구형 호환 원장, 시나리오 17/17 PASS"
+    },
+    {
       "title": "172 검증 시간 단축",
       "date": "2026-10-01",
       "stage": "완료",
       "path": "tasks/172-261001-opd-검증-시간-단축/",
       "result": "설계 게이트 병렬 판정·combine, 컨벤션 결정론 사전 검사·변경 구간 검사, 판정 에이전트 effort 정책, TEST 병렬 그룹 도입. S-13 1건 실패는 ADD로 원인 분리, evaluator effort low 채택. state-tool·precheck 688 passed, main 머지 완료."
-    },
-    {
-      "title": "174 헤더 이력 차단과 state tool 분할",
-      "date": "2026-10-01",
-      "stage": "완료",
-      "path": "tasks/174-261001-opd-헤더-이력-차단과-state-tool-분할/",
-      "result": "code-scan validate가 @header 이력(header_history)·머리말 초과(header_overflow)를 차단으로 판정, state_tool.py를 9개 모듈로 분할(동작 보존), 저장소 위반 정리. state-tool 640 passed, main 머지 완료."
-    },
-    {
-      "title": "173 opd2 사전심사 재시도상한과 지적추적",
-      "date": "2026-10-01",
-      "stage": "완료",
-      "path": "tasks/173-261001-opds-opd2-사전심사-재시도상한과-지적추적/",
-      "result": "opd2 PLAN 사전심사: 재검증은 A·B 모두 재디스패치로 문서 정합, fail 3회 상한과 plan-review-reset(사용자 전용) 도입, 지적 해소 추적. opd2 테스트 46 passed, main 머지 완료."
-    },
-    {
-      "title": "170 설계 게이트 회차 단축",
-      "date": "2026-10-01",
-      "stage": "완료",
-      "path": "tasks/170-261001-opds-설계-게이트-회차-단축/",
-      "result": "설계 게이트 결정론 사전점검(verify --design-gate-check)·decision_clarity 자가점검·previous/resolved_gaps 왕복 도입. evaluator는 측정 결과 baseline 유지. TEST 13/13(S-6 PM 직접 예외), main 머지 완료."
     }
   ]
 }

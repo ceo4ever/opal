@@ -56,9 +56,9 @@ PM이 직접 작업을 수행하는 경우(워커 디스패치 여부 무관)에
 
 ## 3. PM 디스패치 전 프로세스
 
-워커에게 작업을 디스패치하기 전에 **매번** `worker.dispatch` 이벤트를 load하고 응답 문서
-전문을 적용한 뒤 receipt를 검증한다. 그 다음 응답으로 받은 `dispatch-process`의 Step 1~7을
-수행한다. 프로젝트 문서는 수시로 변경되므로 이전 디스패치의 응답이나 receipt를 재사용하지 않는다.
+워커에게 작업을 디스패치하기 전에 `dispatch-process`의 Step 1~4로 대상·역할을 확정한 뒤,
+**매번** 새 디스패치 식별자를 발급하고 계약 버전 2로 `worker.dispatch` 이벤트를 load(대상·역할·식별자 전달)한다.
+대상별로 선별된 응답 문서 본문을 적용하고 같은 인자로 receipt를 검증한 다음 Step 5~7을 수행한다. 프로젝트 문서는 수시로 변경되므로 이전 디스패치의 응답이나 receipt를 재사용하지 않는다.
 
 > 상세 절차(Step 0~7 전체): `opal/core/references/pm/dispatch-process.md` 참조.
 > Lazy 트리거: 워커 디스패치 직전.

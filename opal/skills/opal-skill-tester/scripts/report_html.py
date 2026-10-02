@@ -3,7 +3,7 @@
   "module": "report_html",
   "layer": "util",
   "domain": "opal-skill-tester",
-  "description": "opal-skill-tester 대시보드 보고서(report.html) 렌더러. 단일 실행은 요약(평가축 5종·단계 상세·자기 교정·전체 지표)+스킬별 이력 탭, 비교 실행은 비교(핵심 지표·준수 매트릭스·단계 묶음 막대·변화율)+변형별 상세+이력 탭을 한 파일로 만든다. 이력 탭은 같은 시나리오 추세(최근 실행 중앙값 대비)와 같은 스킬의 과거 실행 표를 보여 주며 각 행은 과거 실행 상세를 페이지 안에서 펼치거나 과거 대시보드를 새 탭으로 연다. 인라인 SVG·외부 의존 없음, 라이트/다크 모드.",
+  "description": "opal-skill-tester 대시보드 보고서(report.html) 렌더러. 단일 실행은 요약(평가축 5종·단계 상세·자기 교정·전체 지표)+스킬별 이력 탭, 비교 실행은 비교(변형 설정 선언·적용, 지표별 평균·최소~최대, 품질 하한 판정, FW 불일치 시 비교 무효 배너, 핵심 지표·준수 매트릭스·단계 묶음 막대·변화율)+변형별 상세+이력 탭을 한 파일로 만든다. 이력 탭은 같은 시나리오 추세(최근 실행 중앙값 대비)와 같은 스킬의 과거 실행 표를 보여 주며 각 행은 과거 실행 상세를 페이지 안에서 펼치거나 과거 대시보드를 새 탭으로 연다. 인라인 SVG·외부 의존 없음, 라이트/다크 모드.",
   "exports": ["render_report", "axes_for"]
 }
 """
@@ -183,7 +183,50 @@ def summary_panel(m, hist):
 <div class="card"><h2>전체 지표</h2><table>{mrow}</table></div></div>"""
 
 
-def compare_panel(runs):
+def _setting(x):
+    return "미지정" if not x else f'{x.get("model")}/{x.get("effort") or "기본"}'
+
+
+def settings_rows(runs):
+    """변형별 변형 설정(선언 design·impl, 적용된 모델·구현 에이전트 사본)을 표 행 HTML로 만든다."""
+    rows = []
+    for label, pick in (("설계 설정(선언)", lambda s: _setting((s.get("declared") or {}).get("design"))),
+                        ("구현 설정(선언)", lambda s: _setting((s.get("declared") or {}).get("impl"))),
+                        ("적용된 모델", lambda s: ", ".join((s.get("applied") or {}).get("models") or []) or "기록 없음"),
+                        ("구현 에이전트 사본", lambda s: ", ".join(sorted((s.get("applied") or {}).get("agent_overrides") or {})) or "없음")):
+        rows.append(f'<tr><td>{e(label)}</td>' + "".join(f'<td>{e(pick(r.get("settings") or {}))}</td>' for r in runs) + "</tr>")
+    return "".join(rows)
+
+
+def comparison_card(comparison, variants):
+    """비교 무효 배너 또는 변형별 지표 평균(최소~최대)과 품질 하한 판정 카드."""
+    if not comparison:
+        return ""
+    if not comparison.get("valid", True):
+        fws = comparison.get("frameworks_by_variant") or {}
+        lines = "".join(f'<li>{e(v)}: <code>{e(", ".join(fws.get(v) or []) or "기록 없음")}</code></li>' for v in variants)
+        return (f'<div class="card" style="margin-bottom:16px;border-color:var(--crit)"><h2 class="d-down">비교 무효 — FW 버전 상이</h2>'
+                f'<div class="sub">변형 간 프레임워크 지문이 달라 결과를 비교하지 않습니다. 같은 FW 버전으로 다시 실행하세요.</div><ul>{lines}</ul></div>')
+    mt = comparison.get("metrics") or {}
+    head = "".join(f'<th class="n">{e(v)}</th>' for v in variants)
+    body = ""
+    for k in ("wall_min", "cost_usd", "turns", "subagent_runs", "gate_iterations", "hidden_pass_rate", "test_fix_iterations"):
+        cells = ""
+        for v in variants:
+            st = (mt.get(v) or {}).get(k)
+            cells += f'<td class="n">{st["avg"]:.2f} ({st["min"]:.2f}~{st["max"]:.2f})</td>' if st else '<td class="n">-</td>'
+        body += f'<tr><td>{e(k)}</td>{cells}</tr>'
+    fl = comparison.get("floor") or {}
+    frows = "".join(
+        f'<tr><td>{e(v)}</td><td>{chip(fl[v]["met"], "하한 충족", "하한 미충족(결정 대상 아님)")}</td>'
+        f'<td class="n">{fl[v]["hidden_avg"]:.2f} / {fl[v]["base_hidden_avg"]:.2f}</td><td class="n">{fl[v]["pass_ratio"]:.2f} / {fl[v]["base_pass_ratio"]:.2f}</td></tr>'
+        for v in variants[1:] if v in fl)
+    return (f'<div class="grid g2"><div class="card"><h2>지표별 평균 (최소~최대)</h2><div class="overflow"><table><tr><th>지표</th>{head}</tr>{body}</table></div></div>'
+            f'<div class="card"><h2>품질 하한 판정</h2><div class="tag" style="margin-bottom:8px">기준 변형 {e(comparison.get("baseline"))} · 숨은 테스트 통과율 평균과 PASS 비율이 모두 기준 이상이어야 충족 (후보 / 기준)</div>'
+            f'<div class="overflow"><table><tr><th>변형</th><th>판정</th><th class="n">숨은 테스트 평균</th><th class="n">PASS 비율</th></tr>{frows}</table></div></div></div>')
+
+
+def compare_panel(runs, comparison=None):
     variants = [r["variant"] for r in runs]
     krows = [("판정", [chip(r["verdict"] == "PASS") for r in runs]), ("숨은 테스트", [e(r.get("hidden_summary") or "-") for r in runs]),
              ("최종 수행 시간", [f'{r.get("wall_min")}분' for r in runs]), ("비용", [f'${r.get("cost_usd")}' for r in runs]),
@@ -239,6 +282,8 @@ def compare_panel(runs):
                          f'<span><span class="sw" style="background:var(--crit)"></span>악화(증가)</span></div><svg viewBox="0 0 {DW} {20 + 30 * len(mets)}" width="100%" role="img" aria-label="변화율">{"".join(drows)}</svg></div>')
     return f"""
 <div class="card" style="margin-bottom:16px"><div class="legend">{legend}</div></div>
+{comparison_card(comparison, variants)}
+<div class="card" style="margin-bottom:16px"><h2>변형 설정</h2><div class="overflow"><table><tr><th>항목</th>{head}</tr>{settings_rows(runs)}</table></div></div>
 <div class="grid g2"><div class="card"><h2>핵심 지표</h2><div class="overflow"><table><tr><th>지표</th>{head}</tr>{ktab}</table></div></div>
 <div class="card"><h2>준수 항목</h2><div class="overflow"><table><tr><th>항목</th>{"".join(f"<th>{e(v)}</th>" for v in variants)}</tr>{ctab}</table></div></div></div>
 <div class="grid g2"><div class="card"><h2>단계별 소요(분)</h2>{grouped}</div>{diverging}</div>"""
@@ -292,7 +337,7 @@ def history_panel(variant, current, scenario_id, hist_same, hist_skill, here_dir
 <div class="overflow"><table><tr><th>일시</th><th>시나리오</th><th>모드</th><th>판정</th><th class="n">최종 수행 시간(분)</th><th class="n">비용($)</th><th class="n">게이트 반복</th><th>프레임워크</th><th>보고서</th></tr>{table}</table></div></div>"""
 
 
-def render_report(scenario, runs, history, here_dir, created_at):
+def render_report(scenario, runs, history, here_dir, created_at, comparison=None):
     """runs: 이번 실행 지표 목록, history: 과거 실행 레코드 목록(variant·scenario·created_at·report_path 포함)."""
     variants = []
     for r in runs:
@@ -307,7 +352,7 @@ def render_report(scenario, runs, history, here_dir, created_at):
         panels.append(("summary", summary_panel(dict(first[v], mode=scenario["mode"]), hs)))
     else:
         tabs.append(("compare", "비교"))
-        panels.append(("compare", compare_panel([first[v] for v in variants])))
+        panels.append(("compare", compare_panel([first[v] for v in variants], comparison)))
         for i, v in enumerate(variants):
             hs = [h for h in history if h["variant"] == v and h["scenario"] == scenario["id"]]
             tabs.append((f"detail{i}", f"상세: {v}"))

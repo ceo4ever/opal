@@ -1,0 +1,188 @@
+{
+  "document": "opal/core/references/opal-pm.md",
+  "unit_level": 2,
+  "sections": [
+    {
+      "id": "pm-role",
+      "title": "1. PM 역할 개요",
+      "load": "always"
+    },
+    {
+      "id": "pm-context-load",
+      "title": "2. PM 컨텍스트 로드 절차",
+      "load": "always"
+    },
+    {
+      "id": "pm-dispatch",
+      "title": "3. PM 디스패치 전 프로세스",
+      "load": "always"
+    },
+    {
+      "id": "pm-review-gate",
+      "title": "4. PM 검토 게이트",
+      "load": "always"
+    },
+    {
+      "id": "pm-improvement-loop",
+      "title": "5. PM 개선 루프",
+      "load": "always"
+    },
+    {
+      "id": "pm-context-injection",
+      "title": "6. 에이전트 컨텍스트 주입 원칙",
+      "load": "always"
+    },
+    {
+      "id": "pm-doc-code-mismatch",
+      "title": "7. 문서/코드 불일치 판단",
+      "load": "always"
+    },
+    {
+      "id": "pm-report-format",
+      "title": "8. 보고 형식",
+      "load": "always"
+    },
+    {
+      "id": "pm-code-scan-mgmt",
+      "title": "9. code-scan.json PM 관리 의무",
+      "load": "always"
+    },
+    {
+      "id": "pm-orchestration",
+      "title": "10. 통합 조율 (전문 에이전트 체계)",
+      "load": "always"
+    },
+    {
+      "id": "pm-specialist-agent",
+      "title": "11. 프로젝트 전문 에이전트 관리",
+      "load": "always"
+    },
+    {
+      "id": "pm-role-switch",
+      "title": "12. 역할 전환 (PM 내부)",
+      "load": "always"
+    },
+    {
+      "id": "pm-code-scan-use",
+      "title": "13. code-scan 활용 규칙",
+      "load": "always"
+    },
+    {
+      "id": "pm-brain-use",
+      "title": "14. opal-brain 활용 규칙",
+      "load": "always"
+    },
+    {
+      "id": "pm-memory-briefing",
+      "title": "15. 프로젝트 메모리 브리핑",
+      "load": "always"
+    },
+    {
+      "id": "pm-model-mapping",
+      "title": "16. 모델 매핑 적용 (PM 행동)",
+      "load": "always"
+    },
+    {
+      "id": "pm-project-context",
+      "title": "17. 프로젝트 컨텍스트",
+      "load": "always"
+    },
+    {
+      "id": "pm-asis",
+      "title": "18. AS-IS 분석 (기획 대화)",
+      "load": "always"
+    }
+  ],
+  "review": [
+    {
+      "id": "pm-role",
+      "load": "always",
+      "reason": "PM 활성화 조건·역할 분리 정의"
+    },
+    {
+      "id": "pm-context-load",
+      "load": "always",
+      "reason": "pm.activate load·receipt 검증 절차와 실패 시 중단 규범"
+    },
+    {
+      "id": "pm-dispatch",
+      "load": "always",
+      "reason": "매 디스패치 새 식별자·receipt 재사용 금지 규범"
+    },
+    {
+      "id": "pm-review-gate",
+      "load": "always",
+      "reason": "검토 의무 선언과 pm-review-gate.md 로드 시점(Lazy 트리거) 지시 — 이 문장이 로드 라우팅 규칙이라 숨기지 않음"
+    },
+    {
+      "id": "pm-improvement-loop",
+      "load": "always",
+      "reason": "개선 루프 진입 조건(Lazy 트리거)과 문서 위임 지시 — 라우팅 규칙이라 숨기지 않음"
+    },
+    {
+      "id": "pm-context-injection",
+      "load": "always",
+      "reason": "3단계 컨텍스트 구성·전문 에이전트 자동 선정 규범"
+    },
+    {
+      "id": "pm-doc-code-mismatch",
+      "load": "always",
+      "reason": "코드가 source of truth라는 원칙과 문서 위임 트리거"
+    },
+    {
+      "id": "pm-report-format",
+      "load": "always",
+      "reason": "응답은 하단 액션 하나로 닫기·35줄 상한 등 PM 응답 규범"
+    },
+    {
+      "id": "pm-code-scan-mgmt",
+      "load": "always",
+      "reason": "code-scan.json 관리 의무와 코드맵 즉석 생성 금지 규범"
+    },
+    {
+      "id": "pm-orchestration",
+      "load": "always",
+      "reason": "다중 에이전트 배치 시 문서 로드 트리거 — 라우팅 규칙이며 311B"
+    },
+    {
+      "id": "pm-specialist-agent",
+      "load": "always",
+      "reason": "전문 에이전트 디스패치 직전 로드 트리거 — 라우팅 규칙"
+    },
+    {
+      "id": "pm-role-switch",
+      "load": "always",
+      "reason": "PM 대화/태스크 구분·수집 워커 허용 범위·진입점·규모는 근거 아님 규범"
+    },
+    {
+      "id": "pm-code-scan-use",
+      "load": "always",
+      "reason": "code-scan 우선 활용·사용자 도구 지시 우선 규범과 2단 소비 절차(참조 표 혼재라 분리 불가)"
+    },
+    {
+      "id": "pm-brain-use",
+      "load": "always",
+      "reason": "brain 온디맨드 조회 원칙·모드별 ingest 규범"
+    },
+    {
+      "id": "pm-memory-briefing",
+      "load": "always",
+      "reason": "session.project 한정 표시·재생성 금지 규범"
+    },
+    {
+      "id": "pm-model-mapping",
+      "load": "always",
+      "reason": "미설정 시 디스패치 중단·폴백 금지 규범"
+    },
+    {
+      "id": "pm-project-context",
+      "load": "always",
+      "reason": "PM 문서 선로딩 금지·pm.activate 전달 문서 적용 규범"
+    },
+    {
+      "id": "pm-asis",
+      "load": "always",
+      "reason": "AS-IS 분석 5단계 요약과 문서 위임 트리거 — 라우팅 규칙이며 695B"
+    }
+  ]
+}

@@ -1,0 +1,343 @@
+{
+  "task_id": "175-261001-opd-이벤트-로딩-경량화",
+  "skill": "opd",
+  "mode": "agentic",
+  "schema_version": "1.2",
+  "created_at": "2026-10-01 22:48:41",
+  "updated_at": "2026-10-02 07:05:46",
+  "current_status": "done",
+  "rows": [
+    {
+      "row_id": 1,
+      "stage": "TASK",
+      "item": "작업",
+      "key": "task.task_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 22:49:12",
+      "owner": "PM",
+      "note": "승인된 제안서 1차 범위·제약·AC 검토 및 clarification-check pass"
+    },
+    {
+      "row_id": 2,
+      "stage": "TASK",
+      "item": "사용자 확인",
+      "key": "task.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 22:56:43",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic 자동 승인"
+    },
+    {
+      "row_id": 3,
+      "stage": "PLAN",
+      "item": "작업",
+      "key": "plan.plan_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:42:35",
+      "owner": "PM",
+      "note": "PLAN은 coordinator PM 직접 작성 — 워커 미디스패치",
+      "worker_duration_unknown": true
+    },
+    {
+      "row_id": 4,
+      "stage": "PLAN",
+      "item": "TEST-SCENARIO 작성",
+      "key": "plan.test_scenario_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 22:56:52",
+      "owner": "PM",
+      "note": "TEST-SCENARIO.md 작성 S-1~S-17, design-gate-check pass"
+    },
+    {
+      "row_id": 5,
+      "stage": "PLAN",
+      "item": "설계 게이트",
+      "key": "plan.design_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 22:59:05",
+      "owner": "PM",
+      "note": "design gate i2 pass",
+      "gate": {
+        "artifacts": [
+          "TASK.md",
+          "PLAN.md",
+          "TEST-SCENARIO.md"
+        ],
+        "checklist": [
+          "`state-tool design-gate record`가 pass를 기록했고 현재 문서 묶음 hash가 통과 hash와 같다",
+          "evaluator design-rubric 설계 4축 PASS·시나리오 3축 기준 충족"
+        ]
+      }
+    },
+    {
+      "row_id": 6,
+      "stage": "PLAN",
+      "item": "사용자 확인",
+      "key": "plan.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-01 22:59:12",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic 자동 승인"
+    },
+    {
+      "row_id": 7,
+      "stage": "EXECUTE",
+      "item": "작업",
+      "key": "execute.implement",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:43:01",
+      "owner": "PM",
+      "note": "run-log worker.started/completed 14:03:48Z~14:16:31Z 근사",
+      "worker_duration_minutes": 13
+    },
+    {
+      "row_id": 8,
+      "stage": "TEST",
+      "item": "작업",
+      "key": "test.run_tests",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:43:02",
+      "owner": "PM",
+      "note": "run-log test-agent 14:16:31Z~15:03:20Z 근사(S-17 16분 포함)",
+      "worker_duration_minutes": 47
+    },
+    {
+      "row_id": 9,
+      "stage": "TEST",
+      "item": "보안 지적 수정 (GC-001·002·003·005)",
+      "key": "test.item_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:09:15",
+      "owner": "PM",
+      "note": "GC-001·002·003·005 수정, 테스트 104 pass(사전 실패 2건 별도)",
+      "test_change_kind": "fix"
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
+      "item": "보안 재검사 지적 수정 (GC-008·009, 테스트 원장 격리)",
+      "key": "test.item_2",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:16:49",
+      "owner": "PM",
+      "note": "GC-008·009 수정, 원장 격리(conftest), 테스트 108 pass(사전 실패 2건 별도)",
+      "test_change_kind": "fix"
+    },
+    {
+      "row_id": 11,
+      "stage": "TEST",
+      "item": "PM Gate",
+      "key": "test.pm_gate",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:23:06",
+      "owner": "PM",
+      "note": "17/17 PASS, 컨벤션 0건, 보안 PASS_WITH_ADVISORIES(GC-004·006·011·012 후속), 회귀 사전 실패 4건 외 없음",
+      "gate": {
+        "artifacts": [
+          "TEST-SCENARIO.md",
+          "test-scenario.json"
+        ],
+        "checklist": [
+          "TEST-SCENARIO.md는 실행 전 명세로만 읽고 결과·증거를 기록하지 않음",
+          "test-scenario.json의 모든 필수 시나리오가 PASS이고 FAIL/BLOCKED가 없으며 실제 실행 증거가 존재",
+          "PLAN.md Work items에 정의된 필수 검증 PASS",
+          "컨벤션 자동 진단 PASS (GC-CONVENTION-*.md Critical/High 0건 — 컨벤션 적용 대상 ≥1건 시 발동)"
+        ]
+      }
+    },
+    {
+      "row_id": 12,
+      "stage": "TEST",
+      "item": "사용자 확인",
+      "key": "test.user_confirm",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:23:06",
+      "owner": "auto",
+      "note": "agentic auto-pass: agentic 자동 승인"
+    },
+    {
+      "row_id": 13,
+      "stage": "CLOSE",
+      "item": "DONE.md 생성",
+      "key": "close.done_md",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:43:02",
+      "owner": "PM",
+      "note": "DONE.md 템플릿 5절 확인, 설치본 재설치(00:28 main) 반영해 검증 절 보정, 회고적 학습 후보 5건 선언"
+    },
+    {
+      "row_id": 14,
+      "stage": "CLOSE",
+      "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
+      "key": "close.docs_sync",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:43:02",
+      "owner": "PM",
+      "note": "no-op: ARCHITECTURE·PROJECT·CONVENTIONS의 event-loader·worker.dispatch 서술은 변경 후에도 참, 도구 수 불변. 상세 계약은 event-loader README가 소유(EXECUTE에서 갱신)",
+      "conditional": true
+    },
+    {
+      "row_id": 15,
+      "stage": "CLOSE",
+      "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
+      "key": "close.brain_ingest",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:43:02",
+      "owner": "PM",
+      "note": "op-brain-ingest(opal-task-agent) completed — concept 4·entity 1, index/log 갱신, DONE 선언 집합 일치",
+      "conditional": true
+    },
+    {
+      "row_id": 16,
+      "stage": "CLOSE",
+      "item": "회고/개선 후보 기록",
+      "key": "close.retrospective",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:43:23",
+      "owner": "PM",
+      "note": "improve-tool fw 3건: AGENTIC-LOG 기록 의무 도구 집행 / 타 세션 install이 설치본 검증 무효화 / idle 세션 lease가 CLOSE 재개 차단"
+    },
+    {
+      "row_id": 17,
+      "stage": "CLOSE",
+      "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
+      "key": "close.worktree_finalize",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:44:11",
+      "owner": "PM",
+      "note": "worktree-tool finalize ok: state closed, 귀속 커밋 5deac640(brain 5 page+index/log), violations 0; status dirty(소스·태스크 미커밋) unpushed 1 merged false",
+      "conditional": true
+    },
+    {
+      "row_id": 18,
+      "stage": "CLOSE",
+      "item": "CLOSE 최종 상태 확정",
+      "key": "close.final",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 00:44:11",
+      "owner": "PM",
+      "note": "CLOSE 완료 — completed_unmerged. merge·install 재실행은 허브 세션 수행"
+    }
+  ],
+  "next_action": "태스크 완료",
+  "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_175",
+  "actor": "coordinator",
+  "run_log": {
+    "contract_version": "1.0",
+    "mode": "shadow",
+    "completion_profile": "cooperative",
+    "completion_profile_receipt": null,
+    "active_run_id": "run_f2287329-4f9f-4fc6-9739-8cd07211f6f6",
+    "status": "active",
+    "pending_events": []
+  },
+  "design_gate": {
+    "status": "pass",
+    "iteration": 2,
+    "limit": 3,
+    "limit_from": 0,
+    "task_confirm_req_hash": "88629c8b886eb2b73ffee07fdeb605a87c7f5ace677ed78fef1dab1851a4ecf1",
+    "current_attempt": {
+      "iteration": 2,
+      "bundle_hash": "2e91eee5c24e15ad21b6aaf5f213125cde090d1e9731e526320a446cd340c687",
+      "files": {
+        "TASK.md": "9a04c3773f0102a65816165a6bb9594583bfcfff4fe74ad78b1c55d0caaecddf",
+        "PLAN.md": "7ed3d5c1661aa542a4f25b7eade5ca00dc1925623d452e4b42de6da1af230ab5",
+        "TEST-SCENARIO.md": "29ce8fc58029953e565b908e0ef2d55cb715f5f4aca0a2c8f8b473291e0cbd33"
+      },
+      "started_at": "2026-10-01 22:58:09",
+      "refinement": false
+    },
+    "passed_bundle_hash": "2e91eee5c24e15ad21b6aaf5f213125cde090d1e9731e526320a446cd340c687",
+    "approved_bundle_hash": "2e91eee5c24e15ad21b6aaf5f213125cde090d1e9731e526320a446cd340c687",
+    "last_rewrite_target": "plan",
+    "history": [
+      {
+        "iteration": 1,
+        "verdict": "rewrite",
+        "rewrite_target": "plan",
+        "bundle_hash": "3413486cd45b75f4dbd5e776941659af10267b20026c9a50311d537c0c615cf5",
+        "reason": "design FAIL: recoverability; scenario average 2.0",
+        "at": "2026-10-01 22:58:03",
+        "advisories": [
+          {
+            "id": "A-1",
+            "kind": "subsumed",
+            "targets": [
+              "S-12"
+            ],
+            "basis": "S-10 already runs `static-check --event worker.dispatch --path opal/agents` on the repository source with an expected result of 0 violations. S-12 runs the same command on the same path. The extra checks in S-12 all come out of that same static-check output.",
+            "recommendation": "Add S-12's expected results to S-10's expected results and drop S-12. Alternatively, record in S-12 the specific check items that S-10 does not cover."
+          },
+          {
+            "id": "A-2",
+            "kind": "cheaper_layer",
+            "targets": [
+              "S-15"
+            ],
+            "basis": "In S-15, the Verifier/Reviewer real dispatch and cross-verify proves a deterministic contract already proven by S-4(b)(c). The model's judgment quality is not an acceptance criterion for AC-3 or H-2.",
+            "recommendation": "Keep the real call to 1 opal-test-agent dispatch plus 1 sub-dispatch path. Prove the Verifier/Reviewer cross-rejection with deterministic load and verify runs against the installed build (S-14 level)."
+          }
+        ],
+        "advisory_responses": [],
+        "refinement": false
+      },
+      {
+        "iteration": 2,
+        "verdict": "pass",
+        "rewrite_target": null,
+        "bundle_hash": "2e91eee5c24e15ad21b6aaf5f213125cde090d1e9731e526320a446cd340c687",
+        "reason": null,
+        "at": "2026-10-01 22:59:05",
+        "advisories": [
+          {
+            "id": "A-1",
+            "kind": "mergeable",
+            "targets": [
+              "S-10",
+              "S-12"
+            ],
+            "basis": "S-10 already runs the same command, static-check --event worker.dispatch --path opal/agents, and checks that the repository source has 0 violations. S-12 looks at the same 16 AGENT.md files with that same command.",
+            "recommendation": "Fold the specific checks that only S-12 makes into S-10's expected results, so the static check runs once."
+          }
+        ],
+        "advisory_responses": [
+          {
+            "id": "A-1",
+            "response": "retain",
+            "reason": "S-12는 에이전트 문서 16종과 하위 디스패치 3종의 게이트 줄 내용을 독립 결함 신호로 판정한다. 같은 명령 실행이지만 S-10은 저장소 전체·픽스처의 위반 0건, S-12는 AC-3 소비자 갱신 증거로 실패 원인이 구별되므로 분리를 유지한다."
+          }
+        ],
+        "refinement": false
+      }
+    ]
+  },
+  "test_timing": {
+    "intervals": [
+      {
+        "kind": "auto",
+        "id": "batch-1",
+        "started_at": "2026-10-01T14:16:54.637161+00:00",
+        "ended_at": "2026-10-01T14:16:57.356695+00:00"
+      }
+    ]
+  }
+}

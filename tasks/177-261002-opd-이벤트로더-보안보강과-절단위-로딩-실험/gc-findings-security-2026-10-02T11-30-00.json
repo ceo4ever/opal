@@ -1,0 +1,260 @@
+{
+ "check": "security",
+ "status": "pass",
+ "checked_files": [
+  "opal/tools/event-loader/event_loader.py",
+  "opal/tools/event-loader/lazy_sections.py",
+  "opal/tools/state-tool/state_tool_parts/gates.py",
+  "opal/tools/state-tool/state_tool_parts/cli.py",
+  "opal/core/references/events.json",
+  "opal/core/references/sections/citation-rules.json",
+  "opal/core/references/sections/design-gate.json",
+  "opal/core/references/sections/pm-review-gate.json",
+  "opal/core/references/sections/pm-process.json"
+ ],
+ "findings": [
+  {
+   "id": "GC-001",
+   "category": "CWE-41 Improper Resolution of Path Equivalence (--require-default-manifest 루트 결속이 심볼릭 events.json에서 정상 설치를 오거부)",
+   "severity": "low",
+   "confidence": "high",
+   "disposition": "advisory",
+   "rule_id": "CWE-41",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 1186,
+    "symbol": "verify_receipt (--require-default-manifest 루트 비교)"
+   },
+   "evidence": "새 루트 결속(1183-1193행)은 기대 루트를 _canonical_manifest().parents[1](설치)·parents[3](소스)로 구한다. _canonical_manifest는 events.json을 resolve()하므로 events.json 자체가 심볼릭 링크면 기대 루트가 링크 대상의 상위 디렉터리가 된다. 재현(R1, 임시 설치 사본): inst/references/events.json -> realm/x/events.json 심볼릭 링크로 바꾸고 load -> 플래그 없는 verify ok:true, --require-default-manifest verify는 manifest_not_default(expected deployed_root=realm, actual deployed_root=inst). 직전 실행 R1에서는 같은 조건이 ok:true였다(GC-011 해소 확인 근거). 대조: 설치 루트 전체를 심볼릭 경로로 실행(inst-link/tools/...)·OPAL_DEPLOYED_ROOT 끝 슬래시·'./inst/../inst'·루트 심볼릭 별칭은 모두 ok:true, manifest_default:true(N2-N4, R1e). references 디렉터리 심볼릭은 기존부터 load가 path_outside_root(변경 무관).",
+   "impact": "events.json만 심볼릭 링크로 배포한 설치(사용자 커스텀 배치·dotfiles 관리)에서 워커 진입 게이트 verify가 항상 실패한다. fail-closed라 우회는 아니며 가용성·정상 흐름 오거부 문제다. 현재 install-mac.sh 클린 배포는 실제 파일 복사라 기본 설치에는 영향이 없다.",
+   "remediation": {
+    "guidance": "기대 루트를 resolve 전 경로에서 구한다: 설치 실행은 Path(__file__).resolve().parents[2], 소스 실행은 parents[3]를 기대 루트로 쓰고, manifest 동일성은 기존처럼 resolve된 경로로 비교한다. 심볼릭 events.json + --require-default-manifest 회귀 테스트를 추가한다.",
+    "reference": "https://cwe.mitre.org/data/definitions/41.html",
+    "auto_fixable": true
+   },
+   "verification": "events.json을 심볼릭 링크로 둔 설치 사본에서 load 후 verify --require-default-manifest가 ok:true, manifest_default:true.",
+   "fingerprint": "88c7d0f18581433c",
+   "suppression": null
+  },
+  {
+   "id": "GC-002",
+   "category": "CWE-15 External Control of Configuration Setting (소스 실행 시 deployed_root 미결속)",
+   "severity": "low",
+   "confidence": "high",
+   "disposition": "advisory",
+   "rule_id": "CWE-15",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 1184,
+    "symbol": "verify_receipt (_running_from_source 분기)"
+   },
+   "evidence": "소스 실행 분기는 source_root만 정본과 비교하고 deployed_root는 비교하지 않는다. 소스 실행의 문서 선택 순서(project->source->deployed)상 deployed 변형만 있는 문서는 manifest의 optional identity(session.assistant) 1건이다. 재현(S1, 소스 레이아웃 사본 src/opal, HOME 격리): OPAL_DEPLOYED_ROOT=dev2(identity.md에 '[MUST] injected' 추가)로 session.assistant load -> 같은 env로 verify --require-default-manifest ok:true, manifest_default:true, verified 경로 dev2/identity.md. 대조: 소스 실행에서 --source-root <사본>+정본 --manifest는 manifest_not_default(source_root 불일치), 설치 실행에서 --source-root evil은 deployed 변형이 우선이라 문서 선택에 쓰이지 않음(R2g document_hash_mismatch).",
+   "impact": "소스 checkout에서 실행하는 개발 환경에 한해, verify 환경을 제어하는 주체가 사용자 identity 문서를 바꾼 응답을 manifest_default:true로 통과시킬 수 있다. 대상은 선택 문서 1건이고 worker.dispatch에는 해당 문서가 없으며 동일 사용자 권한이 전제다.",
+   "remediation": {
+    "guidance": "require_default일 때 소스 실행이면 deployed_root도 기본값(~/.opal)과 같은지 확인하거나, deployed 단독 문서는 manifest_default 판정에서 project 문서처럼 '호출자 루트 의존'으로 결과에 표시한다.",
+    "reference": "https://cwe.mitre.org/data/definitions/15.html",
+    "auto_fixable": false
+   },
+   "verification": "소스 실행에서 OPAL_DEPLOYED_ROOT=<사본>으로 load·verify --require-default-manifest가 manifest_not_default로 거부되거나 결과에 deployed_root 비정본 표식이 남는다.",
+   "fingerprint": "b397a2739050958b",
+   "suppression": null
+  },
+  {
+   "id": "GC-003",
+   "category": "CWE-778 Insufficient Logging / CWE-15 (GC-006 잔여: 테스트 모드 override 시 기본 원장에서 누락)",
+   "severity": "low",
+   "confidence": "high",
+   "disposition": "advisory",
+   "rule_id": "CWE-778",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 447,
+    "symbol": "_write_integrity / _ledger_path"
+   },
+   "evidence": "직전 GC-003과 동일. 이번 변경은 이 코드(_ledger_path·_write_integrity, 410-460행)를 건드리지 않았다(git diff 확인). 의도적 미수정(호출자 지시). 재현 생략, 코드 동일성으로 상태 유지 판정.",
+   "impact": "legacy-report가 테스트 모드 override 호출을 모른 채 reliable:true를 낼 수 있다. 동일 사용자 권한 범위.",
+   "remediation": {
+    "guidance": "override가 active일 때도 override_active 무결성 기록을 기본 원장 옆 또는 폴백 경로에 함께 남긴다.",
+    "reference": "https://cwe.mitre.org/data/definitions/778.html",
+    "auto_fixable": false
+   },
+   "verification": "TEST_MODE=1 override 호출 뒤 env 없는 legacy-report가 override_active>=1, reliable:false.",
+   "fingerprint": "e87eda8bd717d65a",
+   "suppression": null
+  },
+  {
+   "id": "GC-004",
+   "category": "CWE-73 External Control of File Name or Path (GC-004 잔여: role-doc 허용 루트가 호출자·cwd 의존)",
+   "severity": "low",
+   "confidence": "high",
+   "disposition": "advisory",
+   "rule_id": "CWE-73",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 500,
+    "symbol": "_read_role_doc"
+   },
+   "evidence": "_read_role_doc(497-517행) 변경 없음. 재확인(R4g): 임시 설치 사본에서 --project-root / --role-doc /etc/hosts 로 worker.dispatch load가 ok:true. 의도적 미수정(호출자 지시).",
+   "impact": "cwd·인자로 허용 루트를 넓혀 루트 밖 파일의 존재·해시 오라클이 가능하다. 내용 유출 없음, 동일 사용자 범위.",
+   "remediation": {
+    "guidance": "cwd 폴백 project_root를 role_doc 허용 루트에서 제외하고, O_NOFOLLOW|O_NONBLOCK open 후 fstat 검사로 TOCTOU를 닫는다.",
+    "reference": "https://cwe.mitre.org/data/definitions/73.html",
+    "auto_fixable": false
+   },
+   "verification": "Git+.opal 경계 밖 cwd 또는 --project-root / 에서 --role-doc /etc/hosts가 거부된다.",
+   "fingerprint": "7221d609a1048c17",
+   "suppression": null
+  },
+  {
+   "id": "GC-005",
+   "category": "CWE-377 Insecure Temporary File (무결성 폴백 파일 소유자 미확인 읽기)",
+   "severity": "low",
+   "confidence": "medium",
+   "disposition": "advisory",
+   "rule_id": "CWE-377",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 1495,
+    "symbol": "_read_integrity_counts / _integrity_fallback_path"
+   },
+   "evidence": "_read_integrity_counts(1492행~, 직전 1461행에서 줄 이동만) 코드 동일. 폴백 파일을 소유자·모드 확인 없이 읽는다. 의도적 미수정(호출자 지시). 재현 생략.",
+   "impact": "공유 /tmp 환경에서 타 계정이 legacy-report 무결성 집계를 오염시킬 수 있다. fail-safe(reliable:false) 방향이라 영향은 작다.",
+   "remediation": {
+    "guidance": "폴백 파일을 O_NOFOLLOW로 열고 fstat으로 st_uid==getuid·0600을 확인한다.",
+    "reference": "https://cwe.mitre.org/data/definitions/377.html",
+    "auto_fixable": true
+   },
+   "verification": "타 소유자·0644 폴백 파일이 집계에서 제외되고 경고가 나타난다.",
+   "fingerprint": "dcc2f127970bc3a1",
+   "suppression": null
+  },
+  {
+   "id": "GC-006",
+   "category": "CWE-757 Algorithm Downgrade (절 단위 receipt의 plain 검증 강등)",
+   "severity": "info",
+   "confidence": "high",
+   "disposition": "informational",
+   "rule_id": "CWE-757",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 1206,
+    "symbol": "verify_receipt (section_flag None 분기)"
+   },
+   "evidence": "직전 GC-006과 동일 코드(줄 이동만). plain 모드는 응답 본문을 결속하지 않는 기존 성질로, receipt에서 section_mode를 지우고 source_* 값으로 바꾸면 plain verify가 통과한다(직전 R8). 이번 수정 범위 밖.",
+   "impact": "절 모드 소비자가 plain verify를 쓰면 부분 전달을 전체 전달로 오인할 수 있다. 실험 모드라 정본 소비자 연결 전 정리 사항.",
+   "remediation": {
+    "guidance": "절 모드를 정본 소비자에 연결할 때 --section-mode lazy 검증을 소비 계약에 필수로 두고, state-tool event-verify에 --section-mode·--parent-receipt 전달을 추가한다.",
+    "auto_fixable": false
+   },
+   "verification": "section_mode를 제거한 receipt가 plain verify에서 거부되거나 소비 계약이 lazy 검증을 강제한다.",
+   "fingerprint": "62031f0a8a5b8bd9",
+   "suppression": null
+  },
+  {
+   "id": "GC-007",
+   "category": "CWE-345 (응답 최상위 section_mode 누락 허용)",
+   "severity": "info",
+   "confidence": "high",
+   "disposition": "informational",
+   "rule_id": "CWE-345",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 982,
+    "symbol": "_check_lazy_receipt (response section_mode 비교)"
+   },
+   "evidence": "응답 최상위 section_mode 비교는 키가 있을 때만 수행한다(982행 'section_mode' in response). 재현(R7h): 정상 lazy load 응답에서 최상위 section_mode 키만 삭제 -> verify --section-mode lazy ok:true. 값을 바꾸면 document_hash_mismatch(R7i). receipt.section_mode와 응답 본문 문서 해시는 그대로 검증되므로 내용 위조는 불가하다.",
+   "impact": "최상위 section_mode로 미전달 절을 판단하는 소비자는 키가 빠진 응답을 '전체 전달'로 오인할 수 있다. 판단 근거를 receipt.section_mode로 두면 영향 없음.",
+   "remediation": {
+    "guidance": "lazy receipt 검증 시 응답에 section_mode 키가 반드시 있고 receipt와 같아야 하도록 바꾸거나, 소비 계약에서 receipt.section_mode만 신뢰하도록 명시한다.",
+    "reference": "https://cwe.mitre.org/data/definitions/345.html",
+    "auto_fixable": true
+   },
+   "verification": "최상위 section_mode를 삭제한 lazy 응답의 verify가 거부된다.",
+   "fingerprint": "d3fa18a33b9c8863",
+   "suppression": null
+  },
+  {
+   "id": "GC-008",
+   "category": "CWE-345 / CWE-15 수정 재현 확인 (직전 GC-001·GC-002 해소)",
+   "severity": "info",
+   "confidence": "high",
+   "disposition": "informational",
+   "rule_id": "CWE-345",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 975,
+    "symbol": "_check_lazy_receipt / _verify_section_fetch / verify_receipt"
+   },
+   "evidence": "직전 GC-001: _check_lazy_receipt가 _lazy_deliver 재계산 per_doc 전체를 receipt.section_mode.documents와 비교(975-981행), _verify_section_fetch가 현재 문서에서 fetch_units로 단위 해시를 재계산(1035-1045행)하고 부모 delivered 절 재주장을 거부(1057-1059행). 재현(임시 설치 사본): R7a unit_sha256 위조 부모 document_hash_mismatch(receipt만 바꿔도 동일), R7b 위조 본문+위조 부모 document_hash_mismatch, R7b2 위조 본문+정상 부모 section_hash_mismatch, R7e omitted->delivered 이동 document_hash_mismatch, R7f forced_by_must·content_bytes·original_bytes 변조 거부, R7g 추가 필드 거부, R7i 최상위 section_mode 변조 거부, R7j 미선언 context section_context_invalid, 컨텍스트 track dev->planning 바꿔치기 document_hash_mismatch, R7l 정상 절 본문을 다른 id로 재표기 section_hash_mismatch, R7m 이미 전달된 dg-scope 정상 본문을 추가 절로 주장 section_hash_mismatch. 정상 흐름: sectioning 4개 이벤트(pm.activate·stage.task·stage.plan·stage.design) lazy load verify ok, stage.design 미전달 4절 단건·다건 fetch verify ok, --section-context track=dev/planning 조합 ok. 직전 GC-002: 설치 실행에서 deployed_root를 정본 루트와 비교(1183-1193행). R2a env evil manifest_not_default, R2b env evil+정본 --manifest manifest_not_default(deployed_root 불일치), R2c --deployed-root evil 플래그·R2c2 플래그만·R2f state-tool 경유·R2h evil 심볼릭 별칭 모두 manifest_not_default. 플래그 없는 verify는 기존대로 ok:true(R2b'), 워커 게이트 형태는 document_hash_mismatch(R2d). 정상 흐름 N1-N5(기본·끝 슬래시·../ 별칭·루트 심볼릭 별칭·정본 명시) ok:true, manifest_default:true. 회귀 테스트 9건(R7a·R7b·R7e·최상위 변조·정상 흐름, R2 플래그·env·정본 통과·플래그 없는 경로) 추가 확인.",
+   "impact": "해당 없음(관측 결과 기록).",
+   "remediation": {
+    "guidance": "현행 유지.",
+    "auto_fixable": false
+   },
+   "verification": "해당 없음.",
+   "fingerprint": "56707a9029f070c8",
+   "suppression": null
+  }
+ ],
+ "evidence": [
+  "워커 게이트: 설치본 event-loader verify(worker.dispatch, dsp-69522bdc12a140dc98292b573adbb792, role gc-final2) ok:true, contract:2, agent opal-security-checker, manifest_path=/Users/lucas/.opal/references/events.json(설치본 구버전이라 --require-default-manifest 없이 검증, 호출자 지시)",
+  "재현 환경: scratchpad/sec177b/inst = 워크트리 opal/core/references·agents·tools/event-loader·state-tool로 구성한 임시 설치 레이아웃(설치 모드 실행), evil = 문서 주입 사본, src = 소스 레이아웃 사본. TMPDIR·OPAL_DEPLOYED_ROOT·HOME을 scratchpad로 격리해 ~/.opal·저장소 소스 쓰기 없음",
+  "재현 목록: R2a-h·N1-N5(루트 결속), S0-S4(소스 실행 루트), R1·R1c·R1e(심볼릭 manifest·루트), R7a-m(절 receipt·추가 절 위조), 정상 흐름 sectioning 4이벤트·컨텍스트 조합, R4g(role-doc 잔여)",
+  "회귀 테스트: ~/.opal/.venv python, HOME 격리, event-loader tests + state-tool test_event_verify 246 passed / 2 failed. 실패 2건(test_static_check_ok, test_project_brief_cli_preserves_inputs_and_multitask_counts)은 직전 실행과 동일한 범위 밖 실패",
+  "변경 범위: git diff 기준 대상 중 event_loader.py만 수정(_check_lazy_receipt·_verify_section_fetch·verify_receipt 루트 결속). lazy_sections.py·gates.py·cli.py·events.json·sections/*.json은 HEAD 대비 변경 없음",
+  "기준: docs/SECURITY.md(T0) 존재, references/security-baseline.md(T1) CWE 적용",
+  "검사 영역: Python CLI(무결성 검증·경로 처리·설정 결속·임시 파일)와 선언 JSON. 웹·DB·프론트·모바일 영역은 대상 파일 근거 없음으로 비활성",
+  "배포 메모: 설치본 ~/.opal loader는 아직 --require-default-manifest를 모른다. loader와 게이트 문서를 함께 배포해야 한다(구 loader+새 문서 조합은 argparse 오류로 fail-closed)"
+ ],
+ "references": [
+  "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177/docs/SECURITY.md",
+  "/Users/lucas/.opal/skills/op-gc-security/references/security-baseline.md",
+  "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177/opal/core/references/harness/gc-finding-schema.md",
+  "https://cwe.mitre.org/data/definitions/345.html",
+  "https://cwe.mitre.org/data/definitions/15.html",
+  "https://cwe.mitre.org/data/definitions/41.html",
+  "https://cwe.mitre.org/data/definitions/778.html",
+  "https://cwe.mitre.org/data/definitions/73.html",
+  "https://cwe.mitre.org/data/definitions/377.html",
+  "https://cwe.mitre.org/data/definitions/757.html"
+ ],
+ "missing_capabilities": [],
+ "report_path": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177/tasks/177-261002-opd-이벤트로더-보안보강과-절단위-로딩-실험/GC-SECURITY-2026-10-02T11-30-00.md",
+ "verdict": "PASS_WITH_ADVISORIES",
+ "baseline_delta": {
+  "baseline": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177/tasks/177-261002-opd-이벤트로더-보안보강과-절단위-로딩-실험/gc-findings-security-2026-10-02T10-40-00.json",
+  "resolved": [
+   "GC-001 (222794ea3d380043)",
+   "GC-002 (d2657b9ba1ce2908)",
+   "GC-007 (00eade4469030b3e)"
+  ],
+  "persisting": [
+   "GC-003 (e87eda8bd717d65a)",
+   "GC-004 (7221d609a1048c17)",
+   "GC-005 (dcc2f127970bc3a1)",
+   "GC-006 (62031f0a8a5b8bd9)"
+  ],
+  "new": [
+   "GC-001",
+   "GC-002",
+   "GC-007",
+   "GC-008"
+  ],
+  "suppressed": [],
+  "remediation_judgement": {
+   "GC-001(직전, blocking)": "해소 — R7a·R7b·R7e 및 파생 변조(R7f-m) 전부 거부, 정상 흐름 유지",
+   "GC-002(직전)": "해소(설치 실행) — R2b·R2c·R2f·R2h manifest_not_default, 정상 흐름 N1-N5 통과. 잔여: 소스 실행 deployed_root 미결속(이번 GC-002, low advisory), 심볼릭 events.json 오거부(이번 GC-001, low advisory)",
+   "GC-003·GC-004·GC-005(직전)": "의도적 미수정 — 코드 동일, 상태 유지(advisory)",
+   "GC-006(직전)": "변경 없음 — informational 유지",
+   "fingerprint_note": "fingerprint는 정규화 코드 스니펫 기반이다. 줄 이동만 있는 GC-003~006은 같은 값으로 persisting, 수정된 위치의 직전 GC-001·GC-002·GC-007은 resolved로 집계된다"
+  }
+ }
+}

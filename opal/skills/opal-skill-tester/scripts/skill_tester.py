@@ -4,8 +4,8 @@
   "module": "skill_tester",
   "layer": "util",
   "domain": "opal-skill-tester",
-  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report)·tasks/ 기록(record)·대시보드 링크 재생성(refresh)을 수행한다. 기록 폴더에는 record.json과 report.html(요약/비교+스킬별 이력 탭)이 생기고, 이력은 tasks/와 tasks/backup/의 모든 record.json에서 모은다. run은 끝나면 보고서·지표·실행별 핵심 산출물을 진행 중 태스크의 skill-tests/ 또는 tasks/ 아래 YYMMDD-opst-{대상}-{모드}-{제목} 폴더에 기록하며(모의 저장소는 복사하지 않음), 시나리오는 Pilot과 무관하게 고를 수 있고 변형은 PROFILES에 있는 Pilot만 허용하며, 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd·oppb·opd2)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, OPPB는 canonical 태스크의 닫힌 .oppb-run 보존본과 legacy .opal-runs 미생성을 추가로 판정한다. 체크포인트 커밋은 worktree 태스크에만 요구한다.",
-  "exports": ["main", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report", "record_results", "collect_history"]
+  "description": "opal-skill-tester 실행기. scenarios/ 카탈로그 조회(list)·규격 검사(validate)·격리 저장소에서 claude -p 헤드리스 세션 실행과 지표 수집·판정·보고(run)·보고서 재생성(report)·tasks/ 기록(record)·대시보드 링크 재생성(refresh)을 수행한다. 기록 폴더에는 record.json과 report.html(요약/비교+스킬별 이력 탭)이 생기고, 이력은 tasks/와 tasks/backup/의 모든 record.json에서 모은다. run은 끝나면 보고서·지표·실행별 핵심 산출물을 진행 중 태스크의 skill-tests/ 또는 tasks/ 아래 YYMMDD-opst-{대상}-{모드}-{제목} 폴더에 기록하며(모의 저장소는 복사하지 않음), 시나리오는 Pilot과 무관하게 고를 수 있고 변형은 PROFILES에 있는 Pilot만 허용하며, 기본은 단일 변형 실행이고 --variant를 여러 번 주면 비교, --repeat로 반복한다. 기반 저장소의 _opal·_gitignore는 복사 시 .opal·.gitignore로 복원한다. 준수 판정은 PROFILES(opd·opds·opsdd·oppb·opd2)의 Pilot별 단계 이정표·게이트 증거 행을 따르고, OPPB는 canonical 태스크의 닫힌 .oppb-run 보존본과 legacy .opal-runs 미생성을 추가로 판정한다. 체크포인트 커밋은 worktree 태스크에만 요구한다. 변형 문자열은 커맨드 뒤에 `design=모델[/effort]`(설계 세션의 --model·--effort)·`impl=모델[/effort]`(격리 저장소 .claude/agents의 구현 에이전트 사본 frontmatter 치환) 토큰을 붙일 수 있고, 적용 결과는 run.json settings에 기록한다. 변형이 둘 이상이면 FW 지문 일치를 확인해 불일치는 비교 무효로, 일치하면 첫 변형 기준 품질 하한을 판정하고 지표를 평균(최소~최대)으로 보인다. --max-parallel로 동시 세션 수를 제한한다.",
+  "exports": ["main", "parse_variant", "load_scenarios", "validate_scenario", "run_scenario", "collect_run", "judge_run", "write_report", "record_results", "collect_history"]
 }
 """
 import argparse
@@ -49,6 +49,9 @@ PROFILES = {
 PILOT_SKILL_DIRS = {"opd": "opal-pilot-dev", "opds": "opal-pilot-dev", "opsdd": "opal-pilot-sdd", "opp": "opal-pilot-project",
                     "oppd": "opal-pilot-project-dev", "oppl": "opal-pilot-project-loop", "opwt": "opal-pilot-write-tech",
                     "oppb": "opal-pilot-project-build", "opd2": "opal-pilot-dev2"}
+# 구현 설정(impl=)을 적용하는 에이전트와 그 원본 정의 위치. 판정 에이전트는 어떤 경우에도 사본을 만들지 않는다.
+IMPL_AGENTS = ("opal-task-agent", "opal-be-agent", "opal-fe-agent")
+AGENT_SRC_DIR = pathlib.Path.home() / ".claude" / "agents"
 REQUIRED_BASE = ["_opal/AGENT.md", "_opal/code-scan.json", "_opal/MEMORY.json", "docs/PROJECT.md", "_gitignore"]
 
 
@@ -159,13 +162,77 @@ def _install_drift():
     return warns
 
 
-def run_scenario(sid, variants, repeat, outdir, task_dir=None, project_root=None, no_record=False):
+def parse_variant(variant):
+    """변형 문자열을 {command, design, impl}로 나눈다. 첫 토큰이 커맨드이고 나머지는 `design=모델[/effort]`·`impl=모델[/effort]`(순서 무관)."""
+    parts = variant.split()
+    if not parts:
+        raise ValueError("variant_setting_invalid: 빈 변형")
+    res = {"command": parts[0], "design": None, "impl": None}
+    seen = set()
+    for tok in parts[1:]:
+        key, sep, val = tok.partition("=")
+        if key not in ("design", "impl") or not sep or key in seen:
+            raise ValueError(f"variant_setting_invalid: {tok}")
+        seen.add(key)
+        fields = val.split("/")
+        if len(fields) > 2 or not fields[0] or (len(fields) == 2 and not fields[1]):
+            raise ValueError(f"variant_setting_invalid: {tok}")
+        res[key] = {"model": fields[0], "effort": fields[1] if len(fields) == 2 else None}
+    return res
+
+
+def _override_frontmatter(text, model, effort):
+    """에이전트 정의 frontmatter의 model·effort 줄만 바꾼다(없으면 추가). effort가 None이면 effort는 그대로 둔다."""
+    head, sep, rest = text.partition("\n---\n")
+    if not text.startswith("---\n") or not sep:
+        return None
+    lines = head.split("\n")
+    for key, val in (("model", model), ("effort", effort)):
+        if val is None:
+            continue
+        idx = next((i for i, l in enumerate(lines) if l.startswith(f"{key}:")), None)
+        if idx is None:
+            lines.append(f"{key}: {val}")
+        else:
+            lines[idx] = f"{key}: {val}"
+    return "\n".join(lines) + sep + rest
+
+
+def _apply_impl_agents(repo, impl):
+    """구현 에이전트 정의를 격리 저장소 .claude/agents/에 사본으로 만들어 model·effort를 치환한다. {에이전트: sha256}, 누락 목록을 돌려준다."""
+    import hashlib
+    adir = repo / ".claude" / "agents"
+    applied, missing = {}, []
+    for name in IMPL_AGENTS:
+        src = AGENT_SRC_DIR / f"{name}.md"
+        new = _override_frontmatter(src.read_text(encoding="utf-8"), impl["model"], impl["effort"]) if src.is_file() else None
+        if new is None:
+            missing.append(name)
+            continue
+        adir.mkdir(parents=True, exist_ok=True)
+        (adir / f"{name}.md").write_text(new, encoding="utf-8")
+        applied[name] = hashlib.sha256(new.encode("utf-8")).hexdigest()
+    return applied, missing
+
+
+def _interleave(variants, repeat):
+    """반복 회차 우선으로 변형을 교차 배치한다: v1r1, v2r1, v1r2, v2r2 …"""
+    return [(v, k) for k in range(1, repeat + 1) for v in variants]
+
+
+def run_scenario(sid, variants, repeat, outdir, task_dir=None, project_root=None, no_record=False, max_parallel=None):
     errs = validate_scenario(sid)
     if errs:
         out({"ok": False, "command": "run", "error": "scenario_invalid", "detail": errs}, 1)
     s = json.loads((SCENARIOS / sid / "scenario.json").read_text(encoding="utf-8"))
     variants = variants or [s["default_variant"]]
-    unprofiled = [v for v in variants if v.split()[0].lstrip("/") not in PROFILES]
+    parsed = {}
+    for v in variants:
+        try:
+            parsed[v] = parse_variant(v)
+        except ValueError as ex:
+            out({"ok": False, "command": "run", "error": "variant_setting_invalid", "variant": v, "detail": str(ex)}, 1)
+    unprofiled = [v for v in variants if parsed[v]["command"].lstrip("/") not in PROFILES]
     if unprofiled:
         out({"ok": False, "command": "run", "error": "variant_unprofiled", "variants": unprofiled,
              "profiles": sorted(PROFILES)}, 1)
@@ -173,39 +240,69 @@ def run_scenario(sid, variants, repeat, outdir, task_dir=None, project_root=None
         out({"ok": False, "command": "run", "error": "claude_cli_missing"}, 1)
     outdir = pathlib.Path(outdir or f"/tmp/opal-skill-tester/{sid}-{datetime.datetime.now():%Y%m%d-%H%M%S}")
     outdir.mkdir(parents=True, exist_ok=True)
-    runs = []
-    for v in variants:
-        for k in range(1, repeat + 1):
-            rd = outdir / f"{_slug(v)}-r{k}"
-            rd.mkdir()
-            repo = rd / "repo"
-            _copy_base(SCENARIOS / s["base"], repo)
-            ov = SCENARIOS / sid / "overlay"
-            if ov.is_dir():
-                shutil.copytree(ov, repo, dirs_exist_ok=True)
-            _git(repo, "init", "-q", "-b", "main")
-            _git(repo, "add", "-A")
-            _git(repo, "-c", "user.name=skill-tester", "-c", "user.email=skill-tester@local", "commit", "-q", "-m", f"init: {sid}")
-            shutil.copy(SCENARIOS / sid / "request.md", rd / "REQUEST.md")
-            utt = s["utterance"].format(variant=v, request=str(rd / "REQUEST.md"))
-            meta = {"scenario": sid, "mode": s["mode"], "variant": v, "rep": k, "utterance": utt, "start": time.time(),
-                    "framework": _framework_fingerprint(v.split()[0].lstrip("/"))}
-            rf = open(rd / "result.json", "w")
-            ef = open(rd / "stderr.txt", "w")
-            p = subprocess.Popen(["claude", "-p", utt, "--permission-mode", "auto", "--output-format", "json"],
-                                 cwd=repo, stdout=rf, stderr=ef, start_new_session=True)
-            runs.append((rd, meta, p, rf, ef))
-    deadline = time.time() + s["timeout_min"] * 60
-    for rd, meta, p, rf, ef in runs:
-        try:
-            p.wait(timeout=max(1, deadline - time.time()))
-            meta["exit"], meta["timeout"] = p.returncode, False
-        except subprocess.TimeoutExpired:
+    queue = _interleave(variants, repeat)
+    limit = max_parallel if max_parallel and max_parallel > 0 else len(queue)
+    running, finished = [], []
+    timeout_s = s["timeout_min"] * 60
+
+    def launch(v, k):
+        pv = parsed[v]
+        rd = outdir / f"{_slug(v)}-r{k}"
+        rd.mkdir()
+        repo = rd / "repo"
+        _copy_base(SCENARIOS / s["base"], repo)
+        ov = SCENARIOS / sid / "overlay"
+        if ov.is_dir():
+            shutil.copytree(ov, repo, dirs_exist_ok=True)
+        overrides, missing = _apply_impl_agents(repo, pv["impl"]) if pv["impl"] else ({}, [])
+        _git(repo, "init", "-q", "-b", "main")
+        _git(repo, "add", "-A")  # 에이전트 사본도 기준 커밋에 넣어 세션 diff·커밋 판정(raw_commits)에 섞이지 않게 한다
+        _git(repo, "-c", "user.name=skill-tester", "-c", "user.email=skill-tester@local", "commit", "-q", "-m", f"init: {sid}")
+        shutil.copy(SCENARIOS / sid / "request.md", rd / "REQUEST.md")
+        utt = s["utterance"].format(variant=pv["command"], request=str(rd / "REQUEST.md"))
+        argv = ["claude", "-p", utt, "--permission-mode", "auto", "--output-format", "json"]
+        env = None
+        if pv["design"]:
+            argv += ["--model", pv["design"]["model"]]
+            if pv["design"]["effort"]:
+                argv += ["--effort", pv["design"]["effort"]]
+        if pv["design"] or pv["impl"]:
+            env = {k2: v2 for k2, v2 in os.environ.items() if k2 != "CLAUDE_CODE_SUBAGENT_MODEL"}
+        meta = {"scenario": sid, "mode": s["mode"], "variant": v, "rep": k, "vidx": variants.index(v), "utterance": utt,
+                "start": time.time(), "framework": _framework_fingerprint(pv["command"].lstrip("/")),
+                "settings": {"declared": {"design": pv["design"], "impl": pv["impl"]},
+                             "applied": {"models": [], "agent_overrides": overrides, "agents_missing": missing}}}
+        rf = open(rd / "result.json", "w")
+        ef = open(rd / "stderr.txt", "w")
+        p = subprocess.Popen(argv, cwd=repo, stdout=rf, stderr=ef, start_new_session=True, env=env)
+        running.append((rd, meta, p, rf, ef, meta["start"] + timeout_s))
+
+    def finish(item, timed_out):
+        rd, meta, p, rf, ef, _ = item
+        if timed_out:
             os.killpg(p.pid, signal.SIGTERM)
             meta["exit"], meta["timeout"] = None, True
+        else:
+            meta["exit"], meta["timeout"] = p.returncode, False
         meta["end"] = time.time()
         rf.close(); ef.close()
+        try:
+            usage = json.loads((rd / "result.json").read_text(encoding="utf-8")).get("modelUsage") or {}
+            meta["settings"]["applied"]["models"] = sorted(usage)
+        except (json.JSONDecodeError, OSError, AttributeError):
+            pass
         (rd / "run.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    while queue or running:
+        while queue and len(running) < limit:
+            launch(*queue.pop(0))
+        for item in list(running):
+            done = item[2].poll() is not None
+            if done or time.time() >= item[5]:
+                finish(item, not done)
+                running.remove(item)
+        if running:
+            time.sleep(0.05)
     root = _resolve_root(task_dir, project_root)
     report = write_report(outdir, s, collect_history(root) if root else [])
     rec, rec_warn = (None, None) if no_record else record_results(outdir, s, task_dir, project_root)
@@ -298,7 +395,7 @@ def _find_state(repo):
 def collect_run(rd, s):
     meta = json.loads((rd / "run.json").read_text(encoding="utf-8"))
     m = {"run": rd.name, "variant": meta["variant"], "rep": meta["rep"], "timeout": meta.get("timeout"),
-         "wall_min": round((meta["end"] - meta["start"]) / 60, 1)}
+         "wall_min": round((meta["end"] - meta["start"]) / 60, 1), "settings": meta.get("settings")}
     try:
         r = json.loads((rd / "result.json").read_text(encoding="utf-8"))
         u = r.get("usage") or {}
@@ -315,6 +412,7 @@ def collect_run(rd, s):
     st = json.loads(sp.read_text(encoding="utf-8"))
     stored_worktree = pathlib.Path(st["worktree"]) if st.get("worktree") else None
     code = stored_worktree if stored_worktree and stored_worktree.is_dir() else repo
+    m["test_fix_iterations"] = sum(str(r.get("item") or "").startswith("fix 작업") for r in st.get("rows", []))
     m.update(task_found=True, task=tdir.name, actor=st.get("actor"), status=st.get("current_status"),
              pipeline_complete=st.get("current_status") in ("completed_unmerged", "done"))
     v = subprocess.run([str(STATE_TOOL), "validate", str(tdir)], capture_output=True, text=True)
@@ -584,7 +682,7 @@ def _render_html(dest, s, root):
     mets = json.loads((dest / "metrics.json").read_text(encoding="utf-8"))
     meta = json.loads((dest / "record.json").read_text(encoding="utf-8"))
     hist = [h for h in (collect_history(root, exclude=dest) if root else []) if h["created_at"] < meta["created_at"]]
-    (dest / "report.html").write_text(report_html.render_report(s, mets["runs"], hist, str(dest), meta["created_at"]), encoding="utf-8")
+    (dest / "report.html").write_text(report_html.render_report(s, mets["runs"], hist, str(dest), meta["created_at"], mets.get("comparison")), encoding="utf-8")
 
 
 def refresh_all(root):
@@ -652,6 +750,35 @@ def record_results(outdir, s, task_dir=None, project_root=None):
     return dest, None
 
 
+COMPARE_KEYS = ("wall_min", "cost_usd", "turns", "subagent_runs", "gate_iterations", "hidden_pass_rate", "test_fix_iterations")
+
+
+def _compare_variants(runs, variants):
+    """변형별 지표 평균·최소·최대, FW 지문 일치 여부, 첫 변형(기준) 대비 품질 하한 판정을 계산한다."""
+    metrics, fws = {}, {}
+    for v in variants:
+        mine = [m for m in runs if m["variant"] == v]
+        metrics[v] = {}
+        for k in COMPARE_KEYS:
+            xs = [m[k] for m in mine if isinstance(m.get(k), (int, float))]
+            if xs:
+                metrics[v][k] = {"avg": sum(xs) / len(xs), "min": min(xs), "max": max(xs)}
+        fws[v] = sorted({m["framework"] for m in mine if m.get("framework")})
+    frameworks = sorted({f for fs in fws.values() for f in fs})
+    cmp_ = {"valid": len(frameworks) <= 1, "frameworks": frameworks, "frameworks_by_variant": fws, "baseline": variants[0],
+            "metrics": metrics, "floor": {}}
+    if cmp_["valid"]:
+        def stat(v):
+            mine = [m for m in runs if m["variant"] == v]
+            hs = [m.get("hidden_pass_rate") for m in mine if isinstance(m.get("hidden_pass_rate"), (int, float))]
+            return (sum(hs) / len(hs) if hs else 0.0), sum(m["verdict"] == "PASS" for m in mine) / len(mine)
+        bh, bp = stat(variants[0])
+        for v in variants[1:]:
+            h, pr = stat(v)
+            cmp_["floor"][v] = {"met": h >= bh and pr >= bp, "hidden_avg": h, "pass_ratio": pr, "base_hidden_avg": bh, "base_pass_ratio": bp}
+    return cmp_
+
+
 def write_report(outdir, s, history=None):
     outdir = pathlib.Path(outdir)
     history = history or []
@@ -667,7 +794,13 @@ def write_report(outdir, s, history=None):
         m["trend_warnings"] = _trend(m, sorted(same, key=lambda h: h["created_at"]))
         m.pop("_search_text", None)
         runs.append(m)
-    rep = {"scenario": s["id"], "mode": s["mode"], "runs": runs}
+    order = {}
+    for rd in sorted(p for p in outdir.iterdir() if (p / "run.json").exists()):
+        mv = json.loads((rd / "run.json").read_text(encoding="utf-8"))
+        order[mv["variant"]] = min(order.get(mv["variant"], 10 ** 6), mv.get("vidx", 10 ** 6))
+    variants = sorted({m["variant"] for m in runs}, key=lambda v: (order[v], v))
+    comparison = _compare_variants(runs, variants) if len(variants) > 1 else None
+    rep = {"scenario": s["id"], "mode": s["mode"], "runs": runs, "comparison": comparison}
     (outdir / "metrics.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
     L = [f"# opal-skill-tester 보고서 — {s['id']} ({s['mode']})", "", s.get("title", ""), "",
          "| 실행 | 판정 | 숨은 테스트 | 완료 | 상태검증 | run-log 적체 | 게이트 증거 | 체크포인트 커밋 | 최종 수행 시간(분) | $ | 서브에이전트 | 게이트 반복 |",
@@ -683,16 +816,23 @@ def write_report(outdir, s, history=None):
         if m.get("runlog_first_pending"):
             items.append(f"첫 run-log 적체 사건: {json.dumps(m['runlog_first_pending'], ensure_ascii=False)}")
         L.append(f"- **{m['run']}**: " + ("; ".join(items) if items else "없음"))
-    variants = sorted({m["variant"] for m in runs})
-    if len(variants) > 1:
-        L += ["", "## 변형 비교 (반복 평균)", "", "| 지표 | " + " | ".join(variants) + " |", "|---|" + "---|" * len(variants)]
-        for k in ("wall_min", "cost_usd", "turns", "subagent_runs", "gate_iterations", "hidden_pass_rate"):
-            row = []
+    if comparison:
+        L += ["", "## 변형 비교 (반복 평균 (최소~최대))", "", "| 지표 | " + " | ".join(variants) + " |", "|---|" + "---|" * len(variants)]
+        for k in COMPARE_KEYS:
+            cells = []
             for v in variants:
-                xs = [m.get(k) for m in runs if m["variant"] == v and isinstance(m.get(k), (int, float))]
-                row.append(f"{sum(xs) / len(xs):.2f}" if xs else "-")
-            L.append(f"| {k} | " + " | ".join(row) + " |")
+                st = comparison["metrics"][v].get(k)
+                cells.append(f"{st['avg']:.2f} ({st['min']:.2f}~{st['max']:.2f})" if st else "-")
+            L.append(f"| {k} | " + " | ".join(cells) + " |")
         L.append("| 합격 | " + " | ".join(f"{sum(m['verdict'] == 'PASS' for m in runs if m['variant'] == v)}/{sum(m['variant'] == v for m in runs)}" for v in variants) + " |")
+        if not comparison["valid"]:
+            L += ["", "> **비교 무효 — FW 버전 상이**: 변형 간 프레임워크 지문이 달라 결과를 비교하지 않는다. 같은 FW 버전으로 다시 실행한다.", ""]
+            L += [f"- {v}: {', '.join(comparison['frameworks_by_variant'][v]) or '기록 없음'}" for v in variants]
+        else:
+            L += ["", "## 품질 하한 판정", "", f"기준 변형: {comparison['baseline']} — 하한은 숨은 테스트 통과율 평균과 PASS 비율이 모두 기준 이상일 때 충족한다.", ""]
+            for v in variants[1:]:
+                f = comparison["floor"][v]
+                L.append(f"- {v} — {'하한 충족' if f['met'] else '하한 미충족(결정 대상 아님)'} (숨은 테스트 평균 {f['hidden_avg']:.2f}, PASS {f['pass_ratio']:.2f})")
     L += ["", "## 단계별 소요(분)", ""] + [f"- {m['run']}: {m.get('phase_min')}" for m in runs]
     if not history:
         L += ["", "> 같은 시나리오 이력 없음 — 추세 판정 생략(첫 기록)."]
@@ -710,6 +850,7 @@ def main(argv=None):
     r = sub.add_parser("run"); r.add_argument("id"); r.add_argument("--variant", action="append")
     r.add_argument("--repeat", type=int, default=1); r.add_argument("--out")
     r.add_argument("--task-dir"); r.add_argument("--project-root"); r.add_argument("--no-record", action="store_true")
+    r.add_argument("--max-parallel", type=int)
     c = sub.add_parser("record"); c.add_argument("out"); c.add_argument("--task-dir"); c.add_argument("--project-root")
     p = sub.add_parser("report"); p.add_argument("out"); p.add_argument("--project-root")
     f = sub.add_parser("refresh"); f.add_argument("--project-root")
@@ -723,9 +864,11 @@ def main(argv=None):
         res = {i: validate_scenario(i) for i in ids}
         out({"ok": all(not e for e in res.values()), "command": "validate", "results": res}, 0 if all(not e for e in res.values()) else 1)
     if a.cmd == "run":
+        if a.max_parallel is not None and a.max_parallel < 1:
+            out({"ok": False, "command": "run", "error": "max_parallel_invalid"}, 1)
         if a.repeat < 1:
             out({"ok": False, "command": "run", "error": "repeat_invalid"}, 1)
-        run_scenario(a.id, a.variant, a.repeat, a.out, a.task_dir, a.project_root, a.no_record)
+        run_scenario(a.id, a.variant, a.repeat, a.out, a.task_dir, a.project_root, a.no_record, a.max_parallel)
     if a.cmd == "record":
         rd = pathlib.Path(a.out)
         first = next((json.loads((p / "run.json").read_text(encoding="utf-8")) for p in rd.iterdir() if (p / "run.json").exists()), None)

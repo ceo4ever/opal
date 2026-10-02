@@ -531,3 +531,18 @@
 - 신규: [[behavior-preserving-split-and-block-conversion-lessons]]
 - 출처: task:174
 
+## [2026-10-02] ingest | CLOSE ingest — 태스크 175 이벤트 로딩 경량화 1차
+- 신규: [[event-response-single-body]], [[worker-dispatch-target-section-selection]], [[worker-dispatch-contract-v2-binding]], [[legacy-dispatch-compat-sunset-observation]], [[agent-sections]]
+- 출처: task:175
+## [2026-10-02] ingest | CLOSE ingest — 태스크 176 opds 설계·구현 모델·effort 최적화
+- 신규: [[dispatch-model-overrides-agent-frontmatter]], [[model-effort-customization-points-and-effort-mapping-gap]], [[opst-variant-design-impl-settings]], [[model-effort-measurement-retains-current-config]], [[todo-crud-scenario-fails-checkpoint-commits-at-baseline]], [[measurement-framework-fingerprint-drift-invalidates-comparison]]
+- 출처: task:176
+
+## [2026-10-02] ingest | CLOSE ingest 보정 — 태스크 176 crud 시나리오 페이지명 확정
+- 신규: [[crud-scenario-fails-checkpoint-commits-at-baseline]]
+- 출처: task:176
+
+## [2026-10-02] ingest | CLOSE ingest — 태스크 177 이벤트 로더 보안 보강과 절 단위 로딩 실험
+- 신규: [[section-lazy-loading-experiment-hold]], [[lazy-receipt-full-field-recompute]], [[default-manifest-gate-flag]], [[test-mode-bound-override-integrity-record]], [[lazy-loading-scope-framework-docs-only]]
+- 출처: task:177
+

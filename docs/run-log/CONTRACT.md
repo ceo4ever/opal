@@ -3,7 +3,7 @@ template: sdlc-v2
 ---
 # CONTRACT: 태스크 실행 로그 표준화
 
-> 1차 입력 SSOT: `docs/proposals/opal-task-run-log.md`
+> 1차 입력 SSOT: `docs/proposals/260910_태스크_실행_로그.md`
 > 제약·수용 기준은 `TASK.md`, 무엇을 왜는 `PRD.md`, 기술 결정과 근거는 `TRD.md`가 소유한다.
 > 이 문서는 **인터페이스 계약**(스키마·시그니처·경계)을 확정한다. 필드명·enum 값·명령명을 직접 쓰는 것이 이 문서의 정상 형태다.
 > 기계검증절은 `surfaces.json`(같은 폴더)을 필수 구성요소로 포함한다.

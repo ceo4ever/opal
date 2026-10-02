@@ -1,10 +1,11 @@
 # Project Brain Index
-> 갱신: 2026-10-02 17:42
+> 갱신: 2026-10-02 17:58
 
 ## 도메인
 (아직 등록된 페이지 없음)
 
 ## 엔티티
+- [[agent-sections]] — agent_sections #tool #event-loader
 - [[brain-tool]] — brain-tool #tool #knowledge
 - [[code-scan-tool]] — code-scan #tool #util #code-scan
 - [[convention-precheck]] — convention-precheck (컨벤션 결정론 사전 검사 도구) #tool #convention #verification
@@ -119,9 +120,11 @@
 - [[context-tag-suppresses-false-positive-without-removing-hit]] — 오탐 억제는 hit를 배열에서 빼지 않고 context 태그로 분류한다 #false-positive #pattern-scan #risk-detection #task-105
 - [[contract-absent-from-harness-docs-passes-review]] — 규범 문서에 없는 계약은 리뷰를 통과한다 #contract #harness #review #deployment-gap #task-150 #lesson
 - [[count-notation-scattered-across-docs]] — 개수·열거 표기는 문서 여러 곳에 흩어져 조용히 낡는다 #documentation #drift #task-122 #lesson
+- [[crud-scenario-fails-checkpoint-commits-at-baseline]] — 할일-crud 시나리오는 현행에서도 checkpoint_commits 불합격 #opst #scenario #measurement
 - [[daemon-as-tool-orchestrator]] — 데몬은 도구 오케스트레이터 — 데이터 SSOT는 프로젝트 파일 #architecture #dashboard #ssot
 - [[decision-vs-fact-claim-separation]] — 결정과 사실 주장의 분리 — 결정은 근거 판정 대상이 아니다 #evidence #citation #decision #opds
 - [[dedup-pointer-over-copy]] — dedup 원칙 — 목적지 기존 존재 시 표 복사 금지·포인터 단일화 #dedup #ssot #pointer #architecture #principles
+- [[default-manifest-gate-flag]] — 워커 게이트의 설치본 정본 매니페스트 강제 #event-loader #dispatch #security
 - [[degeneracy-rule-preserves-past-values-on-axis-split]] — 집계 축을 쪼갤 때 축퇴 규칙이 과거 확정값을 보존한다 #aggregation #statistics #backward-compat #opal-console #design-decision
 - [[degraded-execution-with-explicit-gap]] — 자산 부재에도 중단하지 않는다 — 축소 실행 + 결측 명시 불변 규칙 #fallback #workflow #reporting #task-084
 - [[delegation-only-file-gate-bypass]] — 위임 전용 파일에 게이트를 두면 우회된다 — 진입경로 역추적 #gate #architecture #lesson #call-graph
@@ -132,6 +135,7 @@
 - [[design-gate-scope-parallel-judgement-combine]] — 설계 게이트 scope 병렬 판정과 combine 결합 #design-gate #evaluator #state-tool
 - [[dev-pilot-profile-unification]] — 개발 Pilot Full/Short profile 통합 계약 #pilot #dev #opd #opds #compatibility
 - [[dict-선행-model-ssot]] — DICT가 MODEL을 선행한다 — 사전이 속성명·타입 SSOT #architecture-decision #data-design #ssot #pipeline
+- [[dispatch-model-overrides-agent-frontmatter]] — 디스패치 model 지정이 에이전트 frontmatter보다 우선 #agent #model #dispatch
 - [[dl-contract-download-verify-target-identity]] — DL-CONTRACT — 검증 대상과 다운로드 대상은 같은 파일이어야 한다 #deploy #release #install #checksum #contract
 - [[e2e-candidate-order-and-fidelity-ownership]] — E2E 후보 순서·충실도 소유 경계 — 계약이 소유하고 코드가 복제하지 않는다 #e2e #driver #fidelity #contract #ownership
 - [[e2e-cmux-first-playwright-fallback]] — E2E 도구 우선순위 — cmux 1순위 → playwright 폴백 (에러코드 소비) #testing #e2e #cmux #framework
@@ -147,6 +151,7 @@
 - [[erd-modeler-deprecation]] — erd-modeler deprecate — op-data-model/ddl로 분해, //erm 하위호환 #architecture-decision #deprecation #erd-modeler #migration
 - [[evaluator-eval-set-label-fixture-measurement-lesson]] — 평가자 model·effort 측정의 세 가지 왜곡 경로 (라벨 노출·fixture 결손·한도 장애) #lesson #evaluator #measurement #eval-set
 - [[evaluator-self-weakness-disclosure-pattern]] — 평가자에 PM 자기약점 명시 전달 + 신고사실 감점면제 금지 명문화 #lesson #evaluator #governance #opds
+- [[event-response-single-body]] — 이벤트 응답 본문 단일화 #event-loader #bootstrap #token-economy
 - [[evidence-tier-asis-tobe-jurisdiction]] — 근거 등급 5단계 + AS-IS/TO-BE 관할 2축 #evidence #citation #architecture #opds
 - [[execution-observation-scope-citation-requirement]] — 실행 관측 인용은 스코프 병기 필수 — 단일파일 vs 디렉토리 수치 상이 #lesson #measurement #citation #opds
 - [[existence-check-not-version-check]] — 존재 검사와 버전 검사는 다른 게이트다 #gate #lesson #version #defect-class
@@ -183,9 +188,12 @@
 - [[kanban-current-stage-derivation]] — 칸반 current_stage 파생 규칙 (도달 단계 기준) #opal-console #kanban #pipeline #be-single-source
 - [[kanban-pipeline-stage-grouping]] — 파이프라인 스테퍼 stage 그룹화 (BE 단일 소스, na/skipped 제외) #opal-console #pipeline #stage-grouping #be-single-source
 - [[knowledge-assets-as-flow-entrypoint]] — 지식 자산은 흐름의 끝이 아니라 시작점이다 — 참조 순서 기준 계층 배치 + 도구·자산 범주 분리 #architecture #knowledge-asset #layering #diagram #decision
+- [[lazy-loading-scope-framework-docs-only]] — 절 단위 로딩 대상은 프레임워크 문서 4종만 #event-loader #decision
+- [[lazy-receipt-full-field-recompute]] — 지연 로딩 receipt는 선별 결과 전 필드를 재계산해 대조 #event-loader #security #verification
 - [[lean-core-relocation-benefit-precondition]] — lean core 이관 이익의 전제 조건 — PM 전용 + Phase B 기 로드 #lean-core #agent-md #relocation #pm-tier #assistant-tier
 - [[lease-handoff-before-terminal-launch]] — 실행 주체 인계는 수신자 id가 아니라 대상 루트를 키로 한다 #lease #ownership #worktree #handoff #task-150 #pattern
 - [[legacy-brain-spawn-policy-gate]] — 구형 Brain 정책 — Registry 진입점과 spawn 직전 게이트 #console #brain #security
+- [[legacy-dispatch-compat-sunset-observation]] — 구형 호출 원장과 관측 구간 기반 호환 종료 판정 #event-loader #dispatch #compat
 - [[legacy-row-address-gate-insertion-regression]] — 레거시 행번호 파이프라인에 게이트 행 삽입 시 전수 수정 결합 회귀 #state-tool #pipeline #legacy-row #regression #scenario-gate #task-075
 - [[linux-install-script]] — Linux 설치 스크립트 신설 (단순 위임 전략) #install #linux #deploy #task
 - [[literal-version-test-expectation-fragility]] — 리터럴 버전번호를 테스트 기대값으로 쓰면 동시 작업이 깨뜨린다 #testing #concurrency #test-scenario #lesson
@@ -195,6 +203,7 @@
 - [[manual-scenario-verbatim-output-evidence]] — M3 수동 시나리오는 출력 원문을 증거로 남긴다 #testing #verification #evidence #manual-scenario
 - [[mark-force-decision-log-scope]] — 강제 처리의 실제 거동 — 사유는 필수지만 의사결정 로그에는 자동 기재되지 않는다 #state-tool #pipeline #decision-log #doc-correction #task-090 #task-094
 - [[marker-literal-check-meta-circular-false-positive]] — 마커 리터럴 검사의 메타-순환 오탐 — 표기 문맥 제거 전처리를 규칙과 함께 정의 #false-positive #verification #documentation #scenario-gate #task-095
+- [[measurement-framework-fingerprint-drift-invalidates-comparison]] — 측정 중 FW 지문 변경은 비교를 오염 #opst #measurement #framework
 - [[measurement-tool-more-fallible-than-artifact-lesson]] — 판정식이 산출물보다 자주 틀린다 — 측정 결함 4례 + 정규식 전종매치 계수 #lesson #measurement #verification #opds
 - [[memory-lifecycle-graduation-workflow]] — 메모리 라이프사이클·졸업(promote) 워크플로우 #memory #lifecycle #architecture #promote
 - [[mirror-gate-must-not-hostage-ssot-record]] — 미러 게이트가 SSOT 기록을 인질로 잡지 않는다 — fail-open 저널 쓰기 경계 #state-tool #ssot #mirror #fail-open #defensive-design #task-094
@@ -202,6 +211,8 @@
 - [[mitigation-recurs-without-ssot-registration]] — 완화책은 SSOT 미등재 시 재발한다 #governance #worker #infra-failure #ssot #resilience
 - [[mock-only-adapter-verification-passes-schema-drift]] — 목킹 전용 어댑터 검증은 응답 스키마 불일치를 통과시킨다 #테스트 #어댑터 #외부CLI #fixture
 - [[mode-aware-execution-continuity-contract]] — Mode-aware execution continuity contract #mode #state #pipeline #agentic #close
+- [[model-effort-customization-points-and-effort-mapping-gap]] — 모델·effort 커스텀 지점 7곳과 effort 매핑 층 부재 #model #effort #settings
+- [[model-effort-measurement-retains-current-config]] — 모델·effort 측정 결과와 현행 유지 결정 #model #effort #measurement #decision
 - [[model-mapping-2layer-override]] — 모델 매핑 2-레이어 오버라이드 (setting.json SSOT + 부트스트랩 step 0 머지) #model #mapping #setting #override #bootstrap
 - [[model-mapping-latest-tracking]] — OPAL 모델 매핑 최신화 + 최신 추종 전략 #model #mapping #gemini #codex #task
 - [[model-mapping-missing-cell-error-policy]] — 모델 매핑 미설정 셀 오류 정책 (폴백 없음 · "default" 폐기) #model #mapping #error #policy #setting
@@ -284,6 +295,7 @@
 - [[oppl-two-loop-orchestrator]] — opal-pilot-project-loop(oppl) — 2-루프 수렴 오케스트레이터 #skill #pilot #orchestrator #loop #oppl
 - [[opsdd-pipeline-ssot]] — opsdd 파이프라인 정본 — SKILL.md SSOT (7단계) #opsdd #pipeline #ssot #workflow
 - [[opst-oppb-profile-detects-finalize-violation]] — opst OPPB 판정 프로필 — 종료 계약 위반 검출 #opst #oppb #task
+- [[opst-variant-design-impl-settings]] — opst 변형 설정 design=/impl= 문법 #opst #variant #model #effort
 - [[opwt-v4-output-system]] — opwt v4 산출물 체계 재설계 (PRD 8섹션 + interview 통합) #opwt #planning #output #framework #task
 - [[order-inversion-corrupts-derived-attribution]] — 순서 역전은 표기 문제가 아니다 — 파생 계산의 귀속까지 오염한다 #state-tool #incident #aggregation #lesson-learned
 - [[owner-honorific-contamination-prevention]] — 산출물 소유자 호칭 오염 차단 원칙 #state-tool #identity #harness #contamination #brain-ingest
@@ -340,6 +352,7 @@
 - [[sdd-internal-stage-skill-ownership]] — SDD 내부 단계 스킬 소유권 #sdd #skill #pilot #ownership
 - [[sdlc-v2-development-artifact-contract]] — sdlc-v2 개발 산출물 계약 #sdlc #development #artifact #ssot #pipeline
 - [[section-append-at-tail-preserves-backrefs]] — 절 번호가 주소인 문서는 말미에 추가한다 — 외부 역참조 보존 #documentation #reference-integrity #task-084
+- [[section-lazy-loading-experiment-hold]] — 절 단위 로딩 실험 — 규범 문서는 기본값 전환 보류 #event-loader #token-economy #measurement
 - [[self-confirming-validation-timing-argument]] — 자기확인 검증의 시점 논거 판별 — 개정 대상 무변경 확인으로 순환 논증을 잡는다 #self-confirming #verification #evaluator #scenario-gate #opd
 - [[self-edit-line-anchor-drift]] — 자기 편집 파일의 행번호 앵커는 드리프트한다 #verification #anchor #test-scenario #regression
 - [[self-modifying-tool-deploy-unit-coupling]] — 자기 자신을 고치는 도구의 배포 단위 결합 원칙 #deploy #gate-design #pattern #task-093
@@ -393,6 +406,7 @@
 - [[tag-removal-is-not-history-removal]] — 태그 제거는 이력 제거가 아니다 — 문장이 무엇을 말하는가 #header-standard #test-design
 - [[template-precedence-over-prose-norms]] — 템플릿 우위 법칙 — 규범은 산문보다 템플릿이 이긴다 #template-precedence #prose-norms #framework-norm #governance #harness-design
 - [[terminal-host-detection-from-own-process-lineage]] — 터미널 호스트는 자기 프로세스 계보로 판별한다 #bootstrap #terminal #task
+- [[test-mode-bound-override-integrity-record]] — 원장 재정의의 시험 모드 한정과 별도 무결성 기록 #event-loader #security #compat
 - [[test-parallel-group-single-agent-only]] — TEST 병렬 그룹은 단일 에이전트 안에서만 #test #parallel
 - [[test-path-layer-gap-masks-deployment-defect]] — 테스트 소스 경로와 배포본 경로의 계층 차이가 실사용 불가를 덮는다 #testing #deployment #layered-verification #task-105
 - [[test-real-data-validation-lesson]] — TEST 실데이터 검증이 build-only 가 놓친 결함을 발견한다 #testing #lesson #test-strategy #real-data
@@ -419,6 +433,8 @@
 - [[wiki-intelligence-decisions-016]] — opal-wiki-pilot 지능화 결정 — M-4/M-5 (016) #architecture #naming #git #brain #policy
 - [[worker-abort-artifact-measured-adjudication]] — 워커 중단 시 재개 대신 산출물 실측 판정 — 중단과 미완은 별개 사실 #agentic #worker #pm-discipline #resilience #task-095
 - [[worker-bypassed-blocked-tool-filename-trigger]] — 워커가 차단된 도구를 우회한 사례 — 원인은 파일명 트리거 + 규율 부재 #worker-discipline #tool-bypass #pm-prompt #dispatch
+- [[worker-dispatch-contract-v2-binding]] — 디스패치 계약 2판 — 대상·역할·식별자·본문 결속 #event-loader #dispatch #verification
+- [[worker-dispatch-target-section-selection]] — 워커 디스패치 대상별 선별과 펜스 바깥 헤딩 절 경계 #event-loader #dispatch #token-economy
 - [[worker-role-boundary-exposes-pm-measurement-error]] — 워커 역할경계 준수가 PM 측정식 결함을 드러낸다 #lesson #worker #governance #opds
 - [[worktree-close-brain-write-contract]] — 워크트리 CLOSE brain 쓰기 계약 — 같은 브랜치 반영·merge 전파 #worktree #brain #architecture #workspace
 - [[worktree-locates-hub-by-issued-copy]] — 워크트리는 허브를 탐색하지 않고 발급값 사본으로 찾는다 #worktree #ownership #issued-value #hook #task-138

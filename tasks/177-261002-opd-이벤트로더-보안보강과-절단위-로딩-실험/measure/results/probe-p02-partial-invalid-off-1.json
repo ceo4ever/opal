@@ -1,0 +1,116 @@
+{
+ "probe": "p02-partial-invalid",
+ "arm": "off",
+ "run": 1,
+ "tag": "p02-partial-invalid-off-1",
+ "prompt_bytes": 53896,
+ "attempts": [
+  {
+   "ok": true,
+   "rc": 0,
+   "wall_s": 8.0,
+   "json": {
+    "duration_api_ms": 4608,
+    "stop_reason": "end_turn",
+    "session_id": "92e5574a-ad99-4955-acc4-566fb73b842e",
+    "total_cost_usd": 0.1802172,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 43382,
+     "cache_read_input_tokens": 12376,
+     "output_tokens": 421,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 43382,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "not_available",
+     "iterations": [
+      {
+       "input_tokens": 2,
+       "output_tokens": 421,
+       "cache_read_input_tokens": 12376,
+       "cache_creation_input_tokens": 43382,
+       "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 43382
+       },
+       "type": "message"
+      }
+     ],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "modelUsage": {
+     "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 421,
+      "cacheReadInputTokens": 12376,
+      "cacheCreationInputTokens": 43382,
+      "webSearchRequests": 0,
+      "costUSD": 0.1802172,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+     }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+     "spawned": 0,
+     "requested": {
+      "background": 0,
+      "foreground": 0,
+      "unset": 0
+     },
+     "started_in_background": 0,
+     "max_depth": 0,
+     "spawned_by_subagents": 0,
+     "completed": 0,
+     "failed": 0,
+     "killed": {
+      "parent": 0,
+      "user": 0,
+      "system": 0
+     },
+     "refused": {
+      "depth_limit": 0,
+      "concurrency_limit": 0,
+      "budget": 0
+     },
+     "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "`design-gate combine`이 `design_gate_partial_invalid`로 거부하는 조건은 문서상 두 가지입니다.\n\n1. **부분 결과 형식 위반**: 부분 결과의 `scope`, 축, 점수, `resolved_gaps` 중 하나라도 형식에 어긋나는 경우입니다.\n2. **`resolved_gaps` ID 불일치**: `resolved_gaps`의 id 집합이 해당 scope의 이전 지적(`start` 응답의 `previous_gaps_by_scope`)과 일치하지 않는 경우입니다.\n\n문서에는 `scope`, 축, 점수가 각각 구체적으로 어떻게 어긋나야 하는지는 적혀 있지 않습니다. 이 코드는 `combine` 소속이고 `detail`이 함께 반환됩니다.\n\n참고로 비슷한 거부 코드는 별개입니다.\n- `design_gate_result_stale`: 부분 결과의 `input_bundle_hash`나 `iteration`이 열린 시도와 다른 경우입니다.\n- `design_gate_iteration_invalid`: 열린 시도가 없거나 시도 번호가 다른 경우입니다.",
+    "ttft_ms": 4662,
+    "type": "result",
+    "duration_ms": 4725,
+    "uuid": "536e1bce-ccad-4678-afc9-572c8ed58256",
+    "ttft_stream_ms": 1910,
+    "time_to_request_ms": 64,
+    "first_content_frame_ms": 1910,
+    "queued_turn_count": 0,
+    "result_index": 0
+   },
+   "stdout_head": null,
+   "stderr": "",
+   "attempt": 1
+  }
+ ],
+ "final_ok": true
+}
