@@ -538,3 +538,7 @@
 - 신규: [[crud-scenario-fails-checkpoint-commits-at-baseline]]
 - 출처: task:176
 
+## [2026-10-02] ingest | CLOSE ingest — 태스크 177 이벤트 로더 보안 보강과 절 단위 로딩 실험
+- 신규: [[section-lazy-loading-experiment-hold]], [[lazy-receipt-full-field-recompute]], [[default-manifest-gate-flag]], [[test-mode-bound-override-integrity-record]], [[lazy-loading-scope-framework-docs-only]]
+- 출처: task:177
+

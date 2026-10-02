@@ -7,7 +7,8 @@ tags:
 - verification
 sources:
 - task:175
-related: [worker-dispatch-target-section-selection, legacy-dispatch-compat-sunset-observation, state-tool]
+- task:177
+related: [worker-dispatch-target-section-selection, legacy-dispatch-compat-sunset-observation, state-tool, default-manifest-gate-flag, lazy-receipt-full-field-recompute]
 created: '2026-10-02'
 updated: '2026-10-02'
 status: draft
@@ -30,6 +31,7 @@ status: draft
 - 상태 도구의 이벤트 검증 서브명령은 다섯 인자를 값이 있을 때만 그대로 넘기고 필수 여부 판정은 로더 한 곳이 맡는다.
 - 정적 검사는 소비자 문서의 호출 줄에서 계약 인자 누락과 워커 게이트의 에이전트 이름 불일치를 찾는다.
 - 워커 진입 게이트의 성공 조건은 검증 성공, 계약 2판, 식별자·에이전트 이름·역할 일치다. 16종 에이전트의 게이트 문장은 읽기 전에 실행해야 하므로 공통 문서 참조로 줄이지 않고 정적 검사로 드리프트를 막는다.
+- 게이트는 설치본 정본 매니페스트·문서 루트를 도구 인자로 강제한다. 상세는 [[default-manifest-gate-flag]]를 따른다.
 
 ## 영향 범위
 
@@ -40,3 +42,5 @@ PM 디스패치 절차는 대상·역할을 확정한 뒤 게이트를 수행하
 - [[worker-dispatch-target-section-selection]]
 - [[legacy-dispatch-compat-sunset-observation]]
 - [[state-tool]]
+- [[default-manifest-gate-flag]]
+- [[lazy-receipt-full-field-recompute]]
