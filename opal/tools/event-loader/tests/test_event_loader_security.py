@@ -3,8 +3,8 @@
   "module": "test_event_loader_security",
   "layer": "test",
   "domain": "opal-tools",
-  "description": "event-loader 보안 보강 계약(원장 override 게이트·무결성 기록, 기본 매니페스트 정규화, --role-doc 제한, verify --require-default-manifest)을 CLI 공개 출력으로 검증 (S-1~S-5, RED)",
-  "exports": [],
+  "description": "event-loader 보안 보강 계약(원장 override 게이트·무결성 기록, 기본 매니페스트 정규화, --role-doc 제한, verify --require-default-manifest)을 CLI 공개 출력으로 검증 (S-1~S-5, 정본 문서 루트 결속 GC-002 포함)",
+  "exports": ["LedgerOverrideGateTest", "LedgerIntegrityTest", "ManifestPathNormalizationTest", "RoleDocRestrictionTest", "RequireDefaultManifestTest", "RequireDefaultManifestDocumentRootTest"],
   "depends": ["event_loader"]
 }
 """
@@ -707,6 +707,52 @@ class RequireDefaultManifestTest(SecurityBase):
         copy = self.make_reduced_copy("copy-e", with_docs=False)
         response = self.load_installed(loader, root, "--manifest", str(copy), deployed=root)
         result = self.verify_installed(loader, response, "--manifest", str(copy), deployed=root)
+        self.assertEqual(result.code, 0, result)
+        self.assertNotIn("manifest_default", result.payload, result)
+
+
+class RequireDefaultManifestDocumentRootTest(RequireDefaultManifestTest):
+    """GC-002: 정본 --manifest를 주더라도 문서 루트가 정본 루트와 다르면 --require-default-manifest가 거부한다."""
+
+    def evil_root(self, root: Path) -> Path:
+        evil = self.tmp / "evil-root"
+        shutil.copytree(root, evil)
+        manifest = json.loads((root / "references" / "events.json").read_text(encoding="utf-8"))
+        event = next(e for e in manifest["events"] if e["id"] == "worker.dispatch")
+        doc = evil / event["required_docs"][0]["deployed"].replace("{deployed_root}/", "")
+        doc.write_text(doc.read_text(encoding="utf-8") + "\n## INJECTED\n", encoding="utf-8")
+        return evil
+
+    def canonical_args(self, root: Path) -> list[str]:
+        return ["--manifest", str((root / "references" / "events.json").resolve())]
+
+    def test_canonical_manifest_with_evil_deployed_root_flag_rejected(self):
+        root, loader = self.installed()
+        evil = self.evil_root(root)
+        response = self.load_installed(loader, root, *self.canonical_args(root), deployed=evil)
+        payload = self.assert_rejected(self.verify_installed(loader, response, *self.canonical_args(root), self.FLAG, deployed=evil), "manifest_not_default")
+        self.assertIn(str(root.resolve()), str(payload.get("expected")), payload)
+        self.assertIn(str(evil.resolve()), str(payload.get("actual")), payload)
+
+    def test_canonical_manifest_with_evil_deployed_root_env_rejected(self):
+        root, loader = self.installed()
+        evil = self.evil_root(root)
+        env = self.env(deployed_root_env=evil)
+        response = self.load_installed(loader, root, *self.canonical_args(root), env=env)
+        self.assert_rejected(self.verify_installed(loader, response, *self.canonical_args(root), self.FLAG, env=env), "manifest_not_default")
+
+    def test_canonical_manifest_and_root_pass(self):
+        root, loader = self.installed()
+        response = self.load_installed(loader, root, *self.canonical_args(root), deployed=root)
+        result = self.verify_installed(loader, response, *self.canonical_args(root), self.FLAG, deployed=root)
+        self.assertEqual(result.code, 0, result)
+        self.assertIs(result.payload.get("manifest_default"), True, result)
+
+    def test_flagless_verify_with_evil_root_unchanged(self):
+        root, loader = self.installed()
+        evil = self.evil_root(root)
+        response = self.load_installed(loader, root, *self.canonical_args(root), deployed=evil)
+        result = self.verify_installed(loader, response, *self.canonical_args(root), deployed=evil)
         self.assertEqual(result.code, 0, result)
         self.assertNotIn("manifest_default", result.payload, result)
 

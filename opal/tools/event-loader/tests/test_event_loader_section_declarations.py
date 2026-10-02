@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "opal-tools",
   "description": "대상 문서 4종의 절 선언(sections/*.json)이 소스 문서와 정합하고 [MUST] 줄이 모든 컨텍스트 조합에서 보존되는지 검증 (S-9)",
-  "exports": [],
+  "exports": ["SectionDeclarationTests"],
   "depends": ["lazy_sections"]
 }
 """

@@ -1,0 +1,320 @@
+{
+  "base_sha": "ea1e1c98a3d6cc5f515af72f3d9bbbb97d6c231e",
+  "head_sha": "f83c81a8a63d39a7ac55359cb0c09eb91c0d3eb4",
+  "mechanical_rule_ids": [
+    "CONVENTIONS.md §구현 규칙 §@header 규칙",
+    "CONVENTIONS.md §파일 구조 §YAML Frontmatter",
+    "opal-doc-standard.md §5",
+    "CONVENTIONS.md §네이밍 규칙 §파일/폴더"
+  ],
+  "files": [
+    {
+      "path": "opal/core/references/events.json",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          100,
+          126
+        ],
+        [
+          186,
+          212
+        ],
+        [
+          245,
+          276
+        ],
+        [
+          324,
+          355
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/pm/dispatch-process.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          61,
+          82
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/sections/citation-rules.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          133
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/sections/design-gate.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          132
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/sections/pm-process.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          188
+        ]
+      ]
+    },
+    {
+      "path": "opal/core/references/sections/pm-review-gate.json",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          88
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/README.md",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          19,
+          47
+        ],
+        [
+          55,
+          117
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/event_loader.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          42
+        ],
+        [
+          64,
+          108
+        ],
+        [
+          140,
+          169
+        ],
+        [
+          221,
+          266
+        ],
+        [
+          275,
+          296
+        ],
+        [
+          386,
+          530
+        ],
+        [
+          553,
+          573
+        ],
+        [
+          633,
+          791
+        ],
+        [
+          822,
+          867
+        ],
+        [
+          890,
+          914
+        ],
+        [
+          943,
+          1226
+        ],
+        [
+          1259,
+          1280
+        ],
+        [
+          1303,
+          1366
+        ],
+        [
+          1390,
+          1410
+        ],
+        [
+          1412,
+          1495
+        ],
+        [
+          1498,
+          1535
+        ],
+        [
+          1724,
+          1798
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/lazy_sections.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          308
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/tests/conftest.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          1,
+          23
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/tests/test_event_loader_dispatch_contract.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          257,
+          279
+        ],
+        [
+          316,
+          338
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/tests/test_event_loader_extended.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          72,
+          92
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/tests/test_event_loader_lazy_mode.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          564
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/tests/test_event_loader_section_declarations.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          112
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/tests/test_event_loader_security.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          761
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/tests/test_event_loader_static_and_index.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          16,
+          36
+        ],
+        [
+          52,
+          98
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/event-loader/tests/test_lazy_sections.py",
+      "status": "added",
+      "whole_file": true,
+      "ranges": [
+        [
+          1,
+          463
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/cli.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          353,
+          375
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/state_tool_parts/gates.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          2668,
+          2689
+        ]
+      ]
+    },
+    {
+      "path": "opal/tools/state-tool/tests/test_event_verify.py",
+      "status": "modified",
+      "whole_file": false,
+      "ranges": [
+        [
+          224,
+          318
+        ]
+      ]
+    }
+  ]
+}

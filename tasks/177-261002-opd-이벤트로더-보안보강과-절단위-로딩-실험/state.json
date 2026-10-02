@@ -4,7 +4,7 @@
   "mode": "agentic",
   "schema_version": "1.2",
   "created_at": "2026-10-02 07:44:11",
-  "updated_at": "2026-10-02 08:55:06",
+  "updated_at": "2026-10-02 10:21:47",
   "current_status": "in_progress",
   "rows": [
     {
@@ -100,20 +100,32 @@
       "stage": "TEST",
       "item": "작업",
       "key": "test.run_tests",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 10:21:42",
       "owner": "PM",
       "note": null
     },
     {
       "row_id": 9,
       "stage": "TEST",
+      "item": "수정: 최종 보안 GC-001(lazy receipt 위조)·GC-002와 컨벤션 High 4건",
+      "key": "test.item_1",
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 10:21:43",
+      "owner": "PM",
+      "note": null,
+      "test_change_kind": "fix"
+    },
+    {
+      "row_id": 10,
+      "stage": "TEST",
       "item": "PM Gate",
       "key": "test.pm_gate",
-      "status": "pending",
-      "status_label": "⬜",
-      "timestamp": null,
+      "status": "done",
+      "status_label": "✅",
+      "timestamp": "2026-10-02 10:21:47",
       "owner": "PM",
       "note": null,
       "gate": {
@@ -130,7 +142,7 @@
       }
     },
     {
-      "row_id": 10,
+      "row_id": 11,
       "stage": "TEST",
       "item": "사용자 확인",
       "key": "test.user_confirm",
@@ -141,7 +153,7 @@
       "note": null
     },
     {
-      "row_id": 11,
+      "row_id": 12,
       "stage": "CLOSE",
       "item": "DONE.md 생성",
       "key": "close.done_md",
@@ -152,7 +164,7 @@
       "note": null
     },
     {
-      "row_id": 12,
+      "row_id": 13,
       "stage": "CLOSE",
       "item": "관련 문서 동기화 (조건부: 구현으로 문서 사실이 달라진 경우)",
       "key": "close.docs_sync",
@@ -164,7 +176,7 @@
       "conditional": true
     },
     {
-      "row_id": 13,
+      "row_id": 14,
       "stage": "CLOSE",
       "item": "brain ingest (조건부: 프로젝트 brain 사용 시)",
       "key": "close.brain_ingest",
@@ -176,7 +188,7 @@
       "conditional": true
     },
     {
-      "row_id": 14,
+      "row_id": 15,
       "stage": "CLOSE",
       "item": "회고/개선 후보 기록",
       "key": "close.retrospective",
@@ -187,7 +199,7 @@
       "note": null
     },
     {
-      "row_id": 15,
+      "row_id": 16,
       "stage": "CLOSE",
       "item": "worktree finalize/attribution (조건부: --wt 실행 시, 허브 수행)",
       "key": "close.worktree_finalize",
@@ -199,7 +211,7 @@
       "conditional": true
     },
     {
-      "row_id": 16,
+      "row_id": 17,
       "stage": "CLOSE",
       "item": "CLOSE 최종 상태 확정",
       "key": "close.final",
@@ -210,7 +222,7 @@
       "note": null
     }
   ],
-  "next_action": "TEST 작업 진입",
+  "next_action": "CLOSE DONE.md 생성 진입",
   "worktree": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177",
   "actor": "coordinator",
   "run_log": {
@@ -220,7 +232,14 @@
     "completion_profile_receipt": null,
     "active_run_id": "run_863fd05a-1e9a-4fa9-a3c5-b1c547d9e61e",
     "status": "active",
-    "pending_events": []
+    "pending_events": [],
+    "last_report": {
+      "event_id": "evt_5f91f730-545a-406c-a134-d1e62be98f53",
+      "report_type": "decision_request",
+      "transition_action": "await_user",
+      "user_input_required": true,
+      "at": "2026-10-01T23:55:51.855Z"
+    }
   },
   "design_gate": {
     "status": "pass",

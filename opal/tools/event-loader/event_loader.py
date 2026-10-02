@@ -958,7 +958,7 @@ def _receipt_section_kind(receipt: dict[str, Any]) -> str | None:
     return None
 
 
-def _check_lazy_receipt(receipt: dict[str, Any], declaration: dict[str, Any], roots: dict[str, Path]) -> None:
+def _check_lazy_receipt(receipt: dict[str, Any], declaration: dict[str, Any], roots: dict[str, Path], response: dict[str, Any] | None = None) -> None:
     """켠 load receipt: 선언 파일 해시 확인 후, 기록된 컨텍스트로 선별을 다시 수행한 전달 내용 해시를 receipt와 비교한다."""
     record = receipt["section_mode"]
     recorded_docs = record.get("documents") if isinstance(record.get("documents"), dict) else {}
@@ -971,7 +971,16 @@ def _check_lazy_receipt(receipt: dict[str, Any], declaration: dict[str, Any], ro
         if not isinstance(recorded, dict) or recorded.get("declaration_sha256") != info["sha256"]:
             raise EventLoaderError("section_declaration_changed", f"절 선언 파일이 load 시점과 다릅니다: {doc_id}", document=doc_id, receipt_sha256=(recorded or {}).get("declaration_sha256"), current_sha256=info["sha256"])
     required, optional, _ = _collect_documents(declaration, roots)
-    delivered, _per_doc = _lazy_deliver(declaration, roots, required + optional, context)
+    delivered, per_doc = _lazy_deliver(declaration, roots, required + optional, context)
+    for doc_id, fresh in per_doc.items():
+        if recorded_docs.get(doc_id) != fresh:
+            raise EventLoaderError(
+                "document_hash_mismatch",
+                f"절 선별 기록(delivered·omitted·unit_sha256 등)이 현재 문서에서 다시 계산한 값과 다릅니다: {doc_id}",
+                document=doc_id,
+            )
+    if response is not None and response is not receipt and "section_mode" in response and response["section_mode"] != record:
+        raise EventLoaderError("document_hash_mismatch", "응답 최상위 section_mode가 receipt와 다릅니다.")
     recorded_by_id = {d.get("id"): d for d in receipt.get("documents", []) if isinstance(d, dict)}
     for doc in delivered:
         recorded = recorded_by_id.get(doc["id"])
@@ -993,6 +1002,8 @@ def _verify_section_fetch(
     manifest_path: Path,
     manifest_raw: bytes,
     require_default: bool,
+    declaration: dict[str, Any],
+    roots: dict[str, Path],
 ) -> dict[str, Any]:
     """D-14: 부모 검증 → 부모 연결 → 절 해시·본문 해시."""
     parent_arg = getattr(args, "parent_receipt", None)
@@ -1021,11 +1032,17 @@ def _verify_section_fetch(
     recorded = receipt.get("sections")
     if response is receipt or not isinstance(sections, list) or not isinstance(recorded, list) or len(sections) != len(recorded):
         raise EventLoaderError("section_hash_mismatch", "추가 절 응답 본문 또는 receipt 절 목록이 올바르지 않습니다.")
-    unit_hashes = {
-        doc_id: (info.get("unit_sha256") or {})
-        for doc_id, info in (parent_receipt.get("section_mode") or {}).get("documents", {}).items()
-        if isinstance(info, dict)
-    }
+    # 부모 receipt 기록값이 아니라 현재 문서에서 다시 계산한 단위 해시와 대조한다(부모 검증과 이중 확인).
+    parent_docs = (parent_receipt.get("section_mode") or {}).get("documents", {})
+    declarations = _read_section_declarations(declaration, roots)
+    required_docs, optional_docs, _ = _collect_documents(declaration, roots)
+    texts = {doc["id"]: doc["content"] for doc in required_docs + optional_docs}
+    parent_context = (parent_receipt.get("section_mode") or {}).get("context") or {}
+    unit_hashes: dict[str, dict[str, str]] = {}
+    for doc_id, info in declarations.items():
+        ids = [s.get("id") for s in (info["declaration"].get("sections") or []) if isinstance(s, dict) and s.get("id")]
+        fresh = fetch_units(texts[doc_id], info["declaration"], parent_context, [], ids)
+        unit_hashes[doc_id] = {item["id"]: item["sha256"] for item in fresh["sections"]}
     for body, record in zip(sections, recorded):
         if not (isinstance(body, dict) and isinstance(record, dict) and isinstance(body.get("content"), str)):
             raise EventLoaderError("section_hash_mismatch", "추가 절 항목 형식이 올바르지 않습니다.")
@@ -1037,6 +1054,9 @@ def _verify_section_fetch(
             and len(body["content"].encode("utf-8")) == record.get("bytes") == body.get("bytes")
             and unit_hashes.get(record.get("document"), {}).get(record.get("id")) == digest
         )
+        already_delivered = (parent_docs.get(record.get("document")) or {}).get("delivered") or []
+        if record.get("id") in already_delivered:
+            raise EventLoaderError("section_hash_mismatch", f"부모 load에서 이미 전달된 절을 추가 절로 주장했습니다: {record.get('id')}", section=record.get("id"))
         if not same:
             raise EventLoaderError("section_hash_mismatch", f"추가 절 본문이 receipt 해시와 다릅니다: {record.get('id')}", section=record.get("id"))
     if _section_body_sha256(sections) != receipt.get("body_sha256"):
@@ -1160,6 +1180,17 @@ def verify_receipt(args: argparse.Namespace) -> dict[str, Any]:
                 expected=str(canonical),
                 actual=str(manifest_path),
             )
+        if _running_from_source():
+            expected_root, actual_root, root_key = _canonical_manifest().parents[3], roots["source_root"], "source_root"
+        else:
+            expected_root, actual_root, root_key = _canonical_manifest().parents[1], roots["deployed_root"], "deployed_root"
+        if actual_root != expected_root.resolve():
+            raise EventLoaderError(
+                "manifest_not_default",
+                "문서 루트가 이 loader의 정본 루트와 다릅니다.",
+                expected=f"{root_key}={expected_root.resolve()}",
+                actual=f"{root_key}={actual_root}",
+            )
     receipt_manifest = receipt.get("manifest_path")
     if not isinstance(receipt_manifest, str) or Path(receipt_manifest).expanduser().resolve() != manifest_path:
         raise EventLoaderError(
@@ -1181,7 +1212,7 @@ def verify_receipt(args: argparse.Namespace) -> dict[str, Any]:
         if _contract_args_given(args):
             raise EventLoaderError("section_mode_conflict", "--section-mode는 계약 인자와 함께 쓸 수 없습니다.")
         if section_kind == "fetch":
-            return _verify_section_fetch(args, response, receipt, receipt_path, manifest_path, manifest_raw, require_default)
+            return _verify_section_fetch(args, response, receipt, receipt_path, manifest_path, manifest_raw, require_default, declaration, roots)
         if getattr(args, "parent_receipt", None):
             raise EventLoaderError("section_mode_mismatch", "--parent-receipt는 추가 절 응답 검증에서만 쓸 수 있습니다.")
     lazy = section_kind == "load"
@@ -1191,7 +1222,7 @@ def verify_receipt(args: argparse.Namespace) -> dict[str, Any]:
     contract_fields: dict[str, Any] = {}
     if lazy:
         _check_response_body(receipt, response)
-        _check_lazy_receipt(receipt, declaration, roots)
+        _check_lazy_receipt(receipt, declaration, roots, response)
         contract_fields = {"section_mode": SECTION_MODE_LAZY, "load_id": receipt.get("load_id")}
     elif call["mode"] == "legacy":
         if receipt_schema == 2:

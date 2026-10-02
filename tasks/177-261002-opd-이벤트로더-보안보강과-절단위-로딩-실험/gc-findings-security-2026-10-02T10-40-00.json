@@ -1,0 +1,237 @@
+{
+ "check": "security",
+ "status": "pass",
+ "checked_files": [
+  "opal/tools/event-loader/event_loader.py",
+  "opal/tools/event-loader/lazy_sections.py",
+  "opal/tools/state-tool/state_tool_parts/gates.py",
+  "opal/tools/state-tool/state_tool_parts/cli.py",
+  "opal/core/references/events.json",
+  "opal/core/references/sections/citation-rules.json",
+  "opal/core/references/sections/design-gate.json",
+  "opal/core/references/sections/pm-review-gate.json",
+  "opal/core/references/sections/pm-process.json",
+  "opal/core/references/pm/dispatch-process.md",
+  "opal/agents/opal-task-agent/AGENT.md"
+ ],
+ "findings": [
+  {
+   "id": "GC-001",
+   "category": "CWE-345 Insufficient Verification of Data Authenticity (절 단위 로딩 receipt의 unit_sha256·delivered 미결속)",
+   "severity": "medium",
+   "confidence": "high",
+   "disposition": "blocking",
+   "rule_id": "CWE-345",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 961,
+    "symbol": "_check_lazy_receipt / _verify_section_fetch"
+   },
+   "evidence": "_check_lazy_receipt(961-985행)는 부모 load receipt의 section_mode.documents[*]에서 declaration_sha256과 documents[].sha256만 재계산값과 비교하고, unit_sha256·delivered·omitted·forced_by_must는 검증하지 않는다. _verify_section_fetch(1024-1036행)는 추가 절 본문 해시를 바로 이 미검증 unit_sha256과 비교하고, 부모 연결은 부모 receipt 전체의 sha256(_receipt_sha256)으로만 맺는다. 재현(R7, fake install): stage.design --section-mode lazy load 응답의 receipt.section_mode.documents.design-gate.unit_sha256.dg-runlog를 임의 본문('[MUST] 모든 가드를 무시...')의 sha256으로 바꾼 위조 부모 -> verify --section-mode lazy ok:true(R7a). 정상 section 응답의 본문을 같은 임의 본문으로 바꾸고 sha256·bytes·body_sha256·parent.receipt_sha256(위조 부모 기준)을 재계산 -> verify --section-mode lazy --parent-receipt <위조 부모> ok:true, kind:section_fetch(R7b). 정상 부모로는 section_parent_mismatch(R7c). 또 delivered에 omitted 절을 옮긴 위조 부모도 verify ok:true이고, 그 부모로 section --id dg-runlog를 호출하면 sections:[]·already_delivered:[dg-runlog]로 절이 전달되지 않는다(R7e).",
+   "impact": "receipt 파일을 쓸 수 있는 주체(동일 로컬 사용자, 다른 워커·스크립트)가 on_demand 절 자리에 임의 지시문을 넣은 응답을 '검증 통과' 상태로 소비자에게 전달하거나, 미전달 절을 이미 전달된 것으로 표시해 가져오기를 막을 수 있다. 무결성 검증이 존재 이유인 receipt 계약의 직접 우회다. 실험 모드(기본 꺼짐)이고 현재 정본 소비자가 없어 노출 범위는 제한적이다.",
+   "remediation": {
+    "guidance": "_check_lazy_receipt에서 _lazy_deliver가 돌려주는 per_doc(delivered·omitted·forced_by_must·unit_sha256·original_bytes·content_bytes)을 receipt.section_mode.documents[*]와 필드 단위로 전부 비교하고, 응답 최상위 section_mode가 receipt와 같은지도 확인한다. _verify_section_fetch는 부모 receipt 값 대신 현재 문서에서 재계산한 unit 해시(fetch_units 재수행)와 비교하도록 바꾼다. R7a·R7b·R7e 위조 케이스를 회귀 테스트로 고정한다.",
+    "reference": "https://cwe.mitre.org/data/definitions/345.html",
+    "auto_fixable": true
+   },
+   "verification": "unit_sha256 또는 delivered를 바꾼 부모 receipt의 verify --section-mode lazy가 document_hash_mismatch/section_declaration_changed 계열로 거부되고, 위조 본문 section 응답이 정상·위조 부모 어느 쪽으로도 ok:false.",
+   "fingerprint": "222794ea3d380043",
+   "suppression": null
+  },
+  {
+   "id": "GC-002",
+   "category": "CWE-15 External Control of Configuration Setting (GC-012 잔여: 정본 manifest 확인이 문서 루트를 결속하지 않음)",
+   "severity": "low",
+   "confidence": "high",
+   "disposition": "advisory",
+   "rule_id": "CWE-15",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 1154,
+    "symbol": "verify_receipt (--require-default-manifest)"
+   },
+   "evidence": "--require-default-manifest(1154-1163행)는 실행 경계 manifest_path가 _canonical_manifest()와 같은지만 본다. 문서 경로를 정하는 deployed_root·source_root는 여전히 --deployed-root/--source-root/OPAL_DEPLOYED_ROOT로 바뀐다. 재현(R2b·R2c·R2f, fake install): 문서 1건에 '## INJECTED' 절을 덧붙인 사본 루트 evil에 대해 OPAL_DEPLOYED_ROOT=evil load --manifest <정본> -> verify --manifest <정본> --require-default-manifest가 ok:true, manifest_path=정본, manifest_default:true, verified_documents 경로는 evil/... --deployed-root evil 플래그와 state-tool event-verify 경유도 동일하게 ok:true. 대조군: 같은 receipt를 워커 게이트 형태(override 없음)로 verify하면 document_hash_mismatch(R2d), 워커가 env만 상속하면 manifest_not_default(R2e). dispatch-process.md Step 0-4·AGENT.md 게이트 문서의 verify 줄에서 --manifest/--deployed-root/--source-root는 static-check(dispatch_gate_manifest_override)로 금지된다.",
+   "impact": "PM 측 verify 명령 인자·환경을 제어하는 주체는 manifest_default:true인 결과를 SSOT와 다른 문서 내용으로 얻을 수 있다. 워커 진입 게이트가 override 없이 재검증하므로 워커 단계에서 차단되며, 동일 사용자 권한이 전제다.",
+   "remediation": {
+    "guidance": "require_default일 때 roots['deployed_root'](설치 실행) 또는 roots['source_root'](소스 실행)도 정본 루트(_canonical_manifest 기준 상위)와 같은지 확인하거나, --manifest/--deployed-root/--source-root/OPAL_DEPLOYED_ROOT 중 하나라도 쓰이면 manifest_default를 거부한다. 회귀 테스트로 R2b·R2c를 고정한다.",
+    "reference": "https://cwe.mitre.org/data/definitions/15.html",
+    "auto_fixable": false
+   },
+   "verification": "--require-default-manifest와 --deployed-root(또는 OPAL_DEPLOYED_ROOT)+정본 --manifest를 함께 준 verify가 manifest_not_default 계열로 거부된다.",
+   "fingerprint": "d2657b9ba1ce2908",
+   "suppression": null
+  },
+  {
+   "id": "GC-003",
+   "category": "CWE-778 Insufficient Logging / CWE-15 (GC-006 잔여: 테스트 모드 override 시 기본 원장에서 누락)",
+   "severity": "low",
+   "confidence": "high",
+   "disposition": "advisory",
+   "rule_id": "CWE-778",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 447,
+    "symbol": "_write_integrity / _ledger_path"
+   },
+   "evidence": "override는 OPAL_EVENT_LOADER_TEST_MODE=1에서만 적용되고 아니면 무시+ledger_override_ignored 기록(R6b: 기본 원장 기록, legacy-report reliable:false)으로 개선됐다. 그러나 테스트 모드 override의 무결성 기록(ledger_override_active)은 _write_integrity가 override된 원장 옆(447행 ledger.parent)에 쓰고, legacy-report는 env 없이 실행되면 기본 원장 옆만 읽는다. 재현(R6c·확인 실행): 깨끗한 상태에서 정상 구형 load 1건 + TEST_MODE=1·LEDGER=<다른 경로> 구형 load 2건 -> env 없는 legacy-report가 count:1, integrity 전부 0, reliable:true. override 행·override_active 표식은 모두 <다른 경로> 쪽에만 남았다. 같은 환경을 제어하는 주체에게 TEST_MODE 값은 추가 장벽이 아니다.",
+   "impact": "legacy-report(구형 호환 종료 판단 근거)가 누락을 모른 채 reliable:true를 낼 수 있다. 동일 사용자 권한 범위.",
+   "remediation": {
+    "guidance": "override가 active일 때도 override_active 무결성 기록은 기본 원장(_install_root 기준) 옆에 남기거나 폴백 경로에 함께 남긴다. legacy-report는 기본 위치를 항상 읽는다.",
+    "reference": "https://cwe.mitre.org/data/definitions/778.html",
+    "auto_fixable": false
+   },
+   "verification": "TEST_MODE=1 override 호출 뒤 env 없는 legacy-report가 override_active>=1, reliable:false.",
+   "fingerprint": "e87eda8bd717d65a",
+   "suppression": null
+  },
+  {
+   "id": "GC-004",
+   "category": "CWE-73 External Control of File Name or Path (GC-004 잔여: 허용 루트가 호출자·cwd 의존)",
+   "severity": "low",
+   "confidence": "high",
+   "disposition": "advisory",
+   "rule_id": "CWE-73",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 500,
+    "symbol": "_read_role_doc"
+   },
+   "evidence": "_read_role_doc(497-517행)는 resolve -> project/source/deployed 루트 포함 -> stat S_ISREG -> 1 MiB 상한 -> 읽기 순서로 검사한다. 재현(R4): 루트 밖 /etc/hosts, 루트 안 심볼릭 링크->/etc/hosts, '..' 경로는 outside_allowed_roots, FIFO는 not_regular_file, 1 MiB+1은 too_large, 정상 파일은 ok. 잔여: project_root는 --project-root 또는 cwd에서 .git+.opal/AGENT.md 경계를 못 찾으면 cwd 자체(145행)가 된다. --project-root / 지정(R4g), cwd=/etc(R4h), cwd=/에서 ~/.ssh/known_hosts(R4i)가 모두 ok:true로 경로·sha256을 receipt에 기록했다. 또한 resolve·stat과 open 사이에 경로 구성요소·파일을 바꾸는 TOCTOU 창이 남는다(분석, 재현 안 함).",
+   "impact": "이전과 같은 해시·존재 오라클이 cwd·인자를 통해 여전히 가능하다. 내용 유출은 없고 동일 사용자 범위. FIFO/장치/대용량 블로킹은 정상 경로에서 해소됐다.",
+   "remediation": {
+    "guidance": "role_doc 허용 루트에서 cwd 폴백 project_root를 제외하거나(Git+.opal 경계로 확정된 경우만 허용), 파일을 O_NOFOLLOW|O_NONBLOCK으로 연 뒤 fstat으로 S_ISREG·크기·inode를 확인해 TOCTOU를 닫는다.",
+    "reference": "https://cwe.mitre.org/data/definitions/73.html",
+    "auto_fixable": false
+   },
+   "verification": "Git+.opal 경계 밖 cwd에서 --role-doc /etc/hosts가 거부되고, fstat 기반 검사 테스트가 존재한다.",
+   "fingerprint": "7221d609a1048c17",
+   "suppression": null
+  },
+  {
+   "id": "GC-005",
+   "category": "CWE-377 Insecure Temporary File (무결성 폴백 파일 소유자 미확인 읽기)",
+   "severity": "low",
+   "confidence": "medium",
+   "disposition": "advisory",
+   "rule_id": "CWE-377",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 1464,
+    "symbol": "_read_integrity_counts / _integrity_fallback_path"
+   },
+   "evidence": "쓰기 쪽은 O_CREAT|O_APPEND|O_NOFOLLOW, 0600, fchmod 후 write로 안전하다: 재현(R6d) 원장 쓰기 불가 시 0600 파일 생성, (R6e) 미리 심은 심볼릭 링크는 ELOOP로 거부되고 대상 파일 미생성·stderr 경고만 남음. 읽기 쪽 _read_integrity_counts(1461-1481행)는 {gettempdir}/opal-event-loader-integrity-{uid}.jsonl을 소유자·모드 확인 없이 읽어 집계한다. 재현(R6f): 폴백 파일에 위조 행 1줄 -> legacy-report write_failures:1, reliable:false. macOS의 gettempdir는 사용자별 $TMPDIR이라 타 사용자 접근이 없지만, 공유 /tmp(Linux)에서는 다른 계정이 같은 이름의 일반 파일을 선점해 위조 행 주입(오탐 reliable:false)이나 쓰기 실패(fchmod EPERM, 기록 유실)를 유발할 수 있다(분석).",
+   "impact": "공유 임시 디렉터리 환경에서 타 계정이 legacy-report의 무결성 집계를 오염시키거나 폴백 기록을 막을 수 있다. 판단은 fail-safe(reliable:false) 방향이라 영향은 작다.",
+   "remediation": {
+    "guidance": "폴백 파일을 읽을 때 O_NOFOLLOW로 열고 fstat으로 st_uid==getuid와 모드 0600을 확인해 다르면 무시+경고한다. 또는 폴백 위치를 사용자 전용 디렉터리로 옮긴다.",
+    "reference": "https://cwe.mitre.org/data/definitions/377.html",
+    "auto_fixable": true
+   },
+   "verification": "타 소유자·0644 폴백 파일이 집계에서 제외되고 경고가 나타나는 테스트.",
+   "fingerprint": "dcc2f127970bc3a1",
+   "suppression": null
+  },
+  {
+   "id": "GC-006",
+   "category": "CWE-757 Algorithm Downgrade (절 단위 receipt의 plain 검증 강등)",
+   "severity": "info",
+   "confidence": "high",
+   "disposition": "informational",
+   "rule_id": "CWE-757",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 1175,
+    "symbol": "verify_receipt (section_flag None 분기)"
+   },
+   "evidence": "--section-mode 없이 절 receipt를 verify하면 section_mode_args_missing으로 거부되고, v2 계약 인자와 함께 쓰면 section_mode_conflict, worker.dispatch는 sectioning 미선언(section_mode_not_declared)이라 계약 2 경로로의 강등은 막혀 있다. 그러나 receipt.section_mode를 지우고 documents[].sha256/bytes를 source_*로, payload_bytes를 source_payload_bytes로 바꾸면 plain verify(--event stage.design)가 ok:true이고 응답 본문은 여전히 '미전달 절 목차'가 든 부분본이다(R8). plain 모드는 원래 응답 본문을 결속하지 않는다(R8b: plain receipt의 content를 'X'로 바꿔도 ok:true)는 기존 성질이라 새 공격 능력은 아니다. state-tool event-verify에는 --section-mode 전달이 없어 절 receipt는 state-tool 경유 검증이 불가능하다(R7d).",
+   "impact": "절 모드를 켠 소비자가 plain verify를 쓰면 부분 전달을 전체 전달로 오인할 수 있다. 실험 모드가 정본 소비자에 연결되기 전에 정리할 사항.",
+   "remediation": {
+    "guidance": "절 모드를 정본 소비자에 연결할 때 소비 계약에 --section-mode lazy 검증을 필수로 두고, plain 모드도 응답 본문 해시(_check_response_body)를 확인하거나 state-tool event-verify에 --section-mode·--parent-receipt 전달을 추가한다.",
+    "auto_fixable": false
+   },
+   "verification": "section_mode를 제거한 receipt가 plain verify에서 response_body 계열로 거부된다.",
+   "fingerprint": "62031f0a8a5b8bd9",
+   "suppression": null
+  },
+  {
+   "id": "GC-007",
+   "category": "CWE-41 / CWE-15 / CWE-73 수정 재현 확인 (GC-011 해소, GC-012·GC-004 주 경로 해소)",
+   "severity": "info",
+   "confidence": "high",
+   "disposition": "informational",
+   "rule_id": "CWE-41",
+   "source_tier": "T1",
+   "location": {
+    "file": "opal/tools/event-loader/event_loader.py",
+    "line": 150,
+    "symbol": "_default_manifest / _canonical_manifest"
+   },
+   "evidence": "GC-011: _default_manifest가 resolve()를 적용(148-150행). 재현(R1) fake install의 references/events.json을 다른 위치 실제 파일로의 심볼릭 링크로 바꾸고 load -> 같은 인자 verify ok:true, --require-default-manifest도 ok:true(manifest_default:true, 실제 경로 기록). 다른 manifest(evil)에서 load한 receipt는 stale_receipt(R1b). GC-012 주 경로: env만 바꾼 경계(OPAL_DEPLOYED_ROOT=evil)는 플래그 없이 ok:true지만 --require-default-manifest에서 manifest_not_default(R2a). _canonical_manifest는 __file__ 기준이라 인자·env 영향 없음. AGENT.md 게이트 4항이 manifest_path 실제 경로 비교와 manifest_default:true를 요구하고 static-check가 verify 줄의 플래그 누락·override 플래그를 잡는다. GC-004 주 경로: R4a-R4f 모두 의도대로 거부/통과. section 서브명령 입력: --id '../../etc/passwd'는 section_not_found(선언 id 집합 대조), --section-context 미선언 키는 section_context_invalid, 선언 파일 경로는 manifest 토큰+_resolve_token 루트 포함 검사. cli.py·gates.py 변경은 플래그 전달 2줄로 subprocess는 shell=False argv 리스트. 대상 JSON·MD에 하드코딩 시크릿 없음.",
+   "impact": "해당 없음(관측 결과 기록).",
+   "remediation": {
+    "guidance": "현행 유지. R1·R2a를 회귀 테스트로 고정할 것을 권장한다.",
+    "auto_fixable": false
+   },
+   "verification": "해당 없음.",
+   "fingerprint": "00eade4469030b3e",
+   "suppression": null
+  }
+ ],
+ "evidence": [
+  "워커 게이트: 설치본 event-loader verify(worker.dispatch, dsp-ea8ec0c7db114e69b057ec3b4114e04c) ok:true, contract:2, agent opal-security-checker, role gc-final, manifest_path=~/.opal/references/events.json(설치본은 --require-default-manifest 미지원이라 플래그 없이 검증, 호출자 지시)",
+  "재현 환경: scratchpad/sec177/inst = ~/.opal 사본(대용량 디렉터리 제외)에 워크트리 event-loader·state-tool·references·agents를 덮어쓴 가짜 설치본(설치 모드 실행). OPAL_DEPLOYED_ROOT·TMPDIR를 scratchpad로 격리해 ~/.opal·저장소 소스에 쓰기 없음",
+  "재현 목록: R1(심볼릭 events.json), R2a-g(경계 override·--require-default-manifest·state-tool), R4a-i(--role-doc 루트·심볼릭·..·FIFO·상한·cwd 폴백), R6a-f(원장 override·테스트 모드·폴백 0600·O_NOFOLLOW·위조 행), R7a-e(절 receipt 위조), R8(plain 강등)",
+  "회귀 테스트: ~/.opal/.venv python으로 event-loader tests + state-tool test_event_verify 229 passed / 2 failed. 실패 2건(test_static_check_ok: opal-pilot-dev2 SKILL.md event_contract_missing 3건, test_project_brief_cli_preserves_inputs_and_multitask_counts)은 baseline과 동일하며 보안 범위 밖",
+  "기준: docs/SECURITY.md(T0) 존재, references/security-baseline.md(T1) CWE 적용",
+  "검사 영역: Python CLI(입력 검증·경로 처리·무결성 검증·임시 파일·subprocess)와 계약 문서·선언 JSON. 웹·DB·프론트·모바일 영역은 대상 파일 근거 없음으로 비활성",
+  "배포 전환 메모: 설치본 ~/.opal loader는 --require-default-manifest를 모른다. 새 AGENT.md 게이트가 배포되면 구 loader와의 조합은 argparse 오류로 fail-closed(우회 아님). 배포 시 loader와 문서를 함께 갱신해야 한다"
+ ],
+ "references": [
+  "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177/docs/SECURITY.md",
+  "/Users/lucas/.opal/skills/op-gc-security/references/security-baseline.md",
+  "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177/opal/core/references/harness/gc-finding-schema.md",
+  "https://cwe.mitre.org/data/definitions/345.html",
+  "https://cwe.mitre.org/data/definitions/15.html",
+  "https://cwe.mitre.org/data/definitions/778.html",
+  "https://cwe.mitre.org/data/definitions/73.html",
+  "https://cwe.mitre.org/data/definitions/377.html",
+  "https://cwe.mitre.org/data/definitions/757.html",
+  "https://cwe.mitre.org/data/definitions/41.html"
+ ],
+ "missing_capabilities": [],
+ "report_path": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177/tasks/177-261002-opd-이벤트로더-보안보강과-절단위-로딩-실험/GC-SECURITY-2026-10-02T10-40-00.md",
+ "verdict": "FAIL",
+ "baseline_delta": {
+  "baseline": "/Volumes/Data/AiStudio/workspace/opal/.opal-worktrees/task_177/tasks/175-261001-opd-이벤트-로딩-경량화/gc-findings-security-2026-10-02T00-50-00-final2.json",
+  "resolved": [
+   "GC-011 (9bf4f8c32eb1efe0)",
+   "GC-012 (0f015551fb44e60b)",
+   "GC-004 (e06f2b9e8e53358a)",
+   "GC-006 (c16860701fb2d825)",
+   "GC-013 (987d3f6e2a35fef7)"
+  ],
+  "persisting": [],
+  "new": [
+   "GC-001",
+   "GC-002",
+   "GC-003",
+   "GC-004",
+   "GC-005",
+   "GC-006",
+   "GC-007"
+  ],
+  "suppressed": [],
+  "remediation_judgement": {
+   "GC-011": "해소 — R1 심볼릭 events.json load->verify ok:true(플래그 유무 모두), 타 manifest receipt는 stale_receipt",
+   "GC-012": "부분 해소 — env/플래그로 manifest를 바꾸면 --require-default-manifest가 manifest_not_default(R2a). 정본 --manifest + 문서 루트 override는 manifest_default:true로 통과(R2b·c·f) -> 잔여 GC-002",
+   "GC-004": "부분 해소 — 루트 밖·심볼릭·..·FIFO·대용량 거부(R4a-e). cwd 폴백·--project-root / 로 허용 루트 확대 시 /etc/hosts·~/.ssh/known_hosts 통과(R4g-i) -> 잔여 GC-004(이번 실행 채번)",
+   "GC-006": "부분 해소 — 테스트 모드 아님: override 무시+경고+무결성 기록, report reliable:false(R6b). 테스트 모드 override는 기본 원장 report에 흔적이 없어 reliable:true(R6c) -> 잔여 GC-003",
+   "fingerprint_note": "fingerprint는 정규화 코드 스니펫 기반이라 수정된 코드 위치의 잔여 finding은 baseline과 다른 값이 된다. baseline의 GC-004·006·011·012는 fingerprint상 resolved로 집계되며 잔여분은 new GC-002·003·004로 재채번했다"
+  }
+ }
+}

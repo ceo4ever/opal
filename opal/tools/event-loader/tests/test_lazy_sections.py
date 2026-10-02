@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "opal-tools",
   "description": "lazy_sections 모듈 공개 함수(선언 검증·선별·본문 조립·추가 절 선별)를 임시 문서·선언 픽스처로 검증 (S-8)",
-  "exports": [],
+  "exports": ["ValidateDeclarationTests", "SelectUnitsTests", "FetchUnitsTests"],
   "depends": ["lazy_sections"]
 }
 """
