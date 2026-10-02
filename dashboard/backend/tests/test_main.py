@@ -52,7 +52,7 @@ def test_no_0000_in_uvicorn_call():
 @pytest.fixture
 def client():
     from dashboard.backend.main import app
-    # 허용 Host(127.0.0.1)로 접근한다 — 기본 Host(testserver)는 Host 검사에서 거절된다(175 D-22)
+    # 허용 Host(127.0.0.1)로 접근한다 — 기본 Host(testserver)는 Host 검사에서 거절된다(179 D-22)
     return TestClient(app, base_url="http://127.0.0.1:7823")
 
 

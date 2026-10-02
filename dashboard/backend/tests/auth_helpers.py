@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "console",
   "description": "Console 인증 게이트 테스트 공용 헬퍼. authed_client(app)는 임시 OPAL_HOME에 dashboard.backend.entry_token.issue()로 진입 token을 발급하고 POST /api/auth/exchange로 교환해 세션 쿠키를 가진 TestClient를 돌려준다(base_url은 항상 http://127.0.0.1:7823, 이후 상태 변경 요청에 Origin과 X-CSRF-Token 자동 부착). make_session은 같은 교환을 하되 헤더를 자동 부착하지 않는 원시 클라이언트와 csrf 값을 돌려준다. FakePopen은 subprocess.Popen 대체 객체(communicate가 (stdout, stderr)를 돌려주고 returncode 보유, 호출 횟수·인자 기록, 선택적 지연 이벤트). forbid_real_spawn은 실제 subprocess.run·subprocess.Popen 호출을 즉시 AssertionError로 만드는 가드 fixture이고 no_real_spawn은 이를 autouse로 적용하는 래퍼이며, isolated_console_home은 console.config.json 경로와 OPAL_HOME을 임시 디렉터리로 격리한다. set_legacy_brain_policy는 임시 설정 파일의 legacy_brain_enabled 키를 쓰고 정책을 설정에서 다시 읽게 한다. 실제 claude 프로세스·사용자 ~/.opal·포트 7823은 건드리지 않는다.",
-  "task": "175-261001-opd-콘솔-POST-인증-게이트",
+  "task": "179-261001-opd-콘솔-POST-인증-게이트",
   "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5", "S-6", "S-7", "S-8", "S-9"],
   "exports": ["BASE_URL", "ORIGIN", "authed_client", "make_session", "FakePopen", "claude_json_output", "forbid_real_spawn", "no_real_spawn", "isolated_console_home", "set_legacy_brain_policy", "reset_registry"],
   "depends": ["entry_token", "adapters.brain_policy", "config"]

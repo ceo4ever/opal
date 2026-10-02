@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_task_number": 177,
+  "last_task_number": 179,
   "memories": [
     {
       "title": "변경이력 제거 검토 결정 — A안 확정",
@@ -173,10 +173,10 @@
   ],
   "history": [
     {
-      "title": "175 콘솔 POST 인증 게이트",
+      "title": "179 콘솔 POST 인증 게이트",
       "date": "2026-10-02",
       "stage": "완료",
-      "path": "tasks/175-261001-opd-콘솔-POST-인증-게이트/",
+      "path": "tasks/179-261001-opd-콘솔-POST-인증-게이트/",
       "result": "Console /api default-deny 인증·console open 1회성 token·구형 Brain 기본 차단(Gateway Phase 0)"
     },
     {

@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "console",
   "description": "Console 인증 게이트 공개 계약 RED-first 테스트(S-1~S-5). 실제 앱(main.app, 미들웨어 포함)과 TestClient(base_url=http://127.0.0.1:7823)로 검증한다. S-1: 상태 변경 라우트 4종(brain prime·query, config prewarm, 같은 앱에 붙인 테스트용 POST 라우트)에 대한 Host→Origin→세션→CSRF 거절 사다리(401 auth_required·403 origin_required·origin_not_allowed·host_not_allowed·csrf_invalid)와 거절 동안 Popen 0회·설정 바이트 불변·핸들러 미진입, 유효 세션 대조군 200. S-2: 테스트용 WebSocket 라우트 handshake 5변형(거절 4종은 accept 전 close 1008). S-3: CORS(credentials true, 정확 origin 반영, x-csrf-token 허용, 미허용 origin 거부, preflight는 세션 없이 통과). S-4: /health 키 3종과 /api/* GET 전수의 default-deny, 유효 세션 GET의 통과. S-5: POST /api/auth/exchange 계약(성공 응답·쿠키 속성, 재사용·만료·상한 초과·무효·디렉터리 위조 거절의 동일 401 entry_token_invalid, Origin 없는 교환 403, 로그·본문 비노출, GET /api/auth/session 모양). 실제 claude·사용자 ~/.opal·포트 7823은 건드리지 않는다(임시 OPAL_HOME·CONFIG_PATH, subprocess 가드, Popen 대체).",
-  "task": "175-261001-opd-콘솔-POST-인증-게이트",
+  "task": "179-261001-opd-콘솔-POST-인증-게이트",
   "scenarios": ["S-1", "S-2", "S-3", "S-4", "S-5"],
   "exports": [],
   "depends": ["auth", "entry_token", "routers.auth", "main", "adapters.brain_policy", "tests.auth_helpers"]

@@ -6,7 +6,7 @@
   "description": "구형 Brain(claude -p 서브프로세스 경로) 사용 정책의 프로세스 단일 소유자. 저장 위치는 console.config.json의 legacy_brain_enabled이며 JSON true일 때만 켜짐으로 해석한다(키 없음·비불리언·파손은 꺼짐, prewarm_projects·업그레이드는 무관). 값은 첫 사용(is_enabled·spawn_guard·set_enabled 최초 호출) 또는 reload_from_config() 호출 시 config.load_legacy_brain_enabled()로 읽고, 이후 변경은 set_enabled(bool)만 한다(메모리 반영만 — 설정 파일 저장은 호출자 책임). 하나의 threading.Lock이 set_enabled와 spawn_guard(최종 launch 허가+프로세스 시작)를 직렬화하므로 set_enabled(False)가 반환된 뒤에는 어떤 경로도 새 프로세스를 시작할 수 없고, 이미 시작된 turn은 끝까지 진행한다. spawn_guard()는 컨텍스트 매니저이며 꺼짐이면 LegacyBrainDisabled(RuntimeError 하위)를 던지고, 켜짐이면 본문(Popen 시작)이 예외 없이 끝난 직후 running_turns를 1 올리고 turn 핸들을 돌려준다. 호출자는 turn이 끝날 때(finally) 핸들의 finish()를 호출해 running_turns를 내린다(중복 호출 안전). 락은 시작 구간에만 잡고 communicate 대기는 락 밖이다. require_enabled()는 꺼짐이면 LegacyBrainDisabled를 던지는 조기 게이트이고, 최종 방어선은 spawn_guard다.",
   "exports": ["LegacyBrainDisabled", "is_enabled", "set_enabled", "spawn_guard", "running_turns", "reload_from_config", "require_enabled"],
   "depends": ["config"],
-  "task": "175-261001-opd-콘솔-POST-인증-게이트"
+  "task": "179-261001-opd-콘솔-POST-인증-게이트"
 }
 """
 from __future__ import annotations

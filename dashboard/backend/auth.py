@@ -6,7 +6,7 @@
   "description": "Console 인증 경계. 순수 ASGI 미들웨어 AuthMiddleware가 http·websocket scope를 라우팅 전에 Host → Origin → 세션 → CSRF 순으로 검사해 요청 본문을 읽기 전에 거절한다. Host는 모든 경로에서 호스트명(포트 제외)이 127.0.0.1·localhost·[::1] 또는 OPAL_CONSOLE_ALLOWED_HOSTS(쉼표 구분, 형식 불일치 항목은 경고 후 제외)에 있어야 하고 위반은 403 host_not_allowed. /api/ 경로는 Origin이 있으면 요청 Host 기준 동일 출처 또는 생성자에 전달된 CORS origin과 정확히 일치해야 하며(403 origin_not_allowed) POST·PUT·PATCH·DELETE 등 상태 변경 메서드는 Origin이 없어도 거절한다(403 origin_required). /api/ 하위는 세션 쿠키 opal_console_session 필수(401 auth_required)이며 예외는 POST /api/auth/exchange와 GET /api/auth/session 2종뿐이다. 상태 변경 메서드는 X-CSRF-Token이 세션의 csrf 값과 compare_digest로 일치해야 한다(403 csrf_invalid). WebSocket은 Host·Origin(필수)·세션을 검사하고 실패하면 accept 전에 close 1008을 보낸다. SPA 정적 경로와 /health는 Host 검사만 받는다. SessionStore는 SHA-256 해시 키 인메모리 세션(12시간 절대 만료, 재시작 시 소멸)과 세션별 csrf 값을 보관한다. 세션·csrf·token 값은 로그·예외·URL에 남기지 않고 인증 우회 스위치는 없다. 오류 본문은 {\"error\":{\"code\",\"message\"}} 형식이다.",
   "exports": ["AuthMiddleware", "SessionStore", "Session", "session_store", "SESSION_COOKIE", "SESSION_MAX_AGE", "error_response", "session_for_scope"],
   "depends": [],
-  "task": "175-261001-opd-콘솔-POST-인증-게이트"
+  "task": "179-261001-opd-콘솔-POST-인증-게이트"
 }
 """
 from __future__ import annotations

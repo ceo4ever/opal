@@ -3,7 +3,7 @@
 # test_console_open.sh — opal-cli `console open` 준비 확인·진입 token 계약 회귀 테스트
 #
 # `open`은 /health가 응답하고 `auth` 필드가 있는 경우에만, 1회용 진입 token을 URL
-# fragment(#entry=<token>)로 실어 브라우저를 열어야 한다 (task 175 D-9·D-11·D-12).
+# fragment(#entry=<token>)로 실어 브라우저를 열어야 한다 (task 179 D-9·D-11·D-12).
 # 실제 7823 포트를 사용하지 않고 curl·open·sleep만 스텁하며, 실제 console.sh와 실제
 # entry_token CLI를 임시 OPAL_HOME에서 실행한다.
 # =============================================================================
@@ -56,7 +56,7 @@ else
     fail '준비 대기는 제한 횟수 뒤 실패를 반환한다'
 fi
 
-# ─── 새 진입 계약 (task 175, PLAN D-9·D-11·D-12) ─────────────────────────────
+# ─── 새 진입 계약 (task 179, PLAN D-9·D-11·D-12) ─────────────────────────────
 # 실제 console.sh + 실제 entry_token CLI(`python -m dashboard.backend.entry_token issue`)를 실행한다.
 # 대체 대상은 curl(/health 응답)·open·sleep 뿐이다. 임시 HOME/OPAL_HOME만 사용하며
 # 사용자 Console(7823)·사용자 ~/.opal·실제 브라우저는 건드리지 않는다.

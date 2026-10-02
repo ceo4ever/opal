@@ -91,7 +91,7 @@ app = FastAPI(
 # prod 모드: 동일 오리진(정적 서빙)이므로 CORS 불요 — allow_origins=[""] 로 제한
 # T01 W-2 (TRD.md TD-7, CONTRACT.md §C.9): 기본 2종은 코드에 남기고 OPAL_CONSOLE_CORS_ORIGINS
 # (쉼표 구분)로 주입된 정확한 origin 문자열만 추가 허용한다. 와일드카드·정규식·전체 허용은
-# 도입하지 않는다(NR-4). allow_credentials=True(쿠키 세션)·allow_headers는 Content-Type/X-CSRF-Token으로 좁힌다(175 D-8).
+# 도입하지 않는다(NR-4). allow_credentials=True(쿠키 세션)·allow_headers는 Content-Type/X-CSRF-Token으로 좁힌다(179 D-8).
 _DEFAULT_DEV_ORIGINS = [
     "http://localhost:5173",   # Vite dev server
     "http://127.0.0.1:5173",
@@ -140,7 +140,7 @@ app.add_middleware(
 
 # ── 라우터 등록 ───────────────────────────────────────────────────────────────
 
-app.include_router(auth.router)  # 175 — /api/auth/exchange·session
+app.include_router(auth.router)  # 179 — /api/auth/exchange·session
 app.include_router(dashboard.router)
 app.include_router(projects.router)
 app.include_router(tasks.router)

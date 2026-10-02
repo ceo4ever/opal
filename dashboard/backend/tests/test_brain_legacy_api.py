@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "console",
   "description": "구형 Brain 정책 HTTP 계약 RED-first 테스트(S-6 HTTP 측·S-8). 정책 꺼짐 구성(키 없음·비불리언·prewarm만 있음)에서 POST /api/brain/prime·/api/brain/query는 403 legacy_brain_disabled(error envelope)이고 subprocess.Popen 대체 호출 0회이며, 켜짐 구성에서는 200으로 처리되어 Popen이 shell=False·--allowedTools Bash,Read,Grep,Glob로 호출되고 GET /api/brain/legacy가 enabled true를 돌려준다. S-8: POST /api/brain/legacy는 위험 확인(risk_acknowledged JSON true) 없이 켤 수 없고(400 risk_not_acknowledged, 상태·디스크 불변), 세션·CSRF 없이는 401/403이며, 유효 요청으로 켜면 응답·GET·console.config.json(legacy_brain_enabled JSON true, 다른 키 보존)이 일치하고, 끄면 false 저장·풀 핸들 폐기, 끄는 요청의 저장 실패 시에도 500이지만 메모리 상태는 꺼짐이어서 이후 prime·query가 403이다. 실제 claude 호출 0회(Popen 대체·spawn 가드), 임시 CONFIG_PATH·OPAL_HOME.",
-  "task": "175-261001-opd-콘솔-POST-인증-게이트",
+  "task": "179-261001-opd-콘솔-POST-인증-게이트",
   "scenarios": ["S-6", "S-8"],
   "exports": [],
   "depends": ["routers.brain", "adapters.brain_policy", "adapters.brain_session", "config", "main", "tests.auth_helpers"]

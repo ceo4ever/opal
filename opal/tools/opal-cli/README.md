@@ -161,7 +161,7 @@ opal/tools/opal-cli/
 | v1.1 | 2026-07-10 10:00 | install 서브커맨드 제거 — dispatch/help/문서 정리 + lib/install.sh 삭제 (055) |
 | v1.2 | 2026-07-13 17:43 | console log 서브명령 신설 — tail -F 실시간 팔로우(-n N) + README console 항목 보강 (L2) |
 
-## console open — 진입 계약 (175)
+## console open — 진입 계약 (179)
 
 `opal-cli console open`은 Console 인증 게이트(`/api/` 세션 필요)를 통과하는 유일한 권장 진입 경로다.
 

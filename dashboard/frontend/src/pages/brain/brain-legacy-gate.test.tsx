@@ -6,7 +6,7 @@
  *   "description": "S-11 RED — 구형 Brain 게이트(D-19) 계약 테스트. 꺼짐 상태 첫 진입 화면(안내·위험 3종·선택지·prime/status/query 호출 0회), 위험 확인 체크 전후 버튼, 켜기 POST 본문 1회, 켜진 화면(legacy 배지·끄기), 끄기 응답 running_turns 안내, Settings 선프라임 토글 안내를 검증한다. apiClient는 상태 보유 mock.",
  *   "exports": [],
  *   "depends": ["brain-legacy-gate", "brain-page", "settings-page", "api-client"],
- *   "task": "175",
+ *   "task": "179",
  *   "scenarios": ["S-11"]
  * }
  */

@@ -79,7 +79,7 @@ def _client_for_corpus_root(corpus_root: Path) -> TestClient:
     from dashboard.backend.routers.docs_skills import get_skill_docs_corpus_root
 
     app.dependency_overrides[get_skill_docs_corpus_root] = lambda: corpus_root
-    # 인증 게이트 뒤의 GET 표면 — 유효 세션이 있어야 기존 응답을 본다(175 D-22). 쓰기 메서드 405 검증은 Origin·CSRF가 자동 부착돼 미들웨어를 통과한다.
+    # 인증 게이트 뒤의 GET 표면 — 유효 세션이 있어야 기존 응답을 본다(179 D-22). 쓰기 메서드 405 검증은 Origin·CSRF가 자동 부착돼 미들웨어를 통과한다.
     return authed_client(app)
 
 

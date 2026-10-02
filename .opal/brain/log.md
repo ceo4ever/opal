@@ -512,9 +512,9 @@
 
 ## [2026-10-01] lint | lint 정비: related 인라인 배열 자동 교정 270페이지(272건), 깨진 링크 2건 수정(brain-entity-discipline), 고립·링크 누락 9건 해소(관련 페이지 링크 추가 5페이지). stale 8건 판정: 제거 기능 기록 5건 유지, 3건은 task:111 sdlc-v2 축소 이후 내용이라 stale 유지. 잔여 21건은 예시 문법 오탐 broken_link 9·용어 오탐 speculative 4·의도된 stale 8
 
-## [2026-10-01] ingest | CLOSE ingest — 태스크 175 콘솔 인증 게이트
+## [2026-10-01] ingest | CLOSE ingest — 태스크 179 콘솔 인증 게이트
 - 신규: [[console-auth-default-deny-gate]], [[console-entry-token-channel]], [[legacy-brain-spawn-policy-gate]]
-- 출처: task:175
+- 출처: task:179
 
 ## [2026-10-01] ingest | CLOSE ingest — 태스크 172 검증 시간 단축
 - 신규: [[entity/convention-precheck]], [[concept/design-gate-scope-parallel-judgement-combine]], [[concept/agent-effort-policy-inherit-by-default]], [[concept/test-parallel-group-single-agent-only]], [[concept/real-invocation-scenario-limit]]
@@ -533,7 +533,7 @@
 
 ## [2026-10-02] ingest | CLOSE ingest — 태스크 175 이벤트 로딩 경량화 1차
 - 신규: [[event-response-single-body]], [[worker-dispatch-target-section-selection]], [[worker-dispatch-contract-v2-binding]], [[legacy-dispatch-compat-sunset-observation]], [[agent-sections]]
-- 출처: task:175
+- 출처: task:179
 ## [2026-10-02] ingest | CLOSE ingest — 태스크 176 opds 설계·구현 모델·effort 최적화
 - 신규: [[dispatch-model-overrides-agent-frontmatter]], [[model-effort-customization-points-and-effort-mapping-gap]], [[opst-variant-design-impl-settings]], [[model-effort-measurement-retains-current-config]], [[todo-crud-scenario-fails-checkpoint-commits-at-baseline]], [[measurement-framework-fingerprint-drift-invalidates-comparison]]
 - 출처: task:176

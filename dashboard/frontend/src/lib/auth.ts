@@ -6,7 +6,7 @@
  *   "description": "OPAL Console 인증 부트스트랩(D-13) — 모듈 단일 Promise로 진입을 정확히 1회 수행한다(StrictMode 이중 effect 방어). location.hash가 #entry=<token>이면 교환 요청 전에 history.replaceState로 fragment를 제거한 뒤 POST /api/auth/exchange, 아니면 GET /api/auth/session을 호출해 authed/locked를 결정한다. csrf_token은 모듈 메모리에만 보관한다(localStorage·sessionStorage·쿠키 접근 금지, C-2). apiClient가 401 auth_required에서 markLocked()를 호출해 잠금으로 전환한다. useAuthStatus()는 useSyncExternalStore 기반 React hook이다. 프로젝트·설정·계정 정보는 다루지 않는다.",
  *   "exports": ["bootstrapAuth", "getAuthStatus", "useAuthStatus", "getCsrfToken", "markLocked", "AuthStatus"],
  *   "depends": [],
- *   "task": "175"
+ *   "task": "179"
  * }
  */
 

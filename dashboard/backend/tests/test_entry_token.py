@@ -4,7 +4,7 @@
   "layer": "test",
   "domain": "console",
   "description": "진입 token 발급 채널 공개 계약 RED-first 테스트(S-5 발급 측). 임시 OPAL_HOME에서 dashboard.backend.entry_token.issue()가 만드는 디렉터리(0700)·파일(0600)·파일명(token의 SHA-256 16진)·내용(만료 시각만, token 없음)·기본 TTL(60초, 상한 300초), 발급 때의 만료 파일 청소, token 유일성, 로그 비노출, 디렉터리가 symlink이거나 그룹/타인 권한이 열려 있으면 발급 거부, CLI(python -m dashboard.backend.entry_token issue [--ttl N])가 stdout에 token 한 줄만 쓰는지를 검증한다. 소비 측 계약(1회성·만료·위조)은 test_auth_gate.py가 POST /api/auth/exchange로 검증한다. 사용자 ~/.opal은 건드리지 않는다(항상 임시 OPAL_HOME).",
-  "task": "175-261001-opd-콘솔-POST-인증-게이트",
+  "task": "179-261001-opd-콘솔-POST-인증-게이트",
   "scenarios": ["S-5"],
   "exports": [],
   "depends": ["entry_token"]
